@@ -132,7 +132,6 @@ public sealed class TransparentSurfaceForm : Form
 
     private Rectangle _targetBoundsPx;
     private readonly WebView2 _webView;
-    private readonly System.Windows.Forms.Timer _hitTestTimer;
     private readonly System.Windows.Forms.Timer _layoutSyncTimer;
     private int _layoutSyncRemainingTicks;
     private long _lastLayoutSyncRequestMs;
@@ -145,6 +144,106 @@ public sealed class TransparentSurfaceForm : Form
     private bool _forceInteractive;
     private bool _suppressedForFullscreen;
     private bool _isReady;
+    private bool _registeredInCoordinator;
+
+    /// <summary>
+    /// Single shared cursor-delta hit-test coordinator across all monitors & surfaces.
+    /// Replaces 6 independent 16ms timers (375 ticks/s) with ONE adaptive loop:
+    /// - 60Hz (16ms) while the pointer is moving or near a surface
+    /// - Automatic 100ms idle sleep + zero Win32 surface work when pointer is stationary (>350ms)
+    /// - Instant 0ms wake on first pixel of movement or DOM hitRect update
+    /// </summary>
+    private static class SurfaceHitTestCoordinator
+    {
+        private static readonly List<TransparentSurfaceForm> s_surfaces = [];
+        private static System.Windows.Forms.Timer? s_timer;
+        private static int s_lastX = int.MinValue;
+        private static int s_lastY = int.MinValue;
+        private static MouseButtons s_lastButtons = MouseButtons.None;
+        private static long s_lastMotionMs;
+        private static bool s_dirty = true;
+
+        public static void Register(TransparentSurfaceForm form)
+        {
+            if (!s_surfaces.Contains(form))
+                s_surfaces.Add(form);
+
+            if (s_timer is null)
+            {
+                s_timer = new System.Windows.Forms.Timer { Interval = 16 };
+                s_timer.Tick += OnTick;
+            }
+            s_dirty = true;
+            s_lastMotionMs = Environment.TickCount64;
+            if (!s_timer.Enabled)
+                s_timer.Start();
+        }
+
+        public static void Unregister(TransparentSurfaceForm form)
+        {
+            s_surfaces.Remove(form);
+            if (s_surfaces.Count == 0 && s_timer is not null)
+            {
+                s_timer.Stop();
+            }
+        }
+
+        public static void MarkDirty()
+        {
+            s_dirty = true;
+            if (s_timer is not null && s_timer.Interval != 16)
+                s_timer.Interval = 16;
+        }
+
+        private static void OnTick(object? sender, EventArgs e)
+        {
+            if (s_surfaces.Count == 0 || s_timer is null)
+                return;
+
+            if (!GetCursorPos(out var cursor))
+                return;
+
+            var buttons = Control.MouseButtons;
+            long now = Environment.TickCount64;
+            bool moved = cursor.X != s_lastX || cursor.Y != s_lastY || buttons != s_lastButtons;
+
+            if (moved)
+            {
+                s_lastX = cursor.X;
+                s_lastY = cursor.Y;
+                s_lastButtons = buttons;
+                s_lastMotionMs = now;
+                s_dirty = true;
+            }
+
+            if (!s_dirty)
+            {
+                // Zero-cost idle sleep when cursor is completely stationary
+                int idleInterval = (now - s_lastMotionMs) > 350 ? 100 : 16;
+                if (s_timer.Interval != idleInterval)
+                    s_timer.Interval = idleInterval;
+                return;
+            }
+
+            s_dirty = false;
+            bool anyNearSurface = false;
+            for (int i = s_surfaces.Count - 1; i >= 0; i--)
+            {
+                var surf = s_surfaces[i];
+                if (surf.IsDisposed)
+                {
+                    s_surfaces.RemoveAt(i);
+                    continue;
+                }
+                if (surf.EvaluateCursorClickThrough(cursor, buttons))
+                    anyNearSurface = true;
+            }
+
+            int desiredInterval = (moved || anyNearSurface) ? 16 : ((now - s_lastMotionMs) > 350 ? 100 : 48);
+            if (s_timer.Interval != desiredInterval)
+                s_timer.Interval = desiredInterval;
+        }
+    }
 
     public string MonitorDeviceId { get; }
     [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
@@ -234,10 +333,6 @@ public sealed class TransparentSurfaceForm : Form
         };
         Controls.Add(_webView);
 
-        // 60Hz physical-to-CSS ratio hit-tester: zero drift across any resolution or mixed DPI!
-        _hitTestTimer = new System.Windows.Forms.Timer { Interval = 16 };
-        _hitTestTimer.Tick += (_, _) => EvaluateCursorClickThrough();
-
         // Multi-monitor WebView2 post-resize sync guard: guarantees background monitors flush fresh hitRects!
         _layoutSyncTimer = new System.Windows.Forms.Timer { Interval = 140 };
         _layoutSyncTimer.Tick += (_, _) =>
@@ -254,7 +349,7 @@ public sealed class TransparentSurfaceForm : Form
             {
                 _forceInteractive = false;
                 PostJsonState("""{"type":"outsideDeactivate"}""");
-                EvaluateCursorClickThrough();
+                EvaluateCursorClickThroughImmediate();
             }
         };
     }
@@ -366,7 +461,7 @@ public sealed class TransparentSurfaceForm : Form
         // Resync cached click-through flag against live Win32 style bits
         long ex = GetWindowLongPtr64(Handle, GwlExStyle);
         _currentlyClickThrough = (ex & WsExTransparent) != 0;
-        EvaluateCursorClickThrough();
+        EvaluateCursorClickThroughImmediate();
     }
 
     public void SetSuppressedForFullscreen(bool suppressed)
@@ -381,19 +476,13 @@ public sealed class TransparentSurfaceForm : Form
         _suppressedForFullscreen = suppressed;
         if (suppressed)
         {
-            _hitTestTimer.Stop();
             ShowWindow(Handle, SwHide);
         }
         else
         {
             ShowWindow(Handle, SwShowNoActivate);
             SetWindowPos(Handle, HwndTopMost, 0, 0, 0, 0, SwpNoMove | SwpNoSize | SwpNoActivate);
-            if (_isReady)
-            {
-                _hitTestTimer.Interval = 16;
-                _hitTestTimer.Start();
-            }
-            EvaluateCursorClickThrough();
+            EvaluateCursorClickThroughImmediate();
         }
     }
 
@@ -509,7 +598,7 @@ public sealed class TransparentSurfaceForm : Form
                                 item.GetProperty("h").GetDouble()));
                         }
                         _interactiveRects = [.. list];
-                        EvaluateCursorClickThrough();
+                        EvaluateCursorClickThroughImmediate();
                     }
                     return;
                 }
@@ -525,7 +614,8 @@ public sealed class TransparentSurfaceForm : Form
 
         _webView.NavigateToString(htmlContent);
         _isReady = true;
-        _hitTestTimer.Start();
+        _registeredInCoordinator = true;
+        SurfaceHitTestCoordinator.Register(this);
     }
 
     public void PostJsonState(string json)
@@ -555,11 +645,6 @@ public sealed class TransparentSurfaceForm : Form
         {
             _suppressedForFullscreen = false;
             ShowWindow(Handle, SwShowNoActivate);
-            if (_isReady)
-            {
-                _hitTestTimer.Interval = 16;
-                _hitTestTimer.Start();
-            }
         }
 
         _forceInteractive = true;
@@ -568,6 +653,7 @@ public sealed class TransparentSurfaceForm : Form
         SetForegroundWindow(Handle);
         Activate();
         _webView.Focus();
+        SurfaceHitTestCoordinator.MarkDirty();
     }
 
     public bool ContainsInteractivePoint(Point screenPt)
@@ -610,7 +696,7 @@ public sealed class TransparentSurfaceForm : Form
     public void ReleaseForcedInteractive()
     {
         _forceInteractive = false;
-        EvaluateCursorClickThrough();
+        EvaluateCursorClickThroughImmediate();
     }
 
     public async Task CapturePngAsync(string outputPath)
@@ -623,28 +709,38 @@ public sealed class TransparentSurfaceForm : Form
         await _webView.CoreWebView2.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Png, fs);
     }
 
-    private void EvaluateCursorClickThrough()
+    private void EvaluateCursorClickThroughImmediate()
+    {
+        SurfaceHitTestCoordinator.MarkDirty();
+        if (GetCursorPos(out var cursor))
+            EvaluateCursorClickThrough(cursor, Control.MouseButtons);
+    }
+
+    private bool EvaluateCursorClickThrough(WIN32_POINT cursor, MouseButtons buttons)
     {
         if (IsDisposed || !IsHandleCreated || Handle == 0 || _suppressedForFullscreen)
-            return;
+            return false;
 
         if (_forceInteractive)
         {
-            if (_hitTestTimer.Interval != 60) _hitTestTimer.Interval = 60;
             SetClickThrough(false);
-            return;
+            return false;
         }
 
-        if (!GetCursorPos(out var cursor) || !GetWindowRect(Handle, out var rc))
-            return;
-
-        // Adaptive 60Hz/7Hz wake throttling: relax timer to 140ms when cursor is far away or on another monitor!
+        // Ultra-fast physical bounds pre-check before touching Win32 GetWindowRect when already idle & outside halo
         const int approachHaloPx = 120;
+        if (_currentlyClickThrough && !_wasWithinHalo && !_wasPointerInsideHitRect &&
+            (cursor.X < _targetBoundsPx.Left - approachHaloPx || cursor.X >= _targetBoundsPx.Right + approachHaloPx ||
+             cursor.Y < _targetBoundsPx.Top - approachHaloPx || cursor.Y >= _targetBoundsPx.Bottom + approachHaloPx))
+        {
+            return false;
+        }
+
+        if (!GetWindowRect(Handle, out var rc))
+            return false;
+
         bool withinHalo = cursor.X >= rc.Left - approachHaloPx && cursor.X < rc.Right + approachHaloPx &&
                           cursor.Y >= rc.Top - approachHaloPx && cursor.Y < rc.Bottom + approachHaloPx;
-        int desiredInterval = withinHalo ? 16 : 140;
-        if (_hitTestTimer.Interval != desiredInterval)
-            _hitTestTimer.Interval = desiredInterval;
 
         // Self-healing multi-monitor guard: the instant the cursor approaches a secondary monitor's
         // surface, request a fresh layout & hitRects flush before the pointer even reaches the dock!
@@ -663,7 +759,7 @@ public sealed class TransparentSurfaceForm : Form
                     PostJsonState("""{"type":"cursorLeft"}""");
             }
             SetClickThrough(true);
-            return;
+            return withinHalo;
         }
 
         // Exact DPI-invariant physical-to-CSS coordinate projection:
@@ -690,7 +786,7 @@ public sealed class TransparentSurfaceForm : Form
             cssY = (cursor.Y - rc.Top) / fallbackScale;
         }
 
-        double pad = (Control.MouseButtons & MouseButtons.Left) != 0 ? 28.0 : 10.0;
+        double pad = (buttons & MouseButtons.Left) != 0 ? 28.0 : 10.0;
 
         bool hitAny = false;
         if (!staleAspect)
@@ -723,6 +819,8 @@ public sealed class TransparentSurfaceForm : Form
             if (EnableNativeCursorWake && _isReady)
                 PostJsonState("""{"type":"cursorLeft"}""");
         }
+
+        return true;
     }
 
     private void SetClickThrough(bool passThrough)
@@ -769,8 +867,11 @@ public sealed class TransparentSurfaceForm : Form
     {
         if (disposing)
         {
-            _hitTestTimer.Stop();
-            _hitTestTimer.Dispose();
+            if (_registeredInCoordinator)
+            {
+                _registeredInCoordinator = false;
+                SurfaceHitTestCoordinator.Unregister(this);
+            }
             _layoutSyncTimer.Stop();
             _layoutSyncTimer.Dispose();
             _webView.Dispose();

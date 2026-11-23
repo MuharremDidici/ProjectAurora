@@ -40,12 +40,49 @@ jobs:
             $notes = "${{ inputs.release_notes }}"
           } else {
             $v = "${{ github.ref_name }}".Trim().TrimStart('v', 'V')
+            $notes = ""
+          }
+
+          # Prefer curated release notes from RELEASE_NOTES.md (## v<version>) over raw commit subjects
+          $releaseBodyPath = Join-Path $env:RUNNER_TEMP "release_body.md"
+          $sectionMarkdown = ""
+          if (Test-Path ".\RELEASE_NOTES.md") {
+            $rawNotes = [System.IO.File]::ReadAllText(".\RELEASE_NOTES.md", [System.Text.UTF8Encoding]::new($false))
+            $pattern = "(?ms)^##\s+v" + [Regex]::Escape($v) + "\s*\r?\n(.*?)(?=^##\s+v|\z)"
+            $m = [Regex]::Match($rawNotes, $pattern)
+            if ($m.Success) {
+              $sectionMarkdown = $m.Groups[1].Value.Trim()
+              $sumMatch = [Regex]::Match($sectionMarkdown, "(?m)^>\s*Summary:\s*(.+)$")
+              if ($sumMatch.Success -and [string]::IsNullOrWhiteSpace($notes)) {
+                $notes = $sumMatch.Groups[1].Value.Trim()
+                $sectionMarkdown = [Regex]::Replace($sectionMarkdown, "(?m)^>\s*Summary:\s*.+\r?\n*", "").Trim()
+              }
+            }
+          }
+
+          if ([string]::IsNullOrWhiteSpace($notes)) {
             $commitSubj = (git log -1 --pretty=%s 2>$null | Out-String).Trim()
             $notes = if (-not [string]::IsNullOrWhiteSpace($commitSubj)) { $commitSubj } else { "Project Aurora v$v — GitHub otomatik güncelleme paketi." }
           }
+
+          $bodySb = [System.Text.StringBuilder]::new()
+          [void]$bodySb.AppendLine("## ✦ Project Aurora v$v")
+          [void]$bodySb.AppendLine("")
+          [void]$bodySb.AppendLine($notes)
+          if (-not [string]::IsNullOrWhiteSpace($sectionMarkdown)) {
+            [void]$bodySb.AppendLine("")
+            [void]$bodySb.AppendLine($sectionMarkdown)
+          }
+          [void]$bodySb.AppendLine("")
+          [void]$bodySb.AppendLine("### Tek Tık Kurulum (Windows 11 x64)")
+          [void]$bodySb.AppendLine("- Aşağıdaki **`Aurora-Kurulum-v*-x64.exe`** dosyasını indirip çalıştırın (yönetici izni / UAC veya ek .NET kurulumu gerektirmez).")
+          [void]$bodySb.AppendLine("- Mevcut Project Aurora kullanıcıları uygulama içindeki **Üst Damla → Stüdyo & Ayarlar → Güncellemeleri Kontrol Et** butonundan ayarlarını kaybetmeden tek tıkla güncelleyebilir.")
+          [System.IO.File]::WriteAllText($releaseBodyPath, $bodySb.ToString(), [System.Text.UTF8Encoding]::new($false))
+
           Add-Content -Path $env:GITHUB_OUTPUT -Value "version=$v" -Encoding utf8NoBOM
           Add-Content -Path $env:GITHUB_OUTPUT -Value "tag=v$v" -Encoding utf8NoBOM
           Add-Content -Path $env:GITHUB_OUTPUT -Value "notes=$notes" -Encoding utf8NoBOM
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "body_path=$releaseBodyPath" -Encoding utf8NoBOM
 
       - name: Build & Run All Automated Tests
         shell: pwsh
@@ -67,14 +104,7 @@ jobs:
         with:
           tag_name: ${{ steps.ver.outputs.tag }}
           name: Project Aurora ${{ steps.ver.outputs.tag }}
-          body: |
-            ## ✦ Project Aurora ${{ steps.ver.outputs.tag }}
-
-            ${{ steps.ver.outputs.notes }}
-
-            ### Tek Tık Kurulum (Windows 11 x64)
-            - Aşağıdaki **`Aurora-Kurulum-v*-x64.exe`** dosyasını indirip çalıştırın (yönetici izni / UAC veya ek .NET kurulumu gerektirmez).
-            - Mevcut Project Aurora kullanıcıları uygulama içindeki **Üst Damla → Stüdyo & Ayarlar → Güncellemeleri Kontrol Et** butonundan ayarlarını kaybetmeden tek tıkla güncelleyebilir.
+          body_path: ${{ steps.ver.outputs.body_path }}
           files: |
             dist/Aurora-Kurulum-*.exe
             dist/release-manifest.json
