@@ -17,6 +17,31 @@ internal static class Program
 
     public static string AppVersion { get; } = ResolveVersion();
 
+    public static Icon? LoadSetupIcon()
+    {
+        try
+        {
+            string? exe = Environment.ProcessPath;
+            return !string.IsNullOrWhiteSpace(exe) && File.Exists(exe) ? Icon.ExtractAssociatedIcon(exe) : null;
+        }
+        catch { return null; }
+    }
+
+    public static Image? LoadSetupLogoImage()
+    {
+        try
+        {
+            using var s = Assembly.GetExecutingAssembly().GetManifestResourceStream("AuroraIcon.png");
+            if (s is null) return null;
+            using var ms = new MemoryStream();
+            s.CopyTo(ms);
+            ms.Position = 0;
+            using var img = Image.FromStream(ms);
+            return new Bitmap(img);
+        }
+        catch { return null; }
+    }
+
     private static string ResolveVersion()
     {
         var raw = Assembly.GetExecutingAssembly()
@@ -54,9 +79,10 @@ internal static class Program
         {
             if (args.Any(a => string.Equals(a, "--silent", StringComparison.OrdinalIgnoreCase)))
             {
+                string existingDesktopLnk = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "Project Aurora.lnk");
                 SetupEngine.InstallAsync(
                     installDir: DefaultInstallDir,
-                    createDesktopShortcut: false,
+                    createDesktopShortcut: File.Exists(existingDesktopLnk),
                     createStartMenuShortcuts: true,
                     enableStartup: false,
                     preserveExistingStartup: true,
@@ -110,6 +136,7 @@ internal sealed class AuroraAutoUpdateForm : Form
     {
         _waitPid = waitPid;
         Text = $"Project Aurora v{Program.AppVersion} Güncelleniyor";
+        if (Program.LoadSetupIcon() is { } updIcon) Icon = updIcon;
         FormBorderStyle = FormBorderStyle.None;
         StartPosition = FormStartPosition.CenterScreen;
         TopMost = true;
@@ -215,31 +242,47 @@ internal sealed class AuroraSetupForm : Form
     public AuroraSetupForm()
     {
         Text = $"Project Aurora v{Program.AppVersion} — Tek Tık Kurulum";
+        if (Program.LoadSetupIcon() is { } appIcon) Icon = appIcon;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = true;
         StartPosition = FormStartPosition.CenterScreen;
-        ClientSize = new Size(540, 405);
+        ClientSize = new Size(540, 412);
         BackColor = Color.FromArgb(11, 16, 32);
         ForeColor = Color.FromArgb(248, 250, 252);
         Font = new Font("Segoe UI", 9.75f, FontStyle.Regular);
+
+        PictureBox? picLogo = null;
+        int headerLeft = 28;
+        if (Program.LoadSetupLogoImage() is { } logoImg)
+        {
+            picLogo = new PictureBox
+            {
+                Image = logoImg,
+                SizeMode = PictureBoxSizeMode.Zoom,
+                Size = new Size(52, 52),
+                Location = new Point(26, 22),
+                BackColor = Color.Transparent
+            };
+            headerLeft = 88;
+        }
 
         var lblBadge = new Label
         {
             Text = $"✦ PROJECT AURORA v{Program.AppVersion} • ÇOKLU EKRAN • WIN11 X64",
             ForeColor = Color.FromArgb(56, 189, 248),
-            Font = new Font("Segoe UI", 9f, FontStyle.Bold),
+            Font = new Font("Segoe UI", 8.75f, FontStyle.Bold),
             AutoSize = true,
-            Location = new Point(28, 24)
+            Location = new Point(headerLeft, 24)
         };
 
         var lblTitle = new Label
         {
             Text = "Yeni Nesil Dinamik Ada & Kristal Dock",
             ForeColor = Color.White,
-            Font = new Font("Segoe UI Semibold", 15.5f, FontStyle.Bold),
+            Font = new Font("Segoe UI Semibold", 14.5f, FontStyle.Bold),
             AutoSize = true,
-            Location = new Point(26, 46)
+            Location = new Point(headerLeft - 2, 46)
         };
 
         var lblSub = new Label
@@ -248,7 +291,7 @@ internal sealed class AuroraSetupForm : Form
             ForeColor = Color.FromArgb(148, 163, 184),
             Font = new Font("Segoe UI", 9f),
             Size = new Size(485, 40),
-            Location = new Point(28, 82)
+            Location = new Point(28, 86)
         };
 
         var cardPanel = new Panel
@@ -318,6 +361,7 @@ internal sealed class AuroraSetupForm : Form
             _lblStatus.Text = "Mevcut kurulum temizlendi ve Windows görev çubuğu geri yüklendi.";
         };
 
+        if (picLogo is not null) Controls.Add(picLogo);
         Controls.AddRange([lblBadge, lblTitle, lblSub, cardPanel, _lblStatus, _progressBar, _btnInstall, _btnUninstall]);
     }
 
@@ -418,16 +462,18 @@ internal static class SetupEngine
         });
 
         string mainExe = Path.Combine(installDir, "Aurora.App.exe");
+        string icoPath = Path.Combine(installDir, "aurora.ico");
+        string shortcutIcon = File.Exists(icoPath) ? icoPath : mainExe;
         string uninstallCmd = Path.Combine(installDir, "Uninstall-Aurora.cmd");
 
         progress?.Report((75, "Kaldırma betiği ve kısayollar hazırlanıyor..."));
         WriteUninstallScript(installDir, mainExe, uninstallCmd);
-        RegisterWindowsUninstaller(installDir, mainExe, uninstallCmd);
+        RegisterWindowsUninstaller(installDir, mainExe, shortcutIcon, uninstallCmd);
 
         if (createDesktopShortcut)
         {
             string desktopLnk = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "Project Aurora.lnk");
-            ShortcutCreator.CreateShortcut(desktopLnk, mainExe, "", installDir, "Project Aurora — Akıllı Dinamik Ada ve Kristal Dock", mainExe);
+            ShortcutCreator.CreateShortcut(desktopLnk, mainExe, "", installDir, "Project Aurora — Akıllı Dinamik Ada ve Kristal Dock", shortcutIcon);
         }
 
         if (createStartMenuShortcuts)
@@ -440,15 +486,17 @@ internal static class SetupEngine
                 "",
                 installDir,
                 "Project Aurora — Akıllı Dinamik Ada ve Kristal Dock",
-                mainExe);
+                shortcutIcon);
             ShortcutCreator.CreateShortcut(
                 Path.Combine(startDir, "Windows Görev Çubuğunu Geri Getir.lnk"),
                 mainExe,
                 "--restore-taskbar",
                 installDir,
                 "Windows yerel görev çubuğunu anında görünür yapar",
-                mainExe);
+                shortcutIcon);
         }
+
+        ShortcutCreator.NotifyShellIconChange();
 
         if (!preserveExistingStartup)
         {
@@ -655,7 +703,7 @@ internal static class SetupEngine
         File.WriteAllText(uninstallCmdPath, sb.ToString(), new UTF8Encoding(false));
     }
 
-    private static void RegisterWindowsUninstaller(string installDir, string mainExe, string uninstallCmdPath)
+    private static void RegisterWindowsUninstaller(string installDir, string mainExe, string iconPath, string uninstallCmdPath)
     {
         try
         {
@@ -663,7 +711,7 @@ internal static class SetupEngine
             key.SetValue("DisplayName", "Project Aurora");
             key.SetValue("DisplayVersion", Program.AppVersion);
             key.SetValue("Publisher", "Muharrem Didici • Project Aurora");
-            key.SetValue("DisplayIcon", mainExe);
+            key.SetValue("DisplayIcon", iconPath.EndsWith(".ico", StringComparison.OrdinalIgnoreCase) ? iconPath : $"{mainExe},0");
             key.SetValue("InstallLocation", installDir);
             key.SetValue("UninstallString", $"cmd.exe /c \"\"{uninstallCmdPath}\"\"");
             key.SetValue("NoModify", 1, RegistryValueKind.DWord);
@@ -702,6 +750,14 @@ internal static class ShortcutCreator
         void SetRelativePath([MarshalAs(UnmanagedType.LPWStr)] string pszPathRel, int dwReserved);
         void Resolve(nint hwnd, int fFlags);
         void SetPath([MarshalAs(UnmanagedType.LPWStr)] string pszFile);
+    }
+
+    [DllImport("shell32.dll")]
+    private static extern void SHChangeNotify(uint wEventId, uint uFlags, nint dwItem1, nint dwItem2);
+
+    public static void NotifyShellIconChange()
+    {
+        try { SHChangeNotify(0x08000000u /* SHCNE_ASSOCCHANGED */, 0x0000u /* SHCNF_IDLIST */, 0, 0); } catch { }
     }
 
     public static void CreateShortcut(string shortcutPath, string targetPath, string arguments, string workingDir, string description, string iconPath)

@@ -7,6 +7,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>..\..\assets\aurora.ico</ApplicationIcon>
     <AssemblyName Condition="'$(SetupAssemblyName)' == ''">Aurora-Kurulum-v2.0-x64</AssemblyName>
     <AssemblyName Condition="'$(SetupAssemblyName)' != ''">$(SetupAssemblyName)</AssemblyName>
     <Product>Project Aurora Kurulum Sihirbazı</Product>
@@ -19,5 +20,6 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Payload\Aurora-Payload.zip" LogicalName="AuroraPayload.zip" />
+    <EmbeddedResource Include="..\..\assets\aurora-icon.png" LogicalName="AuroraIcon.png" />
   </ItemGroup>
 </Project>

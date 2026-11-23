@@ -199,10 +199,24 @@ public sealed class TransparentSurfaceForm : Form
     public event Func<string, IReadOnlyList<string>, Task>? FilesDropped;
     public event Func<string, JsonElement, IReadOnlyList<string>, Task>? FilesDroppedWithContext;
 
+    private static readonly Icon? s_appIcon = TryLoadAppIcon();
+
+    private static Icon? TryLoadAppIcon()
+    {
+        try
+        {
+            string? exe = Environment.ProcessPath;
+            return !string.IsNullOrWhiteSpace(exe) && File.Exists(exe) ? Icon.ExtractAssociatedIcon(exe) : null;
+        }
+        catch { return null; }
+    }
+
     public TransparentSurfaceForm(string surfaceTitle, string monitorDeviceId, Rectangle screenBoundsPx)
     {
         MonitorDeviceId = monitorDeviceId;
         Text = surfaceTitle;
+        if (s_appIcon is not null)
+            Icon = s_appIcon;
         AutoScaleMode = AutoScaleMode.None;
         FormBorderStyle = FormBorderStyle.None;
         StartPosition = FormStartPosition.Manual;
