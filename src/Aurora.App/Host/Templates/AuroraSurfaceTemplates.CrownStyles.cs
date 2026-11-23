@@ -494,26 +494,131 @@ public static partial class AuroraSurfaceTemplates
         }
         #onboardingCard {
             pointer-events: auto;
-            margin-top: 14px;
-            width: min(560px, calc(100vw - 24px));
+            margin-top: 12px;
+            width: min(790px, calc(100vw - 24px));
+            max-height: 550px;
             border-radius: 24px;
-            padding: 18px 20px;
+            padding: 16px 19px 15px;
             display: none;
             flex-direction: column;
-            gap: 13px;
+            gap: 11px;
             animation: popDown 0.22s var(--spring);
         }
         #onboardingCard.open { display: flex; }
-        .onb-tips {
+        .tour-nav {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 5px;
+            padding: 4px;
+            border-radius: 14px;
+            background: var(--bg-inset);
+            border: 1px solid var(--border-subtle);
+        }
+        .tour-nav-btn {
+            height: 29px; padding: 0 7px; border-radius: 10px;
+            border: 1px solid transparent; background: transparent;
+            color: var(--text-2); font-size: 10.5px; font-weight: 700;
+            display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+            cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            transition: background 0.16s, color 0.16s, border-color 0.16s;
+        }
+        .tour-nav-btn:hover { background: var(--bg-card-hover); color: var(--text-1); }
+        .tour-nav-btn.active {
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+            color: var(--accent-ink);
+            box-shadow: 0 4px 12px -4px rgba(56, 189, 248, 0.55);
+        }
+        .tour-nav-num {
+            width: 15px; height: 15px; border-radius: 99px;
+            background: var(--bg-card); color: inherit;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 9.5px; font-weight: 800; flex-shrink: 0;
+        }
+        .tour-nav-btn.active .tour-nav-num { background: rgba(255,255,255,0.22); }
+        .tour-hero {
+            display: flex; align-items: center; justify-content: space-between; gap: 12px;
+            padding: 9px 13px; border-radius: 14px;
+            background: linear-gradient(135deg, rgba(56,189,248,0.11), rgba(129,140,248,0.08));
+            border: 1px solid rgba(56,189,248,0.24);
+        }
+        .tour-hero-title { font-size: 13px; font-weight: 800; color: var(--text-1); letter-spacing: -0.01em; }
+        .tour-hero-sub { font-size: 11px; color: var(--text-2); margin-top: 2px; line-height: 1.35; }
+        .tour-body {
+            display: flex; flex-direction: column; gap: 9px;
+            overflow-y: auto; max-height: 335px; padding-right: 2px;
+        }
+        .tour-grid {
             display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
         }
-        .onb-tip {
-            padding: 9px 11px; border-radius: 13px;
+        .tour-card {
+            padding: 9px 11px; border-radius: 14px;
             background: var(--bg-card); border: 1px solid var(--border-subtle);
-            font-size: 11.5px; line-height: 1.35;
+            display: flex; align-items: flex-start; gap: 9px;
+            transition: border-color 0.16s, background 0.16s;
         }
-        .onb-tip strong { display: block; font-size: 12px; color: var(--text-1); margin-bottom: 2px; }
-        .onb-tip span { color: var(--text-2); }
+        .tour-card:hover { background: var(--bg-card-hover); border-color: var(--border-rim); }
+        .tour-ic {
+            width: 29px; height: 29px; border-radius: 10px; flex-shrink: 0;
+            background: rgba(56, 189, 248, 0.14);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            color: var(--accent-1);
+            display: inline-flex; align-items: center; justify-content: center;
+        }
+        .tour-card-txt { min-width: 0; flex: 1; }
+        .tour-card-head {
+            display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 3px;
+        }
+        .tour-card-head strong { font-size: 11.5px; font-weight: 800; color: var(--text-1); }
+        .tour-tag {
+            font-size: 9px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;
+            padding: 1px 6px; border-radius: 99px;
+            background: rgba(56, 189, 248, 0.15); color: var(--accent-1);
+            border: 1px solid rgba(56, 189, 248, 0.28);
+        }
+        .tour-tag.ok { background: rgba(16, 185, 129, 0.14); color: var(--success); border-color: rgba(16, 185, 129, 0.30); }
+        .tour-tag.warn { background: rgba(245, 158, 11, 0.15); color: var(--warning); border-color: rgba(245, 158, 11, 0.32); }
+        .tour-tag.hot { background: rgba(244, 63, 94, 0.15); color: var(--danger); border-color: rgba(244, 63, 94, 0.32); }
+        .tour-card p {
+            margin: 0; font-size: 10.7px; color: var(--text-2); line-height: 1.38;
+        }
+        .tour-setup-box {
+            padding: 10px 12px; border-radius: 14px;
+            background: var(--bg-card); border: 1px solid var(--border-subtle);
+            display: flex; flex-direction: column; gap: 8px;
+        }
+        .tour-setup-row {
+            display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+        }
+        .tour-setup-lbl { font-size: 11px; font-weight: 700; color: var(--text-1); min-width: 118px; }
+        .tour-kbd-strip {
+            display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px;
+        }
+        .tour-kbd-item {
+            padding: 7px 9px; border-radius: 11px;
+            background: var(--bg-inset); border: 1px solid var(--border-subtle);
+            display: flex; align-items: center; justify-content: space-between; gap: 6px;
+            font-size: 10.5px; color: var(--text-2);
+        }
+        .tour-kbd {
+            font-family: ui-monospace, 'Cascadia Code', monospace;
+            font-size: 10px; font-weight: 800; color: var(--text-1);
+            padding: 2px 6px; border-radius: 6px;
+            background: var(--bg-card-hover); border: 1px solid var(--border-rim);
+            white-space: nowrap;
+        }
+        .tour-footer {
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+            padding-top: 8px; border-top: 1px solid var(--border-subtle);
+        }
+        .tour-prog-track {
+            width: 84px; height: 5px; border-radius: 99px;
+            background: var(--bg-inset); overflow: hidden;
+        }
+        .tour-prog-fill {
+            height: 100%; border-radius: 99px;
+            background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+            transition: width 0.22s var(--ease);
+        }
         .audio-out-strip {
             display: flex; flex-wrap: wrap; gap: 5px;
             margin-top: 8px; padding-top: 7px;

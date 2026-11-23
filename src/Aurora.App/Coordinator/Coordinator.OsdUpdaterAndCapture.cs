@@ -536,7 +536,18 @@ internal sealed partial class AuroraDesktopCoordinator
             await Task.Delay(450);
             await primary.CrownForm.CapturePngAsync(Path.Combine(dir, "omnibar_apps.png"));
 
-            // Visually verify Light Theme (Aurora Glass Açık) across ALL 8 surfaces!
+            // Capture interactive 6-step Product Tour in Dark Theme
+            primary.CrownForm.PostJsonState("""{"type":"openTour","step":0}""");
+            await Task.Delay(380);
+            await primary.CrownForm.CapturePngAsync(Path.Combine(dir, "tour_step1_dark.png"));
+            primary.CrownForm.PostJsonState("""{"type":"openTour","step":1}""");
+            await Task.Delay(320);
+            await primary.CrownForm.CapturePngAsync(Path.Combine(dir, "tour_step2_dark.png"));
+            primary.CrownForm.PostJsonState("""{"type":"openTour","step":5}""");
+            await Task.Delay(320);
+            await primary.CrownForm.CapturePngAsync(Path.Combine(dir, "tour_step6_dark.png"));
+
+            // Visually verify Light Theme (Aurora Glass Açık) across ALL 8 surfaces + Tour!
             var prevTheme = _stateStore.EffectiveTheme;
             await _stateStore.ApplyThemeAsync(BuiltInThemes.AuroraGlassLight);
             _shellPrefs = _shellPrefs with { DockEdge = "Bottom", DockOffsetPercent = 0 };
@@ -588,6 +599,13 @@ internal sealed partial class AuroraDesktopCoordinator
             primary.CrownForm.PostJsonState("""{"type":"toggleTray"}""");
             await Task.Delay(420);
             await primary.CrownForm.CapturePngAsync(Path.Combine(dir, "tray_drawer_light.png"));
+
+            primary.CrownForm.PostJsonState("""{"type":"openTour","step":0}""");
+            await Task.Delay(380);
+            await primary.CrownForm.CapturePngAsync(Path.Combine(dir, "tour_step1_light.png"));
+            primary.CrownForm.PostJsonState("""{"type":"openTour","step":3}""");
+            await Task.Delay(320);
+            await primary.CrownForm.CapturePngAsync(Path.Combine(dir, "tour_step4_light.png"));
 
             await _stateStore.ApplyThemeAsync(prevTheme);
             _shellPrefs = _shellPrefs with { DockEdge = savedEdgeBeforeCap };

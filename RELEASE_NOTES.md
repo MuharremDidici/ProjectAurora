@@ -1,5 +1,13 @@
 # Project Aurora — Sürüm Notları
 
+## v2.3.1
+> Summary: Tüm güncel özellikleri kapsayan 6 adımlı interaktif Özellik Turu (canlı tema/Dock seçici, DDC/CI, Bluetooth Pil, Gizlilik LED, 3 Bölgeli Drop + QR AirDrop, GIF/OCR, Telemetri ve kısayol haritası).
+
+### Öne Çıkan Yenilikler
+- **6 Adımlı İnteraktif Özellik Turu (`Hızlı Tur`):** Üstte tıklanabilir 6 bölüm sekmesi, ilerleme çubuğu, klavye (`← / → / ESC`) gezintisi ve her adımda ilgili sekme veya OmniSearch'e tek tıkla geçiş düğmesi.
+- **Canlı Kurulum Adımı (Adım 1):** Tema ailesi, Dock konumu (`Alt / Sol / Sağ`) ve Dock davranışı tur açıkken canlı önizlenerek değiştirilebilir.
+- **Eksiksiz Özellik Rehberi (Adım 2–6):** Canlı Donanım OSD, Harici Monitör DDC/CI (EDID), Bluetooth Pil yüzdeleri, Kamera/Mikrofon Gizlilik LED'i, sıfır kaymalı Fitts Yasası Dock, `Alt+Sürükle`, `Shift+Sürükle` Snap Zones, 3 Bölgeli Drop + Yerel QR AirDrop, SQLite Pano Kasası & Oto-Yapıştır, 10 FPS Bayer GIF Kaydedici, Çevrimdışı OCR, Renk Damlalığı, Telemetri SVG Eğrileri, OmniSearch kısayol haritası ve SHA-256 GitHub otomatik güncelleme tek rehberde toplandı.
+
 ## v2.3.0
 > Summary: Tek merkezi uyku destekli hit-test motoru ve tek-renderer düşük bellekli WebView2 ile uzun süreli CPU/RAM optimizasyonu, tam modüler kod mimarisi, 8 Açık Tema yüzeyi piksel doğrulaması ve yeni vitrin dokümantasyonu.
 

@@ -28,6 +28,8 @@ public static partial class AuroraSurfaceTemplates
         let notifOpen = false;
         let manualOnboardingOpen = false;
         let onboardingDismissedLocal = false;
+        let tourStep = 0;
+        let lastTourSig = '';
         let armedPowerAction = null;
         let armedPowerTimer = null;
         let calMonthOffset = 0;
@@ -1808,73 +1810,264 @@ public static partial class AuroraSurfaceTemplates
             if (s) { s.classList.remove('danger-arm'); s.innerHTML = SVG.power + '<span>Kapat</span>'; }
         }
 
-        function openOnboardingTour() {
+        function openOnboardingTour(stepIdx = 0) {
             expanded = false;
             closeAllSubPopups();
+            tourStep = Math.max(0, Math.min(5, Number(stepIdx) || 0));
+            lastTourSig = '';
             manualOnboardingOpen = true;
             onboardingDismissedLocal = false;
             renderAll();
             syncFocusDemand();
         }
 
+        function setTourStep(stepIdx) {
+            tourStep = Math.max(0, Math.min(5, Number(stepIdx) || 0));
+            lastTourSig = '';
+            renderOnboardingCard();
+            requestAnimationFrame(reportHitRects);
+        }
+
+        function stepTour(delta) {
+            const next = tourStep + delta;
+            if (next < 0) return;
+            if (next > 5) { finishOnboarding(); return; }
+            setTourStep(next);
+        }
+
+        function tourJumpToDeck(tab) {
+            manualOnboardingOpen = false;
+            onboardingDismissedLocal = true;
+            lastTourSig = '';
+            send('completeOnboarding');
+            activeTab = tab || 'control';
+            toggleCrown(true);
+        }
+
+        function tourJumpToOmni() {
+            manualOnboardingOpen = false;
+            onboardingDismissedLocal = true;
+            lastTourSig = '';
+            send('completeOnboarding');
+            openOmni();
+        }
+
         function finishOnboarding() {
             manualOnboardingOpen = false;
             onboardingDismissedLocal = true;
+            lastTourSig = '';
             send('completeOnboarding');
             renderAll();
             syncFocusDemand();
         }
 
+        function tourCard(icon, title, tagText, tagCls, desc) {
+            return `
+                <div class="tour-card">
+                    <div class="tour-ic">${icon}</div>
+                    <div class="tour-card-txt">
+                        <div class="tour-card-head">
+                            <strong>${title}</strong>
+                            ${tagText ? `<span class="tour-tag ${tagCls || ''}">${tagText}</span>` : ''}
+                        </div>
+                        <p>${desc}</p>
+                    </div>
+                </div>`;
+        }
+
         function renderOnboardingCard() {
             const el = document.getElementById('onboardingCard');
             if (!state || !isOnboardingVisible()) {
-                el.className = 'glass-shell';
+                if (el.className !== 'glass-shell') el.className = 'glass-shell';
+                lastTourSig = '';
                 return;
             }
-            const curTheme = state.theme?.id || 'aurora-glass-light';
-            const curDock = state.dockMode || 'AlwaysVisible';
+
+            const curTheme = state.theme?.id || 'obsidian-pro-dark';
+            const curDock = state.dockMode || 'SmartDodge';
+            const curEdge = state.dockEdge || 'Bottom';
+            const omniKey = state.omniHotkeyPreset || 'Alt+Space';
+            const appVer = state.version || '2.3.1';
+            const sig = `${tourStep}|${curTheme}|${curDock}|${curEdge}|${omniKey}|${appVer}`;
+            if (sig === lastTourSig && el.classList.contains('open')) return;
+            lastTourSig = sig;
+
+            const navTabs = [
+                { n: 1, label: 'Kurulum' },
+                { n: 2, label: 'Damla & Donanım' },
+                { n: 3, label: 'Dock & Pencere' },
+                { n: 4, label: 'Raf, QR & Pano' },
+                { n: 5, label: 'GIF & Telemetri' },
+                { n: 6, label: 'Arama & Sistem' }
+            ];
+
+            let heroTitle = '';
+            let heroSub = '';
+            let bodyHtml = '';
+            let tryBtnHtml = '';
+
+            if (tourStep === 0) {
+                heroTitle = '1. Hızlı Kurulum & Canlı Görünüm Seçici';
+                heroSub = 'Aşağıdaki seçimler masaüstünde anında uygulanır; dilediğin zaman Stüdyo sekmesinden değiştirebilirsin.';
+                bodyHtml = `
+                    <div class="tour-setup-box">
+                        <div class="tour-setup-row">
+                            <span class="tour-setup-lbl">Tema Ailesi</span>
+                            <div style="display:flex;gap:5px;flex-wrap:wrap;flex:1;">
+                                <button class="pill-btn ${curTheme==='obsidian-pro-dark'?'accent':''}" onclick="send('applyTheme',{id:'obsidian-pro-dark'})">Obsidian Pro (Koyu)</button>
+                                <button class="pill-btn ${curTheme==='aurora-glass-light'?'accent':''}" onclick="send('applyTheme',{id:'aurora-glass-light'})">Aurora Glass (Açık)</button>
+                                <button class="pill-btn ${curTheme==='aurora-glass-dark'?'accent':''}" onclick="send('applyTheme',{id:'aurora-glass-dark'})">Aurora Koyu</button>
+                                <button class="pill-btn ${curTheme==='nebula-dark'?'accent':''}" onclick="send('applyTheme',{id:'nebula-dark'})">Nebula</button>
+                                <button class="pill-btn ${curTheme==='high-contrast-dark'?'accent':''}" onclick="send('applyTheme',{id:'high-contrast-dark'})">Yüksek Kontrast</button>
+                            </div>
+                        </div>
+                        <div class="tour-setup-row">
+                            <span class="tour-setup-lbl">Dock Konumu</span>
+                            <div style="display:flex;gap:5px;flex-wrap:wrap;flex:1;">
+                                <button class="pill-btn ${curEdge==='Bottom'?'accent':''}" onclick="send('setDockEdge',{edge:'Bottom'})">Alt Yatay</button>
+                                <button class="pill-btn ${curEdge==='Left'?'accent':''}" onclick="send('setDockEdge',{edge:'Left'})">Sol Dikey Ray</button>
+                                <button class="pill-btn ${curEdge==='Right'?'accent':''}" onclick="send('setDockEdge',{edge:'Right'})">Sağ Dikey Ray</button>
+                            </div>
+                        </div>
+                        <div class="tour-setup-row">
+                            <span class="tour-setup-lbl">Dock Davranışı</span>
+                            <div style="display:flex;gap:5px;flex-wrap:wrap;flex:1;">
+                                <button class="pill-btn ${curDock==='SmartDodge'?'accent':''}" onclick="send('setDockMode',{mode:'SmartDodge'})">Akıllı Kaçınma (Önerilen)</button>
+                                <button class="pill-btn ${curDock==='AlwaysVisible'?'accent':''}" onclick="send('setDockMode',{mode:'AlwaysVisible'})">Her Zaman Sabit</button>
+                                <button class="pill-btn ${curDock==='AutoHide'?'accent':''}" onclick="send('setDockMode',{mode:'AutoHide'})">Otomatik Gizle</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tour-grid">
+                        ${tourCard(SVG.lock, 'Sıfır UAC & Güvenli Kabuk', 'asInvoker', 'ok', 'Yönetici izni istemez, explorer.exe’ye DLL enjekte etmez. Koruma watchdog’u kapanışta Windows çubuğunu anında geri getirir.')}
+                        ${tourCard(SVG.monitor, 'Çoklu Monitör & Karma DPI', '3+ Ekran', '', 'Her ekrana ayrı Üst Damla + Dock yerleştirir; tam ekran oyun/video açıldığında yalnızca o ekranda otomatik uykuya geçer.')}
+                    </div>`;
+            } else if (tourStep === 1) {
+                heroTitle = '2. Üst Damla (Aurora Crown) & Canlı Donanım Kontrolü';
+                heroSub = 'Ekranın üst ortasındaki akışkan damlanın üzerine gelerek tüm donanım, medya ve gizlilik verilerine tek dokunuşla ulaş.';
+                bodyHtml = `
+                    <div class="tour-grid">
+                        ${tourCard(SVG.vol, 'Canlı Donanım OSD HUD', 'Sıfır Gecikme', 'ok', 'Ses, sessiz, parlaklık, mikrofon, Caps Lock ve Num Lock tuşlarında Windows kutusunu bastırır; Üst Damla’da akıcı çubuk gösterir.')}
+                        ${tourCard(SVG.sun, 'Harici Monitör DDC/CI Parlaklık', 'EDID + I2C', '', 'Dahili dizüstü ekranı (WMI) yanında harici monitörleri gerçek model adıyla (örn. VA2715-QHD) algılayıp takılmadan ayarlar.')}
+                        ${tourCard(SVG.bluetooth, 'Bluetooth Cihaz Pil Yüzdeleri', 'PnP + BLE', 'warn', 'Kulaklık, fare, klavye ve oyun kollarının şarj yüzdesini cihaz ikonuyla canlı gösterir; %15 altında düşük pil uyarısı verir.')}
+                        ${tourCard(SVG.camera, 'Kamera & Mikrofon Gizlilik LED’i', 'Canlı Güvenlik', 'hot', 'Hangi uygulamanın kamera (yeşil LED) veya mikrofon (turuncu LED) kullandığını hayalet süreç korumasıyla anlık bildirir.')}
+                        ${tourCard(SVG.headphones, 'Medya & Uygulama Ses Yönlendirme', 'GSMTC', '', 'Spotify, YouTube ve tarayıcıyı kontrol et; Uygulama Ses Mikseri’nden her uygulama için farklı kulaklık/hoparlör çıkışı seç.')}
+                        ${tourCard(SVG.coffee, 'Uyanık Tut (Awake) & Odak Modu', '1 Tık', '', 'Sunum, indirme veya izleme sırasında ekran kararmasını ve uykuyu tek tıkla (süresiz veya zamanlı) engelle; bildirimleri sustur.')}
+                    </div>`;
+                tryBtnHtml = `<button class="pill-btn" onclick="tourJumpToDeck('control')">${SVG.sliders}<span>Kontrol Merkezini Aç</span></button>`;
+            } else if (tourStep === 2) {
+                heroTitle = '3. Kristal Dock, Dikey Ray & Akıllı Pencere Yönetimi';
+                heroSub = 'Fitts Yasası ile sıfır kaymalı hassas tıklama, dikey kenar desteği ve fareyle her pencereyi zahmetsizce yönetme.';
+                bodyHtml = `
+                    <div class="tour-grid">
+                        ${tourCard(SVG.sparkles, 'Sıfır Kaymalı Hover Dalgası', 'Fitts Yasası', 'ok', 'İkonlar üzerinde gezerken komşu simgeler sağa-sola kaymaz; tıklamak istediğin uygulama asla hedeften kaçmaz.')}
+                        ${tourCard(SVG.layers, 'Sol / Sağ Dikey Ray & Akıllı Derle', '2×2 Mozaik', '', 'Dikey modda yalın squircle ray, 175 ms niyet gecikmeli yan etiketler, kategori mozaiği ve dikey sürükle-bırak sabitleme.')}
+                        ${tourCard(SVG.desktop, 'Radyal Hub & 60 FPS DWM Önizleme', 'Tekerlek', '', 'Çok pencereli simgeye gelince dairesel küre ve canlı 60 FPS pencere önizlemesi açılır; fare tekerleğiyle pencereler arasında dön.')}
+                        ${tourCard(SVG.moveWin, 'Alt + Sürükle Pencere & Dock', 'Alt+Tık', '', 'Herhangi bir pencereyi ortasından Alt+Sol Tık ile taşı, Alt+Sağ Tık ile boyutlandır; aynı hareketle Dock kenarını ve boyutunu (%75–%135) ayarla.')}
+                        ${tourCard(SVG.grid, 'Shift + Sürükle Snap Zones', 'Cam Bölgeler', '', 'Pencere taşırken Shift’e basılı tut; 65/35 Kodlama, 50/50 Böl, Üçlü veya Zen odak bölgelerine pürüzsüzce yerleştir.')}
+                        ${tourCard(SVG.folder, 'Klasör Yığınları & Sürükle-Uyandır', 'Drag & Drop', '', 'Dock’a klasör bırakıp hızlı açılır yığın oluştur; bir dosyayı açık pencere simgesinin üzerine tutunca o pencere anında öne gelir.')}
+                    </div>`;
+            } else if (tourStep === 3) {
+                heroTitle = '4. Süper Raf, Yerel QR AirDrop & SQLite Pano Kasası';
+                heroSub = 'Dosya aktarımı, kalıcı pano geçmişi, hızlı notlar ve odak zamanlayıcısı tek bir cam merkezde.';
+                bodyHtml = `
+                    <div class="tour-grid">
+                        ${tourCard(SVG.inbox, '3 Bölgeli Üst Damla Sürükle-Bırak', 'Akıllı Drop', 'ok', 'Dosya sürüklerken Üst Damla 3 bölgeye açılır: Dosya Rafına Koy, QR ile Telefona Gönder veya Hızlı Dönüştür / ZIP.')}
+                        ${tourCard(SVG.qr, 'Yerel Ağ QR AirDrop', 'Sıfır Bulut', '', 'Dosyaları internet kullanmadan aynı Wi-Fi’deki telefonuna yerel HTTP sunucusu ve anlık QR kod ile saniyeler içinde gönder.')}
+                        ${tourCard(SVG.zip, 'Tek Hareketle Dönüştür & ZIP', 'PNG ↔ JPG', '', 'Tek görseli anında optimize JPG/PNG’ye çevir; birden fazla dosya veya klasörü bırakınca zaman damgalı ZIP arşivi oluştur.')}
+                        ${tourCard(SVG.clip, 'SQLite Pano Kasası & Oto-Yapıştır', 'Kalıcı', '', 'Metin, ekran görüntüsü, HEX/RGB renk kartı ve link geçmişini saklar; Oto-Yapıştır açıkken tıkladığın öğe önceki pencereye direkt yapışır.')}
+                        ${tourCard(SVG.timer, 'Sanal Masaüstü & Pomodoro Odak', 'M1/2 · 25 dk', '', 'Tek tıkla sanal masaüstleri (M1/2) arasında geç, hazır pencere düzenleri uygula ve 25/45/5 dk odak sayacını Üst Damla’dan izle.')}
+                        ${tourCard(SVG.note, 'Hızlı Cep Notu & Mini Takvim', 'Oto-Kayıt', '', 'Fikir ve görevlerini anında not al (otomatik diske kaydedilir); Üst Damla saatine tıklayarak tarih bazlı ajanda notları ekle.')}
+                    </div>`;
+                tryBtnHtml = `<button class="pill-btn" onclick="tourJumpToDeck('shelf')">${SVG.layers}<span>Süper Raf & Pano’yu Aç</span></button>`;
+            } else if (tourStep === 4) {
+                heroTitle = '5. Üretkenlik Araçları, GIF Kaydedici & Canlı Telemetri';
+                heroSub = 'Ekran kaydı, çevrimdışı metin okuma, piksel renk seçici ve gerçek zamanlı sistem performansı.';
+                bodyHtml = `
+                    <div class="tour-grid">
+                        ${tourCard(SVG.record, '10 FPS Animasyonlu GIF Kaydedici', 'Bayer + Çerçeve', 'hot', 'Seçtiğin bölgeyi kayda girmeyen kırmızı çerçeve ve Bayer dithering ile net GIF89a olarak kaydedip otomatik panoya kopyalar.')}
+                        ${tourCard(SVG.scanText, 'Çevrimdışı Ekran OCR', 'İnternetsiz', 'ok', 'Video, görsel veya kopyalanamayan herhangi bir ekran alanını çiz; Windows yerel OCR motoruyla metni anında panoya çıkar.')}
+                        ${tourCard(SVG.pipette, 'Ekran Renk Damlalığı', 'HEX / RGB / HSL', '', 'Büyüteçli piksel seçiciyle ekrandaki herhangi bir rengin kodunu tek tıkla yakala ve Pano Kasası’nda renk kartı olarak gör.')}
+                        ${tourCard(SVG.activity, 'Canlı Telemetri Eğrileri & Top-3 RAM', 'Çift-Tık Koru', '', '1.5 sn canlı CPU, RAM, Ağ akışı SVG eğrileri; en çok RAM harcayan 3 süreç için yanlışlıkla kapatmayı önleyen 3.5 sn onay kilidi.')}
+                        ${tourCard(SVG.bell, 'Canlı Windows Bildirimleri & Tepsi', 'Tüm Uygulamalar', '', 'WhatsApp, Teams ve sistem bildirimlerini Üst Damla’da topla; arka planda çalışan sistem tepsisi uygulamalarını bellek kullanımıyla gör.')}
+                        ${tourCard(SVG.bolt, 'Uyku Destekli Düşük Bellek Motoru', '301 MB / 3 Ekran', '', 'Tek merkezi imleç koordinatörü hareketsizken otomatik uykuya geçer; paylaşımlı tek WebView2 renderer ile çok düşük RAM tüketir.')}
+                    </div>`;
+                tryBtnHtml = `<button class="pill-btn" onclick="tourJumpToDeck('metrics')">${SVG.activity}<span>Telemetri Sekmesini Aç</span></button>`;
+            } else {
+                heroTitle = '6. OmniSearch, Kısayollar, Yedekleme & Otomatik Güncelleme';
+                heroSub = 'Klavyeden elini kaldırmadan tüm bilgisayarını yönet ve yeni sürümleri tek tıkla al.';
+                bodyHtml = `
+                    <div class="tour-grid">
+                        ${tourCard(SVG.search, `Evrensel OmniSearch (${escHtml(omniKey)})`, '250+ Uygulama', 'ok', 'Store/Win32 uygulamalar, yerel dosyalar, canlı hesap makinesi (18% of 4500), birim çevirici (100 km to mi) ve > komutları.')}
+                        ${tourCard(SVG.palette, 'Çalışma Profilleri & Tek Dokunuş Win', 'İş / Oyun / Akış', '', 'Profiller arası tek tıkla tema/odak değiştir; istersen Stüdyo’dan tek dokunuş Windows tuşunu OmniSearch’e bağla (Win+D/E/L korunur).')}
+                        ${tourCard(SVG.exportPkg, 'JSON Yedekleme & Geri Yükleme', 'Taşınabilir', '', 'Tüm ayarlar, seçili tema, sabitli kısayollar ve takvim notlarını tek JSON dosyasıyla yedekle veya başka bilgisayara aktar.')}
+                        ${tourCard(SVG.refresh, 'GitHub SHA-256 Otomatik Güncelleme', `v${escHtml(appVer)}`, '', 'Yeni sürüm çıkınca Üst Damla’da bildirim al; Stüdyo → Kontrol Et ile ayarlarını kaybetmeden SHA-256 doğrulamalı tek tıkla güncelle.')}
+                    </div>
+                    <div class="tour-kbd-strip">
+                        <div class="tour-kbd-item"><span>OmniSearch</span><span class="tour-kbd">${escHtml(omniKey)}</span></div>
+                        <div class="tour-kbd-item"><span>Kontrol Merkezi</span><span class="tour-kbd">Ctrl+Alt+A</span></div>
+                        <div class="tour-kbd-item"><span>Stüdyo & Ayarlar</span><span class="tour-kbd">Ctrl+Alt+S</span></div>
+                        <div class="tour-kbd-item"><span>Pencere / Dock Taşı</span><span class="tour-kbd">Alt+Sol Tık</span></div>
+                        <div class="tour-kbd-item"><span>Pencere / Dock Boyut</span><span class="tour-kbd">Alt+Sağ Tık</span></div>
+                        <div class="tour-kbd-item"><span>Snap Zones</span><span class="tour-kbd">Shift+Sürükle</span></div>
+                    </div>`;
+                tryBtnHtml = `<button class="pill-btn" onclick="tourJumpToOmni()">${SVG.search}<span>OmniSearch’ü Dene</span></button>`;
+            }
+
+            const progPct = Math.round(((tourStep + 1) / 6) * 100);
             el.className = 'glass-shell open';
             el.innerHTML = `
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
                     <div style="display:flex;align-items:center;gap:10px;">
                         <div class="orb">✦</div>
                         <div>
-                            <div style="font-size:15px;font-weight:800;letter-spacing:-0.015em;">Project Aurora'ya Hoş Geldin</div>
-                            <div style="font-size:11.5px;color:var(--text-2);">5 saniyede görünümünü seç, masaüstünü anında hızlandır</div>
+                            <div style="font-size:15px;font-weight:800;letter-spacing:-0.015em;">Project Aurora v${escHtml(appVer)} — Kapsamlı Özellik Turu</div>
+                            <div style="font-size:11px;color:var(--text-2);">Adım ${tourStep + 1} / 6 · Yeni nesil Dinamik Ada, Kristal Dock ve tüm üretkenlik araçları</div>
                         </div>
                     </div>
-                    <button class="micro-btn" onclick="finishOnboarding()">${SVG.close}</button>
-                </div>
-
-                <div>
-                    <div class="card-title" style="margin-bottom:6px;"><span>1. Tema Tercihin</span></div>
-                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                        <button class="pill-btn ${curTheme==='aurora-glass-light'?'accent':''}" onclick="send('applyTheme',{id:'aurora-glass-light'})">Aurora Kristal Açık</button>
-                        <button class="pill-btn ${curTheme==='obsidian-pro-dark'?'accent':''}" onclick="send('applyTheme',{id:'obsidian-pro-dark'})">Obsidian Pro Koyu</button>
-                        <button class="pill-btn ${curTheme==='nebula-dark'?'accent':''}" onclick="send('applyTheme',{id:'nebula-dark'})">Nebula Siber</button>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <span class="pill-btn" style="height:24px;padding:0 9px;font-size:10.5px;pointer-events:none;">${tourStep + 1} / 6</span>
+                        <button class="micro-btn" onclick="finishOnboarding()" title="Turu Kapat (ESC)">${SVG.close}</button>
                     </div>
                 </div>
 
-                <div>
-                    <div class="card-title" style="margin-bottom:6px;"><span>2. Alt Dock Davranışı</span></div>
-                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                        <button class="pill-btn ${curDock==='SmartDodge'?'accent':''}" onclick="send('setDockMode',{mode:'SmartDodge'})">Akıllı Kaçınma (Önerilen)</button>
-                        <button class="pill-btn ${curDock==='AlwaysVisible'?'accent':''}" onclick="send('setDockMode',{mode:'AlwaysVisible'})">Her Zaman Sabit</button>
-                        <button class="pill-btn ${curDock==='AutoHide'?'accent':''}" onclick="send('setDockMode',{mode:'AutoHide'})">Otomatik Gizle</button>
+                <div class="tour-nav">
+                    ${navTabs.map((t, i) => `
+                        <button class="tour-nav-btn ${i === tourStep ? 'active' : ''}" onclick="setTourStep(${i})">
+                            <span class="tour-nav-num">${t.n}</span>
+                            <span>${t.label}</span>
+                        </button>`).join('')}
+                </div>
+
+                <div class="tour-hero">
+                    <div style="min-width:0;">
+                        <div class="tour-hero-title">${heroTitle}</div>
+                        <div class="tour-hero-sub">${heroSub}</div>
                     </div>
+                    ${tryBtnHtml}
                 </div>
 
-                <div class="onb-tips">
-                    <div class="onb-tip"><strong>Dairesel Halka & Tekerlek</strong><span>Çok pencereli simgeye gelince dairesel küre + 60 FPS önizleme açılır; fare tekerleği pencereleri döner.</span></div>
-                    <div class="onb-tip"><strong>Evrensel Arama (${escHtml(state.omniHotkeyPreset || 'Alt+Space')})</strong><span>280+ Store & Win32 uygulama, yerel dosyalar, ayarlar, birim çevirici ve <code>&gt;</code> komut çalıştırıcı.</span></div>
-                    <div class="onb-tip"><strong>Üst Damla Ada</strong><span>Üzerine gelince açılır; canlı Windows bildirimleri (🔔), sanal masaüstü (M1/2) ve ses çıkışı elinin altında.</span></div>
-                    <div class="onb-tip"><strong>Sürükle-Bırak & Klasör Yığını</strong><span>Dock'a dosya sürükleyip bekleyince pencere öne gelir; klasör bırakınca yığın olarak sabitlenir.</span></div>
+                <div class="tour-body">
+                    ${bodyHtml}
                 </div>
 
-                <div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;padding-top:4px;">
-                    <button class="pill-btn accent" style="height:34px;padding:0 18px;font-size:12.5px;" onclick="finishOnboarding()">
-                        ${SVG.sparkles}<span>Aurora'yı Kullanmaya Başla</span>
-                    </button>
+                <div class="tour-footer">
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <div class="tour-prog-track"><div class="tour-prog-fill" style="width:${progPct}%;"></div></div>
+                        <span style="font-size:10.5px;color:var(--text-2);">← / → Adım Değiştir · ESC Kapat</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:7px;">
+                        <button class="pill-btn" style="height:31px;padding:0 13px;font-size:11.5px;${tourStep===0?'opacity:0.42;pointer-events:none;':''}" onclick="stepTour(-1)">
+                            ${SVG.chevL}<span>Önceki</span>
+                        </button>
+                        ${tourStep < 5 ? `
+                        <button class="pill-btn accent" style="height:31px;padding:0 15px;font-size:11.5px;" onclick="stepTour(1)">
+                            <span>Sonraki Adım</span>${SVG.chevR}
+                        </button>` : `
+                        <button class="pill-btn accent" style="height:31px;padding:0 16px;font-size:11.5px;" onclick="finishOnboarding()">
+                            ${SVG.sparkles}<span>Turu Tamamla ve Başla</span>
+                        </button>`}
+                    </div>
                 </div>
             `;
         }
@@ -2014,6 +2207,13 @@ public static partial class AuroraSurfaceTemplates
                 }
             });
 
+            window.addEventListener('keydown', e => {
+                if (!isOnboardingVisible()) return;
+                if (e.key === 'Escape') { e.preventDefault(); finishOnboarding(); }
+                else if (e.key === 'ArrowRight') { e.preventDefault(); stepTour(1); }
+                else if (e.key === 'ArrowLeft') { e.preventDefault(); stepTour(-1); }
+            });
+
             window.addEventListener('resize', () => requestAnimationFrame(reportHitRects));
 
             window.addEventListener('dragover', e => {
@@ -2118,6 +2318,8 @@ public static partial class AuroraSurfaceTemplates
             } else if (msg.type === 'toggleDeck') {
                 activeTab = msg.tab || 'control';
                 toggleCrown(!expanded);
+            } else if (msg.type === 'openTour') {
+                openOnboardingTour(msg.step || 0);
             } else if (msg.type === 'outsideDeactivate') {
                 if (isAnyPopupOpen()) {
                     expanded = false;
