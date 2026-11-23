@@ -28,15 +28,17 @@ public sealed record ShellRuntimePreferences(
     int DockScalePercent = 100,
     int DockOffsetPercent = 0,
     bool ClipboardAutoPasteEnabled = false,
-    bool ReserveDockWorkArea = true)
+    bool? ReserveDockWorkArea = null)
 {
     public string EffectiveDockMode =>
         DockVisibilityMode is "AlwaysVisible" or "SmartDodge" or "AutoHide"
             ? DockVisibilityMode
             : (DockAutoHide ? "AutoHide" : "AlwaysVisible");
 
+    public bool EffectiveReserveDockWorkAreaPreference => ReserveDockWorkArea ?? true;
+
     public bool EffectiveReserveDockWorkArea =>
-        ReserveDockWorkArea && !string.Equals(EffectiveDockMode, "AutoHide", StringComparison.OrdinalIgnoreCase);
+        EffectiveReserveDockWorkAreaPreference && !string.Equals(EffectiveDockMode, "AutoHide", StringComparison.OrdinalIgnoreCase);
 
     public string EffectiveDockDensity =>
         DockDensity is "Compact" or "Standard" or "Cozy"

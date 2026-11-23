@@ -197,6 +197,14 @@ public sealed class V2PillarsTests
             var clampedPrefs = store.Load();
             Assert.Equal(135, clampedPrefs.EffectiveDockScalePercent);
             Assert.Equal(-100, clampedPrefs.EffectiveDockOffsetPercent);
+
+            // Legacy v2.3.2 shell_settings.json without "reserveDockWorkArea" MUST default to enabled (true)
+            string legacyPath = Path.Combine(dir, "legacy_v232_settings.json");
+            File.WriteAllText(legacyPath, """{"dockVisibilityMode":"AlwaysVisible","dockDensity":"Compact","dockEdge":"Bottom"}""");
+            var legacyLoaded = new ShellPreferencesStore(legacyPath).Load();
+            Assert.True(legacyLoaded.EffectiveReserveDockWorkAreaPreference);
+            Assert.True(legacyLoaded.EffectiveReserveDockWorkArea);
+            Assert.False((legacyLoaded with { DockVisibilityMode = "AutoHide" }).EffectiveReserveDockWorkArea);
         }
         finally
         {

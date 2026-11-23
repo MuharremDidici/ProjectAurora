@@ -398,6 +398,7 @@ internal sealed partial class AuroraDesktopCoordinator : ApplicationContext
             {
                 _appBarService.HideNativeWindowsTaskbar();
                 SyncDockWorkAreaReservation();
+                ScheduleDockWorkAreaReapply();
                 SpawnCrashWatchdogIfNeeded();
             }
 
@@ -717,7 +718,10 @@ internal sealed partial class AuroraDesktopCoordinator : ApplicationContext
                     SendToast(null, "Uyanık Tut Süresi Doldu", "Normal Windows güç yönetimine dönüldü.");
                 }
                 if (!_allMonitorsFullscreen)
+                {
+                    SyncDockWorkAreaReservation();
                     await RefreshAndBroadcastStateAsync(windowTopologyOnly: false);
+                }
             };
             _syncTimer.Start();
 
@@ -856,6 +860,8 @@ internal sealed partial class AuroraDesktopCoordinator : ApplicationContext
             {
                 await Task.Delay(350);
                 _appBarService.EnforceNativeTaskbarSuppressed();
+                SyncDockWorkAreaReservation();
+                ScheduleDockWorkAreaReapply();
                 await ReconcileMonitorHostsAsync();
                 _ = Task.Run(() => { try { _ddcBrightnessService.DiscoverMonitors(); } catch { } });
                 await Task.Delay(300);

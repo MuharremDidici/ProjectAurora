@@ -359,6 +359,7 @@ internal sealed partial class AuroraDesktopCoordinator
                     if (nextHide)
                     {
                         SyncDockWorkAreaReservation();
+                        ScheduleDockWorkAreaReapply();
                         SpawnCrashWatchdogIfNeeded();
                     }
                     _shellPrefs = _shellPrefs with { HideNativeTaskbarWhileActive = nextHide };
@@ -581,14 +582,15 @@ internal sealed partial class AuroraDesktopCoordinator
 
             case "toggleReserveDockWorkArea":
                 {
-                    _shellPrefs = _shellPrefs with { ReserveDockWorkArea = !_shellPrefs.ReserveDockWorkArea };
+                    bool nextReserve = !_shellPrefs.EffectiveReserveDockWorkAreaPreference;
+                    _shellPrefs = _shellPrefs with { ReserveDockWorkArea = nextReserve };
                     _shellPrefsStore.Save(_shellPrefs);
                     SyncDockWorkAreaReservation();
                     EvaluateFullscreenYieldPerMonitor();
                     SendToast(
                         sourceMonitorId,
-                        _shellPrefs.ReserveDockWorkArea ? "Dock Alanı Ayrıldı" : "Tam Ekran Pencere Alanı",
-                        _shellPrefs.ReserveDockWorkArea
+                        nextReserve ? "Dock Alanı Ayrıldı" : "Tam Ekran Pencere Alanı",
+                        nextReserve
                             ? "Tam ekran pencereler Dock'un hemen üstünde durur; yazı kutuları artık kapanmaz."
                             : "Pencereler tüm ekran yüksekliğini kullanır (Akıllı Kaçınma ile uyumludur).");
                     await RefreshAndBroadcastStateAsync(forceFull: true);
@@ -805,6 +807,8 @@ internal sealed partial class AuroraDesktopCoordinator
                         _hotkeyWindow?.RegisterHotkeys(_shellPrefs.OmniHotkeyPreset);
                         _appBarService.SetNativeTaskbarHiddenWhileActive(_shellPrefs.HideNativeTaskbarWhileActive);
                         RecomputeAndApplyAllMonitorBounds();
+                        if (_shellPrefs.HideNativeTaskbarWhileActive)
+                            ScheduleDockWorkAreaReapply();
 
                         if (!string.IsNullOrWhiteSpace(bundle.ActiveProfileId))
                             await _workspaceVm.ActivateProfileAsync(bundle.ActiveProfileId);
@@ -1183,6 +1187,7 @@ internal sealed partial class AuroraDesktopCoordinator
                         density = "Standard";
                     _shellPrefs = _shellPrefs with { DockDensity = density, DockScalePercent = 100 };
                     _shellPrefsStore.Save(_shellPrefs);
+                    SyncDockWorkAreaReservation();
                     await RefreshAndBroadcastStateAsync(forceFull: true);
                     break;
                 }
@@ -1491,6 +1496,7 @@ internal sealed partial class AuroraDesktopCoordinator
                             _trayPeekTimer = null;
                             _appBarService.SetNativeTaskbarHiddenWhileActive(true);
                             RecomputeAndApplyAllMonitorBounds();
+                            ScheduleDockWorkAreaReapply();
                             await RefreshAndBroadcastStateAsync();
                         };
                         _trayPeekTimer.Start();

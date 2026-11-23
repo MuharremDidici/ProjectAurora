@@ -72,11 +72,7 @@ public sealed class Win32AppBarService(IAuroraLogger logger) : IAppBarService
     private const uint SWP_HIDEWINDOW = 0x0080;
     private const uint MONITOR_DEFAULTTONEAREST = 0x00000002;
     private const uint WM_SETTINGCHANGE = 0x001A;
-    private const uint SMTO_ABORTIFHUNG = 0x0002;
     private static readonly nint HWND_BROADCAST = new(0xFFFF);
-
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-    private static extern nint SendMessageTimeoutW(nint hWnd, uint msg, nuint wParam, nint lParam, uint fuFlags, uint uTimeout, out nint lpdwResult);
 
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -301,13 +297,16 @@ public sealed class Win32AppBarService(IAuroraLogger logger) : IAppBarService
         double scaleFactor,
         string dockEdge,
         int dockScalePercent,
-        bool reserve)
+        bool reserve,
+        string dockDensity = "Standard")
     {
         if (!reserve || monitorBounds.Width <= 0 || monitorBounds.Height <= 0)
             return monitorBounds;
 
         double dpi = Math.Max(1.0, scaleFactor);
         double dockMul = Math.Clamp(dockScalePercent <= 0 ? 100 : dockScalePercent, 75, 135) / 100.0;
+        bool compact = string.Equals(dockDensity, "Compact", StringComparison.OrdinalIgnoreCase);
+        bool cozy = string.Equals(dockDensity, "Cozy", StringComparison.OrdinalIgnoreCase);
 
         int left = monitorBounds.X;
         int top = monitorBounds.Y;
@@ -316,17 +315,20 @@ public sealed class Win32AppBarService(IAuroraLogger logger) : IAppBarService
 
         if (string.Equals(dockEdge, "Left", StringComparison.OrdinalIgnoreCase))
         {
-            int inset = (int)Math.Round(Math.Clamp(56.0 * dockMul + 14.0, 56.0, 114.0) * dpi);
+            double baseSide = compact ? 48.0 : (cozy ? 66.0 : 56.0);
+            int inset = (int)Math.Round(Math.Clamp(baseSide * dockMul + 14.0, 52.0, 122.0) * dpi);
             left = Math.Min(right - 320, left + inset);
         }
         else if (string.Equals(dockEdge, "Right", StringComparison.OrdinalIgnoreCase))
         {
-            int inset = (int)Math.Round(Math.Clamp(56.0 * dockMul + 14.0, 56.0, 114.0) * dpi);
+            double baseSide = compact ? 48.0 : (cozy ? 66.0 : 56.0);
+            int inset = (int)Math.Round(Math.Clamp(baseSide * dockMul + 14.0, 52.0, 122.0) * dpi);
             right = Math.Max(left + 320, right - inset);
         }
         else
         {
-            int inset = (int)Math.Round(Math.Clamp(58.0 * dockMul + 14.0, 58.0, 118.0) * dpi);
+            double baseBottom = compact ? 50.0 : (cozy ? 68.0 : 58.0);
+            int inset = (int)Math.Round(Math.Clamp(baseBottom * dockMul + 14.0, 54.0, 126.0) * dpi);
             bottom = Math.Max(top + 240, bottom - inset);
         }
 
@@ -335,10 +337,11 @@ public sealed class Win32AppBarService(IAuroraLogger logger) : IAppBarService
 
     /// <summary>
     /// Applies (or releases) Aurora's Dock WorkArea reservation across all monitors via SPI_SETWORKAREA
-    /// with a bounded 220 ms SMTO_ABORTIFHUNG broadcast so Windows DWM immediately resizes maximized apps
-    /// cleanly above/beside the Dock without ever hanging or touching explorer.exe.
+    /// (fWinIni = 0, NEVER broadcasting WM_SETTINGCHANGE(SPI_SETWORKAREA) to HWND_BROADCAST because
+    /// Shell_TrayWnd responds to that broadcast in ABS_AUTOHIDE mode by immediately wiping rcWork back
+    /// to 100%!), and directly notifies & refits already-maximized user windows cleanly above/beside the Dock.
     /// </summary>
-    public void ApplyDockWorkAreaReservation(string dockEdge, int dockScalePercent, bool reserve)
+    public void ApplyDockWorkAreaReservation(string dockEdge, int dockScalePercent, bool reserve, string dockDensity = "Standard")
     {
         if (!_nativeTaskbarSuppressed || _disposed)
             return;
@@ -359,7 +362,7 @@ public sealed class Win32AppBarService(IAuroraLogger logger) : IAppBarService
                     dpiX = dx;
 
                 var monPx = new PhysicalPixelRect(info.rcMonitor.Left, info.rcMonitor.Top, info.rcMonitor.Width, info.rcMonitor.Height);
-                var desired = ComputeDockReservedWorkArea(monPx, dpiX / 96.0, dockEdge, dockScalePercent, reserve);
+                var desired = ComputeDockReservedWorkArea(monPx, dpiX / 96.0, dockEdge, dockScalePercent, reserve, dockDensity);
 
                 if (info.rcWork.Left != desired.X || info.rcWork.Top != desired.Y ||
                     info.rcWork.Right != desired.Right || info.rcWork.Bottom != desired.Bottom)
@@ -379,7 +382,6 @@ public sealed class Win32AppBarService(IAuroraLogger logger) : IAppBarService
 
             if (anyChanged)
             {
-                SendMessageTimeoutW(HWND_BROADCAST, WM_SETTINGCHANGE, SPI_SETWORKAREA, 0, SMTO_ABORTIFHUNG, 220, out _);
                 RefitAlreadyMaximizedWindowsToWorkArea();
             }
         }
@@ -405,6 +407,9 @@ public sealed class Win32AppBarService(IAuroraLogger logger) : IAppBarService
                 if (pid == 0 || pid == ownPid)
                     return true;
 
+                if (IsNativeTaskbarWindow(hwnd))
+                    return true;
+
                 long ex = NativeMethods.GetWindowLongPtr64(hwnd, NativeMethods.GWL_EXSTYLE);
                 if ((ex & NativeMethods.WS_EX_TOOLWINDOW) != 0)
                     return true;
@@ -420,6 +425,9 @@ public sealed class Win32AppBarService(IAuroraLogger logger) : IAppBarService
                 var wa = info.rcWork;
                 if (!GetWindowRect(hwnd, out var cur))
                     return true;
+
+                // Notify ONLY this user application window (never Shell_TrayWnd) so Chromium/Electron updates WM_GETMINMAXINFO
+                SendNotifyMessageW(hwnd, WM_SETTINGCHANGE, SPI_SETWORKAREA, 0);
 
                 bool needsRefit =
                     Math.Abs(cur.Bottom - (wa.Bottom + framePad)) > 6 ||

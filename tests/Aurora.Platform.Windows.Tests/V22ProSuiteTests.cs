@@ -273,7 +273,13 @@ public sealed class V22ProSuiteTests
         var waBottom = Win32AppBarService.ComputeDockReservedWorkArea(mon, 1.0, "Bottom", 100, reserve: true);
         Assert.Equal(0, waBottom.X);
         Assert.Equal(2560, waBottom.Width);
-        Assert.InRange(mon.Bottom - waBottom.Bottom, 64, 80);
+        Assert.Equal(72, mon.Bottom - waBottom.Bottom);
+
+        // Density-aware channels (Compact 64px < Standard 72px < Cozy 82px)
+        var waCompact = Win32AppBarService.ComputeDockReservedWorkArea(mon, 1.0, "Bottom", 100, reserve: true, dockDensity: "Compact");
+        var waCozy = Win32AppBarService.ComputeDockReservedWorkArea(mon, 1.0, "Bottom", 100, reserve: true, dockDensity: "Cozy");
+        Assert.Equal(64, mon.Bottom - waCompact.Bottom);
+        Assert.Equal(82, mon.Bottom - waCozy.Bottom);
 
         var waLeft = Win32AppBarService.ComputeDockReservedWorkArea(mon, 1.0, "Left", 100, reserve: true);
         Assert.InRange(waLeft.X, 62, 78);

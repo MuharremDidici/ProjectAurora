@@ -164,7 +164,39 @@ internal sealed partial class AuroraDesktopCoordinator
         _appBarService.ApplyDockWorkAreaReservation(
             _shellPrefs.EffectiveDockEdge,
             _shellPrefs.EffectiveDockScalePercent,
-            _shellPrefs.EffectiveReserveDockWorkArea);
+            _shellPrefs.EffectiveReserveDockWorkArea,
+            _shellPrefs.EffectiveDockDensity);
+    }
+
+    /// <summary>
+    /// Re-enforces Dock WorkArea reservation after Windows Explorer asynchronously processes
+    /// SHAppBarMessage(ABM_SETSTATE, ABS_AUTOHIDE) or a display topology change (~150–900 ms).
+    /// </summary>
+    private void ScheduleDockWorkAreaReapply()
+    {
+        if (!_appBarService.IsNativeTaskbarSuppressed)
+            return;
+
+        _ = Task.Run(async () =>
+        {
+            foreach (int delayMs in new[] { 450, 1250 })
+            {
+                try
+                {
+                    await Task.Delay(delayMs);
+                    var prim = GetPrimaryMonitorHost();
+                    if (prim is not null && !prim.CrownForm.IsDisposed && prim.CrownForm.IsHandleCreated)
+                    {
+                        prim.CrownForm.BeginInvoke(() => SyncDockWorkAreaReservation());
+                    }
+                    else
+                    {
+                        SyncDockWorkAreaReservation();
+                    }
+                }
+                catch { }
+            }
+        });
     }
 
     private void RecomputeAndApplyAllMonitorBounds()
@@ -488,6 +520,7 @@ internal sealed partial class AuroraDesktopCoordinator
             {
                 _shellPrefs = _shellPrefs with { DockScalePercent = finalScale };
                 _shellPrefsStore.Save(_shellPrefs);
+                SyncDockWorkAreaReservation();
             }
             await RefreshAndBroadcastStateAsync(forceFull: true);
         }

@@ -1,5 +1,13 @@
 # Project Aurora — Sürüm Notları
 
+## v2.4.1
+> Summary: Tıklanabilir canlı bildirimler (WhatsApp, Antigravity, Teams, Ekran Alıntısı derin bağlantı) + açılış sonrası Explorer yarışını engelleyen, yoğunluğa duyarlı (Kompakt/Standart/Rahat) ve kendi kendini iyileştiren Dock Çalışma Alanı (`Alan Ayır`) koruması.
+
+### Öne Çıkan Yenilikler
+- **Tıklanabilir Canlı Bildirimler (Native Deep-Link):** Üstte beliren bildirim kartına (`Aç ↗`), Zil açılır penceresine veya Telemetri bildirim satırına tıkladığınızda ilgili uygulama ve doğrudan o sohbet/konuşma açılır (`whatsapp:`, `antigravity-ide:`, `ms-screensketch:`, `msteams:` protokolleri + Store/MSIX uygulamaları için COM `IApplicationActivationManager` AUMID + açık pencere odaklama).
+- **Kendi Kendini İyileştiren Dock Çalışma Alanı (`Alan Ayır: Açık`):** Açılışta Windows Explorer'ın `ABM_SETSTATE` sonrası çalışma alanını sıfırlama yarış koşulu giderildi; gecikmeli doğrulama, ekran değişikliği ve pasif 0-CPU kalp atışı koruması eklendi. Artık tüm monitörlerde (100% ve 125%+ DPI dahil) Dock yoğunluğuna (`Kompakt 64 px`, `Standart 72 px`, `Rahat 82 px`) ve `Alt+Sağ Tık` ölçeğine göre birebir temiz boşluk ayrılır; Antigravity, WhatsApp ve Discord yazı kutuları asla kapanmaz.
+- **Sürüm Yükseltme Uyumluluğu:** `v2.3.2` ve öncesi ayarlardan yükselten kullanıcılar için `Alan Ayır` varsayılan olarak otomatik etkin gelir; `Otomatik Gizle` modunda alan %100'e geri açılır.
+
 ## v2.4.0
 > Summary: Tıklanabilir canlı bildirimler (WhatsApp sohbetine, Antigravity konuşmasına, Teams ve Ekran Alıntısı'na doğrudan derin bağlantı) ve tam ekran pencerelerin yazı kutularını asla kapatmayan otomatik Dock Çalışma Alanı (Alan Ayır) rezervasyonu.
 
