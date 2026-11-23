@@ -2,6 +2,23 @@ using System.Text.Json;
 
 namespace Aurora.Infrastructure.Persistence;
 
+public sealed record ThemeColorCustomization(
+    string? AccentPrimary = null,
+    string? AccentSecondary = null,
+    string? Surface1 = null,
+    string? Surface2 = null,
+    string? TextPrimary = null,
+    double? SurfaceOpacity = null)
+{
+    public bool HasAnyOverride =>
+        !string.IsNullOrWhiteSpace(AccentPrimary) ||
+        !string.IsNullOrWhiteSpace(AccentSecondary) ||
+        !string.IsNullOrWhiteSpace(Surface1) ||
+        !string.IsNullOrWhiteSpace(Surface2) ||
+        !string.IsNullOrWhiteSpace(TextPrimary) ||
+        SurfaceOpacity.HasValue;
+}
+
 public sealed record ShellRuntimePreferences(
     bool SmartTidyEnabled = true,
     bool DockAutoHide = false,
@@ -28,7 +45,9 @@ public sealed record ShellRuntimePreferences(
     int DockScalePercent = 100,
     int DockOffsetPercent = 0,
     bool ClipboardAutoPasteEnabled = false,
-    bool? ReserveDockWorkArea = null)
+    bool? ReserveDockWorkArea = null,
+    string DockBarLayout = "Centered",
+    Dictionary<string, ThemeColorCustomization>? ThemeCustomizations = null)
 {
     public string EffectiveDockMode =>
         DockVisibilityMode is "AlwaysVisible" or "SmartDodge" or "AutoHide"
@@ -37,8 +56,19 @@ public sealed record ShellRuntimePreferences(
 
     public bool EffectiveReserveDockWorkAreaPreference => ReserveDockWorkArea ?? true;
 
+    /// <summary>
+    /// WorkArea is reserved ONLY when pinned as Fixed Bar ("AlwaysVisible").
+    /// In Intellihide ("SmartDodge") and "AutoHide" modes, windows ALWAYS reclaim 100% screen height
+    /// with zero wallpaper strip while the floating Crystal Pill glides away cleanly.
+    /// </summary>
     public bool EffectiveReserveDockWorkArea =>
-        EffectiveReserveDockWorkAreaPreference && !string.Equals(EffectiveDockMode, "AutoHide", StringComparison.OrdinalIgnoreCase);
+        EffectiveReserveDockWorkAreaPreference &&
+        string.Equals(EffectiveDockMode, "AlwaysVisible", StringComparison.OrdinalIgnoreCase);
+
+    public string EffectiveDockBarLayout =>
+        DockBarLayout is "Centered" or "Split3Zone"
+            ? DockBarLayout
+            : "Centered";
 
     public string EffectiveDockDensity =>
         DockDensity is "Compact" or "Standard" or "Cozy"
@@ -58,6 +88,19 @@ public sealed record ShellRuntimePreferences(
         SnapZonePreset is "code6535" or "studio3" or "cols3" or "grid2x2"
             ? SnapZonePreset
             : "code6535";
+
+    public ThemeColorCustomization? GetThemeCustomization(string? themeId)
+    {
+        if (string.IsNullOrWhiteSpace(themeId) || ThemeCustomizations is null)
+            return null;
+
+        foreach (var kv in ThemeCustomizations)
+        {
+            if (string.Equals(kv.Key, themeId, StringComparison.OrdinalIgnoreCase))
+                return kv.Value;
+        }
+        return null;
+    }
 }
 
 /// <summary>

@@ -124,30 +124,30 @@ internal sealed partial class AuroraDesktopCoordinator
         int crownX = b.X + ((b.Width - crownW) / 2);
         int crownY = b.Y;
 
-        // 2. CRYSTAL DOCK CANVAS — Supports Bottom (horizontal), Left (vertical), and Right (vertical) with full-edge Alt+Drag positioning!
+        // 2. CRYSTAL DOCK / FIXED BAR CANVAS — Edge-to-edge full span on Bottom, Left, and Right so Pinned Fixed Bar has 0px corner gaps!
         string edge = _shellPrefs.EffectiveDockEdge;
         Rectangle dockRect;
         if (edge == "Left")
         {
             int dockW = Math.Min(b.Width / 2, (int)Math.Round(460 * scale));
-            int dockH = Math.Max(320, b.Height - (int)Math.Round(16 * scale));
+            int dockH = Math.Max(320, b.Height);
             int dockX = b.X;
-            int dockY = b.Y + ((b.Height - dockH) / 2);
+            int dockY = b.Y;
             dockRect = new Rectangle(dockX, dockY, dockW, dockH);
         }
         else if (edge == "Right")
         {
             int dockW = Math.Min(b.Width / 2, (int)Math.Round(460 * scale));
-            int dockH = Math.Max(320, b.Height - (int)Math.Round(16 * scale));
+            int dockH = Math.Max(320, b.Height);
             int dockX = b.Right - dockW;
-            int dockY = b.Y + ((b.Height - dockH) / 2);
+            int dockY = b.Y;
             dockRect = new Rectangle(dockX, dockY, dockW, dockH);
         }
         else
         {
-            int dockW = Math.Max(320, b.Width - 12);
+            int dockW = Math.Max(320, b.Width);
             int dockH = Math.Min(b.Height / 2, (int)Math.Round(450 * scale));
-            int dockX = b.X + ((b.Width - dockW) / 2);
+            int dockX = b.X;
             int bottomEdgePx = _appBarService.IsNativeTaskbarSuppressed ? b.Bottom : w.Bottom;
             int dockY = bottomEdgePx - dockH;
             dockRect = new Rectangle(dockX, dockY, dockW, dockH);
@@ -366,14 +366,22 @@ internal sealed partial class AuroraDesktopCoordinator
         var b = mon.BoundsPx;
         var w = mon.WorkAreaPx;
 
-        // Compute clean snap work-area respecting Aurora's Crown, Dock Edge (Bottom/Left/Right), and Dock Mode
+        // Compute clean snap work-area respecting Aurora's Crown, Dock Edge (Bottom/Left/Right), and Pinned Fixed Bar
         string edge = _shellPrefs.EffectiveDockEdge;
-        bool reservedDock = _shellPrefs.EffectiveReserveDockWorkArea || _shellPrefs.EffectiveDockMode == "AlwaysVisible";
+        bool reserveForSnap = _appBarService.IsNativeTaskbarSuppressed && _shellPrefs.EffectiveReserveDockWorkArea;
+        var reservedPx = Win32AppBarService.ComputeDockReservedWorkArea(
+            b,
+            scale,
+            edge,
+            _shellPrefs.EffectiveDockScalePercent,
+            reserveForSnap,
+            _shellPrefs.EffectiveDockDensity);
+
         int topInset = (int)Math.Round(10 * scale);
-        int leftInset = (reservedDock && edge == "Left") ? (int)Math.Round(70 * scale) : 0;
-        int rightInset = (reservedDock && edge == "Right") ? (int)Math.Round(70 * scale) : 0;
+        int leftInset = Math.Max(0, reservedPx.X - b.X);
+        int rightInset = Math.Max(0, b.Right - reservedPx.Right);
         int bottomInset = _appBarService.IsNativeTaskbarSuppressed
-            ? ((reservedDock && edge == "Bottom") ? (int)Math.Round(72 * scale) : (int)Math.Round(10 * scale))
+            ? Math.Max((int)Math.Round(10 * scale), b.Bottom - reservedPx.Bottom)
             : Math.Max(0, b.Bottom - w.Bottom);
 
         var workRect = new Rectangle(

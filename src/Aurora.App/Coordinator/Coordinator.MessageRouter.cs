@@ -387,6 +387,50 @@ internal sealed partial class AuroraDesktopCoordinator
                     break;
                 }
 
+            case "toggleDockPinMode":
+                {
+                    // Clean 1-click Pin behavior on Dock:
+                    // Pinned ("AlwaysVisible") = Slim Edge-to-Edge Fixed Bar (with WorkArea reserved)
+                    // Unpinned ("SmartDodge") = Classic Floating Crystal Pill Intellihide (0px WorkArea cut)
+                    string nextMode = _shellPrefs.EffectiveDockMode == "AlwaysVisible" ? "SmartDodge" : "AlwaysVisible";
+                    _shellPrefs = _shellPrefs with { DockVisibilityMode = nextMode, DockAutoHide = false };
+                    _shellPrefsStore.Save(_shellPrefs);
+                    SyncDockWorkAreaReservation();
+                    EvaluateFullscreenYieldPerMonitor();
+                    var (pTitle, pBody) = nextMode == "AlwaysVisible"
+                        ? ("Sabit Bar Aktif", "Dock uçtan uca ince görev çubuğuna dönüştü; pencereler hemen üstünde hizalanır.")
+                        : ("Akıllı Kaçınma (Yüzen Dock)", "Pencereler %100 tam ekran çalışır; yüzen Dock alt kenara çekilir.");
+                    SendToast(sourceMonitorId, pTitle, pBody);
+                    await RefreshAndBroadcastStateAsync(forceFull: true);
+                    break;
+                }
+
+            case "setDockAutoHideMode":
+                {
+                    _shellPrefs = _shellPrefs with { DockVisibilityMode = "AutoHide", DockAutoHide = true };
+                    _shellPrefsStore.Save(_shellPrefs);
+                    SyncDockWorkAreaReservation();
+                    EvaluateFullscreenYieldPerMonitor();
+                    SendToast(sourceMonitorId, "Dock Modu: Oto-Gizle", "Yüzen Dock alt kenarda ince ışıklı çizgiye katlanır; %100 tam ekran.");
+                    await RefreshAndBroadcastStateAsync(forceFull: true);
+                    break;
+                }
+
+            case "toggleDockBarLayout":
+                {
+                    string nextLayout = _shellPrefs.EffectiveDockBarLayout == "Split3Zone" ? "Centered" : "Split3Zone";
+                    _shellPrefs = _shellPrefs with { DockBarLayout = nextLayout };
+                    _shellPrefsStore.Save(_shellPrefs);
+                    SendToast(
+                        sourceMonitorId,
+                        nextLayout == "Split3Zone" ? "Sabit Bar: 3 Bölgeli Düzen" : "Sabit Bar: Merkez Odaklı",
+                        nextLayout == "Split3Zone"
+                            ? "Solda Ara, ortada uygulamalar, sağda araçlar dengeli yerleşir."
+                            : "Tüm uygulamalar ve araçlar barın merkezinde sade biçimde hizalanır.");
+                    await RefreshAndBroadcastStateAsync(forceFull: true);
+                    break;
+                }
+
             case "cycleDockVisibilityMode":
                 {
                     string nextMode = _shellPrefs.EffectiveDockMode switch
@@ -401,9 +445,9 @@ internal sealed partial class AuroraDesktopCoordinator
                     EvaluateFullscreenYieldPerMonitor();
                     var (tTitle, tBody) = nextMode switch
                     {
-                        "SmartDodge" => ("Dock Modu: Akıllı Kaçınma", "Tam pencere alt kenara değdiğinde otomatik çekilir; masaüstünde hep görünür."),
-                        "AutoHide" => ("Dock Modu: Otomatik Gizle", "İmleç ayrıldığında alt kenarda ince ışıklı çizgiye katlanır."),
-                        _ => ("Dock Modu: Sabit Görünür", "Kristal Dock tüm ekranlarda daima açık kalır (tam ekran hariç).")
+                        "SmartDodge" => ("Dock Modu: Akıllı Kaçınma", "Pencereler %100 tam ekran çalışır; yüzen Dock alt kenara değince otomatik çekilir."),
+                        "AutoHide" => ("Dock Modu: Oto-Gizle", "Yüzen Dock alt kenarda ince ışıklı çizgiye katlanır; %100 tam ekran."),
+                        _ => ("Dock Modu: Sabit Bar", "Uçtan uca ince görev çubuğu tüm ekranlarda sabit kalır (tam ekran video hariç).")
                     };
                     SendToast(sourceMonitorId, tTitle, tBody);
                     await RefreshAndBroadcastStateAsync(forceFull: true);
@@ -1085,7 +1129,59 @@ internal sealed partial class AuroraDesktopCoordinator
                     string id = msg.GetProperty("id").GetString() ?? BuiltInThemes.AuroraGlassDark.Id;
                     var t = _stateStore.ResolveThemeById(id);
                     await _stateStore.ApplyThemeAsync(t);
-                    await RefreshAndBroadcastStateAsync();
+                    await RefreshAndBroadcastStateAsync(forceFull: true);
+                    break;
+                }
+
+            case "updateThemeColors":
+                {
+                    string themeId = msg.TryGetProperty("themeId", out var tidProp) && !string.IsNullOrWhiteSpace(tidProp.GetString())
+                        ? tidProp.GetString()!
+                        : _stateStore.EffectiveTheme.Id;
+
+                    var map = _shellPrefs.ThemeCustomizations is null
+                        ? new Dictionary<string, ThemeColorCustomization>(StringComparer.OrdinalIgnoreCase)
+                        : new Dictionary<string, ThemeColorCustomization>(_shellPrefs.ThemeCustomizations, StringComparer.OrdinalIgnoreCase);
+
+                    var existing = _shellPrefs.GetThemeCustomization(themeId) ?? new ThemeColorCustomization();
+                    string? nextA1 = msg.TryGetProperty("accentPrimary", out var a1p) ? a1p.GetString() : existing.AccentPrimary;
+                    string? nextA2 = msg.TryGetProperty("accentSecondary", out var a2p) ? a2p.GetString() : existing.AccentSecondary;
+                    string? nextS1 = msg.TryGetProperty("surface1", out var s1p) ? s1p.GetString() : existing.Surface1;
+                    string? nextS2 = msg.TryGetProperty("surface2", out var s2p) ? s2p.GetString() : existing.Surface2;
+                    string? nextT1 = msg.TryGetProperty("textPrimary", out var t1p) ? t1p.GetString() : existing.TextPrimary;
+                    double? nextOp = msg.TryGetProperty("surfaceOpacity", out var opp) && opp.ValueKind == JsonValueKind.Number
+                        ? Math.Round(Math.Clamp(opp.GetDouble(), 0.55, 1.0), 2)
+                        : existing.SurfaceOpacity;
+
+                    map[themeId] = new ThemeColorCustomization(
+                        AccentPrimary: ContrastCalculator.IsValidHexColor(nextA1) ? nextA1!.Trim().ToUpperInvariant() : existing.AccentPrimary,
+                        AccentSecondary: ContrastCalculator.IsValidHexColor(nextA2) ? nextA2!.Trim().ToUpperInvariant() : existing.AccentSecondary,
+                        Surface1: ContrastCalculator.IsValidHexColor(nextS1) ? nextS1!.Trim().ToUpperInvariant() : existing.Surface1,
+                        Surface2: ContrastCalculator.IsValidHexColor(nextS2) ? nextS2!.Trim().ToUpperInvariant() : existing.Surface2,
+                        TextPrimary: ContrastCalculator.IsValidHexColor(nextT1) ? nextT1!.Trim().ToUpperInvariant() : existing.TextPrimary,
+                        SurfaceOpacity: nextOp);
+
+                    _shellPrefs = _shellPrefs with { ThemeCustomizations = map };
+                    _shellPrefsStore.Save(_shellPrefs);
+                    await RefreshAndBroadcastStateAsync(forceFull: true);
+                    break;
+                }
+
+            case "resetThemeColors":
+                {
+                    string themeId = msg.TryGetProperty("themeId", out var tidProp) && !string.IsNullOrWhiteSpace(tidProp.GetString())
+                        ? tidProp.GetString()!
+                        : _stateStore.EffectiveTheme.Id;
+
+                    if (_shellPrefs.ThemeCustomizations is not null)
+                    {
+                        var map = new Dictionary<string, ThemeColorCustomization>(_shellPrefs.ThemeCustomizations, StringComparer.OrdinalIgnoreCase);
+                        map.Remove(themeId);
+                        _shellPrefs = _shellPrefs with { ThemeCustomizations = map.Count > 0 ? map : null };
+                        _shellPrefsStore.Save(_shellPrefs);
+                    }
+                    SendToast(sourceMonitorId, "Tema Renkleri Sıfırlandı", "Aktif tema kendi orijinal 2026 renk paletine döndürüldü.");
+                    await RefreshAndBroadcastStateAsync(forceFull: true);
                     break;
                 }
 

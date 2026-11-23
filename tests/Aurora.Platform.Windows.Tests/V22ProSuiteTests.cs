@@ -268,25 +268,25 @@ public sealed class V22ProSuiteTests
         Assert.StartsWith("whatsapp://", waUri);
         Assert.False(NotificationActivationService.TryExtractLaunchUri("chatId=905551112233@s.whatsapp.net", "foreground", out _));
 
-        // Per-monitor Dock WorkArea reservation keeps chat boxes unobstructed at Bottom, Left, and Right edges
+        // Per-monitor Pinned Fixed Bar WorkArea reservation (slim 44/52/60px bottom, 58px vertical at 100% scale)
         var mon = new Aurora.Core.Primitives.PhysicalPixelRect(0, 0, 2560, 1440);
         var waBottom = Win32AppBarService.ComputeDockReservedWorkArea(mon, 1.0, "Bottom", 100, reserve: true);
         Assert.Equal(0, waBottom.X);
         Assert.Equal(2560, waBottom.Width);
-        Assert.Equal(72, mon.Bottom - waBottom.Bottom);
+        Assert.Equal(52, mon.Bottom - waBottom.Bottom);
 
-        // Density-aware channels (Compact 64px < Standard 72px < Cozy 82px)
+        // Density-aware Fixed Bar heights (Compact 44px < Standard 52px < Cozy 60px)
         var waCompact = Win32AppBarService.ComputeDockReservedWorkArea(mon, 1.0, "Bottom", 100, reserve: true, dockDensity: "Compact");
         var waCozy = Win32AppBarService.ComputeDockReservedWorkArea(mon, 1.0, "Bottom", 100, reserve: true, dockDensity: "Cozy");
-        Assert.Equal(64, mon.Bottom - waCompact.Bottom);
-        Assert.Equal(82, mon.Bottom - waCozy.Bottom);
+        Assert.Equal(44, mon.Bottom - waCompact.Bottom);
+        Assert.Equal(60, mon.Bottom - waCozy.Bottom);
 
         var waLeft = Win32AppBarService.ComputeDockReservedWorkArea(mon, 1.0, "Left", 100, reserve: true);
-        Assert.InRange(waLeft.X, 62, 78);
+        Assert.Equal(58, waLeft.X);
         Assert.Equal(1440, waLeft.Height);
 
         var waRight = Win32AppBarService.ComputeDockReservedWorkArea(mon, 1.0, "Right", 100, reserve: true);
-        Assert.InRange(mon.Right - waRight.Right, 62, 78);
+        Assert.Equal(58, mon.Right - waRight.Right);
 
         var waFull = Win32AppBarService.ComputeDockReservedWorkArea(mon, 1.0, "Bottom", 100, reserve: false);
         Assert.Equal(mon, waFull);

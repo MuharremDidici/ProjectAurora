@@ -4,23 +4,39 @@ public static partial class AuroraSurfaceTemplates
 {
     public const string SharedDesignCss = """
         :root {
-            --bg-glass-1: rgba(9, 13, 24, 0.96);
-            --bg-glass-2: rgba(14, 21, 38, 0.985);
-            --bg-card: rgba(255, 255, 255, 0.048);
-            --bg-card-hover: rgba(255, 255, 255, 0.095);
-            --bg-inset: rgba(0, 0, 0, 0.34);
-            --border-rim: rgba(255, 255, 255, 0.16);
-            --border-subtle: rgba(255, 255, 255, 0.085);
+            --bg-glass-1: rgba(15, 23, 42, 0.90);
+            --bg-glass-2: rgba(22, 32, 56, 0.94);
+            --bg-card: rgba(255, 255, 255, 0.045);
+            --bg-card-hover: rgba(255, 255, 255, 0.09);
+            --bg-inset: rgba(0, 0, 0, 0.28);
+            --border-rim: rgba(255, 255, 255, 0.14);
+            --border-subtle: rgba(255, 255, 255, 0.075);
             --text-1: #F8FAFC;
-            --text-2: #94A3B8;
+            --text-2: #B6C4D8;
             --accent-1: #38BDF8;
             --accent-2: #818CF8;
+            --a1-rgb: 56, 189, 248;
+            --a2-rgb: 129, 140, 248;
+            --accent-soft: rgba(var(--a1-rgb), 0.13);
+            --accent-tint: rgba(var(--a1-rgb), 0.22);
+            --accent-ring: rgba(var(--a1-rgb), 0.46);
+            --accent-glow: rgba(var(--a1-rgb), 0.30);
             --accent-ink: #04101F;
             --success: #34D399;
             --warning: #FBBF24;
             --danger: #FB7185;
+            --radius-shell: 22px;
+            --radius-card: 15px;
+            --radius-item: 12px;
+            --radius-btn: 999px;
+            --shadow-shell:
+                0 22px 54px -14px rgba(0, 0, 0, 0.72),
+                0 4px 16px -4px rgba(0, 0, 0, 0.38),
+                inset 0 1px 0 rgba(255, 255, 255, 0.22),
+                inset 0 0 0 0.5px rgba(255, 255, 255, 0.07);
             --font: 'Segoe UI Variable Display', 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
-            --spring: cubic-bezier(0.22, 1.18, 0.36, 1);
+            --font-mono: 'Cascadia Mono', 'JetBrains Mono', ui-monospace, Consolas, monospace;
+            --spring: cubic-bezier(0.22, 1.12, 0.36, 1);
             --ease: cubic-bezier(0.22, 1, 0.36, 1);
         }
         * { box-sizing: border-box; user-select: none; -webkit-user-drag: none; }
@@ -31,6 +47,7 @@ public static partial class AuroraSurfaceTemplates
             font-family: var(--font);
             color: var(--text-1);
             -webkit-font-smoothing: antialiased;
+            letter-spacing: -0.01em;
         }
         .num { font-variant-numeric: tabular-nums; }
         ::-webkit-scrollbar { width: 5px; height: 5px; }
@@ -38,34 +55,165 @@ public static partial class AuroraSurfaceTemplates
         .svg-ic {
             width: 15px; height: 15px; display: inline-flex; align-items: center; justify-content: center;
             flex-shrink: 0; stroke: currentColor; fill: none;
-            stroke-width: 1.85; stroke-linecap: round; stroke-linejoin: round;
+            stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
         }
         .svg-ic.sm { width: 13px; height: 13px; }
         .svg-ic.lg { width: 18px; height: 18px; }
+
+        /* ========== BASE OPTICAL SHELL (Liquid Glass 26 Default) ========== */
         .glass-shell {
             position: relative;
             background:
-                radial-gradient(ellipse 65% 55% at 18% 0%, rgba(56, 189, 248, 0.12), transparent 65%),
-                radial-gradient(ellipse 50% 45% at 88% 100%, rgba(129, 140, 248, 0.09), transparent 60%),
-                linear-gradient(160deg, var(--bg-glass-1), var(--bg-glass-2));
+                radial-gradient(ellipse 68% 58% at 18% 0%, rgba(var(--a1-rgb), 0.11), transparent 66%),
+                radial-gradient(ellipse 52% 46% at 86% 100%, rgba(var(--a2-rgb), 0.08), transparent 62%),
+                linear-gradient(165deg, var(--bg-glass-1), var(--bg-glass-2));
+            border: 1px solid var(--border-rim);
+            box-shadow: var(--shadow-shell);
+        }
+
+        /* ========== 2026 ARCHITECTURAL THEME OVERRIDES (Distinct Geometry, Material & Craft) ========== */
+
+        /* 1. LIQUID GLASS 26 — Apple Tahoe / visionOS refractive optical crystal */
+        body.style-liquid-glass .glass-shell {
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.085) 0%, rgba(255,255,255,0.015) 38%, transparent 100%),
+                radial-gradient(ellipse 64% 56% at 20% 0%, rgba(var(--a1-rgb), 0.13), transparent 65%),
+                linear-gradient(165deg, var(--bg-glass-1), var(--bg-glass-2));
+            border: 1px solid rgba(255, 255, 255, 0.20);
+            box-shadow:
+                0 24px 56px -14px rgba(0, 0, 0, 0.72),
+                0 6px 20px -6px rgba(0, 0, 0, 0.42),
+                inset 0 1px 0 rgba(255, 255, 255, 0.30),
+                inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+        }
+
+        /* 2. BENTO SILK (AÇIK) — Scandinavian porcelain daylight layers, soft architectural shadow */
+        body.style-bento-silk {
+            --radius-shell: 20px;
+            --radius-card: 16px;
+            --radius-item: 12px;
+            --radius-btn: 999px;
+        }
+        body.style-bento-silk .glass-shell {
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.58) 0%, rgba(255,255,255,0.08) 100%),
+                linear-gradient(165deg, var(--bg-glass-1), var(--bg-glass-2));
+            border: 1px solid rgba(20, 22, 26, 0.11);
+            box-shadow:
+                0 20px 44px -14px rgba(20, 22, 26, 0.20),
+                0 4px 12px -4px rgba(20, 22, 26, 0.10),
+                inset 0 1px 0 rgba(255, 255, 255, 0.92);
+        }
+
+        /* 3. LINEAR PRECISION — Matte carbon, razor 1px hairlines, tight 10px corners, zero decorative glow */
+        body.style-linear-precision {
+            --radius-shell: 12px;
+            --radius-card: 10px;
+            --radius-item: 8px;
+            --radius-btn: 8px;
+        }
+        body.style-linear-precision .glass-shell {
+            background: linear-gradient(180deg, var(--bg-glass-1), var(--bg-glass-2));
             border: 1px solid var(--border-rim);
             box-shadow:
-                0 24px 58px -14px rgba(0, 0, 0, 0.80),
-                0 6px 20px -4px rgba(0, 0, 0, 0.45),
-                inset 0 1px 0 rgba(255, 255, 255, 0.20),
-                inset 0 0 0 0.5px rgba(255, 255, 255, 0.06);
+                0 16px 36px -12px rgba(0, 0, 0, 0.65),
+                inset 0 1px 0 rgba(255, 255, 255, 0.075);
         }
+        body.style-linear-precision .pill-btn { border-radius: 8px; }
+        body.style-linear-precision .micro-btn { border-radius: 7px; }
+
+        /* 4. MONO MATRIX — Nothing OS / Teenage Engineering industrial pitch + dot-matrix + monospace accents */
+        body.style-mono-matrix {
+            --radius-shell: 14px;
+            --radius-card: 11px;
+            --radius-item: 9px;
+            --radius-btn: 999px;
+        }
+        body.style-mono-matrix .glass-shell {
+            background:
+                radial-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+                linear-gradient(180deg, var(--bg-glass-1), var(--bg-glass-2));
+            background-size: 10px 10px, 100% 100%;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow:
+                0 20px 44px -14px rgba(0, 0, 0, 0.78),
+                inset 0 1px 0 rgba(255, 255, 255, 0.11);
+        }
+        body.style-mono-matrix .num,
+        body.style-mono-matrix .drop-time,
+        body.style-mono-matrix .card-title,
+        body.style-mono-matrix .count-pill,
+        body.style-mono-matrix .acc-count {
+            font-family: var(--font-mono);
+            letter-spacing: 0.02em;
+        }
+        body.style-mono-matrix .micro-btn { border-radius: 50%; }
+
+        /* 5. SPATIAL VISION — visionOS full-stadium capsule, circular hover halos, prismatic rim */
+        body.style-spatial-vision {
+            --radius-shell: 28px;
+            --radius-card: 20px;
+            --radius-item: 50%;
+            --radius-btn: 999px;
+        }
+        body.style-spatial-vision .glass-shell {
+            background:
+                radial-gradient(ellipse 80% 60% at 15% 0%, rgba(var(--a1-rgb), 0.16), transparent 64%),
+                radial-gradient(ellipse 60% 55% at 88% 100%, rgba(var(--a2-rgb), 0.13), transparent 62%),
+                linear-gradient(155deg, var(--bg-glass-1), var(--bg-glass-2));
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            box-shadow:
+                0 26px 60px -12px rgba(0, 0, 0, 0.72),
+                0 0 0 0.5px rgba(255, 255, 255, 0.10),
+                inset 0 1.5px 0 rgba(255, 255, 255, 0.34),
+                inset 0 -1px 0 rgba(255, 255, 255, 0.08);
+        }
+
+        /* 6. CYBER PRISM — Deep OLED edge-lit HUD with crisp accent top trace & technical geometry */
+        body.style-cyber-prism {
+            --radius-shell: 9px;
+            --radius-card: 8px;
+            --radius-item: 7px;
+            --radius-btn: 7px;
+        }
+        body.style-cyber-prism .glass-shell {
+            background:
+                linear-gradient(90deg, rgba(var(--a1-rgb), 0.16) 0%, transparent 28%, transparent 72%, rgba(var(--a2-rgb), 0.14) 100%),
+                linear-gradient(180deg, var(--bg-glass-1), var(--bg-glass-2));
+            border: 1px solid rgba(var(--a1-rgb), 0.32);
+            box-shadow:
+                0 20px 46px -12px rgba(0, 0, 0, 0.86),
+                0 0 24px -8px rgba(var(--a1-rgb), 0.26),
+                inset 0 1px 0 rgba(var(--a1-rgb), 0.55);
+        }
+        body.style-cyber-prism .pill-btn { border-radius: 7px; }
+        body.style-cyber-prism .micro-btn { border-radius: 6px; }
+
+        /* 7. HIGH CONTRAST — Zero blur, crisp WCAG AAA outlines */
+        body.style-high-contrast {
+            --radius-shell: 8px;
+            --radius-card: 6px;
+            --radius-item: 6px;
+            --radius-btn: 6px;
+        }
+        body.style-high-contrast .glass-shell {
+            background: var(--bg-glass-1);
+            border: 1.5px solid var(--border-rim);
+            box-shadow: none;
+        }
+
+        /* ========== SHARED TACTILE CONTROLS ========== */
         .pill-btn {
             display: inline-flex; align-items: center; gap: 6px;
             height: 29px; padding: 0 11px;
-            border-radius: 999px;
+            border-radius: var(--radius-btn);
             border: 1px solid var(--border-subtle);
             background: var(--bg-card);
             color: var(--text-1);
-            font-family: var(--font); font-size: 12px; font-weight: 600;
+            font-family: var(--font); font-size: 11.5px; font-weight: 600;
             letter-spacing: -0.01em;
             cursor: pointer;
-            transition: transform 0.16s var(--ease), background 0.15s, border-color 0.15s, box-shadow 0.15s;
+            transition: transform 0.15s var(--ease), background 0.14s, border-color 0.14s, color 0.14s, box-shadow 0.15s;
             white-space: nowrap;
         }
         .pill-btn:hover { background: var(--bg-card-hover); border-color: var(--border-rim); transform: translateY(-0.5px); }
@@ -74,13 +222,13 @@ public static partial class AuroraSurfaceTemplates
             background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
             color: var(--accent-ink);
             border-color: transparent;
-            box-shadow: 0 6px 18px -4px rgba(56, 189, 248, 0.48);
+            box-shadow: 0 6px 18px -5px var(--accent-glow);
         }
         .pill-btn.accent:hover { filter: brightness(1.06); }
         .pill-btn.subtle { background: transparent; border-color: transparent; color: var(--text-2); }
         .pill-btn.subtle:hover { background: var(--bg-card); color: var(--text-1); border-color: var(--border-subtle); }
         .micro-btn {
-            width: 26px; height: 26px; border-radius: 8px;
+            width: 27px; height: 27px; border-radius: 8px;
             border: 1px solid var(--border-subtle);
             background: var(--bg-card);
             color: var(--text-2);
@@ -88,9 +236,9 @@ public static partial class AuroraSurfaceTemplates
             cursor: pointer; flex-shrink: 0;
             transition: all 0.14s var(--ease);
         }
-        .micro-btn:hover { background: var(--bg-card-hover); color: var(--text-1); border-color: var(--accent-1); }
-        .micro-btn.active { background: rgba(56,189,248,0.22); color: var(--accent-1); border-color: var(--accent-1); }
-        .micro-btn.danger:hover { background: rgba(251,113,133,0.22); color: var(--danger); border-color: var(--danger); }
+        .micro-btn:hover { background: var(--bg-card-hover); color: var(--text-1); border-color: var(--accent-ring); }
+        .micro-btn.active { background: var(--accent-tint); color: var(--accent-1); border-color: var(--accent-ring); }
+        .micro-btn.danger:hover { background: rgba(251,113,133,0.20); color: var(--danger); border-color: var(--danger); }
         """;
 
     public const string SharedSvgJs = """

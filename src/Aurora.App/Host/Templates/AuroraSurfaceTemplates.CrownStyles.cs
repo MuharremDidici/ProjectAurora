@@ -32,45 +32,90 @@ public static partial class AuroraSurfaceTemplates
             margin-top: 0;
             height: 25px;
             border-top: none;
-            border-radius: 0 0 18px 18px;
+            border-radius: 0 0 16px 16px;
             padding: 0 15px;
             display: inline-flex; align-items: center; gap: 8px;
             cursor: pointer;
             box-shadow:
-                0 10px 26px -6px rgba(0, 0, 0, 0.72),
-                0 2px 10px rgba(56, 189, 248, 0.18),
-                inset 0 -1px 0 rgba(56, 189, 248, 0.35);
+                0 10px 26px -6px rgba(0, 0, 0, 0.68),
+                0 2px 10px rgba(var(--a1-rgb), 0.16),
+                inset 0 -1px 0 rgba(var(--a1-rgb), 0.34);
         }
         #crown.droplet::after {
             content: '';
             position: absolute; bottom: 0; left: 20%; right: 20%; height: 2px;
             border-radius: 99px;
             background: linear-gradient(90deg, transparent, var(--accent-1), var(--accent-2), transparent);
-            opacity: 0.72;
+            opacity: 0.68;
         }
-        /* LIVE HARDWARE OSD MORPH INSIDE LIQUID DROPLET (Boring.Notch / ModernFlyouts grade) */
+
+        /* 2026 ARCHITECTURAL CROWN SILHOUETTES */
+        body.style-bento-silk #crown.droplet,
+        body.style-spatial-vision #crown.droplet {
+            margin-top: 5px;
+            height: 26px;
+            border-top: 1px solid var(--border-rim);
+            border-radius: 999px;
+            padding: 0 14px;
+            box-shadow: var(--shadow-shell);
+        }
+        body.style-bento-silk #crown.droplet::after,
+        body.style-spatial-vision #crown.droplet::after { display: none; }
+        body.style-linear-precision #crown.droplet {
+            border-radius: 0 0 9px 9px;
+            box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.72);
+        }
+        body.style-linear-precision #crown.droplet::after {
+            height: 1.5px; opacity: 0.55;
+            background: var(--accent-1);
+        }
+        body.style-mono-matrix #crown.droplet {
+            margin-top: 4px;
+            height: 25px;
+            border-top: 1px solid rgba(255,255,255,0.16);
+            border-radius: 999px;
+            padding: 0 13px;
+        }
+        body.style-mono-matrix #crown.droplet::after { display: none; }
+        body.style-cyber-prism #crown.droplet {
+            border-radius: 0 0 8px 8px;
+            box-shadow:
+                0 10px 26px -6px rgba(0, 0, 0, 0.85),
+                0 0 16px -4px rgba(var(--a1-rgb), 0.35),
+                inset 0 -1.5px 0 var(--accent-1);
+        }
+        body.style-cyber-prism #crown.droplet::after {
+            left: 6%; right: 6%; opacity: 0.92;
+        }
+
+        /* LIVE HARDWARE OSD MORPH INSIDE LIQUID DROPLET */
         #crown.droplet.osd-active {
             height: 36px;
             min-width: 242px;
             padding: 0 15px;
-            border-radius: 0 0 21px 21px;
+            border-radius: 0 0 20px 20px;
             gap: 9px;
             box-shadow:
-                0 14px 36px -8px rgba(0, 0, 0, 0.78),
-                0 0 18px rgba(56, 189, 248, 0.28),
-                inset 0 -1px 0 rgba(56, 189, 248, 0.55);
+                0 14px 36px -8px rgba(0, 0, 0, 0.74),
+                0 0 18px rgba(var(--a1-rgb), 0.28),
+                inset 0 -1px 0 rgba(var(--a1-rgb), 0.55);
+        }
+        body.style-bento-silk #crown.droplet.osd-active,
+        body.style-spatial-vision #crown.droplet.osd-active,
+        body.style-mono-matrix #crown.droplet.osd-active {
+            border-radius: 999px;
         }
         #crown.droplet.osd-active.osd-brightness {
             box-shadow:
-                0 14px 36px -8px rgba(0, 0, 0, 0.78),
-                0 0 18px rgba(245, 158, 11, 0.30),
+                0 14px 36px -8px rgba(0, 0, 0, 0.74),
+                0 0 18px rgba(245, 158, 11, 0.28),
                 inset 0 -1px 0 rgba(251, 191, 36, 0.65);
         }
         #crown.droplet.osd-active.osd-mute,
         #crown.droplet.osd-active.osd-off {
             box-shadow:
-                0 14px 36px -8px rgba(0, 0, 0, 0.78),
-                0 0 18px rgba(251, 113, 133, 0.28),
+                0 14px 36px -8px rgba(0, 0, 0, 0.74),
+                0 0 18px rgba(251, 113, 133, 0.26),
                 inset 0 -1px 0 rgba(251, 113, 133, 0.55);
         }
         .osd-icon {
@@ -101,7 +146,7 @@ public static partial class AuroraSurfaceTemplates
         .osd-status-pill {
             padding: 2px 9px; border-radius: 99px; font-size: 10.5px; font-weight: 800;
             letter-spacing: 0.04em;
-            background: rgba(56, 189, 248, 0.20); color: var(--accent-1);
+            background: var(--accent-tint); color: var(--accent-1);
         }
         .osd-off .osd-status-pill, .osd-mute .osd-status-pill {
             background: rgba(251, 113, 133, 0.20); color: var(--danger);
@@ -115,9 +160,9 @@ public static partial class AuroraSurfaceTemplates
         }
         #osdFloat.show { display: inline-flex; }
         .drop-dot {
-            width: 6.5px; height: 6.5px; border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
-            box-shadow: 0 0 9px var(--accent-1);
+            width: 6px; height: 6px; border-radius: 50%;
+            background: var(--accent-1);
+            box-shadow: 0 0 8px var(--accent-glow);
         }
         .drop-time {
             font-size: 11.5px; font-weight: 700; letter-spacing: 0.02em;
@@ -126,19 +171,19 @@ public static partial class AuroraSurfaceTemplates
         .drop-pill-tag {
             font-size: 10px; font-weight: 700; color: var(--accent-1);
             padding: 1px 6px; border-radius: 99px;
-            background: rgba(56, 189, 248, 0.14);
+            background: var(--accent-soft);
         }
 
-        /* HOVER-EXPANDED LIQUID ACTION PILL */
+        /* HOVER-EXPANDED ACTION PILL */
         #crown.pill {
             margin-top: 7px;
-            height: 43px;
-            border-radius: 999px;
+            height: 42px;
+            border-radius: var(--radius-btn);
             padding: 0 8px;
             display: inline-flex; align-items: center; gap: 5px;
         }
         #crown.pill .pill-btn {
-            height: 29px; padding: 0 8.5px; font-size: 11.5px; flex-shrink: 0;
+            height: 28px; padding: 0 8.5px; font-size: 11.5px; flex-shrink: 0;
         }
         #crown.pill .micro-btn {
             width: 28px; height: 28px; flex-shrink: 0;
@@ -147,11 +192,11 @@ public static partial class AuroraSurfaceTemplates
         /* FULL BENTO COMMAND DECK */
         #crown.expanded {
             margin-top: 8px;
-            width: min(880px, calc(100vw - 24px));
-            height: min(504px, calc(100vh - 36px));
-            border-radius: 24px;
+            width: min(900px, calc(100vw - 24px));
+            height: min(528px, calc(100vh - 34px));
+            border-radius: var(--radius-shell);
             padding: 14px 16px;
-            display: flex; flex-direction: column; gap: 11px;
+            display: flex; flex-direction: column; gap: 10px;
         }
         #crown.drag-over {
             margin-top: 7px;
@@ -159,16 +204,16 @@ public static partial class AuroraSurfaceTemplates
             border-radius: 999px;
             padding: 0 22px;
             border-color: var(--accent-1) !important;
-            box-shadow: 0 0 0 2px var(--accent-1), 0 18px 48px rgba(56, 189, 248, 0.45) !important;
+            box-shadow: 0 0 0 2px var(--accent-1), 0 18px 48px var(--accent-glow) !important;
         }
 
         .orb {
-            width: 28px; height: 28px; border-radius: 50%;
-            background: conic-gradient(from 180deg, var(--accent-1), var(--accent-2), #2DD4BF, var(--accent-1));
+            width: 27px; height: 27px; border-radius: 50%;
+            background: conic-gradient(from 180deg, var(--accent-1), var(--accent-2), var(--accent-1));
             display: flex; align-items: center; justify-content: center;
-            color: #050B16; font-weight: 900; font-size: 13px;
+            color: var(--accent-ink); font-weight: 900; font-size: 12.5px;
             cursor: pointer; flex-shrink: 0;
-            box-shadow: 0 0 16px rgba(56, 189, 248, 0.46);
+            box-shadow: 0 0 14px var(--accent-glow);
         }
         .eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 11px; }
         .eq span {
@@ -211,12 +256,12 @@ public static partial class AuroraSurfaceTemplates
         .deck-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
         .tabs {
             display: flex; gap: 4px; background: var(--bg-inset);
-            padding: 4px; border-radius: 999px; border: 1px solid var(--border-subtle);
+            padding: 4px; border-radius: var(--radius-btn); border: 1px solid var(--border-subtle);
             overflow-x: auto;
         }
         .tab {
             display: inline-flex; align-items: center; gap: 6px;
-            padding: 6px 12px; border-radius: 999px; font-size: 11.5px; font-weight: 600;
+            padding: 6px 12px; border-radius: var(--radius-btn); font-size: 11.5px; font-weight: 600;
             color: var(--text-2); cursor: pointer; border: none; background: transparent;
             white-space: nowrap; transition: all 0.16s var(--ease); font-family: var(--font);
         }
@@ -226,15 +271,15 @@ public static partial class AuroraSurfaceTemplates
             color: var(--accent-ink);
         }
         .deck-body { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding-right: 3px; display: flex; flex-direction: column; }
-        .bento-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 11px; flex: 1; min-height: 0; }
+        .bento-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.10fr); gap: 11px; flex: 1; min-height: 0; }
         .bento-col { display: flex; flex-direction: column; gap: 9px; min-height: 0; }
         .card {
             background: var(--bg-card); border: 1px solid var(--border-subtle);
-            border-radius: 17px; padding: 13px;
+            border-radius: var(--radius-card); padding: 12px;
         }
         .card-title {
             font-size: 10.5px; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 0.06em; color: var(--text-2); margin-bottom: 9px;
+            letter-spacing: 0.06em; color: var(--text-2); margin-bottom: 8px;
             display: flex; align-items: center; justify-content: space-between; gap: 8px;
         }
         .card-title-l { display: inline-flex; align-items: center; gap: 6px; }
@@ -258,23 +303,23 @@ public static partial class AuroraSurfaceTemplates
         }
         .toggle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .tile {
-            padding: 10px 11px; border-radius: 13px; border: 1px solid var(--border-subtle);
+            padding: 10px 11px; border-radius: calc(var(--radius-card) - 2px); border: 1px solid var(--border-subtle);
             background: var(--bg-card); cursor: pointer;
             display: flex; align-items: center; justify-content: space-between; gap: 8px;
             transition: all 0.15s var(--ease);
         }
         .tile:hover { background: var(--bg-card-hover); border-color: var(--border-rim); }
         .tile.on {
-            background: linear-gradient(135deg, rgba(56,189,248,0.22), rgba(129,140,248,0.18));
+            background: linear-gradient(135deg, rgba(var(--a1-rgb),0.20), rgba(var(--a2-rgb),0.14));
             border-color: var(--accent-1);
         }
         .tile .t-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
         .tile .t-icon {
-            width: 28px; height: 28px; border-radius: 9px;
+            width: 28px; height: 28px; border-radius: 8px;
             background: var(--bg-inset); color: var(--text-2);
             display: flex; align-items: center; justify-content: center; flex-shrink: 0;
         }
-        .tile.on .t-icon { background: rgba(56,189,248,0.24); color: var(--accent-1); }
+        .tile.on .t-icon { background: var(--accent-tint); color: var(--accent-1); }
         .tile .t-name { font-size: 12px; font-weight: 700; }
         .tile .t-sub { font-size: 10.5px; color: var(--text-2); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .slider-row { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
@@ -283,18 +328,18 @@ public static partial class AuroraSurfaceTemplates
         }
         .media-hero {
             display: flex; align-items: center; gap: 13px;
-            background: linear-gradient(135deg, rgba(56,189,248,0.13), rgba(129,140,248,0.09));
-            border: 1px solid rgba(56,189,248,0.28); border-radius: 17px; padding: 12px;
+            background: linear-gradient(135deg, rgba(var(--a1-rgb),0.12), rgba(var(--a2-rgb),0.08));
+            border: 1px solid rgba(var(--a1-rgb),0.28); border-radius: var(--radius-card); padding: 12px;
         }
         .media-art {
-            width: 54px; height: 54px; border-radius: 13px; object-fit: cover;
+            width: 54px; height: 54px; border-radius: 12px; object-fit: cover;
             background: var(--bg-inset); color: var(--accent-1); flex-shrink: 0;
             display: flex; align-items: center; justify-content: center;
         }
         textarea.scratchpad {
             width: 100%; height: 86px; resize: none;
             background: var(--bg-inset); border: 1px solid var(--border-subtle);
-            border-radius: 11px; padding: 9px 10px; color: var(--text-1);
+            border-radius: 10px; padding: 9px 10px; color: var(--text-1);
             font-family: var(--font); font-size: 12px; outline: none;
             user-select: text;
         }
@@ -306,12 +351,146 @@ public static partial class AuroraSurfaceTemplates
             margin-bottom: 5px; cursor: pointer; overflow: hidden;
             text-overflow: ellipsis; white-space: nowrap;
         }
-        .clip-item:hover { border-color: var(--accent-1); background: rgba(56,189,248,0.12); }
+        .clip-item:hover { border-color: var(--accent-1); background: var(--accent-soft); }
+
+        /* ========== 2026 STUDIO: ARCHITECTURAL THEME GALLERY & LIVE COLOR CUSTOMIZER ========== */
+        .theme-gallery {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 6px;
+        }
+        .theme-card {
+            position: relative;
+            padding: 7px 8px;
+            border-radius: calc(var(--radius-card) - 3px);
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-card);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            transition: border-color 0.15s var(--ease), background 0.15s var(--ease), transform 0.14s var(--ease);
+        }
+        .theme-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-rim);
+            transform: translateY(-1px);
+        }
+        .theme-card.active {
+            border-color: var(--accent-1);
+            background: var(--accent-soft);
+            box-shadow: 0 0 0 1px var(--accent-ring);
+        }
+        .theme-mini {
+            height: 28px;
+            border-radius: 7px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 3px 6px;
+            border: 1px solid rgba(255,255,255,0.10);
+        }
+        .theme-mini.tm-mono-matrix {
+            background-image: radial-gradient(rgba(255,255,255,0.14) 1px, transparent 1px) !important;
+            background-size: 6px 6px !important;
+        }
+        .theme-mini-crown {
+            width: 26px; height: 4px;
+            border-radius: 0 0 4px 4px;
+            opacity: 0.92;
+        }
+        .theme-mini.tm-bento-silk .theme-mini-crown,
+        .theme-mini.tm-spatial-vision .theme-mini-crown,
+        .theme-mini.tm-mono-matrix .theme-mini-crown {
+            border-radius: 99px;
+            margin-top: 1px;
+        }
+        .theme-mini-dock {
+            width: 72%; height: 8px;
+            border-radius: 4px;
+            display: flex; align-items: center; justify-content: center; gap: 3px;
+            border: 1px solid rgba(255,255,255,0.16);
+        }
+        .theme-mini.tm-spatial-vision .theme-mini-dock { border-radius: 99px; width: 78%; }
+        .theme-mini.tm-linear-precision .theme-mini-dock { border-radius: 2px; width: 88%; }
+        .theme-mini.tm-cyber-prism .theme-mini-dock { border-radius: 2px; width: 90%; border-top: 1.5px solid; }
+        .theme-mini-dot { width: 3.5px; height: 3.5px; border-radius: 50%; }
+        .theme-card-meta {
+            display: flex; align-items: center; justify-content: space-between; gap: 4px; min-width: 0;
+        }
+        .theme-card-name {
+            font-size: 11px; font-weight: 700; color: var(--text-1);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .theme-card-tag {
+            font-size: 9px; font-weight: 700; color: var(--text-2);
+            padding: 1px 5px; border-radius: 99px;
+            background: var(--bg-inset);
+            white-space: nowrap; flex-shrink: 0;
+        }
+        .theme-card.active .theme-card-tag {
+            color: var(--accent-1);
+            background: var(--accent-soft);
+        }
+
+        .color-studio {
+            margin-top: 8px;
+            padding: 8px 9px;
+            border-radius: calc(var(--radius-card) - 3px);
+            background: var(--bg-inset);
+            border: 1px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+        .swatch-row {
+            display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+        }
+        .swatch-btn {
+            width: 18px; height: 18px; border-radius: 50%;
+            border: 1.5px solid rgba(255,255,255,0.28);
+            cursor: pointer; padding: 0; flex-shrink: 0;
+            transition: transform 0.14s var(--spring), border-color 0.14s;
+        }
+        .swatch-btn:hover { transform: scale(1.18); border-color: var(--text-1); }
+        .color-pickers-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 5px;
+        }
+        .cp-slot {
+            display: flex; flex-direction: column; align-items: center; gap: 3px;
+            padding: 4px 3px; border-radius: 8px;
+            background: var(--bg-card); border: 1px solid var(--border-subtle);
+            cursor: pointer; transition: border-color 0.14s;
+        }
+        .cp-slot:hover { border-color: var(--accent-ring); }
+        .cp-slot input[type=color] {
+            width: 24px; height: 18px; padding: 0; border: none;
+            background: transparent; cursor: pointer; border-radius: 4px;
+        }
+        .cp-slot input[type=color]::-webkit-color-swatch-wrapper { padding: 0; }
+        .cp-slot input[type=color]::-webkit-color-swatch {
+            border: 1px solid rgba(255,255,255,0.28); border-radius: 4px;
+        }
+        .cp-lbl { font-size: 9px; font-weight: 700; color: var(--text-2); white-space: nowrap; }
+        .wcag-pill {
+            font-size: 9.5px; font-weight: 800; padding: 1px 6px; border-radius: 99px;
+            background: rgba(52,211,153,0.14); color: var(--success);
+            border: 1px solid rgba(52,211,153,0.32);
+        }
+        .wcag-pill.warn {
+            background: rgba(251,191,36,0.14); color: var(--warning);
+            border-color: rgba(251,191,36,0.34);
+        }
 
         /* Flyouts: Tray, Calendar, Dropzone, Omnibar */
         .flyout-panel {
             pointer-events: auto;
-            margin-top: 8px; border-radius: 22px; padding: 15px;
+            margin-top: 8px; border-radius: var(--radius-shell); padding: 15px;
             max-width: calc(100vw - 24px);
             display: none; flex-direction: column; gap: 11px;
             animation: flyIn 0.20s var(--spring);
@@ -327,7 +506,7 @@ public static partial class AuroraSurfaceTemplates
         #omnibar {
             pointer-events: auto;
             margin-top: 8px; width: min(740px, calc(100vw - 24px));
-            border-radius: 24px; padding: 15px;
+            border-radius: var(--radius-shell); padding: 15px;
             display: none; flex-direction: column; gap: 11px;
             animation: flyIn 0.18s var(--spring);
         }
@@ -336,8 +515,8 @@ public static partial class AuroraSurfaceTemplates
         .omni-input-wrap {
             display: flex; align-items: center; gap: 10px;
             background: var(--bg-inset); border: 1.5px solid var(--accent-1);
-            border-radius: 14px; padding: 9px 13px;
-            box-shadow: 0 0 22px rgba(56, 189, 248, 0.16);
+            border-radius: 12px; padding: 9px 13px;
+            box-shadow: 0 0 20px var(--accent-soft);
         }
         .omni-input-wrap input {
             flex: 1; background: transparent; border: none; outline: none;
@@ -345,8 +524,8 @@ public static partial class AuroraSurfaceTemplates
             user-select: text;
         }
         .calc-banner {
-            padding: 10px 14px; border-radius: 13px;
-            background: linear-gradient(135deg, rgba(52,211,153,0.18), rgba(56,189,248,0.14));
+            padding: 10px 14px; border-radius: 12px;
+            background: linear-gradient(135deg, rgba(52,211,153,0.16), var(--accent-soft));
             border: 1px solid var(--success);
             display: flex; align-items: center; justify-content: space-between;
             cursor: pointer;
@@ -358,12 +537,12 @@ public static partial class AuroraSurfaceTemplates
         .app-card {
             position: relative;
             display: flex; align-items: center; gap: 9px;
-            padding: 8px 10px; border-radius: 12px;
+            padding: 8px 10px; border-radius: 11px;
             background: var(--bg-card); border: 1px solid var(--border-subtle);
             cursor: pointer; transition: all 0.14s var(--ease);
         }
         .app-card:hover {
-            background: rgba(56,189,248,0.14);
+            background: var(--accent-soft);
             border-color: var(--accent-1);
             transform: translateY(-1px);
         }
@@ -383,11 +562,11 @@ public static partial class AuroraSurfaceTemplates
         .omni-list { max-height: 256px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
         .omni-row {
             display: flex; align-items: center; gap: 10px;
-            padding: 8px 11px; border-radius: 12px; cursor: pointer;
+            padding: 8px 11px; border-radius: 11px; cursor: pointer;
             background: var(--bg-card); border: 1px solid transparent;
         }
         .omni-row.sel, .omni-row:hover {
-            background: rgba(56,189,248,0.16); border-color: var(--accent-1);
+            background: var(--accent-soft); border-color: var(--accent-1);
         }
         .omni-row img { width: 22px; height: 22px; border-radius: 6px; }
 
@@ -397,7 +576,7 @@ public static partial class AuroraSurfaceTemplates
         }
         .tray-item {
             display: flex; align-items: center; gap: 9px;
-            padding: 9px 10px; border-radius: 13px;
+            padding: 9px 10px; border-radius: 12px;
             background: var(--bg-card); border: 1px solid var(--border-subtle);
             cursor: pointer; transition: all 0.14s var(--ease);
         }
@@ -420,7 +599,7 @@ public static partial class AuroraSurfaceTemplates
             background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
             color: var(--accent-ink); font-weight: 800;
         }
-        .cal-day.selected:not(.today) { border-color: var(--accent-1); background: rgba(56,189,248,0.16); }
+        .cal-day.selected:not(.today) { border-color: var(--accent-1); background: var(--accent-soft); }
         .cal-day .note-dot {
             position: absolute; bottom: 3px; width: 4.5px; height: 4.5px;
             border-radius: 50%; background: var(--accent-1);
@@ -430,10 +609,10 @@ public static partial class AuroraSurfaceTemplates
         .drop-zone-box {
             border: 1.5px dashed var(--accent-1);
             border-radius: 14px; padding: 14px;
-            text-align: center; background: rgba(56, 189, 248, 0.06);
+            text-align: center; background: rgba(var(--a1-rgb), 0.06);
             cursor: pointer; transition: all 0.15s var(--ease);
         }
-        .drop-zone-box:hover, .drop-zone-box.drag-active { background: rgba(56, 189, 248, 0.16); }
+        .drop-zone-box:hover, .drop-zone-box.drag-active { background: var(--accent-soft); }
         .shelf-file-row {
             display: flex; align-items: center; gap: 9px;
             padding: 8px 10px; border-radius: 11px;
@@ -452,7 +631,7 @@ public static partial class AuroraSurfaceTemplates
         /* Toast */
         #toast {
             pointer-events: auto;
-            margin-top: 8px; padding: 10px 15px; border-radius: 16px;
+            margin-top: 8px; padding: 10px 15px; border-radius: var(--radius-card);
             display: none; align-items: center; gap: 10px; max-width: 460px;
             font-size: 12px;
             transition: border-color 0.16s, transform 0.16s;
@@ -462,8 +641,8 @@ public static partial class AuroraSurfaceTemplates
         #toast.clickable:hover { border-color: var(--accent-1); transform: translateY(-1px); }
         .toast-open-pill {
             font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 99px;
-            background: rgba(56, 189, 248, 0.16); color: var(--accent-1);
-            border: 1px solid rgba(56, 189, 248, 0.34); flex-shrink: 0; white-space: nowrap;
+            background: var(--accent-soft); color: var(--accent-1);
+            border: 1px solid var(--accent-ring); flex-shrink: 0; white-space: nowrap;
         }
         .notif-row-click {
             font-size: 11.5px; padding: 6px 7px; border-radius: 9px;
@@ -475,7 +654,7 @@ public static partial class AuroraSurfaceTemplates
             display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
         }
         .omni-chip {
-            height: 24px; padding: 0 10px; border-radius: 99px;
+            height: 24px; padding: 0 10px; border-radius: var(--radius-btn);
             border: 1px solid var(--border-subtle);
             background: var(--bg-card); color: var(--text-2);
             font-family: var(--font); font-size: 11px; font-weight: 700;
@@ -497,7 +676,7 @@ public static partial class AuroraSurfaceTemplates
         }
         .notif-card {
             display: flex; align-items: flex-start; gap: 9px;
-            padding: 9px 11px; border-radius: 13px;
+            padding: 9px 11px; border-radius: 12px;
             background: var(--bg-card); border: 1px solid var(--border-subtle);
             cursor: pointer;
             transition: background 0.14s, border-color 0.14s;
@@ -512,7 +691,7 @@ public static partial class AuroraSurfaceTemplates
             margin-top: 12px;
             width: min(790px, calc(100vw - 24px));
             max-height: 550px;
-            border-radius: 24px;
+            border-radius: var(--radius-shell);
             padding: 16px 19px 15px;
             display: none;
             flex-direction: column;
@@ -525,12 +704,12 @@ public static partial class AuroraSurfaceTemplates
             grid-template-columns: repeat(6, minmax(0, 1fr));
             gap: 5px;
             padding: 4px;
-            border-radius: 14px;
+            border-radius: 12px;
             background: var(--bg-inset);
             border: 1px solid var(--border-subtle);
         }
         .tour-nav-btn {
-            height: 29px; padding: 0 7px; border-radius: 10px;
+            height: 29px; padding: 0 7px; border-radius: 9px;
             border: 1px solid transparent; background: transparent;
             color: var(--text-2); font-size: 10.5px; font-weight: 700;
             display: inline-flex; align-items: center; justify-content: center; gap: 5px;
@@ -541,7 +720,7 @@ public static partial class AuroraSurfaceTemplates
         .tour-nav-btn.active {
             background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
             color: var(--accent-ink);
-            box-shadow: 0 4px 12px -4px rgba(56, 189, 248, 0.55);
+            box-shadow: 0 4px 12px -4px var(--accent-glow);
         }
         .tour-nav-num {
             width: 15px; height: 15px; border-radius: 99px;
@@ -552,9 +731,9 @@ public static partial class AuroraSurfaceTemplates
         .tour-nav-btn.active .tour-nav-num { background: rgba(255,255,255,0.22); }
         .tour-hero {
             display: flex; align-items: center; justify-content: space-between; gap: 12px;
-            padding: 9px 13px; border-radius: 14px;
-            background: linear-gradient(135deg, rgba(56,189,248,0.11), rgba(129,140,248,0.08));
-            border: 1px solid rgba(56,189,248,0.24);
+            padding: 9px 13px; border-radius: var(--radius-card);
+            background: linear-gradient(135deg, rgba(var(--a1-rgb),0.11), rgba(var(--a2-rgb),0.08));
+            border: 1px solid rgba(var(--a1-rgb),0.26);
         }
         .tour-hero-title { font-size: 13px; font-weight: 800; color: var(--text-1); letter-spacing: -0.01em; }
         .tour-hero-sub { font-size: 11px; color: var(--text-2); margin-top: 2px; line-height: 1.35; }
@@ -566,16 +745,16 @@ public static partial class AuroraSurfaceTemplates
             display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
         }
         .tour-card {
-            padding: 9px 11px; border-radius: 14px;
+            padding: 9px 11px; border-radius: calc(var(--radius-card) - 2px);
             background: var(--bg-card); border: 1px solid var(--border-subtle);
             display: flex; align-items: flex-start; gap: 9px;
             transition: border-color 0.16s, background 0.16s;
         }
         .tour-card:hover { background: var(--bg-card-hover); border-color: var(--border-rim); }
         .tour-ic {
-            width: 29px; height: 29px; border-radius: 10px; flex-shrink: 0;
-            background: rgba(56, 189, 248, 0.14);
-            border: 1px solid rgba(56, 189, 248, 0.25);
+            width: 29px; height: 29px; border-radius: 9px; flex-shrink: 0;
+            background: var(--accent-soft);
+            border: 1px solid rgba(var(--a1-rgb), 0.25);
             color: var(--accent-1);
             display: inline-flex; align-items: center; justify-content: center;
         }
@@ -587,8 +766,8 @@ public static partial class AuroraSurfaceTemplates
         .tour-tag {
             font-size: 9px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;
             padding: 1px 6px; border-radius: 99px;
-            background: rgba(56, 189, 248, 0.15); color: var(--accent-1);
-            border: 1px solid rgba(56, 189, 248, 0.28);
+            background: var(--accent-soft); color: var(--accent-1);
+            border: 1px solid rgba(var(--a1-rgb), 0.28);
         }
         .tour-tag.ok { background: rgba(16, 185, 129, 0.14); color: var(--success); border-color: rgba(16, 185, 129, 0.30); }
         .tour-tag.warn { background: rgba(245, 158, 11, 0.15); color: var(--warning); border-color: rgba(245, 158, 11, 0.32); }
@@ -597,7 +776,7 @@ public static partial class AuroraSurfaceTemplates
             margin: 0; font-size: 10.7px; color: var(--text-2); line-height: 1.38;
         }
         .tour-setup-box {
-            padding: 10px 12px; border-radius: 14px;
+            padding: 10px 12px; border-radius: var(--radius-card);
             background: var(--bg-card); border: 1px solid var(--border-subtle);
             display: flex; flex-direction: column; gap: 8px;
         }
@@ -609,13 +788,13 @@ public static partial class AuroraSurfaceTemplates
             display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px;
         }
         .tour-kbd-item {
-            padding: 7px 9px; border-radius: 11px;
+            padding: 7px 9px; border-radius: 10px;
             background: var(--bg-inset); border: 1px solid var(--border-subtle);
             display: flex; align-items: center; justify-content: space-between; gap: 6px;
             font-size: 10.5px; color: var(--text-2);
         }
         .tour-kbd {
-            font-family: ui-monospace, 'Cascadia Code', monospace;
+            font-family: var(--font-mono);
             font-size: 10px; font-weight: 800; color: var(--text-1);
             padding: 2px 6px; border-radius: 6px;
             background: var(--bg-card-hover); border: 1px solid var(--border-rim);
@@ -664,7 +843,7 @@ public static partial class AuroraSurfaceTemplates
             font-family: var(--font); font-size: 12px; outline: none;
             user-select: text; flex-shrink: 0;
         }
-        .clip-search:focus { border-color: var(--accent-1); box-shadow: 0 0 0 2px rgba(56,189,248,0.16); }
+        .clip-search:focus { border-color: var(--accent-1); box-shadow: 0 0 0 2px var(--accent-soft); }
         .clip-vault-list {
             display: flex; flex-direction: column; gap: 6px;
             flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
@@ -685,15 +864,15 @@ public static partial class AuroraSurfaceTemplates
         .deck-body::-webkit-scrollbar-thumb:hover { background: var(--accent-1); }
         .clip-card {
             display: flex; align-items: center; gap: 9px;
-            padding: 8px 10px; border-radius: 12px;
+            padding: 8px 10px; border-radius: 11px;
             background: var(--bg-inset); border: 1px solid var(--border-subtle);
             cursor: pointer; flex-shrink: 0;
             transition: border-color 0.14s, background 0.14s, transform 0.12s;
         }
         .clip-card:hover { border-color: var(--accent-1); background: var(--bg-card-hover); }
         .clip-card.pinned {
-            border-color: rgba(56,189,248,0.52);
-            background: linear-gradient(135deg, rgba(56,189,248,0.08), var(--bg-inset));
+            border-color: var(--accent-ring);
+            background: linear-gradient(135deg, rgba(var(--a1-rgb),0.09), var(--bg-inset));
         }
         .clip-thumb {
             width: 58px; height: 38px; object-fit: cover; border-radius: 7px;
@@ -746,12 +925,12 @@ public static partial class AuroraSurfaceTemplates
             background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
             color: var(--accent-ink); border-style: solid; border-color: transparent;
             transform: scale(1.04);
-            box-shadow: 0 8px 20px -4px rgba(56,189,248,0.50);
+            box-shadow: 0 8px 20px -4px var(--accent-glow);
         }
         #qrShareCard {
             pointer-events: auto;
             margin-top: 8px; width: min(360px, calc(100vw - 24px));
-            border-radius: 22px; padding: 14px;
+            border-radius: var(--radius-shell); padding: 14px;
             display: none; flex-direction: column; gap: 10px;
             animation: flyIn 0.20s var(--spring);
         }
@@ -778,12 +957,12 @@ public static partial class AuroraSurfaceTemplates
         }
         .bt-batt-fill { height: 100%; border-radius: 99px; }
         .spark-tile {
-            padding: 9px 11px; border-radius: 13px; border: 1px solid var(--border-subtle);
+            padding: 9px 11px; border-radius: calc(var(--radius-card) - 2px); border: 1px solid var(--border-subtle);
             background: var(--bg-card); display: flex; flex-direction: column; gap: 5px;
         }
         .spark-tile.accent-tile {
-            background: linear-gradient(145deg, rgba(56,189,248,0.12), rgba(129,140,248,0.08));
-            border-color: rgba(56,189,248,0.34);
+            background: linear-gradient(145deg, rgba(var(--a1-rgb),0.12), rgba(var(--a2-rgb),0.08));
+            border-color: rgba(var(--a1-rgb),0.34);
         }
         .spark-svg { width: 100%; height: 28px; display: block; overflow: visible; }
         .proc-row {

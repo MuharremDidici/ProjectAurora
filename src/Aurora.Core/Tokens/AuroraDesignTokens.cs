@@ -7,7 +7,8 @@ public enum AuroraThemeFamily
     AuroraGlass,
     ObsidianPro,
     AuroraFlow,
-    Nebula
+    Nebula,
+    MonoMatrix
 }
 
 public enum AuroraColorMode
@@ -121,7 +122,8 @@ public sealed record AuroraThemeTokens(
     RadiusTokens Radius,
     MaterialTokens Material,
     MotionTokens Motion,
-    double IconSizeDip = 22.0);
+    double IconSizeDip = 22.0,
+    string VisualStyle = "liquid-glass");
 
 public static class ContrastCalculator
 {
@@ -184,21 +186,21 @@ public static class BuiltInThemes
 {
     public static AuroraThemeTokens AuroraGlassDark { get; } = new(
         Id: "aurora-glass-dark",
-        DisplayName: "Aurora Glass",
-        Description: "Buzlu yarı saydam yüzeyler, ince ışık kenarlıkları ve dengeli derinlik gölgeleri.",
+        DisplayName: "Liquid Glass 26",
+        Description: "Optik katmanlı buzlu cam, üst kırılma kenarlığı ve akıcı kapsül formu.",
         Family: AuroraThemeFamily.AuroraGlass,
         ColorMode: AuroraColorMode.Dark,
         Colors: new ColorTokens(
-            Canvas: "#0B101E",
-            Surface1: "#121A2F",
-            Surface2: "#18233D",
-            Surface3: "#202E4F",
-            SurfaceElevated: "#1C2947",
+            Canvas: "#0A0F1D",
+            Surface1: "#0F172A",
+            Surface2: "#162038",
+            Surface3: "#1E2C4A",
+            SurfaceElevated: "#1A2744",
             TextPrimary: "#F8FAFC",
-            TextSecondary: "#CBD5E1",
+            TextSecondary: "#B6C4D8",
             TextDisabled: "#64748B",
-            BorderSubtle: "#2D3E63",
-            BorderStrong: "#4A6396",
+            BorderSubtle: "#2A3A5C",
+            BorderStrong: "#47608E",
             AccentPrimary: "#38BDF8",
             AccentSecondary: "#818CF8",
             StateSuccess: "#34D399",
@@ -208,56 +210,59 @@ public static class BuiltInThemes
             FocusRing: "#7DD3FC"),
         Typography: new TypographyTokens(),
         Spacing: new SpacingTokens(1.0),
-        Radius: new RadiusTokens(1.0),
-        Material: new MaterialTokens(AuroraBlurLevel.Standard, SurfaceOpacity: 0.86, ShadowIntensity: 0.45, AmbientGradientEnabled: false),
-        Motion: new MotionTokens(120, 190, 280, ReducedMotion: false, PauseWhenHidden: true),
-        IconSizeDip: 22.0);
+        Radius: new RadiusTokens(1.05),
+        Material: new MaterialTokens(AuroraBlurLevel.Standard, SurfaceOpacity: 0.90, ShadowIntensity: 0.45, AmbientGradientEnabled: false),
+        Motion: new MotionTokens(120, 190, 260, ReducedMotion: false, PauseWhenHidden: true),
+        IconSizeDip: 22.0,
+        VisualStyle: "liquid-glass");
 
     public static AuroraThemeTokens AuroraGlassLight { get; } = AuroraGlassDark with
     {
         Id = "aurora-glass-light",
-        DisplayName = "Aurora Glass (Açık)",
+        DisplayName = "Bento Silk (Açık)",
+        Description = "Sıcak porselen açık yüzeyler, yüzen üst ada ve İskandinav yumuşak derinlik.",
         ColorMode = AuroraColorMode.Light,
         Colors = new ColorTokens(
-            Canvas: "#EEF2F9",
-            Surface1: "#FFFFFF",
-            Surface2: "#F1F5FB",
-            Surface3: "#E2E8F4",
+            Canvas: "#F2F0EB",
+            Surface1: "#FAF9F6",
+            Surface2: "#F0EEE9",
+            Surface3: "#E5E2DB",
             SurfaceElevated: "#FFFFFF",
-            TextPrimary: "#0F172A",
-            TextSecondary: "#334155",
-            TextDisabled: "#94A3B8",
-            BorderSubtle: "#CBD5E1",
-            BorderStrong: "#94A3B8",
-            AccentPrimary: "#0284C7",
-            AccentSecondary: "#4F46E5",
+            TextPrimary: "#14161A",
+            TextSecondary: "#4A515E",
+            TextDisabled: "#9098A6",
+            BorderSubtle: "#D6D2C8",
+            BorderStrong: "#B5AFA3",
+            AccentPrimary: "#2563EB",
+            AccentSecondary: "#0EA5E9",
             StateSuccess: "#059669",
             StateWarning: "#D97706",
             StateDanger: "#E11D48",
             StateInfo: "#2563EB",
-            FocusRing: "#0284C7"),
-        Material = new MaterialTokens(AuroraBlurLevel.Standard, SurfaceOpacity: 0.90, ShadowIntensity: 0.25, AmbientGradientEnabled: false)
+            FocusRing: "#2563EB"),
+        Material = new MaterialTokens(AuroraBlurLevel.Standard, SurfaceOpacity: 0.94, ShadowIntensity: 0.22, AmbientGradientEnabled: false),
+        VisualStyle = "bento-silk"
     };
 
     public static AuroraThemeTokens ObsidianProDark { get; } = new(
         Id: "obsidian-pro-dark",
-        DisplayName: "Obsidian Pro",
-        Description: "Yoğun bilgi hiyerarşisi, yüksek kontrastlı profesyonel yüzeyler ve düşük hareket modu.",
+        DisplayName: "Linear Precision",
+        Description: "Mat karbon yüzeyler, jilet keskinliğinde 1px çizgiler ve sıfır gürültülü profesyonel düzen.",
         Family: AuroraThemeFamily.ObsidianPro,
         ColorMode: AuroraColorMode.Dark,
         Colors: new ColorTokens(
             Canvas: "#090A0D",
-            Surface1: "#111318",
-            Surface2: "#181B22",
-            Surface3: "#212630",
-            SurfaceElevated: "#1C2029",
+            Surface1: "#101217",
+            Surface2: "#171A21",
+            Surface3: "#202530",
+            SurfaceElevated: "#1A1E27",
             TextPrimary: "#F4F6F9",
-            TextSecondary: "#B8C1CF",
+            TextSecondary: "#A3AEBE",
             TextDisabled: "#636D7E",
-            BorderSubtle: "#2A303D",
-            BorderStrong: "#454F63",
+            BorderSubtle: "#262C38",
+            BorderStrong: "#3F495C",
             AccentPrimary: "#10B981",
-            AccentSecondary: "#14B8A6",
+            AccentSecondary: "#34D399",
             StateSuccess: "#22C55E",
             StateWarning: "#F59E0B",
             StateDanger: "#EF4444",
@@ -265,76 +270,111 @@ public static class BuiltInThemes
             FocusRing: "#34D399"),
         Typography: new TypographyTokens(ScaleFactor: 0.96),
         Spacing: new SpacingTokens(0.92),
-        Radius: new RadiusTokens(0.75),
-        Material: new MaterialTokens(AuroraBlurLevel.Subtle, SurfaceOpacity: 0.96, ShadowIntensity: 0.30, AmbientGradientEnabled: false),
-        Motion: new MotionTokens(100, 140, 200, ReducedMotion: false, PauseWhenHidden: true),
-        IconSizeDip: 20.0);
+        Radius: new RadiusTokens(0.72),
+        Material: new MaterialTokens(AuroraBlurLevel.Subtle, SurfaceOpacity: 0.96, ShadowIntensity: 0.28, AmbientGradientEnabled: false),
+        Motion: new MotionTokens(100, 150, 200, ReducedMotion: false, PauseWhenHidden: true),
+        IconSizeDip: 20.0,
+        VisualStyle: "linear-precision");
+
+    public static AuroraThemeTokens MonoMatrixDark { get; } = new(
+        Id: "mono-matrix-dark",
+        DisplayName: "Mono Matrix",
+        Description: "Endüstriyel dot-matrix doku, monospace telemetri ve dairesel sinyal LED göstergeleri.",
+        Family: AuroraThemeFamily.MonoMatrix,
+        ColorMode: AuroraColorMode.Dark,
+        Colors: new ColorTokens(
+            Canvas: "#08080A",
+            Surface1: "#0E0E11",
+            Surface2: "#16161A",
+            Surface3: "#202026",
+            SurfaceElevated: "#1A1A20",
+            TextPrimary: "#F5F5F7",
+            TextSecondary: "#A8A8B3",
+            TextDisabled: "#63636E",
+            BorderSubtle: "#282830",
+            BorderStrong: "#484854",
+            AccentPrimary: "#FF453A",
+            AccentSecondary: "#FF9F0A",
+            StateSuccess: "#30D158",
+            StateWarning: "#FF9F0A",
+            StateDanger: "#FF453A",
+            StateInfo: "#64D2FF",
+            FocusRing: "#FF6961"),
+        Typography: new TypographyTokens(ScaleFactor: 0.98),
+        Spacing: new SpacingTokens(0.96),
+        Radius: new RadiusTokens(0.78),
+        Material: new MaterialTokens(AuroraBlurLevel.Subtle, SurfaceOpacity: 0.97, ShadowIntensity: 0.35, AmbientGradientEnabled: false),
+        Motion: new MotionTokens(95, 150, 210, ReducedMotion: false, PauseWhenHidden: true),
+        IconSizeDip: 21.0,
+        VisualStyle: "mono-matrix");
 
     public static AuroraThemeTokens AuroraFlowDark { get; } = new(
         Id: "aurora-flow-dark",
-        DisplayName: "Aurora Flow",
-        Description: "Dinamik kuzey ışığı gradyan vurguları, katmanlı renk alanları ve yüksek okunabilirlik.",
+        DisplayName: "Spatial Vision",
+        Description: "Tam kapsül uzamsal cam, dairesel ikon haleleri ve havada süzülen dinamik üst ada.",
         Family: AuroraThemeFamily.AuroraFlow,
         ColorMode: AuroraColorMode.Dark,
         Colors: new ColorTokens(
-            Canvas: "#0C0A1D",
-            Surface1: "#151230",
-            Surface2: "#1E1A42",
-            Surface3: "#282356",
-            SurfaceElevated: "#221D4A",
-            TextPrimary: "#FAF8FF",
-            TextSecondary: "#D6D1F5",
-            TextDisabled: "#7870A8",
-            BorderSubtle: "#37306B",
-            BorderStrong: "#5B4FA8",
-            AccentPrimary: "#A78BFA",
+            Canvas: "#0D0E1B",
+            Surface1: "#14162A",
+            Surface2: "#1D203C",
+            Surface3: "#272B4E",
+            SurfaceElevated: "#212545",
+            TextPrimary: "#FAF9FF",
+            TextSecondary: "#C5C2E2",
+            TextDisabled: "#76729E",
+            BorderSubtle: "#343866",
+            BorderStrong: "#565C9E",
+            AccentPrimary: "#8B5CF6",
             AccentSecondary: "#2DD4BF",
             StateSuccess: "#34D399",
             StateWarning: "#FBBF24",
             StateDanger: "#FB7185",
             StateInfo: "#60A5FA",
-            FocusRing: "#C4B5FD"),
+            FocusRing: "#A78BFA"),
         Typography: new TypographyTokens(),
         Spacing: new SpacingTokens(1.02),
-        Radius: new RadiusTokens(1.12),
-        Material: new MaterialTokens(AuroraBlurLevel.Strong, SurfaceOpacity: 0.84, ShadowIntensity: 0.50, AmbientGradientEnabled: true),
-        Motion: new MotionTokens(130, 210, 300, ReducedMotion: false, PauseWhenHidden: true),
-        IconSizeDip: 23.0);
+        Radius: new RadiusTokens(1.25),
+        Material: new MaterialTokens(AuroraBlurLevel.Strong, SurfaceOpacity: 0.88, ShadowIntensity: 0.48, AmbientGradientEnabled: true),
+        Motion: new MotionTokens(130, 200, 280, ReducedMotion: false, PauseWhenHidden: true),
+        IconSizeDip: 22.0,
+        VisualStyle: "spatial-vision");
 
     public static AuroraThemeTokens NebulaDark { get; } = new(
         Id: "nebula-dark",
-        DisplayName: "Nebula",
-        Description: "Derin uzay yüzeyleri, yalnızca odak ve aktif durumlar için ince neon siber konturlar.",
+        DisplayName: "Cyber Prism",
+        Description: "Derin OLED siyah yüzey, kenar aydınlatmalı ince ışık şeridi ve keskin teknik HUD hatları.",
         Family: AuroraThemeFamily.Nebula,
         ColorMode: AuroraColorMode.Dark,
         Colors: new ColorTokens(
-            Canvas: "#05070F",
-            Surface1: "#0B1021",
-            Surface2: "#111933",
-            Surface3: "#182347",
-            SurfaceElevated: "#141E3D",
+            Canvas: "#05070E",
+            Surface1: "#090E1C",
+            Surface2: "#10182E",
+            Surface3: "#182444",
+            SurfaceElevated: "#131D38",
             TextPrimary: "#F0F9FF",
-            TextSecondary: "#BAE6FD",
+            TextSecondary: "#A5CBE2",
             TextDisabled: "#526D8A",
             BorderSubtle: "#1D3259",
             BorderStrong: "#06B6D4",
-            AccentPrimary: "#22D3EE",
-            AccentSecondary: "#F472B6",
+            AccentPrimary: "#06B6D4",
+            AccentSecondary: "#F43F5E",
             StateSuccess: "#4ADE80",
             StateWarning: "#FACC15",
             StateDanger: "#F43F5E",
             StateInfo: "#38BDF8",
-            FocusRing: "#67E8F9"),
+            FocusRing: "#22D3EE"),
         Typography: new TypographyTokens(),
         Spacing: new SpacingTokens(1.0),
-        Radius: new RadiusTokens(0.90),
-        Material: new MaterialTokens(AuroraBlurLevel.Standard, SurfaceOpacity: 0.90, ShadowIntensity: 0.55, AmbientGradientEnabled: true),
-        Motion: new MotionTokens(115, 180, 260, ReducedMotion: false, PauseWhenHidden: true),
-        IconSizeDip: 22.0);
+        Radius: new RadiusTokens(0.70),
+        Material: new MaterialTokens(AuroraBlurLevel.Standard, SurfaceOpacity: 0.93, ShadowIntensity: 0.52, AmbientGradientEnabled: true),
+        Motion: new MotionTokens(110, 175, 240, ReducedMotion: false, PauseWhenHidden: true),
+        IconSizeDip: 22.0,
+        VisualStyle: "cyber-prism");
 
     public static AuroraThemeTokens HighContrastSafe { get; } = new(
         Id: "aurora-high-contrast",
-        DisplayName: "Yüksek Kontrast (Erişilebilirlik)",
+        DisplayName: "Yüksek Kontrast",
         Description: "Dekoratif bulanıklık kapatılmış, maksimum WCAG AAA metin ve odak kontrastı.",
         Family: AuroraThemeFamily.ObsidianPro,
         ColorMode: AuroraColorMode.Dark,
@@ -361,13 +401,15 @@ public static class BuiltInThemes
         Radius: new RadiusTokens(0.6),
         Material: new MaterialTokens(AuroraBlurLevel.None, SurfaceOpacity: 1.0, ShadowIntensity: 0.0, AmbientGradientEnabled: false),
         Motion: new MotionTokens(0, 0, 0, ReducedMotion: true, PauseWhenHidden: true),
-        IconSizeDip: 24.0);
+        IconSizeDip: 24.0,
+        VisualStyle: "high-contrast");
 
     public static IReadOnlyList<AuroraThemeTokens> All { get; } =
     [
         AuroraGlassDark,
         AuroraGlassLight,
         ObsidianProDark,
+        MonoMatrixDark,
         AuroraFlowDark,
         NebulaDark,
         HighContrastSafe
@@ -381,8 +423,73 @@ public static class BuiltInThemes
         {
             AuroraThemeFamily.AuroraGlass => mode == AuroraColorMode.Light ? AuroraGlassLight : AuroraGlassDark,
             AuroraThemeFamily.ObsidianPro => ObsidianProDark,
+            AuroraThemeFamily.MonoMatrix => MonoMatrixDark,
             AuroraThemeFamily.AuroraFlow => AuroraFlowDark,
             AuroraThemeFamily.Nebula => NebulaDark,
             _ => AuroraGlassDark
         };
+}
+
+public static class ThemeCustomizationHelper
+{
+    public static AuroraThemeTokens ApplyOverrides(
+        AuroraThemeTokens baseTheme,
+        string? accentPrimary = null,
+        string? accentSecondary = null,
+        string? surface1 = null,
+        string? surface2 = null,
+        string? textPrimary = null,
+        double? surfaceOpacity = null)
+    {
+        var c = baseTheme.Colors;
+        string effAccent1 = ContrastCalculator.IsValidHexColor(accentPrimary) ? accentPrimary!.Trim().ToUpperInvariant() : c.AccentPrimary;
+        string effAccent2 = ContrastCalculator.IsValidHexColor(accentSecondary) ? accentSecondary!.Trim().ToUpperInvariant() : c.AccentSecondary;
+        string effSurf1 = ContrastCalculator.IsValidHexColor(surface1) ? surface1!.Trim().ToUpperInvariant() : c.Surface1;
+        string effSurf2 = ContrastCalculator.IsValidHexColor(surface2) ? surface2!.Trim().ToUpperInvariant() : c.Surface2;
+        string effText1 = ContrastCalculator.IsValidHexColor(textPrimary) ? textPrimary!.Trim().ToUpperInvariant() : c.TextPrimary;
+
+        // Auto-detect effective light/dark color mode from customized Surface1 luminance
+        double surfLum = ContrastCalculator.RelativeLuminance(effSurf1);
+        var effMode = surfLum >= 0.42 ? AuroraColorMode.Light : AuroraColorMode.Dark;
+
+        // Derive harmonious secondary text if Surface1 changed dramatically or textPrimary changed
+        string effText2 = c.TextSecondary;
+        if (effMode != baseTheme.ColorMode || !string.Equals(effText1, c.TextPrimary, StringComparison.OrdinalIgnoreCase))
+        {
+            effText2 = BlendHex(effText1, effSurf1, 0.34);
+        }
+
+        double effOpacity = surfaceOpacity.HasValue
+            ? Math.Round(Math.Clamp(surfaceOpacity.Value, 0.55, 1.0), 2)
+            : baseTheme.Material.SurfaceOpacity;
+
+        return baseTheme with
+        {
+            ColorMode = effMode,
+            Colors = c with
+            {
+                Canvas = effSurf1,
+                Surface1 = effSurf1,
+                Surface2 = effSurf2,
+                SurfaceElevated = effSurf2,
+                TextPrimary = effText1,
+                TextSecondary = effText2,
+                AccentPrimary = effAccent1,
+                AccentSecondary = effAccent2,
+                FocusRing = effAccent1
+            },
+            Material = baseTheme.Material with { SurfaceOpacity = effOpacity }
+        };
+    }
+
+    private static string BlendHex(string fgHex, string bgHex, double bgWeight)
+    {
+        var (_, fr, fg, fb) = ContrastCalculator.ParseHexColor(fgHex);
+        var (_, br, bg, bb) = ContrastCalculator.ParseHexColor(bgHex);
+        double w = Math.Clamp(bgWeight, 0.0, 1.0);
+        byte r = (byte)Math.Round(fr * (1 - w) + br * w);
+        byte g = (byte)Math.Round(fg * (1 - w) + bg * w);
+        byte b = (byte)Math.Round(fb * (1 - w) + bb * w);
+        return $"#{r:X2}{g:X2}{b:X2}";
+    }
 }

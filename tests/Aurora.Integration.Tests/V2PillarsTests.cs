@@ -198,13 +198,34 @@ public sealed class V2PillarsTests
             Assert.Equal(135, clampedPrefs.EffectiveDockScalePercent);
             Assert.Equal(-100, clampedPrefs.EffectiveDockOffsetPercent);
 
-            // Legacy v2.3.2 shell_settings.json without "reserveDockWorkArea" MUST default to enabled (true)
+            // Legacy v2.3.2 shell_settings.json without "reserveDockWorkArea" MUST default to enabled (true) for Fixed Bar
             string legacyPath = Path.Combine(dir, "legacy_v232_settings.json");
             File.WriteAllText(legacyPath, """{"dockVisibilityMode":"AlwaysVisible","dockDensity":"Compact","dockEdge":"Bottom"}""");
             var legacyLoaded = new ShellPreferencesStore(legacyPath).Load();
             Assert.True(legacyLoaded.EffectiveReserveDockWorkAreaPreference);
             Assert.True(legacyLoaded.EffectiveReserveDockWorkArea);
+            Assert.Equal("Centered", legacyLoaded.EffectiveDockBarLayout);
+            // Both SmartDodge (Intellihide) and AutoHide release WorkArea to 100% full screen height!
+            Assert.False((legacyLoaded with { DockVisibilityMode = "SmartDodge" }).EffectiveReserveDockWorkArea);
             Assert.False((legacyLoaded with { DockVisibilityMode = "AutoHide" }).EffectiveReserveDockWorkArea);
+
+            // Per-theme color customization & Split3Zone Fixed Bar layout persistence
+            var customMap = new Dictionary<string, ThemeColorCustomization>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["mono-matrix-dark"] = new ThemeColorCustomization(
+                    AccentPrimary: "#84CC16",
+                    AccentSecondary: "#22C55E",
+                    Surface1: "#0B0D0C",
+                    SurfaceOpacity: 0.85)
+            };
+            store.Save(legacyLoaded with { DockBarLayout = "Split3Zone", ThemeCustomizations = customMap });
+            var customReloaded = store.Load();
+            Assert.Equal("Split3Zone", customReloaded.EffectiveDockBarLayout);
+            var monoCustom = customReloaded.GetThemeCustomization("mono-matrix-dark");
+            Assert.NotNull(monoCustom);
+            Assert.True(monoCustom!.HasAnyOverride);
+            Assert.Equal("#84CC16", monoCustom.AccentPrimary);
+            Assert.Equal(0.85, monoCustom.SurfaceOpacity);
         }
         finally
         {

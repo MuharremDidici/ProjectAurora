@@ -10,14 +10,49 @@ public sealed class CoreDesignAndEventTests
     [Fact]
     public void AllBuiltInThemes_MeetWcagAA_PrimaryTextAndFocusRingContrast()
     {
+        Assert.True(BuiltInThemes.All.Count >= 7);
+        var distinctStyles = BuiltInThemes.All.Select(t => t.VisualStyle).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        Assert.Equal(BuiltInThemes.All.Count, distinctStyles.Count);
+
         foreach (var theme in BuiltInThemes.All)
         {
+            Assert.False(string.IsNullOrWhiteSpace(theme.VisualStyle));
             bool textOk = ContrastCalculator.MeetsWcagAA(theme.Colors.TextPrimary, theme.Colors.Surface1);
             bool focusOk = ContrastCalculator.MeetsWcagAA(theme.Colors.FocusRing, theme.Colors.Surface1, largeText: true);
 
             Assert.True(textOk, $"Theme '{theme.Id}' failed WCAG AA primary text contrast.");
             Assert.True(focusOk, $"Theme '{theme.Id}' failed WCAG AA focus ring contrast.");
         }
+    }
+
+    [Fact]
+    public void ThemeCustomizationHelper_AppliesValidColorOverrides_AutoDetectsColorMode_AndRejectsInvalidHex()
+    {
+        var baseTheme = BuiltInThemes.MonoMatrixDark;
+        var customized = ThemeCustomizationHelper.ApplyOverrides(
+            baseTheme,
+            accentPrimary: "#84cc16",
+            accentSecondary: "#22c55e",
+            surface1: "#f5f4f0",
+            surface2: "#e8e6df",
+            textPrimary: "#111318",
+            surfaceOpacity: 0.78);
+
+        Assert.Equal(baseTheme.VisualStyle, customized.VisualStyle);
+        Assert.Equal(AuroraColorMode.Light, customized.ColorMode);
+        Assert.Equal("#84CC16", customized.Colors.AccentPrimary);
+        Assert.Equal("#22C55E", customized.Colors.AccentSecondary);
+        Assert.Equal("#F5F4F0", customized.Colors.Surface1);
+        Assert.Equal("#111318", customized.Colors.TextPrimary);
+        Assert.Equal(0.78, customized.Material.SurfaceOpacity);
+
+        // Invalid hex values fall back safely to base theme tokens
+        var safeFallback = ThemeCustomizationHelper.ApplyOverrides(
+            baseTheme,
+            accentPrimary: "not-a-hex",
+            surfaceOpacity: 0.10);
+        Assert.Equal(baseTheme.Colors.AccentPrimary, safeFallback.Colors.AccentPrimary);
+        Assert.Equal(0.55, safeFallback.Material.SurfaceOpacity);
     }
 
     [Theory]

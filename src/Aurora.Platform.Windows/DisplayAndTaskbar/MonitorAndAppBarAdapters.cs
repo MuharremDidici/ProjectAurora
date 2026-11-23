@@ -288,9 +288,10 @@ public sealed class Win32AppBarService(IAuroraLogger logger) : IAppBarService
     }
 
     /// <summary>
-    /// Computes the exact per-monitor Windows WorkArea rectangle that leaves a clean breathing channel
-    /// for Aurora's Bottom / Left / Right Dock so maximized apps (Antigravity, WhatsApp, Discord, VS Code)
-    /// NEVER have their typing boxes or sidebars covered by the Dock.
+    /// Computes the exact per-monitor Windows WorkArea rectangle for Aurora's Pinned Fixed Bar
+    /// (Bottom 44/52/60px, Left/Right 50/58/66px at 100% scale) so maximized apps (Antigravity,
+    /// WhatsApp, Discord, VS Code) sit pixel-flush right above/beside the edge-to-edge Fixed Bar
+    /// with ZERO wallpaper bleed and ZERO covered typing boxes.
     /// </summary>
     public static PhysicalPixelRect ComputeDockReservedWorkArea(
         PhysicalPixelRect monitorBounds,
@@ -315,20 +316,20 @@ public sealed class Win32AppBarService(IAuroraLogger logger) : IAppBarService
 
         if (string.Equals(dockEdge, "Left", StringComparison.OrdinalIgnoreCase))
         {
-            double baseSide = compact ? 48.0 : (cozy ? 66.0 : 56.0);
-            int inset = (int)Math.Round(Math.Clamp(baseSide * dockMul + 14.0, 52.0, 122.0) * dpi);
+            double baseSide = compact ? 50.0 : (cozy ? 66.0 : 58.0);
+            int inset = (int)Math.Round(Math.Clamp(baseSide * dockMul, 42.0, 92.0) * dpi);
             left = Math.Min(right - 320, left + inset);
         }
         else if (string.Equals(dockEdge, "Right", StringComparison.OrdinalIgnoreCase))
         {
-            double baseSide = compact ? 48.0 : (cozy ? 66.0 : 56.0);
-            int inset = (int)Math.Round(Math.Clamp(baseSide * dockMul + 14.0, 52.0, 122.0) * dpi);
+            double baseSide = compact ? 50.0 : (cozy ? 66.0 : 58.0);
+            int inset = (int)Math.Round(Math.Clamp(baseSide * dockMul, 42.0, 92.0) * dpi);
             right = Math.Max(left + 320, right - inset);
         }
         else
         {
-            double baseBottom = compact ? 50.0 : (cozy ? 68.0 : 58.0);
-            int inset = (int)Math.Round(Math.Clamp(baseBottom * dockMul + 14.0, 54.0, 126.0) * dpi);
+            double baseBottom = compact ? 44.0 : (cozy ? 60.0 : 52.0);
+            int inset = (int)Math.Round(Math.Clamp(baseBottom * dockMul, 38.0, 84.0) * dpi);
             bottom = Math.Max(top + 240, bottom - inset);
         }
 

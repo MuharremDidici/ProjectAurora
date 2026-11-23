@@ -67,6 +67,37 @@ internal sealed partial class AuroraDesktopCoordinator
         return _cachedInstalledAppDtos;
     }
 
+    private static string GetThemeStyleTag(string visualStyle) => visualStyle switch
+    {
+        "liquid-glass" => "Optik Cam",
+        "bento-silk" => "Porselen Açık",
+        "linear-precision" => "Mat Karbon",
+        "mono-matrix" => "Dot-Matrix",
+        "spatial-vision" => "Uzamsal Kapsül",
+        "cyber-prism" => "OLED HUD",
+        "high-contrast" => "WCAG AAA",
+        _ => "Modern Cam"
+    };
+
+    private (AuroraThemeTokens Effective, AuroraThemeTokens Base, bool HasCustomColors) ResolveEffectiveCustomizedTheme()
+    {
+        var baseTheme = _stateStore.EffectiveTheme;
+        var custom = _shellPrefs.GetThemeCustomization(baseTheme.Id);
+        if (custom is null || !custom.HasAnyOverride)
+            return (baseTheme, baseTheme, false);
+
+        var applied = ThemeCustomizationHelper.ApplyOverrides(
+            baseTheme,
+            accentPrimary: custom.AccentPrimary,
+            accentSecondary: custom.AccentSecondary,
+            surface1: custom.Surface1,
+            surface2: custom.Surface2,
+            textPrimary: custom.TextPrimary,
+            surfaceOpacity: custom.SurfaceOpacity);
+
+        return (applied, baseTheme, true);
+    }
+
     private void PostStaticCatalogToAllCrowns(bool forceRebuild = false)
     {
         var appsDto = EnsureInstalledAppsCached(forceRebuild);
@@ -76,8 +107,15 @@ internal sealed partial class AuroraDesktopCoordinator
             {
                 id = t.Id,
                 name = t.DisplayName,
-                mode = t.ColorMode == AuroraColorMode.Light ? "Açık Kristal" : "Koyu Cam",
-                accent = t.Colors.AccentPrimary
+                desc = t.Description,
+                visualStyle = t.VisualStyle,
+                styleTag = GetThemeStyleTag(t.VisualStyle),
+                mode = t.ColorMode == AuroraColorMode.Light ? "Açık" : "Koyu",
+                isLight = t.ColorMode == AuroraColorMode.Light,
+                accent = t.Colors.AccentPrimary,
+                accent2 = t.Colors.AccentSecondary,
+                surface1 = t.Colors.Surface1,
+                surface2 = t.Colors.Surface2
             }).ToArray();
 
             _cachedStaticCatalogJson = JsonSerializer.Serialize(new
@@ -140,7 +178,7 @@ internal sealed partial class AuroraDesktopCoordinator
             if (activeWin is not null)
                 _attentionService.ClearAttention(activeWin.ProcessName);
 
-            var theme = _stateStore.EffectiveTheme;
+            var (theme, baseTheme, hasCustomColors) = ResolveEffectiveCustomizedTheme();
             var m = _widgetVm.Metrics;
             var wx = _widgetVm.Weather;
             var media = _mediaVm.SelectedSession;
@@ -167,19 +205,39 @@ internal sealed partial class AuroraDesktopCoordinator
 
             var clockStr = DateTime.Now.ToString(_shellPrefs.ShowClockSeconds ? "HH:mm:ss" : "HH:mm");
             var shortDateStr = DateTime.Now.ToString("dd MMM", CultureInfo.GetCultureInfo("tr-TR"));
+            double contrastRatio = ContrastCalculator.CalculateContrastRatio(theme.Colors.TextPrimary, theme.Colors.Surface1);
             var themeDto = new
             {
                 id = theme.Id,
                 displayName = theme.DisplayName,
+                visualStyle = theme.VisualStyle,
+                styleTag = GetThemeStyleTag(theme.VisualStyle),
                 colorMode = theme.ColorMode.ToString(),
+                surfaceOpacity = theme.Material.SurfaceOpacity,
+                hasCustomColors,
+                contrastRatio,
+                meetsWcagAA = contrastRatio >= 4.5,
                 colors = new
                 {
+                    canvas = theme.Colors.Canvas,
                     surface1 = theme.Colors.Surface1,
                     surface2 = theme.Colors.Surface2,
+                    surface3 = theme.Colors.Surface3,
                     textPrimary = theme.Colors.TextPrimary,
                     textSecondary = theme.Colors.TextSecondary,
                     accentPrimary = theme.Colors.AccentPrimary,
-                    accentSecondary = theme.Colors.AccentSecondary
+                    accentSecondary = theme.Colors.AccentSecondary,
+                    borderSubtle = theme.Colors.BorderSubtle,
+                    borderStrong = theme.Colors.BorderStrong
+                },
+                defaultColors = new
+                {
+                    surface1 = baseTheme.Colors.Surface1,
+                    surface2 = baseTheme.Colors.Surface2,
+                    textPrimary = baseTheme.Colors.TextPrimary,
+                    accentPrimary = baseTheme.Colors.AccentPrimary,
+                    accentSecondary = baseTheme.Colors.AccentSecondary,
+                    surfaceOpacity = baseTheme.Material.SurfaceOpacity
                 }
             };
             var profilesDto = _stateStore.Profiles.Select(p => new
@@ -333,6 +391,7 @@ internal sealed partial class AuroraDesktopCoordinator
                     monitorId = monId,
                     dockAutoHide = effectiveDockMode == "AutoHide",
                     dockMode = effectiveDockMode,
+                    dockBarLayout = _shellPrefs.EffectiveDockBarLayout,
                     dockDensity = effectiveDockDensity,
                     dockEdge = effectiveDockEdge,
                     dockScalePercent = _shellPrefs.EffectiveDockScalePercent,
@@ -365,6 +424,7 @@ internal sealed partial class AuroraDesktopCoordinator
                     virtualDesktop = virtualDesktopDto,
                     unreadNotifCount = _unreadNotifCount,
                     dockMode = effectiveDockMode,
+                    dockBarLayout = _shellPrefs.EffectiveDockBarLayout,
                     dockDensity = effectiveDockDensity,
                     dockEdge = effectiveDockEdge,
                     dockScalePercent = _shellPrefs.EffectiveDockScalePercent,

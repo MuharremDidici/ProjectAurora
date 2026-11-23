@@ -786,13 +786,16 @@ public sealed class TransparentSurfaceForm : Form
             cssY = (cursor.Y - rc.Top) / fallbackScale;
         }
 
-        double pad = (buttons & MouseButtons.Left) != 0 ? 28.0 : 10.0;
+        bool dragging = (buttons & MouseButtons.Left) != 0;
+        double defaultPad = dragging ? 28.0 : 10.0;
 
         bool hitAny = false;
         if (!staleAspect)
         {
             foreach (var r in _interactiveRects)
             {
+                bool isThinEdgeTrigger = !dragging && (r.H <= 16.0 || r.W <= 16.0);
+                double pad = isThinEdgeTrigger ? 3.0 : defaultPad;
                 if (cssX >= r.X - pad && cssX <= r.X + r.W + pad &&
                     cssY >= r.Y - pad && cssY <= r.Y + r.H + pad)
                 {

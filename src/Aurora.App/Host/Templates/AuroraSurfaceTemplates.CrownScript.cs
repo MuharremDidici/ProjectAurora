@@ -97,32 +97,151 @@ public static partial class AuroraSurfaceTemplates
             });
         }
 
+        const ALL_VISUAL_STYLES = ['liquid-glass', 'bento-silk', 'linear-precision', 'mono-matrix', 'spatial-vision', 'cyber-prism', 'high-contrast'];
+        const CURATED_ACCENT_PRESETS = [
+            { name: 'Buz Mavisi', a1: '#38BDF8', a2: '#818CF8' },
+            { name: 'Zümrüt', a1: '#10B981', a2: '#34D399' },
+            { name: 'Sinyal Kırmızı', a1: '#FF453A', a2: '#FF9F0A' },
+            { name: 'Kehribar Altın', a1: '#F59E0B', a2: '#FB923C' },
+            { name: 'Uzamsal İris', a1: '#8B5CF6', a2: '#2DD4BF' },
+            { name: 'Kobalt', a1: '#2563EB', a2: '#0EA5E9' },
+            { name: 'Siber Mercan', a1: '#F43F5E', a2: '#EC4899' },
+            { name: 'Asit Yeşil', a1: '#84CC16', a2: '#22C55E' }
+        ];
+        let themeColorSendTimer = null;
+        let pendingThemeColorPatch = {};
+
+        function parseHexRgb(hex, fallback = [56, 189, 248]) {
+            const h = String(hex || '').replace('#', '').trim();
+            const clean = h.length === 8 ? h.slice(2) : h;
+            if (clean.length !== 6) return fallback;
+            const n = parseInt(clean, 16);
+            if (Number.isNaN(n)) return fallback;
+            return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+        }
+
+        function hexToRgba(hex, alpha) {
+            const [r, g, b] = parseHexRgb(hex, [15, 23, 42]);
+            return `rgba(${r},${g},${b},${alpha})`;
+        }
+
+        function relativeLum(hex) {
+            const [r, g, b] = parseHexRgb(hex, [56, 189, 248]).map(v => {
+                const c = v / 255;
+                return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+            });
+            return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        }
+
         function applyThemeVars(t) {
             if (!t) return;
             const root = document.documentElement.style;
             const isLight = t.colorMode === 'Light';
-            root.setProperty('--bg-glass-1', isLight ? 'rgba(248,250,252,0.97)' : hexToRgba(t.colors.surface1, 0.965));
-            root.setProperty('--bg-glass-2', isLight ? 'rgba(235,241,250,0.988)' : hexToRgba(t.colors.surface2, 0.985));
-            root.setProperty('--bg-card', isLight ? 'rgba(15,23,42,0.045)' : 'rgba(255,255,255,0.05)');
-            root.setProperty('--bg-card-hover', isLight ? 'rgba(15,23,42,0.095)' : 'rgba(255,255,255,0.105)');
-            root.setProperty('--bg-inset', isLight ? 'rgba(15,23,42,0.06)' : 'rgba(0,0,0,0.34)');
-            root.setProperty('--border-rim', isLight ? 'rgba(15,23,42,0.16)' : 'rgba(255,255,255,0.16)');
-            root.setProperty('--border-subtle', isLight ? 'rgba(15,23,42,0.085)' : 'rgba(255,255,255,0.085)');
+            const styleId = t.visualStyle || (isLight ? 'bento-silk' : 'liquid-glass');
+            for (const s of ALL_VISUAL_STYLES) {
+                document.body.classList.toggle('style-' + s, s === styleId);
+            }
+            document.body.classList.toggle('mode-light', isLight);
+
+            const op1 = typeof t.surfaceOpacity === 'number' ? Math.max(0.55, Math.min(1.0, t.surfaceOpacity)) : (isLight ? 0.94 : 0.92);
+            const op2 = Math.min(1.0, op1 + 0.04);
+            const [a1r, a1g, a1b] = parseHexRgb(t.colors.accentPrimary, [56, 189, 248]);
+            const [a2r, a2g, a2b] = parseHexRgb(t.colors.accentSecondary, [129, 140, 248]);
+            const accentInk = relativeLum(t.colors.accentPrimary) > 0.36 ? '#050B16' : '#FFFFFF';
+
+            root.setProperty('--bg-glass-1', hexToRgba(t.colors.surface1, op1));
+            root.setProperty('--bg-glass-2', hexToRgba(t.colors.surface2, op2));
+            root.setProperty('--bg-card', isLight ? 'rgba(20,22,26,0.045)' : 'rgba(255,255,255,0.048)');
+            root.setProperty('--bg-card-hover', isLight ? 'rgba(20,22,26,0.095)' : 'rgba(255,255,255,0.10)');
+            root.setProperty('--bg-inset', isLight ? 'rgba(20,22,26,0.055)' : 'rgba(0,0,0,0.30)');
+            root.setProperty('--border-rim', isLight ? 'rgba(20,22,26,0.14)' : 'rgba(255,255,255,0.15)');
+            root.setProperty('--border-subtle', isLight ? 'rgba(20,22,26,0.08)' : 'rgba(255,255,255,0.08)');
             root.setProperty('--text-1', t.colors.textPrimary);
             root.setProperty('--text-2', t.colors.textSecondary);
             root.setProperty('--accent-1', t.colors.accentPrimary);
             root.setProperty('--accent-2', t.colors.accentSecondary);
-            root.setProperty('--accent-ink', isLight ? '#FFFFFF' : '#04101F');
+            root.setProperty('--a1-rgb', `${a1r},${a1g},${a1b}`);
+            root.setProperty('--a2-rgb', `${a2r},${a2g},${a2b}`);
+            root.setProperty('--accent-soft', `rgba(${a1r},${a1g},${a1b},${isLight ? 0.12 : 0.14})`);
+            root.setProperty('--accent-tint', `rgba(${a1r},${a1g},${a1b},${isLight ? 0.20 : 0.23})`);
+            root.setProperty('--accent-ring', `rgba(${a1r},${a1g},${a1b},${isLight ? 0.44 : 0.48})`);
+            root.setProperty('--accent-glow', `rgba(${a1r},${a1g},${a1b},${isLight ? 0.24 : 0.32})`);
+            root.setProperty('--accent-ink', accentInk);
             root.setProperty('--success', isLight ? '#059669' : '#34D399');
             root.setProperty('--warning', isLight ? '#D97706' : '#FBBF24');
             root.setProperty('--danger', isLight ? '#E11D48' : '#FB7185');
+            syncStudioCustomizerReadouts(t);
         }
 
-        function hexToRgba(hex, alpha) {
-            const h = (hex || '#121A2F').replace('#', '');
-            const bigint = parseInt(h.length === 8 ? h.slice(2) : h, 16);
-            const r = (bigint >> 16) & 255, g = (bigint >> 8) & 255, b = bigint & 255;
-            return `rgba(${r},${g},${b},${alpha})`;
+        function syncStudioCustomizerReadouts(t) {
+            if (!t || activeTab !== 'studio' || !expanded) return;
+            const c = t.colors || {};
+            const map = {
+                cpAccent1: c.accentPrimary,
+                cpAccent2: c.accentSecondary,
+                cpSurface1: c.surface1,
+                cpSurface2: c.surface2,
+                cpText1: c.textPrimary
+            };
+            for (const [id, val] of Object.entries(map)) {
+                const el = document.getElementById(id);
+                if (el && document.activeElement !== el && typeof val === 'string' && val.startsWith('#') && val.length >= 7) {
+                    el.value = val.slice(0, 7).toLowerCase();
+                }
+            }
+            const opEl = document.getElementById('cpOpacityRange');
+            const opPct = Math.round((t.surfaceOpacity ?? 0.92) * 100);
+            if (opEl && document.activeElement !== opEl) opEl.value = String(opPct);
+            const opLbl = document.getElementById('cpOpacityLbl');
+            if (opLbl) opLbl.textContent = '%' + opPct;
+            const wcagEl = document.getElementById('cpWcagBadge');
+            if (wcagEl && typeof t.contrastRatio === 'number') {
+                wcagEl.textContent = `${t.contrastRatio.toFixed(1)}:1 ${t.meetsWcagAA ? 'AA✓' : 'Düşük'}`;
+                wcagEl.className = 'wcag-pill num' + (t.meetsWcagAA ? '' : ' warn');
+            }
+            const resetBtn = document.getElementById('cpResetBtn');
+            if (resetBtn) resetBtn.style.display = t.hasCustomColors ? 'inline-flex' : 'none';
+        }
+
+        function queueThemeColorPatch(patch) {
+            if (!state?.theme) return;
+            pendingThemeColorPatch = { ...pendingThemeColorPatch, ...patch };
+            // Instant 0ms local visual feedback on Crown without closing active color picker!
+            const previewTheme = {
+                ...state.theme,
+                hasCustomColors: true,
+                surfaceOpacity: typeof patch.surfaceOpacity === 'number' ? patch.surfaceOpacity : state.theme.surfaceOpacity,
+                colors: {
+                    ...state.theme.colors,
+                    ...(patch.accentPrimary ? { accentPrimary: patch.accentPrimary } : {}),
+                    ...(patch.accentSecondary ? { accentSecondary: patch.accentSecondary } : {}),
+                    ...(patch.surface1 ? { surface1: patch.surface1 } : {}),
+                    ...(patch.surface2 ? { surface2: patch.surface2 } : {}),
+                    ...(patch.textPrimary ? { textPrimary: patch.textPrimary } : {})
+                }
+            };
+            if (patch.surface1) {
+                previewTheme.colorMode = relativeLum(patch.surface1) >= 0.42 ? 'Light' : 'Dark';
+            }
+            applyThemeVars(previewTheme);
+
+            clearTimeout(themeColorSendTimer);
+            themeColorSendTimer = setTimeout(() => {
+                const payload = { themeId: state.theme.id, ...pendingThemeColorPatch };
+                pendingThemeColorPatch = {};
+                send('updateThemeColors', payload);
+            }, 90);
+        }
+
+        function applyAccentPreset(a1, a2) {
+            queueThemeColorPatch({ accentPrimary: a1, accentSecondary: a2 });
+        }
+
+        function onThemeOpacitySlide(pctVal) {
+            const pct = Math.max(55, Math.min(100, Number(pctVal) || 92));
+            const lbl = document.getElementById('cpOpacityLbl');
+            if (lbl) lbl.textContent = '%' + pct;
+            queueThemeColorPatch({ surfaceOpacity: Number((pct / 100).toFixed(2)) });
         }
 
         function toggleCrown(force) {
@@ -249,6 +368,7 @@ public static partial class AuroraSurfaceTemplates
             } else {
                 core.studio = [
                     state.dockMagnification, state.nativeTaskbarHidden, state.dockMode,
+                    state.dockBarLayout, state.reserveDockWorkArea,
                     state.dockDensity, state.dockEdge, state.dockScalePercent, state.dockOffsetPercent,
                     state.hardwareOsdEnabled, state.altDragEnabled,
                     state.showClockSeconds, state.snapZonesEnabled,
@@ -943,50 +1063,124 @@ public static partial class AuroraSurfaceTemplates
         }
 
         function buildStudioTab() {
+            const curT = state.theme || {};
+            const c = curT.colors || {};
+            const a1Val = (c.accentPrimary || '#38BDF8').slice(0, 7).toLowerCase();
+            const a2Val = (c.accentSecondary || '#818CF8').slice(0, 7).toLowerCase();
+            const s1Val = (c.surface1 || '#0F172A').slice(0, 7).toLowerCase();
+            const s2Val = (c.surface2 || '#162038').slice(0, 7).toLowerCase();
+            const t1Val = (c.textPrimary || '#F8FAFC').slice(0, 7).toLowerCase();
+            const opPct = Math.round((curT.surfaceOpacity ?? 0.92) * 100);
+            const ratio = typeof curT.contrastRatio === 'number' ? curT.contrastRatio.toFixed(1) : '14.0';
+            const wcagOk = curT.meetsWcagAA !== false;
+            const isPinnedBar = state.dockMode === 'AlwaysVisible';
+
             return `
                 <div class="bento-grid">
-                    <div class="card">
-                        <div class="card-title"><span class="card-title-l">${SVG.palette}<span>Tema Aileleri</span></span><span>Canlı Geçiş</span></div>
-                        <div class="toggle-grid">
-                            ${getThemesList().map(t => `
-                                <div class="tile ${state.theme.id===t.id?'on':''}" onclick="send('applyTheme',{id:'${t.id}'})">
-                                    <div><div class="t-name">${escHtml(t.name)}</div><div class="t-sub">${escHtml(t.mode)}</div></div>
-                                    <span style="width:14px;height:14px;border-radius:50%;background:${t.accent};display:inline-block;flex-shrink:0;"></span>
-                                </div>
-                            `).join('')}
-                        </div>
+                    <div class="card" style="display:flex;flex-direction:column;justify-content:space-between;gap:6px;">
+                        <div>
+                            <div class="card-title">
+                                <span class="card-title-l">${SVG.palette}<span>2026 Tema Mimarileri</span></span>
+                                <span class="studio-tip">${escHtml(curT.styleTag || 'Modern Cam')}</span>
+                            </div>
+                            <div class="theme-gallery">
+                                ${getThemesList().map(t => {
+                                    const active = curT.id === t.id;
+                                    const vs = t.visualStyle || 'liquid-glass';
+                                    const s1 = active ? (c.surface1 || t.surface1) : (t.surface1 || '#0F172A');
+                                    const s2 = active ? (c.surface2 || t.surface2) : (t.surface2 || '#162038');
+                                    const ac1 = active ? (c.accentPrimary || t.accent) : (t.accent || '#38BDF8');
+                                    const ac2 = active ? (c.accentSecondary || t.accent2) : (t.accent2 || ac1);
+                                    return `
+                                    <div class="theme-card ${active ? 'active' : ''}" onclick="send('applyTheme',{id:'${t.id}'})" title="${escHtml(t.desc || t.name)}">
+                                        <div class="theme-mini tm-${escHtml(vs)}" style="background:linear-gradient(145deg,${s1},${s2});">
+                                            <div class="theme-mini-crown" style="background:${ac1};"></div>
+                                            <div class="theme-mini-dock" style="background:${s2};border-color:${vs==='cyber-prism'?ac1:'rgba(255,255,255,0.18)'};">
+                                                <span class="theme-mini-dot" style="background:${ac1};"></span>
+                                                <span class="theme-mini-dot" style="background:${ac2};"></span>
+                                                <span class="theme-mini-dot" style="background:${t.isLight ? '#14161A' : '#E2E8F0'};opacity:0.65;"></span>
+                                            </div>
+                                        </div>
+                                        <div class="theme-card-meta">
+                                            <span class="theme-card-name">${escHtml(t.name)}</span>
+                                            <span class="theme-card-tag">${escHtml(t.styleTag || t.mode)}</span>
+                                        </div>
+                                    </div>`;
+                                }).join('')}
+                            </div>
 
-                        <div style="margin-top:11px;" class="card-title"><span class="card-title-l">${SVG.bolt}<span>Çalışma Profilleri</span></span></div>
-                        <div style="display:flex;flex-wrap:wrap;gap:6px;">
-                            ${(state.profiles || []).map(p => `
-                                <button class="pill-btn ${p.active?'accent':''}" onclick="send('switchProfile',{id:'${p.id}'})">${escHtml(p.name)}</button>
-                            `).join('')}
+                            <div class="color-studio">
+                                <div class="studio-sec-lbl" style="margin-bottom:0;">
+                                    <span>Tema Renklerini Özelleştir</span>
+                                    <div style="display:inline-flex;align-items:center;gap:5px;">
+                                        <span id="cpWcagBadge" class="wcag-pill num ${wcagOk ? '' : 'warn'}" title="Metin / Yüzey okunabilirlik kontrast oranı">${ratio}:1 ${wcagOk ? 'AA✓' : 'Düşük'}</span>
+                                        <button id="cpResetBtn" class="pill-btn" style="height:20px;padding:0 7px;font-size:9.5px;display:${curT.hasCustomColors ? 'inline-flex' : 'none'};" onclick="send('resetThemeColors',{themeId:'${escHtml(curT.id || '')}'})" title="Aktif temayı kendi varsayılan renklerine döndür">
+                                            Sıfırla
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="swatch-row">
+                                    ${CURATED_ACCENT_PRESETS.map(sw => `
+                                        <button class="swatch-btn" title="${sw.name}" style="background:linear-gradient(135deg,${sw.a1},${sw.a2});" onclick="applyAccentPreset('${sw.a1}','${sw.a2}')"></button>
+                                    `).join('')}
+                                </div>
+                                <div class="color-pickers-grid">
+                                    <label class="cp-slot" title="Ana Vurgu Rengi">
+                                        <input id="cpAccent1" type="color" value="${a1Val}" oninput="queueThemeColorPatch({accentPrimary:this.value})" />
+                                        <span class="cp-lbl">Vurgu 1</span>
+                                    </label>
+                                    <label class="cp-slot" title="İkincil Vurgu Rengi">
+                                        <input id="cpAccent2" type="color" value="${a2Val}" oninput="queueThemeColorPatch({accentSecondary:this.value})" />
+                                        <span class="cp-lbl">Vurgu 2</span>
+                                    </label>
+                                    <label class="cp-slot" title="Ana Yüzey Rengi">
+                                        <input id="cpSurface1" type="color" value="${s1Val}" oninput="queueThemeColorPatch({surface1:this.value})" />
+                                        <span class="cp-lbl">Yüzey 1</span>
+                                    </label>
+                                    <label class="cp-slot" title="İkincil Yüzey Rengi">
+                                        <input id="cpSurface2" type="color" value="${s2Val}" oninput="queueThemeColorPatch({surface2:this.value})" />
+                                        <span class="cp-lbl">Yüzey 2</span>
+                                    </label>
+                                    <label class="cp-slot" title="Birincil Metin Rengi">
+                                        <input id="cpText1" type="color" value="${t1Val}" oninput="queueThemeColorPatch({textPrimary:this.value})" />
+                                        <span class="cp-lbl">Metin</span>
+                                    </label>
+                                </div>
+                                <div class="slider-row" style="margin-bottom:0;gap:7px;">
+                                    <span style="font-size:10px;font-weight:700;color:var(--text-2);width:54px;">Opaklık</span>
+                                    <input id="cpOpacityRange" type="range" min="55" max="100" value="${opPct}" oninput="onThemeOpacitySlide(this.value)" />
+                                    <span id="cpOpacityLbl" class="num" style="width:32px;text-align:right;font-size:10px;color:var(--text-2);">%${opPct}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     <div class="card" style="display:flex;flex-direction:column;justify-content:space-between;gap:8px;">
                         <div>
                             <div class="card-title" style="margin-bottom:6px;">
-                                <span class="card-title-l">${SVG.monitor}<span>Dock & Görünüm</span></span>
-                                <span class="studio-tip">Alt+Sol Tık: Taşı · Alt+Sağ Tık: Boyut</span>
+                                <span class="card-title-l">${SVG.monitor}<span>Sabit Bar & Dock</span></span>
+                                <span class="studio-tip">Pin: Sabit Bar ↔ Kaçınma</span>
                             </div>
                             <div class="slider-row" style="margin-bottom:6px;" title="Simgeleri sağa/sola kaydırmadan (0px hedef sapması) sadece yukarı/yana yükselterek vurgular">
-                                <span style="font-size:11.5px;width:112px;color:var(--text-1);font-weight:600;">Simge Hover</span>
+                                <span style="font-size:11px;width:96px;color:var(--text-1);font-weight:600;">Simge Hover</span>
                                 <input type="range" min="0" max="80" value="${state.dockMagnification}" oninput="send('setMagnification',{value:+this.value})" />
-                                <span class="num" style="width:34px;text-align:right;font-size:11px;color:var(--text-2);">%${state.dockMagnification}</span>
+                                <span class="num" style="width:32px;text-align:right;font-size:11px;color:var(--text-2);">%${state.dockMagnification}</span>
                             </div>
                             <div class="studio-chip-row">
+                                <button class="pill-btn ${isPinnedBar?'accent':''}" style="height:24px;font-size:10.5px;" onclick="send('cycleDockVisibilityMode')" title="Sabit Bar (uçtan uca ince bar) / Akıllı Kaçınma (yüzen pill, %100 tam ekran) / Oto-Gizle">
+                                    ${SVG.pin}<span>Mod: ${state.dockMode==='SmartDodge' ? 'Akıllı Kaçınma' : (state.dockMode==='AutoHide' ? 'Oto-Gizle' : 'Sabit Bar')}</span>
+                                </button>
+                                <button class="pill-btn ${state.dockBarLayout==='Split3Zone'?'accent':''}" style="height:24px;font-size:10.5px;" onclick="send('toggleDockBarLayout')" title="Sabit Bar modunda ikon yerleşimi: Merkez Odaklı veya 3 Bölgeli (Sol Ara / Orta Uygulamalar / Sağ Araçlar)">
+                                    ${SVG.grid}<span>Bar: ${state.dockBarLayout==='Split3Zone' ? '3 Bölgeli' : 'Merkez'}</span>
+                                </button>
                                 <button class="pill-btn ${(state.dockEdge && state.dockEdge!=='Bottom') || (state.dockOffsetPercent && state.dockOffsetPercent!==0)?'accent':''}" style="height:24px;font-size:10.5px;" onclick="cycleDockEdge()" title="Dock kenar konumunu değiştir (veya Dock üzerinde Alt+Sol Tık ile sürükleyip Alt/Sol/Sağ kenara bırak)">
                                     ${SVG.snapL}<span>Konum: ${state.dockEdge==='Left' ? 'Sol' : (state.dockEdge==='Right' ? 'Sağ' : 'Alt')}</span>
                                 </button>
                                 <button class="pill-btn ${(state.dockDensity!=='Standard' || (state.dockScalePercent && state.dockScalePercent!==100))?'accent':''}" style="height:24px;font-size:10.5px;" onclick="cycleDockDensity()" title="Dock yoğunluğunu değiştir (Alt+Sağ Tık Sürükle ile canlı %75–%135 ölçeklenebilir)">
                                     ${SVG.sliders}<span>Boyut: ${(state.dockScalePercent && state.dockScalePercent!==100) ? ('%' + state.dockScalePercent) : (state.dockDensity==='Compact' ? 'Kompakt' : (state.dockDensity==='Cozy' ? 'Geniş' : 'Standart'))}</span>
                                 </button>
-                                <button class="pill-btn ${state.dockMode!=='AlwaysVisible'?'accent':''}" style="height:24px;font-size:10.5px;" onclick="send('cycleDockVisibilityMode')">
-                                    ${SVG.chevD}<span>Dock: ${state.dockMode==='SmartDodge' ? 'Akıllı Kaçınma' : (state.dockMode==='AutoHide' ? 'Oto-Gizle' : 'Sabit')}</span>
-                                </button>
-                                <button class="pill-btn ${state.reserveDockWorkArea!==false && state.dockMode!=='AutoHide'?'accent':''}" style="height:24px;font-size:10.5px;" onclick="send('toggleReserveDockWorkArea')" title="Tam ekran pencereler (Antigravity, WhatsApp, Discord vb.) Dock'un üstünde durur; yazı kutularını asla kapatmaz">
-                                    ${SVG.snapC}<span>Alan Ayır: ${state.reserveDockWorkArea!==false && state.dockMode!=='AutoHide' ? 'Açık' : 'Kapalı'}</span>
+                                <button class="pill-btn ${state.reserveDockWorkArea!==false && isPinnedBar?'accent':''}" style="height:24px;font-size:10.5px;" onclick="send('toggleReserveDockWorkArea')" title="Sabit Bar modunda tam ekran pencereler barın hemen üstünde hizalanır; Akıllı Kaçınma'da otomatik %100 tam ekran olur">
+                                    ${SVG.snapC}<span>Alan Ayır: ${state.reserveDockWorkArea!==false && isPinnedBar ? 'Açık' : 'Kapalı'}</span>
                                 </button>
                                 <button class="pill-btn ${state.nativeTaskbarHidden?'accent':''}" style="height:24px;font-size:10.5px;" onclick="send('toggleHideNativeTaskbar')" title="Aurora açıkken Windows görev çubuğunu tamamen kapatır; kapanınca otomatik geri açar">
                                     ${SVG.desktop}<span>Win Barı: ${state.nativeTaskbarHidden ? 'Kapalı' : 'Açık'}</span>
@@ -1004,6 +1198,15 @@ public static partial class AuroraSurfaceTemplates
                                 <button class="pill-btn" style="height:24px;font-size:10.5px;" onclick="send('resetDockTransform')" title="Dock konumunu ortala ve boyutunu %100'e sıfırla">
                                     <span>Dock Sıfırla</span>
                                 </button>` : ''}
+                            </div>
+
+                            <div class="studio-sec">
+                                <div class="studio-sec-lbl"><span>Çalışma Profilleri</span></div>
+                                <div class="studio-chip-row">
+                                    ${(state.profiles || []).map(p => `
+                                        <button class="pill-btn ${p.active?'accent':''}" style="height:24px;font-size:10.5px;" onclick="send('switchProfile',{id:'${p.id}'})">${escHtml(p.name)}</button>
+                                    `).join('')}
+                                </div>
                             </div>
 
                             <div class="studio-sec">
@@ -1053,7 +1256,7 @@ public static partial class AuroraSurfaceTemplates
                         </div>
 
                         ${state.updateAvailable ? `
-                        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;border-radius:12px;background:linear-gradient(135deg,rgba(52,211,153,0.16),rgba(56,189,248,0.12));border:1px solid rgba(52,211,153,0.45);margin-bottom:7px;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;border-radius:12px;background:linear-gradient(135deg,rgba(52,211,153,0.16),var(--accent-soft));border:1px solid rgba(52,211,153,0.45);margin-bottom:7px;">
                             <div style="min-width:0;flex:1;">
                                 <div style="font-size:11.5px;font-weight:800;color:var(--text-1);display:flex;align-items:center;gap:6px;">
                                     <span style="color:var(--success);">✦</span>
@@ -1435,9 +1638,14 @@ public static partial class AuroraSurfaceTemplates
                     { badge: 'Sistem', title: 'Aurora Ayarlarını Yedekle (.aurora-backup)', sub: 'Tema, sabitler ve tüm tercihleri kaydet', kw: 'yedek backup export disa aktar', run: () => send('exportBackup') },
                     { badge: 'Sistem', title: 'Bilgisayarı Uyku Moduna Al', sub: 'Sleep', kw: 'uyku sleep kapat', run: () => send('sleepPc') },
                     { badge: 'Sistem', title: 'Ekranı Kilitle', sub: 'Lock PC', kw: 'kilit lock oturum', run: () => send('lockPc') },
-                    { badge: 'Tema', title: 'Aurora Kristal Açık Teması', sub: 'Yüksek kontrastlı açık cam', kw: 'acik tema light', run: () => send('applyTheme', { id: 'aurora-glass-light' }) },
-                    { badge: 'Tema', title: 'Obsidian Pro Koyu Teması', sub: 'Profesyonel koyu cam', kw: 'koyu tema dark obsidian', run: () => send('applyTheme', { id: 'obsidian-pro-dark' }) },
-                    { badge: 'Tema', title: 'Nebula Siber Teması', sub: 'Derin uzay yüzeyleri', kw: 'nebula siber tema', run: () => send('applyTheme', { id: 'nebula-dark' }) }
+                    { badge: 'Görünüm', title: 'Sabit Bar ↔ Akıllı Kaçınma (Yüzen Dock) Değiştir', sub: 'Sabit ince görev çubuğu ile yüzen Intellihide arası geçiş', kw: 'sabit bar dock pin intellihide akilli kacinma yuzen', run: () => send('toggleDockPinMode') },
+                    { badge: 'Görünüm', title: 'Sabit Bar Düzeni: Merkez / 3 Bölgeli Değiştir', sub: 'Sabit bar ikon hizalamasını değiştir', kw: 'bar duzen merkez 3 bolgeli split layout', run: () => send('toggleDockBarLayout') },
+                    { badge: 'Tema', title: 'Liquid Glass 26 Teması', sub: 'Optik katmanlı buzlu cam (Koyu)', kw: 'liquid glass 26 cam koyu tema aurora', run: () => send('applyTheme', { id: 'aurora-glass-dark' }) },
+                    { badge: 'Tema', title: 'Bento Silk (Açık) Teması', sub: 'Sıcak porselen açık yüzeyler ve yüzen üst ada', kw: 'acik tema light bento silk porselen', run: () => send('applyTheme', { id: 'aurora-glass-light' }) },
+                    { badge: 'Tema', title: 'Linear Precision Teması', sub: 'Mat karbon yüzey ve jilet 1px çizgiler', kw: 'linear precision obsidian koyu karbon tema', run: () => send('applyTheme', { id: 'obsidian-pro-dark' }) },
+                    { badge: 'Tema', title: 'Mono Matrix Teması', sub: 'Endüstriyel dot-matrix doku ve sinyal LED', kw: 'mono matrix nothing endustriyel dot tema', run: () => send('applyTheme', { id: 'mono-matrix-dark' }) },
+                    { badge: 'Tema', title: 'Spatial Vision Teması', sub: 'Tam kapsül uzamsal cam ve dairesel ikon haleleri', kw: 'spatial vision kapsul uzamsal tema flow', run: () => send('applyTheme', { id: 'aurora-flow-dark' }) },
+                    { badge: 'Tema', title: 'Cyber Prism Teması', sub: 'Derin OLED kenar aydınlatmalı teknik HUD', kw: 'cyber prism nebula oled siber tema', run: () => send('applyTheme', { id: 'nebula-dark' }) }
                 ];
                 for (const c of quickCmds) {
                     if (!qNorm) continue;
@@ -1937,13 +2145,15 @@ public static partial class AuroraSurfaceTemplates
                 bodyHtml = `
                     <div class="tour-setup-box">
                         <div class="tour-setup-row">
-                            <span class="tour-setup-lbl">Tema Ailesi</span>
+                            <span class="tour-setup-lbl">2026 Tema Mimarisi</span>
                             <div style="display:flex;gap:5px;flex-wrap:wrap;flex:1;">
-                                <button class="pill-btn ${curTheme==='obsidian-pro-dark'?'accent':''}" onclick="send('applyTheme',{id:'obsidian-pro-dark'})">Obsidian Pro (Koyu)</button>
-                                <button class="pill-btn ${curTheme==='aurora-glass-light'?'accent':''}" onclick="send('applyTheme',{id:'aurora-glass-light'})">Aurora Glass (Açık)</button>
-                                <button class="pill-btn ${curTheme==='aurora-glass-dark'?'accent':''}" onclick="send('applyTheme',{id:'aurora-glass-dark'})">Aurora Koyu</button>
-                                <button class="pill-btn ${curTheme==='nebula-dark'?'accent':''}" onclick="send('applyTheme',{id:'nebula-dark'})">Nebula</button>
-                                <button class="pill-btn ${curTheme==='high-contrast-dark'?'accent':''}" onclick="send('applyTheme',{id:'high-contrast-dark'})">Yüksek Kontrast</button>
+                                <button class="pill-btn ${curTheme==='aurora-glass-dark'?'accent':''}" onclick="send('applyTheme',{id:'aurora-glass-dark'})">Liquid Glass 26</button>
+                                <button class="pill-btn ${curTheme==='aurora-glass-light'?'accent':''}" onclick="send('applyTheme',{id:'aurora-glass-light'})">Bento Silk (Açık)</button>
+                                <button class="pill-btn ${curTheme==='obsidian-pro-dark'?'accent':''}" onclick="send('applyTheme',{id:'obsidian-pro-dark'})">Linear Precision</button>
+                                <button class="pill-btn ${curTheme==='mono-matrix-dark'?'accent':''}" onclick="send('applyTheme',{id:'mono-matrix-dark'})">Mono Matrix</button>
+                                <button class="pill-btn ${curTheme==='aurora-flow-dark'?'accent':''}" onclick="send('applyTheme',{id:'aurora-flow-dark'})">Spatial Vision</button>
+                                <button class="pill-btn ${curTheme==='nebula-dark'?'accent':''}" onclick="send('applyTheme',{id:'nebula-dark'})">Cyber Prism</button>
+                                <button class="pill-btn ${curTheme==='aurora-high-contrast'?'accent':''}" onclick="send('applyTheme',{id:'aurora-high-contrast'})">Yüksek Kontrast</button>
                             </div>
                         </div>
                         <div class="tour-setup-row">
@@ -1957,9 +2167,9 @@ public static partial class AuroraSurfaceTemplates
                         <div class="tour-setup-row">
                             <span class="tour-setup-lbl">Dock Davranışı</span>
                             <div style="display:flex;gap:5px;flex-wrap:wrap;flex:1;">
-                                <button class="pill-btn ${curDock==='SmartDodge'?'accent':''}" onclick="send('setDockMode',{mode:'SmartDodge'})">Akıllı Kaçınma (Önerilen)</button>
-                                <button class="pill-btn ${curDock==='AlwaysVisible'?'accent':''}" onclick="send('setDockMode',{mode:'AlwaysVisible'})">Her Zaman Sabit</button>
-                                <button class="pill-btn ${curDock==='AutoHide'?'accent':''}" onclick="send('setDockMode',{mode:'AutoHide'})">Otomatik Gizle</button>
+                                <button class="pill-btn ${curDock==='AlwaysVisible'?'accent':''}" onclick="send('setDockMode',{mode:'AlwaysVisible'})">Sabit Bar (52px Uçtan Uca)</button>
+                                <button class="pill-btn ${curDock==='SmartDodge'?'accent':''}" onclick="send('setDockMode',{mode:'SmartDodge'})">Akıllı Kaçınma (Yüzen Pill)</button>
+                                <button class="pill-btn ${curDock==='AutoHide'?'accent':''}" onclick="send('setDockMode',{mode:'AutoHide'})">Oto-Gizle</button>
                             </div>
                         </div>
                     </div>
@@ -2132,7 +2342,7 @@ public static partial class AuroraSurfaceTemplates
                     ? `<img class="clip-thumb" src="data:image/png;base64,${c.thumb}"/>`
                     : (isColor
                         ? `<span class="clip-color-swatch" style="background:${escHtml(rawTxt)};" title="Renk Önizleme: ${escHtml(rawTxt)}"></span>`
-                        : `<span style="width:28px;height:28px;border-radius:8px;background:rgba(56,189,248,0.12);color:var(--accent-1);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;">${isUrl ? SVG.globe : SVG.copy}</span>`);
+                        : `<span style="width:28px;height:28px;border-radius:8px;background:var(--accent-soft);color:var(--accent-1);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;">${isUrl ? SVG.globe : SVG.copy}</span>`);
                 return `
                 <div class="clip-card ${c.pinned ? 'pinned' : ''}" onclick="send('copyClipById',{id:${c.id}})" title="${state?.clipboardAutoPaste ? 'Tıklayınca önceki pencereye doğrudan yapıştırır' : 'Panoya kopyalamak için tıklayın'}">
                     ${leftVisual}

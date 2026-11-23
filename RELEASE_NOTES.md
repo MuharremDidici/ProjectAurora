@@ -1,5 +1,14 @@
 # Project Aurora — Sürüm Notları
 
+## v2.5.0
+> Summary: Tek tıkla Sabit Bar (52 px uçtan uca ince görev çubuğu, 0 px duvar kağıdı sızıntısı) ↔ Yüzen Intellihide geçişi + 6 farklı 2026 mimari tema (Liquid Glass 26, Bento Silk, Linear Precision, Mono Matrix, Spatial Vision, Cyber Prism) ve her tema için ayrı kaydedilen canlı renk özelleştirici.
+
+### Öne Çıkan Yenilikler
+- **Sabit Bar ↔ Akıllı Kaçınma (Tek Tık Pin Geçişi):** Dock üzerindeki Sabit (Pin) butonuna basıldığında Dock uçtan uca kenara sıfır oturan ince bir görev çubuğuna (`Kompakt 44 px / Standart 52 px / Geniş 60 px`) dönüşür — duvar kağıdı sızıntısı ve kesik masaüstü ikonları tamamen ortadan kalkar, Antigravity/WhatsApp mesaj kutuları asla kapanmaz. Pin kaldırıldığında doğrudan Akıllı Kaçınma (yüzen Kristal Pill) moduna geçer, çalışma alanı %100'e geri açılır ve en alt kenar tetiklemesi daraltılarak yazı kutularına tıklarken yanlışlıkla açılma engellenir.
+- **Sabit Bar Düzen Seçeneği:** Stüdyo'dan tek tıkla `Merkez Odaklı` veya `3 Bölgeli (Sol: Ara · Orta: Uygulamalar · Sağ: Araçlar)` düzen seçilebilir.
+- **2026 Çok-Mimarili Tasarım Sistemi (6 Farklı Tema Mimarisi):** Yalnızca renk değişimi değil; her biri farklı geometri, yüzey dokusu, kenarlık, üst ada silüeti ve aktif uygulama göstergesine sahip 6 modern tema: **Liquid Glass 26**, **Bento Silk (Açık)**, **Linear Precision**, **Mono Matrix** *(yeni — dot-matrix + monospace telemetri + sinyal LED)*, **Spatial Vision** ve **Cyber Prism**.
+- **Her Tema İçin Canlı Renk Özelleştirici:** Stüdyo sekmesinde her temanın **Vurgu 1, Vurgu 2, Yüzey 1, Yüzey 2, Metin** renkleri ve **Yüzey Opaklığı (%55–%100)** canlı olarak değiştirilebilir, 8 hazır modern palet uygulanabilir, WCAG AA okunabilirlik oranı anlık izlenebilir ve her temanın özel renkleri ayrı ayrı kaydedilir.
+
 ## v2.4.1
 > Summary: Tıklanabilir canlı bildirimler (WhatsApp, Antigravity, Teams, Ekran Alıntısı derin bağlantı) + açılış sonrası Explorer yarışını engelleyen, yoğunluğa duyarlı (Kompakt/Standart/Rahat) ve kendi kendini iyileştiren Dock Çalışma Alanı (`Alan Ayır`) koruması.
 

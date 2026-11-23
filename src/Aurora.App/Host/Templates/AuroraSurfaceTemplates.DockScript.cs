@@ -39,19 +39,23 @@ public static partial class AuroraSurfaceTemplates
 
         function getDockEdge() { return state?.dockEdge || 'Bottom'; }
         function isVerticalEdge() { const e = getDockEdge(); return e === 'Left' || e === 'Right'; }
+        function isPinnedBarMode() {
+            const mode = state?.dockMode || (state?.dockAutoHide ? 'AutoHide' : 'AlwaysVisible');
+            return mode === 'AlwaysVisible' && !isDockTuckedNow();
+        }
 
         function applyDockGeometryAndOffset() {
             const dock = document.getElementById('dockBar');
             if (!dock) return;
-            const edge = getDockEdge();
             const isVert = isVerticalEdge();
             const tuckedNow = isDockTuckedNow();
+            const pinnedBar = isPinnedBarMode();
 
             const rawScale = liveScaleOverride !== null ? liveScaleOverride : (state?.dockScalePercent ?? 100);
             let ds = Math.max(0.75, Math.min(1.35, rawScale / 100.0));
             dock.style.setProperty('--ds', ds.toFixed(3));
 
-            if (!tuckedNow && isVert) {
+            if (!tuckedNow && !pinnedBar && isVert) {
                 const maxH = Math.max(240, window.innerHeight - 24);
                 const actualH = dock.scrollHeight;
                 if (actualH > maxH && actualH > 0) {
@@ -60,22 +64,27 @@ public static partial class AuroraSurfaceTemplates
                 }
             }
 
-            const offsetPct = Math.max(-100, Math.min(100, state?.dockOffsetPercent ?? 0));
-            if (offsetPct === 0) {
+            if (pinnedBar) {
                 dock.style.left = '';
                 dock.style.top = '';
-            } else if (isVert) {
-                const rect = dock.getBoundingClientRect();
-                const maxTravel = Math.max(0, (window.innerHeight - rect.height) / 2 - 14);
-                const dy = Math.round((offsetPct / 100.0) * maxTravel);
-                dock.style.left = '';
-                dock.style.top = `${dy}px`;
             } else {
-                const rect = dock.getBoundingClientRect();
-                const maxTravel = Math.max(0, (window.innerWidth - rect.width) / 2 - 14);
-                const dx = Math.round((offsetPct / 100.0) * maxTravel);
-                dock.style.top = '';
-                dock.style.left = `${dx}px`;
+                const offsetPct = Math.max(-100, Math.min(100, state?.dockOffsetPercent ?? 0));
+                if (offsetPct === 0) {
+                    dock.style.left = '';
+                    dock.style.top = '';
+                } else if (isVert) {
+                    const rect = dock.getBoundingClientRect();
+                    const maxTravel = Math.max(0, (window.innerHeight - rect.height) / 2 - 14);
+                    const dy = Math.round((offsetPct / 100.0) * maxTravel);
+                    dock.style.left = '';
+                    dock.style.top = `${dy}px`;
+                } else {
+                    const rect = dock.getBoundingClientRect();
+                    const maxTravel = Math.max(0, (window.innerWidth - rect.width) / 2 - 14);
+                    const dx = Math.round((offsetPct / 100.0) * maxTravel);
+                    dock.style.top = '';
+                    dock.style.left = `${dx}px`;
+                }
             }
 
             dock.querySelectorAll('.mag-target').forEach(el => {
@@ -92,46 +101,81 @@ public static partial class AuroraSurfaceTemplates
             return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
         }
 
+        function parseHexRgb(hex, fallback = [56, 189, 248]) {
+            const h = String(hex || '').replace('#', '').trim();
+            const clean = h.length === 8 ? h.slice(2) : h;
+            if (clean.length !== 6) return fallback;
+            const n = parseInt(clean, 16);
+            if (Number.isNaN(n)) return fallback;
+            return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+        }
+
         function hexToRgba(hex, alpha) {
-            const h = (hex || '#121A2F').replace('#', '');
-            const bigint = parseInt(h.length === 8 ? h.slice(2) : h, 16);
-            const r = (bigint >> 16) & 255, g = (bigint >> 8) & 255, b = bigint & 255;
+            const [r, g, b] = parseHexRgb(hex, [15, 23, 42]);
             return `rgba(${r},${g},${b},${alpha})`;
         }
+
+        function relativeLum(hex) {
+            const [r, g, b] = parseHexRgb(hex, [56, 189, 248]).map(v => {
+                const c = v / 255;
+                return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+            });
+            return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        }
+
+        const ALL_VISUAL_STYLES = ['liquid-glass', 'bento-silk', 'linear-precision', 'mono-matrix', 'spatial-vision', 'cyber-prism', 'high-contrast'];
 
         function applyThemeVars(t) {
             if (!t) return;
             const root = document.documentElement.style;
             const isLight = t.colorMode === 'Light';
-            root.setProperty('--bg-glass-1', isLight ? 'rgba(248,250,252,0.97)' : hexToRgba(t.colors.surface1, 0.965));
-            root.setProperty('--bg-glass-2', isLight ? 'rgba(235,241,250,0.988)' : hexToRgba(t.colors.surface2, 0.985));
-            root.setProperty('--bg-card', isLight ? 'rgba(15,23,42,0.048)' : 'rgba(255,255,255,0.05)');
-            root.setProperty('--bg-card-hover', isLight ? 'rgba(15,23,42,0.095)' : 'rgba(255,255,255,0.105)');
-            root.setProperty('--border-rim', isLight ? 'rgba(15,23,42,0.16)' : 'rgba(255,255,255,0.16)');
-            root.setProperty('--border-subtle', isLight ? 'rgba(15,23,42,0.085)' : 'rgba(255,255,255,0.085)');
+            const styleId = t.visualStyle || (isLight ? 'bento-silk' : 'liquid-glass');
+            for (const s of ALL_VISUAL_STYLES) {
+                document.body.classList.toggle('style-' + s, s === styleId);
+            }
+            document.body.classList.toggle('mode-light', isLight);
+
+            const op1 = typeof t.surfaceOpacity === 'number' ? Math.max(0.55, Math.min(1.0, t.surfaceOpacity)) : (isLight ? 0.94 : 0.92);
+            const op2 = Math.min(1.0, op1 + 0.04);
+            const [a1r, a1g, a1b] = parseHexRgb(t.colors.accentPrimary, [56, 189, 248]);
+            const [a2r, a2g, a2b] = parseHexRgb(t.colors.accentSecondary, [129, 140, 248]);
+            const accentInk = relativeLum(t.colors.accentPrimary) > 0.36 ? '#050B16' : '#FFFFFF';
+
+            root.setProperty('--bg-glass-1', hexToRgba(t.colors.surface1, op1));
+            root.setProperty('--bg-glass-2', hexToRgba(t.colors.surface2, op2));
+            root.setProperty('--bg-card', isLight ? 'rgba(20,22,26,0.048)' : 'rgba(255,255,255,0.05)');
+            root.setProperty('--bg-card-hover', isLight ? 'rgba(20,22,26,0.095)' : 'rgba(255,255,255,0.105)');
+            root.setProperty('--border-rim', isLight ? 'rgba(20,22,26,0.14)' : 'rgba(255,255,255,0.15)');
+            root.setProperty('--border-subtle', isLight ? 'rgba(20,22,26,0.08)' : 'rgba(255,255,255,0.08)');
             root.setProperty('--text-1', t.colors.textPrimary);
             root.setProperty('--text-2', t.colors.textSecondary);
             root.setProperty('--accent-1', t.colors.accentPrimary);
             root.setProperty('--accent-2', t.colors.accentSecondary);
-            root.setProperty('--accent-ink', isLight ? '#FFFFFF' : '#04101F');
+            root.setProperty('--a1-rgb', `${a1r},${a1g},${a1b}`);
+            root.setProperty('--a2-rgb', `${a2r},${a2g},${a2b}`);
+            root.setProperty('--accent-soft', `rgba(${a1r},${a1g},${a1b},${isLight ? 0.12 : 0.14})`);
+            root.setProperty('--accent-tint', `rgba(${a1r},${a1g},${a1b},${isLight ? 0.20 : 0.23})`);
+            root.setProperty('--accent-ring', `rgba(${a1r},${a1g},${a1b},${isLight ? 0.44 : 0.48})`);
+            root.setProperty('--accent-glow', `rgba(${a1r},${a1g},${a1b},${isLight ? 0.24 : 0.32})`);
+            root.setProperty('--accent-ink', accentInk);
             root.setProperty('--success', isLight ? '#059669' : '#34D399');
             root.setProperty('--warning', isLight ? '#D97706' : '#FBBF24');
             root.setProperty('--danger', isLight ? '#E11D48' : '#FB7185');
 
             root.setProperty('--radial-disc-bg', isLight
-                ? 'radial-gradient(circle at 50% 25%, rgba(255,255,255,0.985), rgba(232,240,251,0.985))'
-                : 'radial-gradient(circle at 50% 30%, rgba(20,31,56,0.96), rgba(8,13,26,0.985))');
-            root.setProperty('--radial-orb-bg', isLight ? 'rgba(15,23,42,0.05)' : 'rgba(255,255,255,0.075)');
-            root.setProperty('--radial-orb-border', isLight ? 'rgba(15,23,42,0.14)' : 'rgba(255,255,255,0.16)');
-            root.setProperty('--radial-orb-hover', isLight ? 'rgba(2,132,199,0.15)' : 'rgba(56,189,248,0.22)');
-            root.setProperty('--radial-orbit-bg', isLight ? 'rgba(255,255,255,0.98)' : 'rgba(11,18,34,0.96)');
-            root.setProperty('--radial-caption-bg', isLight ? 'rgba(255,255,255,0.985)' : 'rgba(9,14,27,0.965)');
-            root.setProperty('--radial-ring-stroke', isLight ? 'rgba(15,23,42,0.22)' : 'rgba(148,163,184,0.34)');
+                ? `radial-gradient(circle at 50% 25%, ${hexToRgba(t.colors.surface1, 0.985)}, ${hexToRgba(t.colors.surface2, 0.985)})`
+                : `radial-gradient(circle at 50% 30%, ${hexToRgba(t.colors.surface2, 0.97)}, ${hexToRgba(t.colors.surface1, 0.985)})`);
+            root.setProperty('--radial-orb-bg', isLight ? 'rgba(20,22,26,0.05)' : 'rgba(255,255,255,0.07)');
+            root.setProperty('--radial-orb-border', isLight ? 'rgba(20,22,26,0.14)' : 'rgba(255,255,255,0.15)');
+            root.setProperty('--radial-orb-hover', `rgba(${a1r},${a1g},${a1b},${isLight ? 0.16 : 0.22})`);
+            root.setProperty('--radial-orbit-bg', hexToRgba(t.colors.surface1, 0.97));
+            root.setProperty('--radial-caption-bg', hexToRgba(t.colors.surface1, 0.975));
+            root.setProperty('--radial-ring-stroke', isLight ? 'rgba(20,22,26,0.20)' : 'rgba(148,163,184,0.30)');
             root.setProperty('--radial-shadow', isLight
-                ? '0 22px 46px -12px rgba(15,23,42,0.32), 0 6px 18px -4px rgba(15,23,42,0.16)'
-                : '0 22px 52px -10px rgba(0,0,0,0.80), 0 6px 20px -4px rgba(0,0,0,0.48)');
-            root.setProperty('--acc-bg', isLight ? 'rgba(15,23,42,0.045)' : 'rgba(255,255,255,0.045)');
-            root.setProperty('--acc-open-bg', isLight ? 'rgba(2,132,199,0.09)' : 'rgba(56,189,248,0.11)');
+                ? '0 22px 46px -12px rgba(20,22,26,0.26), 0 6px 18px -4px rgba(20,22,26,0.14)'
+                : '0 22px 52px -10px rgba(0,0,0,0.78), 0 6px 20px -4px rgba(0,0,0,0.44)');
+            root.setProperty('--acc-bg', isLight ? 'rgba(20,22,26,0.045)' : 'rgba(255,255,255,0.045)');
+            root.setProperty('--acc-open-bg', `rgba(${a1r},${a1g},${a1b},${isLight ? 0.10 : 0.12})`);
         }
 
         function isDockTuckedNow() {
@@ -155,6 +199,7 @@ public static partial class AuroraSurfaceTemplates
             const fcard = document.getElementById('folderStackCard');
             const edge = getDockEdge();
             const isVert = isVerticalEdge();
+            const pinnedBar = isPinnedBarMode();
             let dockRect = null;
 
             if (dock && getComputedStyle(dock).display !== 'none') {
@@ -165,13 +210,17 @@ public static partial class AuroraSurfaceTemplates
                     if (isVert) {
                         if (tuckedNow) {
                             const padY = 48;
-                            const rx = edge === 'Left' ? 0 : Math.max(0, r.left - 24);
-                            const rw = edge === 'Left' ? (r.right + 24) : (window.innerWidth - rx);
-                            rects.push({ x: rx, y: Math.max(0, r.top - padY), w: Math.max(32, rw), h: r.height + padY * 2 });
+                            const rx = edge === 'Left' ? 0 : Math.max(0, r.left - 6);
+                            const rw = edge === 'Left' ? (r.right + 6) : (window.innerWidth - rx);
+                            rects.push({ x: rx, y: Math.max(0, r.top - padY), w: Math.min(14, Math.max(10, rw)), h: r.height + padY * 2 });
+                        } else if (pinnedBar) {
+                            const rx = edge === 'Left' ? 0 : Math.max(0, r.left - 8);
+                            const rw = edge === 'Left' ? (r.right + 8) : (window.innerWidth - rx);
+                            rects.push({ x: rx, y: 0, w: rw, h: window.innerHeight });
                         } else {
-                            const padLeft = edge === 'Right' ? 38 : 14;
-                            const padRight = edge === 'Left' ? 38 : 14;
-                            const padY = 18;
+                            const padLeft = edge === 'Right' ? 32 : 12;
+                            const padRight = edge === 'Left' ? 32 : 12;
+                            const padY = 16;
                             rects.push({
                                 x: Math.max(0, r.left - padLeft),
                                 y: Math.max(0, r.top - padY),
@@ -179,10 +228,24 @@ public static partial class AuroraSurfaceTemplates
                                 h: r.height + padY * 2
                             });
                         }
+                    } else if (tuckedNow) {
+                        // Precision bottom-edge trigger (total ~11px) so WhatsApp/Antigravity typing boxes NEVER accidentally wake Dock!
+                        const extraTop = 4;
+                        const padX = 72;
+                        const padB = 6;
+                        rects.push({
+                            x: Math.max(0, r.left - padX),
+                            y: Math.max(0, r.top - extraTop),
+                            w: Math.min(window.innerWidth, r.width + padX * 2),
+                            h: Math.min(14, r.height + extraTop + padB)
+                        });
+                    } else if (pinnedBar) {
+                        const extraTop = 10;
+                        rects.push({ x: 0, y: Math.max(0, r.top - extraTop), w: window.innerWidth, h: r.height + extraTop });
                     } else {
-                        const extraTop = tuckedNow ? 22 : 36;
-                        const padX = tuckedNow ? 80 : 12;
-                        const padB = tuckedNow ? 16 : 12;
+                        const extraTop = 30;
+                        const padX = 12;
+                        const padB = 12;
                         rects.push({ x: r.left - padX, y: r.top - extraTop, w: r.width + padX * 2, h: r.height + extraTop + padB });
                     }
                 }
@@ -294,9 +357,14 @@ public static partial class AuroraSurfaceTemplates
             document.body.classList.toggle('edge-left', edge === 'Left');
             document.body.classList.toggle('edge-right', edge === 'Right');
 
+            const stage = document.querySelector('.dock-stage');
             const dock = document.getElementById('dockBar');
             if (isDockTuckedNow()) {
                 closeRadialHub(false);
+                if (stage) {
+                    stage.classList.remove('pinned-bar-stage');
+                    stage.classList.add('tucked-stage');
+                }
                 dock.className = 'glass-shell tucked';
                 dock.innerHTML = '';
                 applyDockGeometryAndOffset();
@@ -316,29 +384,37 @@ public static partial class AuroraSurfaceTemplates
                 scheduleDockAutoHide(440);
             };
             dock.onclick = null;
+
+            const pinnedBar = isPinnedBarMode();
+            const splitLayout = pinnedBar && state.dockBarLayout === 'Split3Zone';
+            if (stage) {
+                stage.classList.toggle('pinned-bar-stage', pinnedBar);
+                stage.classList.remove('tucked-stage');
+            }
             const densCls = state.dockDensity === 'Compact' ? ' density-compact' : (state.dockDensity === 'Cozy' ? ' density-cozy' : '');
-            dock.className = 'glass-shell' + densCls;
+            const barCls = pinnedBar ? (' pinned-bar' + (splitLayout ? ' layout-split' : '')) : '';
+            dock.className = 'glass-shell' + densCls + barCls;
 
             const groups = state.groups || [];
             const pinned = groups.filter(g => g.isPinned);
             const runningUnpinned = groups.filter(g => !g.isPinned && g.windows.length > 0);
             const compactMode = isVert || (window.innerWidth < 1050);
 
-            let html = `
+            const searchHtml = `
                 <div class="search-pill" onclick="send('openOmni')">
                     ${SVG.search}
                     ${compactMode ? '' : '<span>Ara</span>'}
                     ${isVert ? '<span class="hover-label">Evrensel Arama</span>' : ''}
                 </div>
-                <div class="dock-sep"></div>
             `;
 
+            let appsHtml = '';
             for (let i = 0; i < pinned.length; i++) {
-                html += buildDockIconHtml(pinned[i], i, null);
+                appsHtml += buildDockIconHtml(pinned[i], i, null);
             }
 
             if (runningUnpinned.length > 0) {
-                html += `<div class="dock-sep"></div>`;
+                appsHtml += `<div class="dock-sep"></div>`;
                 if (state.smartTidy) {
                     const buckets = getSmartTidyBuckets(runningUnpinned);
                     if (expandedAccordionCat && !buckets.some(b => b.id === expandedAccordionCat)) {
@@ -346,7 +422,7 @@ public static partial class AuroraSurfaceTemplates
                     }
                     for (const b of buckets) {
                         if (isVert && b.groups.length === 1) {
-                            html += buildDockIconHtml(b.groups[0], -1, null);
+                            appsHtml += buildDockIconHtml(b.groups[0], -1, null);
                             continue;
                         }
                         const isOpen = (expandedAccordionCat === b.id) || (radialAnchorCatId === b.id && Boolean(radialGroupKey));
@@ -366,7 +442,7 @@ public static partial class AuroraSurfaceTemplates
                             <span class="dock-dot"></span>
                             <span class="hover-label">${escHtml(b.name)} (${b.windows.length})</span>
                         `;
-                        html += `
+                        appsHtml += `
                             <div class="acc-bucket ${isOpen ? 'open' : ''} ${b.hasActive ? 'has-active' : ''}"
                                  data-cat-id="${b.id}"
                                  onmouseenter="scheduleAccordionOpen('${b.id}')"
@@ -385,17 +461,17 @@ public static partial class AuroraSurfaceTemplates
                 } else {
                     expandedAccordionCat = null;
                     for (const g of runningUnpinned) {
-                        html += buildDockIconHtml(g, -1, null);
+                        appsHtml += buildDockIconHtml(g, -1, null);
                     }
                 }
             }
 
+            let foldersHtml = '';
             const dockFolders = state.dockFolders || [];
             if (dockFolders.length > 0 && (!compactMode || isVert)) {
-                html += `<div class="dock-sep"></div>`;
                 dockFolders.forEach((f, idx) => {
                     const isOpen = (openFolderPath && openFolderPath.toLowerCase() === f.path.toLowerCase());
-                    html += `
+                    foldersHtml += `
                         <div class="folder-chip mag-target ${isOpen ? 'open' : ''}" data-folder-idx="${idx}"
                              onclick="toggleFolderStackByIdx(this, ${idx})"
                              oncontextmenu="event.preventDefault();openDockFolderNative(${idx});">
@@ -410,26 +486,51 @@ public static partial class AuroraSurfaceTemplates
             const dockMode = state.dockMode || (state.dockAutoHide ? 'AutoHide' : 'AlwaysVisible');
             const pinCls = dockMode === 'AlwaysVisible' ? 'active' : (dockMode === 'SmartDodge' ? 'smart-dodge' : '');
             const pinLabel = dockMode === 'AlwaysVisible'
-                ? 'Dock: Sabit (Tıkla → Akıllı Kaçınma)'
+                ? 'Sabit Bar Açık (Tıkla → Akıllı Kaçınma · Sağ Tık → Oto-Gizle)'
                 : (dockMode === 'SmartDodge'
-                    ? 'Dock: Akıllı Kaçınma (Tıkla → Oto-Gizle)'
-                    : 'Dock: Oto-Gizle (Tıkla → Sabit)');
-            html += `
-                <div class="dock-sep"></div>
+                    ? 'Akıllı Kaçınma / Yüzen (Tıkla → Sabit Bar · Sağ Tık → Oto-Gizle)'
+                    : 'Oto-Gizle (Tıkla → Sabit Bar)');
+
+            const utilsHtml = `
                 <button class="pill-btn dock-v-btn num" onclick="send('openTray')" title="Sistem Tepsisi (${trayCount})">
                     ${SVG.tray}${isVert ? '' : `<span>${trayCount}</span>`}
                     ${isVert && trayCount > 0 ? `<span class="dock-v-badge num">${trayCount}</span>` : ''}
                     ${isVert ? `<span class="hover-label">Sistem Tepsisi (${trayCount})</span>` : ''}
                 </button>
-                <button class="pill-btn dock-v-btn ${state.smartTidy?'accent':''}" onclick="send('toggleSmartTidy')" title="Akıllı Derle">
+                <button class="pill-btn dock-v-btn ${state.smartTidy?'tidy-on':''}" onclick="send('toggleSmartTidy')" title="Akıllı Derle">
                     ${SVG.sparkles}${compactMode ? '' : `<span>${state.smartTidy ? 'Derli' : 'Derle'}</span>`}
                     ${isVert ? `<span class="hover-label">Akıllı Derle: ${state.smartTidy ? 'Açık' : 'Kapalı'}</span>` : ''}
                 </button>
-                <button class="micro-btn dock-pin-btn ${pinCls}" onclick="toggleDockPin()">
+                <button class="micro-btn dock-pin-btn ${pinCls}" onclick="toggleDockPin()" oncontextmenu="event.preventDefault();send('setDockAutoHideMode');">
                     ${SVG.pin}
                     <span class="hover-label">${pinLabel}</span>
                 </button>
             `;
+
+            let html;
+            if (splitLayout) {
+                html = `
+                    <div class="bar-zone-left">
+                        ${searchHtml}
+                        ${foldersHtml ? `<div class="dock-sep"></div>${foldersHtml}` : ''}
+                    </div>
+                    <div class="bar-zone-center">
+                        ${appsHtml}
+                    </div>
+                    <div class="bar-zone-right">
+                        ${utilsHtml}
+                    </div>
+                `;
+            } else {
+                html = `
+                    ${searchHtml}
+                    <div class="dock-sep"></div>
+                    ${appsHtml}
+                    ${foldersHtml ? `<div class="dock-sep"></div>${foldersHtml}` : ''}
+                    <div class="dock-sep"></div>
+                    ${utilsHtml}
+                `;
+            }
 
             dock.innerHTML = html;
             applyDockGeometryAndOffset();
@@ -456,7 +557,7 @@ public static partial class AuroraSurfaceTemplates
             autoHideRevealed = true;
             closeRadialHub(false);
             closeFolderStack(false);
-            send('cycleDockVisibilityMode');
+            send('toggleDockPinMode');
             scheduleDockAutoHide(900);
         }
 
