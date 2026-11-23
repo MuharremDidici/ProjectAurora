@@ -433,6 +433,18 @@ public sealed class TransparentSurfaceForm : Form
         settings.AreDevToolsEnabled = false;
         settings.IsStatusBarEnabled = false;
         settings.IsZoomControlEnabled = false;
+        settings.AreBrowserAcceleratorKeysEnabled = false;
+        settings.IsSwipeNavigationEnabled = false;
+        settings.IsPinchZoomEnabled = false;
+
+        try
+        {
+            _webView.CoreWebView2.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Low;
+        }
+        catch
+        {
+            // Older WebView2 runtimes may not support MemoryUsageTargetLevel
+        }
 
         _webView.CoreWebView2.WebMessageReceived += async (_, args) =>
         {

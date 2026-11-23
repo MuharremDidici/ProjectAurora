@@ -280,12 +280,7 @@ public static class AuroraSurfaceTemplates
         .drop-dot {
             width: 6.5px; height: 6.5px; border-radius: 50%;
             background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
-            box-shadow: 0 0 10px var(--accent-1);
-            animation: breathe 2.8s ease-in-out infinite;
-        }
-        @keyframes breathe {
-            0%, 100% { transform: scale(1); opacity: 0.92; }
-            50% { transform: scale(1.22); opacity: 1; }
+            box-shadow: 0 0 9px var(--accent-1);
         }
         .drop-time {
             font-size: 11.5px; font-weight: 700; letter-spacing: 0.02em;
@@ -341,11 +336,13 @@ public static class AuroraSurfaceTemplates
         .eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 11px; }
         .eq span {
             width: 2.2px; background: var(--accent-1); border-radius: 2px;
-            animation: bounce 0.8s ease-in-out infinite alternate;
         }
-        .eq span:nth-child(1) { height: 4px; animation-delay: 0s; }
+        #crown.pill .eq span {
+            animation: bounce 0.85s ease-in-out infinite alternate;
+        }
+        .eq span:nth-child(1) { height: 5px; animation-delay: 0s; }
         .eq span:nth-child(2) { height: 10px; animation-delay: 0.2s; }
-        .eq span:nth-child(3) { height: 6px; animation-delay: 0.4s; }
+        .eq span:nth-child(3) { height: 7px; animation-delay: 0.4s; }
         @keyframes bounce { to { height: 11px; opacity: 0.65; } }
 
         .sep { width: 1px; height: 18px; background: var(--border-subtle); flex-shrink: 0; }
@@ -404,6 +401,24 @@ public static class AuroraSurfaceTemplates
             display: flex; align-items: center; justify-content: space-between; gap: 8px;
         }
         .card-title-l { display: inline-flex; align-items: center; gap: 6px; }
+        .studio-sec {
+            margin-top: 8px;
+            padding-top: 7px;
+            border-top: 1px solid var(--border-subtle);
+        }
+        .studio-sec-lbl {
+            font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.07em; color: var(--text-2);
+            margin-bottom: 5px;
+            display: flex; align-items: center; justify-content: space-between; gap: 6px;
+        }
+        .studio-chip-row {
+            display: flex; flex-wrap: wrap; gap: 5px;
+        }
+        .studio-tip {
+            font-size: 10px; font-weight: 500; text-transform: none; letter-spacing: 0;
+            color: var(--accent-1); opacity: 0.88;
+        }
         .toggle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .tile {
             padding: 10px 11px; border-radius: 13px; border: 1px solid var(--border-subtle);
@@ -825,6 +840,7 @@ public static class AuroraSurfaceTemplates
         let clipQuery = '';
         let clipFilter = 'all';
         let lastExpandedSig = '';
+        let lastDropletSig = '';
         let activeOsd = null;
         let osdHideTimer = null;
         let toastTimer = null;
@@ -1086,6 +1102,7 @@ public static class AuroraSurfaceTemplates
 
             const crown = document.getElementById('crown');
             if (expanded) {
+                lastDropletSig = '';
                 const sig = computeExpandedDeckSignature();
                 if (!crown.classList.contains('expanded') || sig !== lastExpandedSig) {
                     const prevClipScroll = document.getElementById('clipVaultList')?.scrollTop || 0;
@@ -1117,6 +1134,7 @@ public static class AuroraSurfaceTemplates
             } else {
                 lastExpandedSig = '';
                 if (isDraggingFile) {
+                lastDropletSig = '';
                 crown.className = 'glass-shell pill drag-over';
                 crown.innerHTML = `
                     <div style="font-size:12.5px;font-weight:700;color:var(--accent-1);display:flex;align-items:center;gap:8px;">
@@ -1127,15 +1145,23 @@ public static class AuroraSurfaceTemplates
                 } else if (!crownHovered && !crownPinned && !isAnyPopupOpen()) {
                     // LIVE HARDWARE OSD MORPH INSIDE QUIET LIQUID DROPLET ("Damla")
                     if (activeOsd) {
+                        lastDropletSig = '';
                         crown.className = 'glass-shell droplet osd-active ' + getOsdToneClass(activeOsd);
                         crown.innerHTML = buildOsdInnerHtml(activeOsd);
                     } else {
-                        // QUIET LIQUID DROPLET ("Damla") STATE
+                        // QUIET LIQUID DROPLET ("Damla") STATE — Fast-path clock updates avoid full DOM rebuilds!
                         const media = state.media;
                         const shelfCount = (state.dropShelf || []).length;
                         const unread = state.unreadNotifCount || 0;
                         const micMuted = Boolean(state.mic?.supported && state.mic?.muted);
                         const awakeOn = Boolean(state.awake?.active);
+                        const dSig = `${Boolean(media && media.isPlaying)}|${state.focus.running ? state.focus.label : ''}|${awakeOn ? state.awake.shortLabel : ''}|${micMuted}|${unread}|${shelfCount}`;
+                        if (crown.classList.contains('droplet') && !crown.classList.contains('osd-active') && dSig === lastDropletSig) {
+                            const tEl = crown.querySelector('.drop-time');
+                            if (tEl && tEl.textContent !== state.clock) tEl.textContent = state.clock;
+                            return;
+                        }
+                        lastDropletSig = dSig;
                         crown.className = 'glass-shell droplet';
                         crown.innerHTML = `
                             <span class="drop-dot"></span>
@@ -1149,6 +1175,7 @@ public static class AuroraSurfaceTemplates
                         `;
                     }
                 } else {
+                lastDropletSig = '';
                 // FLUID HOVER-REVEALED ACTION PILL
                 crown.className = 'glass-shell pill';
                 const aw = state.activeWindow;
@@ -1215,7 +1242,7 @@ public static class AuroraSurfaceTemplates
                     ${state.mic?.supported && state.mic?.muted ? `
                     <button class="micro-btn danger" style="border-color:var(--danger);color:var(--danger);background:rgba(251,113,133,0.16);" onclick="send('toggleMicMute')" title="Mikrofon Sessiz (Açmak için tıklayın)">${SVG.micOff}</button>` : ''}
                     <button class="pill-btn num ${calOpen ? 'accent' : ''}" onclick="toggleCalendarPopup()" title="Aylık Takvim ve Günlük Ajandayı Aç">
-                        ${SVG.calendar}<span>${escHtml(state.clock)} • ${escHtml(state.shortDate || '')}</span>
+                        ${SVG.calendar}<span id="crownClockPill">${escHtml(state.clock)} • ${escHtml(state.shortDate || '')}</span>
                     </button>
                     <button class="pill-btn num ${(notifOpen || (state.unreadNotifCount || 0) > 0) ? 'accent' : ''}" style="padding:0 9px;" onclick="toggleNotifPopup()" title="Canlı Windows & Aurora Bildirimleri">
                         ${SVG.bell}${(state.unreadNotifCount || 0) > 0 ? `<span>${state.unreadNotifCount}</span>` : ((state.notifications || []).length > 0 ? `<span>${state.notifications.length}</span>` : '')}
@@ -1537,73 +1564,88 @@ public static class AuroraSurfaceTemplates
                         </div>
                     </div>
 
-                    <div class="card" style="display:flex;flex-direction:column;justify-content:space-between;gap:10px;">
+                    <div class="card" style="display:flex;flex-direction:column;justify-content:space-between;gap:8px;">
                         <div>
-                            <div class="card-title"><span class="card-title-l">${SVG.monitor}<span>Dock, Çoklu Ekran & Windows Barı</span></span><span class="num">${state.monitorCount || 1} Ekran</span></div>
-                            <div class="slider-row">
-                                <span style="font-size:12px;width:118px;">Büyüme Dalgası</span>
-                                <input type="range" min="0" max="80" value="${state.dockMagnification}" oninput="send('setMagnification',{value:+this.value})" />
-                                <span class="num" style="width:36px;text-align:right;font-size:11.5px;">%${state.dockMagnification}</span>
+                            <div class="card-title" style="margin-bottom:6px;">
+                                <span class="card-title-l">${SVG.monitor}<span>Dock & Görünüm</span></span>
+                                <span class="studio-tip">Alt+Sol Tık: Taşı · Alt+Sağ Tık: Boyut</span>
                             </div>
-                            <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;">
-                                <button class="pill-btn ${state.nativeTaskbarHidden?'accent':''}" style="height:25px;font-size:10.5px;" onclick="send('toggleHideNativeTaskbar')" title="Aurora açıkken Windows görev çubuğunu tamamen kapatır; kapanınca otomatik geri açar">
-                                    ${SVG.desktop}<span>Win Barı: ${state.nativeTaskbarHidden ? 'Kapalı' : 'Açık'}</span>
-                                </button>
-                                <button class="pill-btn ${state.dockMode!=='AlwaysVisible'?'accent':''}" style="height:25px;font-size:10.5px;" onclick="send('cycleDockVisibilityMode')">
-                                    ${SVG.chevD}<span>Dock: ${state.dockMode==='SmartDodge' ? 'Akıllı Kaçınma' : (state.dockMode==='AutoHide' ? 'Oto-Gizle' : 'Sabit')}</span>
-                                </button>
-                                <button class="pill-btn ${(state.dockDensity!=='Standard' || (state.dockScalePercent && state.dockScalePercent!==100))?'accent':''}" style="height:25px;font-size:10.5px;" onclick="cycleDockDensity()" title="Dock yoğunluğunu değiştir (Alt+Sağ Tık Sürükle ile canlı %75–%135 ölçeklenebilir)">
-                                    ${SVG.sliders}<span>Boyut: ${(state.dockScalePercent && state.dockScalePercent!==100) ? ('%' + state.dockScalePercent) : (state.dockDensity==='Compact' ? 'Kompakt' : (state.dockDensity==='Cozy' ? 'Geniş' : 'Standart'))}</span>
-                                </button>
-                                <button class="pill-btn ${(state.dockEdge && state.dockEdge!=='Bottom') || (state.dockOffsetPercent && state.dockOffsetPercent!==0)?'accent':''}" style="height:25px;font-size:10.5px;" onclick="cycleDockEdge()" title="Dock kenar konumunu değiştir (veya Dock üzerinde Alt+Sol Tık ile sürükleyip Alt/Sol/Sağ kenara bırak)">
+                            <div class="slider-row" style="margin-bottom:6px;" title="Simgeleri sağa/sola kaydırmadan (0px hedef sapması) sadece yukarı/yana yükselterek vurgular">
+                                <span style="font-size:11.5px;width:112px;color:var(--text-1);font-weight:600;">Simge Hover</span>
+                                <input type="range" min="0" max="80" value="${state.dockMagnification}" oninput="send('setMagnification',{value:+this.value})" />
+                                <span class="num" style="width:34px;text-align:right;font-size:11px;color:var(--text-2);">%${state.dockMagnification}</span>
+                            </div>
+                            <div class="studio-chip-row">
+                                <button class="pill-btn ${(state.dockEdge && state.dockEdge!=='Bottom') || (state.dockOffsetPercent && state.dockOffsetPercent!==0)?'accent':''}" style="height:24px;font-size:10.5px;" onclick="cycleDockEdge()" title="Dock kenar konumunu değiştir (veya Dock üzerinde Alt+Sol Tık ile sürükleyip Alt/Sol/Sağ kenara bırak)">
                                     ${SVG.snapL}<span>Konum: ${state.dockEdge==='Left' ? 'Sol' : (state.dockEdge==='Right' ? 'Sağ' : 'Alt')}</span>
                                 </button>
-                                ${((state.dockScalePercent && state.dockScalePercent!==100) || (state.dockOffsetPercent && state.dockOffsetPercent!==0)) ? `
-                                <button class="pill-btn" style="height:25px;font-size:10.5px;" onclick="send('resetDockTransform')" title="Dock konumunu ortala ve boyutunu %100'e sıfırla">
-                                    <span>Dock Sıfırla</span>
-                                </button>` : ''}
-                                <button class="pill-btn ${state.hardwareOsdEnabled!==false?'accent':''}" style="height:25px;font-size:10.5px;" onclick="send('toggleHardwareOsd')" title="Ses, Parlaklık, Mikrofon, CapsLock ve NumLock değişimlerini Üst Damla'da canlı göster (Windows ses kutusunu gizler)">
-                                    ${SVG.vol}<span>Canlı OSD: ${state.hardwareOsdEnabled!==false ? 'Açık' : 'Kapalı'}</span>
+                                <button class="pill-btn ${(state.dockDensity!=='Standard' || (state.dockScalePercent && state.dockScalePercent!==100))?'accent':''}" style="height:24px;font-size:10.5px;" onclick="cycleDockDensity()" title="Dock yoğunluğunu değiştir (Alt+Sağ Tık Sürükle ile canlı %75–%135 ölçeklenebilir)">
+                                    ${SVG.sliders}<span>Boyut: ${(state.dockScalePercent && state.dockScalePercent!==100) ? ('%' + state.dockScalePercent) : (state.dockDensity==='Compact' ? 'Kompakt' : (state.dockDensity==='Cozy' ? 'Geniş' : 'Standart'))}</span>
                                 </button>
-                                <button class="pill-btn ${state.altDragEnabled!==false?'accent':''}" style="height:25px;font-size:10.5px;" onclick="send('toggleAltDrag')" title="Pencerelerde ve Dock'ta: Alt+Sol Tık ile taşı/kenara yasla, Alt+Sağ Tık ile boyutlandır">
-                                    ${SVG.moveWin}<span>Alt+Sürükle: ${state.altDragEnabled!==false ? 'Açık' : 'Kapalı'}</span>
+                                <button class="pill-btn ${state.dockMode!=='AlwaysVisible'?'accent':''}" style="height:24px;font-size:10.5px;" onclick="send('cycleDockVisibilityMode')">
+                                    ${SVG.chevD}<span>Dock: ${state.dockMode==='SmartDodge' ? 'Akıllı Kaçınma' : (state.dockMode==='AutoHide' ? 'Oto-Gizle' : 'Sabit')}</span>
                                 </button>
-                                <button class="pill-btn ${state.showClockSeconds?'accent':''}" style="height:25px;font-size:10.5px;" onclick="send('toggleClockSeconds')">
-                                    ${SVG.timer}<span>Saniye: ${state.showClockSeconds ? 'Açık' : 'Kapalı'}</span>
+                                <button class="pill-btn ${state.nativeTaskbarHidden?'accent':''}" style="height:24px;font-size:10.5px;" onclick="send('toggleHideNativeTaskbar')" title="Aurora açıkken Windows görev çubuğunu tamamen kapatır; kapanınca otomatik geri açar">
+                                    ${SVG.desktop}<span>Win Barı: ${state.nativeTaskbarHidden ? 'Kapalı' : 'Açık'}</span>
                                 </button>
-                                <button class="pill-btn ${state.snapZonesEnabled!==false?'accent':''}" style="height:25px;font-size:10.5px;" onclick="send('toggleSnapZones')" title="Pencere sürüklerken Shift tuşuna basınca cam bölgeler açılır">
-                                    ${SVG.grid}<span>Shift+Bölge: ${state.snapZonesEnabled!==false ? 'Açık' : 'Kapalı'}</span>
+                                <button class="pill-btn ${state.perMonitorFilter?'accent':''}" style="height:24px;font-size:10.5px;" onclick="send('togglePerMonitorFilter')">
+                                    ${SVG.monitor}<span>Ekran: ${state.perMonitorFilter ? 'Bu Ekran' : 'Tümü'} (${state.monitorCount || 1})</span>
                                 </button>
-                                <button class="pill-btn" style="height:25px;font-size:10.5px;" onclick="cycleSnapZonePreset()" title="Shift+Sürükle bölge yerleşim şablonunu değiştir">
-                                    ${SVG.snapL}<span>Bölge: ${snapPresetLabel(state.snapZonePreset)}</span>
-                                </button>
-                                <button class="pill-btn ${state.perMonitorFilter?'accent':''}" style="height:25px;font-size:10.5px;" onclick="send('togglePerMonitorFilter')">
-                                    ${SVG.monitor}<span>Ekran: ${state.perMonitorFilter ? 'Bu Ekran' : 'Tümü'}</span>
-                                </button>
-                                <button class="pill-btn ${state.dwmLivePreview!==false?'accent':''}" style="height:25px;font-size:10.5px;" onclick="send('toggleDwmLivePreview')">
+                                <button class="pill-btn ${state.dwmLivePreview!==false?'accent':''}" style="height:24px;font-size:10.5px;" onclick="send('toggleDwmLivePreview')">
                                     ${SVG.layers}<span>DWM 60 FPS</span>
                                 </button>
-                                <button class="pill-btn ${state.sysNotifBridge!==false?'accent':''}" style="height:25px;font-size:10.5px;" onclick="send('toggleSysNotifBridge')">
-                                    ${SVG.bell}<span>Bildirimler</span>
+                                <button class="pill-btn ${state.showClockSeconds?'accent':''}" style="height:24px;font-size:10.5px;" onclick="send('toggleClockSeconds')">
+                                    ${SVG.timer}<span>Saniye: ${state.showClockSeconds ? 'Açık' : 'Kapalı'}</span>
                                 </button>
-                                <button class="pill-btn ${state.winKeyOmni?'accent':''}" style="height:25px;font-size:10.5px;" onclick="send('toggleWinKeyOmni')">
-                                    ${SVG.search}<span>Win Tuşu</span>
-                                </button>
-                                <button class="pill-btn" style="height:25px;font-size:10.5px;" onclick="send('cycleOmniHotkey')">
-                                    ${SVG.bolt}<span>${escHtml(state.omniHotkeyPreset || 'Alt+Space')}</span>
-                                </button>
-                                <button class="pill-btn ${state.startupEnabled?'accent':''}" style="height:25px;font-size:10.5px;" onclick="send('toggleStartup')">
-                                    ${SVG.bolt}<span>Oto-Başlat</span>
-                                </button>
-                                <button class="pill-btn" style="height:25px;font-size:10.5px;" onclick="send('exportBackup')">
-                                    ${SVG.exportPkg}<span>Yedekle</span>
-                                </button>
-                                <button class="pill-btn" style="height:25px;font-size:10.5px;" onclick="send('importBackup')">
-                                    ${SVG.inbox}<span>Geri Yükle</span>
-                                </button>
-                                <button class="pill-btn" style="height:25px;font-size:10.5px;" onclick="openOnboardingTour()">
-                                    ${SVG.sparkles}<span>Tur</span>
-                                </button>
+                                ${((state.dockScalePercent && state.dockScalePercent!==100) || (state.dockOffsetPercent && state.dockOffsetPercent!==0)) ? `
+                                <button class="pill-btn" style="height:24px;font-size:10.5px;" onclick="send('resetDockTransform')" title="Dock konumunu ortala ve boyutunu %100'e sıfırla">
+                                    <span>Dock Sıfırla</span>
+                                </button>` : ''}
+                            </div>
+
+                            <div class="studio-sec">
+                                <div class="studio-sec-lbl"><span>Pencere, OSD & Kısayollar</span></div>
+                                <div class="studio-chip-row">
+                                    <button class="pill-btn ${state.altDragEnabled!==false?'accent':''}" style="height:24px;font-size:10.5px;" onclick="send('toggleAltDrag')" title="Pencerelerde ve Dock'ta: Alt+Sol Tık ile taşı/kenara yasla, Alt+Sağ Tık ile boyutlandır">
+                                        ${SVG.moveWin}<span>Alt+Sürükle: ${state.altDragEnabled!==false ? 'Açık' : 'Kapalı'}</span>
+                                    </button>
+                                    <button class="pill-btn ${state.snapZonesEnabled!==false?'accent':''}" style="height:24px;font-size:10.5px;" onclick="send('toggleSnapZones')" title="Pencere sürüklerken Shift tuşuna basınca cam bölgeler açılır">
+                                        ${SVG.grid}<span>Shift+Bölge: ${state.snapZonesEnabled!==false ? 'Açık' : 'Kapalı'}</span>
+                                    </button>
+                                    <button class="pill-btn" style="height:24px;font-size:10.5px;" onclick="cycleSnapZonePreset()" title="Shift+Sürükle bölge yerleşim şablonunu değiştir">
+                                        ${SVG.snapL}<span>Bölge: ${snapPresetLabel(state.snapZonePreset)}</span>
+                                    </button>
+                                    <button class="pill-btn ${state.hardwareOsdEnabled!==false?'accent':''}" style="height:24px;font-size:10.5px;" onclick="send('toggleHardwareOsd')" title="Ses, Parlaklık, Mikrofon, CapsLock ve NumLock değişimlerini Üst Damla'da canlı göster (Windows ses kutusunu gizler)">
+                                        ${SVG.vol}<span>Canlı OSD: ${state.hardwareOsdEnabled!==false ? 'Açık' : 'Kapalı'}</span>
+                                    </button>
+                                    <button class="pill-btn ${state.sysNotifBridge!==false?'accent':''}" style="height:24px;font-size:10.5px;" onclick="send('toggleSysNotifBridge')">
+                                        ${SVG.bell}<span>Bildirimler</span>
+                                    </button>
+                                    <button class="pill-btn ${state.winKeyOmni?'accent':''}" style="height:24px;font-size:10.5px;" onclick="send('toggleWinKeyOmni')">
+                                        ${SVG.search}<span>Win Tuşu</span>
+                                    </button>
+                                    <button class="pill-btn" style="height:24px;font-size:10.5px;" onclick="send('cycleOmniHotkey')">
+                                        ${SVG.bolt}<span>${escHtml(state.omniHotkeyPreset || 'Alt+Space')}</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="studio-sec">
+                                <div class="studio-sec-lbl"><span>Sistem & Yedekleme</span></div>
+                                <div class="studio-chip-row">
+                                    <button class="pill-btn ${state.startupEnabled?'accent':''}" style="height:24px;font-size:10.5px;" onclick="send('toggleStartup')">
+                                        ${SVG.bolt}<span>Oto-Başlat</span>
+                                    </button>
+                                    <button class="pill-btn" style="height:24px;font-size:10.5px;" onclick="send('exportBackup')">
+                                        ${SVG.exportPkg}<span>Yedekle</span>
+                                    </button>
+                                    <button class="pill-btn" style="height:24px;font-size:10.5px;" onclick="send('importBackup')">
+                                        ${SVG.inbox}<span>Geri Yükle</span>
+                                    </button>
+                                    <button class="pill-btn" style="height:24px;font-size:10.5px;" onclick="openOnboardingTour()">
+                                        ${SVG.sparkles}<span>Hızlı Tur</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -1625,17 +1667,17 @@ public static class AuroraSurfaceTemplates
                             </button>
                         </div>` : ''}
 
-                        <div style="display:flex;justify-content:space-between;align-items:center;padding-top:9px;border-top:1px solid var(--border-subtle);gap:6px;flex-wrap:wrap;">
-                            <div style="display:flex;align-items:center;gap:5px;min-width:0;flex-wrap:wrap;">
-                                <button class="pill-btn" style="height:24px;font-size:10.5px;" ${state.updateDownloading ? 'disabled' : ''} onclick="send('checkForUpdates')" title="GitHub Releases üzerinden yeni sürümü kontrol et">
-                                    ${SVG.refresh}<span>Güncellemeleri Kontrol Et · ${escHtml(state.updateStatus || ('v' + (state.version || '2.0.0')))}</span>
+                        <div style="display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid var(--border-subtle);gap:5px;flex-wrap:nowrap;">
+                            <div style="display:flex;align-items:center;gap:5px;min-width:0;flex-wrap:nowrap;overflow:hidden;">
+                                <button class="pill-btn" style="height:24px;padding:0 9px;font-size:10.5px;" ${state.updateDownloading ? 'disabled' : ''} onclick="send('checkForUpdates')" title="GitHub Releases üzerinden yeni sürümü kontrol et">
+                                    ${SVG.refresh}<span>Kontrol Et · ${escHtml(state.updateStatus || ('v' + (state.version || '2.0.0')))}</span>
                                 </button>
-                                <button class="pill-btn ${state.autoCheckUpdatesEnabled!==false?'accent':''}" style="height:24px;font-size:10px;" onclick="send('toggleAutoCheckUpdates')" title="Yeni sürüm çıktığında Üst Damla'da otomatik bildirim göster">
-                                    <span>Oto Kontrol: ${state.autoCheckUpdatesEnabled!==false ? 'Açık' : 'Kapalı'}</span>
+                                <button class="pill-btn ${state.autoCheckUpdatesEnabled!==false?'accent':''}" style="height:24px;padding:0 8px;font-size:10px;" onclick="send('toggleAutoCheckUpdates')" title="Yeni sürüm çıktığında Üst Damla'da otomatik bildirim göster">
+                                    <span>Oto: ${state.autoCheckUpdatesEnabled!==false ? 'Açık' : 'Kapalı'}</span>
                                 </button>
-                                ${state.repoUrl ? `<button class="pill-btn subtle" style="height:24px;font-size:10px;padding:0 8px;" onclick="send('openUri',{uri:state.repoUrl})" title="GitHub deposunu aç"><span>GitHub</span></button>` : ''}
+                                ${state.repoUrl ? `<button class="pill-btn subtle" style="height:24px;font-size:10px;padding:0 7px;" onclick="send('openUri',{uri:state.repoUrl})" title="GitHub deposunu aç"><span>GitHub</span></button>` : ''}
                             </div>
-                            <button class="pill-btn" style="border-color:var(--danger);color:var(--danger);height:24px;font-size:10.5px;" onclick="send('exitAurora')">${SVG.power}<span>Çıkış</span></button>
+                            <button class="pill-btn" style="border-color:var(--danger);color:var(--danger);height:24px;padding:0 9px;font-size:10.5px;flex-shrink:0;" onclick="send('exitAurora')">${SVG.power}<span>Çıkış</span></button>
                         </div>
                     </div>
                 </div>
@@ -2577,6 +2619,14 @@ public static class AuroraSurfaceTemplates
                         renderOmniList(inp ? inp.value : '', true);
                     }
                 }
+            } else if (msg.type === 'clockTick') {
+                if (state && msg.clock) {
+                    state.clock = msg.clock;
+                    const tEl = document.querySelector('#crown.droplet:not(.osd-active) .drop-time');
+                    if (tEl) tEl.textContent = msg.clock;
+                    const pEl = document.getElementById('crownClockPill');
+                    if (pEl) pEl.textContent = `${msg.clock} • ${state.shortDate || ''}`;
+                }
             } else if (msg.type === 'state') {
                 state = msg.payload;
                 if (typeof state.crownPinned === 'boolean') crownPinned = state.crownPinned;
@@ -2898,7 +2948,7 @@ public static class AuroraSurfaceTemplates
             --img-sz: calc(26px * var(--ds));
             pointer-events: auto;
             position: relative;
-            display: flex; align-items: center; gap: calc(7px * var(--ds));
+            display: flex; align-items: center; gap: calc(8px * var(--ds));
             max-width: calc(100vw - 20px);
             width: auto;
             height: auto;
@@ -3034,6 +3084,7 @@ public static class AuroraSurfaceTemplates
             border-color: var(--danger); color: var(--danger);
         }
         .search-pill {
+            position: relative;
             height: calc(var(--item-sz) * 0.95); padding: 0 calc(13px * var(--ds)); border-radius: calc(13px * var(--ds));
             display: inline-flex; align-items: center; gap: calc(7px * var(--ds));
             background: linear-gradient(135deg, rgba(56,189,248,0.20), rgba(129,140,248,0.16));
@@ -3047,6 +3098,7 @@ public static class AuroraSurfaceTemplates
             color: var(--accent-ink); border-color: transparent;
             transform: translateY(-1.5px);
         }
+        .search-pill:hover .hover-label { opacity: 1; }
         .dock-item {
             position: relative;
             width: var(--item-sz); height: var(--item-sz); flex-shrink: 0;
@@ -3058,6 +3110,18 @@ public static class AuroraSurfaceTemplates
             background: var(--bg-card);
             border: 1px solid var(--border-subtle);
             transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+        }
+        /* Invisible hit-bridge underneath lifted icons so clicking never slips during hover elevation */
+        .dock-item::before {
+            content: '';
+            position: absolute;
+            inset: -3px -3px -10px -3px;
+            pointer-events: auto;
+        }
+        .dock-item:hover {
+            background: var(--bg-card-hover);
+            border-color: rgba(255, 255, 255, 0.24);
+            box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(56, 189, 248, 0.22);
         }
         .dock-item.active {
             background: linear-gradient(145deg, rgba(56,189,248,0.22), rgba(129,140,248,0.18));
@@ -3079,6 +3143,7 @@ public static class AuroraSurfaceTemplates
             position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%);
             height: 3.5px; border-radius: 99px;
             background: var(--text-2);
+            pointer-events: none;
         }
         .dock-item.active .dock-dot {
             width: 16px;
@@ -3094,26 +3159,47 @@ public static class AuroraSurfaceTemplates
             font-size: 9.5px; font-weight: 800;
             display: flex; align-items: center; justify-content: center;
             box-shadow: 0 2px 6px rgba(0,0,0,0.32);
+            pointer-events: none;
         }
         .hover-label {
-            position: absolute; top: -33px; left: 50%; transform: translateX(-50%);
-            padding: 3px 9px; border-radius: 8px;
+            position: absolute; top: -34px; left: 50%; transform: translateX(-50%);
+            padding: 4px 10px; border-radius: 9px;
             background: rgba(8, 12, 24, 0.96);
             border: 1px solid rgba(255, 255, 255, 0.16);
             color: #F8FAFC; font-size: 11px; font-weight: 600;
             white-space: nowrap; opacity: 0; pointer-events: none;
-            transition: opacity 0.12s ease;
-            box-shadow: 0 8px 20px -4px rgba(0,0,0,0.45);
+            transition: opacity 0.13s ease, transform 0.14s var(--ease);
+            box-shadow: 0 10px 24px -6px rgba(0,0,0,0.52);
+            z-index: 95;
         }
         .dock-item:hover:not(.radial-anchored) .hover-label { opacity: 1; }
-        .dock-sep { width: 1px; height: 28px; background: var(--border-rim); margin: 0 2px; flex-shrink: 0; }
+        .dock-v-btn { position: relative; }
+        .dock-v-btn:hover .hover-label { opacity: 1; }
+        .dock-v-badge {
+            display: none;
+            position: absolute; top: -4px; right: -4px;
+            min-width: 15px; height: 15px; padding: 0 3.5px;
+            border-radius: 99px;
+            background: rgba(15, 23, 42, 0.94);
+            border: 1px solid var(--border-rim);
+            color: var(--text-1);
+            font-size: 8.5px; font-weight: 800;
+            align-items: center; justify-content: center;
+            pointer-events: none;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.38);
+        }
+        .dock-sep {
+            width: 1px; height: 26px;
+            background: linear-gradient(180deg, transparent, var(--border-rim), transparent);
+            margin: 0 2px; flex-shrink: 0;
+        }
 
         /* Dock Density Variants (Compact for 13-14" laptops, Cozy for 4K/Touch) */
         #dockBar.density-compact {
             --item-sz: calc(35px * var(--ds));
             --img-sz: calc(21px * var(--ds));
             padding: calc(5px * var(--ds)) calc(10px * var(--ds));
-            gap: calc(5px * var(--ds));
+            gap: calc(6px * var(--ds));
             border-radius: calc(17px * var(--ds));
         }
         #dockBar.density-compact .acc-bucket { height: calc(37px * var(--ds)); border-radius: calc(11px * var(--ds)); }
@@ -3124,7 +3210,7 @@ public static class AuroraSurfaceTemplates
             --item-sz: calc(48px * var(--ds));
             --img-sz: calc(30px * var(--ds));
             padding: calc(9px * var(--ds)) calc(15px * var(--ds));
-            gap: calc(8px * var(--ds));
+            gap: calc(9px * var(--ds));
             border-radius: calc(24px * var(--ds));
         }
         #dockBar.density-cozy .acc-bucket { height: calc(50px * var(--ds)); border-radius: calc(16px * var(--ds)); }
@@ -3133,7 +3219,7 @@ public static class AuroraSurfaceTemplates
         /* Inline Accordion Category Stack for Smart Tidy ("Derli") */
         .acc-bucket {
             display: inline-flex; align-items: center;
-            height: 44px; border-radius: 14px;
+            height: var(--item-sz); border-radius: calc(12px * var(--ds));
             background: var(--acc-bg);
             border: 1px solid var(--border-rim);
             padding: 0 2px;
@@ -3146,38 +3232,38 @@ public static class AuroraSurfaceTemplates
         .acc-bucket.open {
             background: var(--acc-open-bg);
             border-color: var(--accent-1);
-            padding: 0 5px 0 3px;
+            padding: 0 calc(5px * var(--ds)) 0 calc(3px * var(--ds));
             box-shadow: 0 6px 20px -6px rgba(56, 189, 248, 0.35);
         }
         .acc-head {
-            height: 38px; padding: 0 9px; border-radius: 11px;
-            display: inline-flex; align-items: center; gap: 7px;
-            cursor: pointer; font-size: 12px; font-weight: 700;
+            height: calc(var(--item-sz) - 4px); padding: 0 calc(8px * var(--ds)); border-radius: calc(10px * var(--ds));
+            display: inline-flex; align-items: center; gap: calc(6px * var(--ds));
+            cursor: pointer; font-size: calc(11.5px * var(--ds)); font-weight: 700;
             color: var(--text-1);
             transition: background 0.15s ease, transform 0.15s var(--ease);
         }
         .acc-head:hover { background: var(--bg-card-hover); transform: translateY(-1px); }
         .stack-icons { display: flex; align-items: center; }
         .stack-icons img {
-            width: 19px; height: 19px; border-radius: 5px;
-            margin-left: -6px; border: 1.5px solid var(--bg-glass-2);
+            width: calc(18px * var(--ds)); height: calc(18px * var(--ds)); border-radius: calc(5px * var(--ds));
+            margin-left: calc(-5px * var(--ds)); border: 1.5px solid var(--bg-glass-2);
             background: var(--bg-glass-2);
         }
         .stack-icons img:first-child { margin-left: 0; }
         .acc-count {
-            min-width: 18px; height: 18px; padding: 0 5px;
+            min-width: calc(17px * var(--ds)); height: calc(17px * var(--ds)); padding: 0 calc(4.5px * var(--ds));
             border-radius: 99px;
             background: rgba(56, 189, 248, 0.16);
             color: var(--accent-1);
-            font-size: 10.5px; font-weight: 800;
+            font-size: calc(10px * var(--ds)); font-weight: 800;
             display: inline-flex; align-items: center; justify-content: center;
         }
         .acc-drawer {
             display: none;
             align-items: center;
-            gap: 6px;
-            padding-left: 6px;
-            margin-left: 4px;
+            gap: calc(5px * var(--ds));
+            padding-left: calc(6px * var(--ds));
+            margin-left: calc(4px * var(--ds));
             border-left: 1px solid var(--border-subtle);
         }
         .acc-bucket.open .acc-drawer {
@@ -3185,23 +3271,23 @@ public static class AuroraSurfaceTemplates
             animation: accFanIn 0.20s var(--spring);
         }
         .acc-bucket.open .acc-drawer .dock-item {
-            width: 36px; height: 36px; border-radius: 10px;
+            width: calc(var(--item-sz) * 0.86); height: calc(var(--item-sz) * 0.86); border-radius: calc(10px * var(--ds));
         }
-        .acc-bucket.open .acc-drawer .dock-item img { width: 22px; height: 22px; }
+        .acc-bucket.open .acc-drawer .dock-item img { width: calc(var(--img-sz) * 0.84); height: calc(var(--img-sz) * 0.84); }
         .acc-bucket.open .acc-drawer .dock-item .dock-dot { bottom: -3px; height: 3px; }
         @keyframes accFanIn {
             from { opacity: 0; transform: translateX(-8px) scale(0.92); }
             to { opacity: 1; transform: translateX(0) scale(1); }
         }
 
-        /* ========== VERTICAL DOCK MODES (LEFT & RIGHT SCREEN EDGES) ========== */
+        /* ========== VERTICAL DOCK MODES (ARCHITECTURAL GLASS RAIL — LEFT & RIGHT) ========== */
         body.edge-left .dock-stage {
             flex-direction: row; justify-content: flex-start; align-items: center;
-            padding: 8px 0 8px 8px;
+            padding: 10px 0 10px 7px;
         }
         body.edge-right .dock-stage {
             flex-direction: row; justify-content: flex-end; align-items: center;
-            padding: 8px 8px 8px 0;
+            padding: 10px 7px 10px 0;
         }
         body.edge-left #dockBar,
         body.edge-right #dockBar {
@@ -3210,87 +3296,247 @@ public static class AuroraSurfaceTemplates
             height: auto;
             min-height: 0;
             min-width: calc(56px * var(--ds));
-            padding: calc(10px * var(--ds)) calc(8px * var(--ds));
+            padding: calc(9px * var(--ds)) calc(7px * var(--ds));
+            gap: calc(7px * var(--ds));
             max-width: none;
-            max-height: calc(100vh - 16px);
-            border-radius: calc(21px * var(--ds));
+            max-height: calc(100vh - 20px);
+            border-radius: calc(20px * var(--ds));
+        }
+        body.edge-left #dockBar {
+            box-shadow:
+                14px 0 38px -10px rgba(0, 0, 0, 0.72),
+                0 14px 32px -12px rgba(0, 0, 0, 0.52),
+                inset 1.5px 0 0 rgba(255, 255, 255, 0.24),
+                inset 0 1px 0 rgba(255, 255, 255, 0.14);
+        }
+        body.edge-right #dockBar {
+            box-shadow:
+                -14px 0 38px -10px rgba(0, 0, 0, 0.72),
+                0 14px 32px -12px rgba(0, 0, 0, 0.52),
+                inset -1.5px 0 0 rgba(255, 255, 255, 0.24),
+                inset 0 1px 0 rgba(255, 255, 255, 0.14);
         }
         body.edge-left #dockBar.density-compact,
         body.edge-right #dockBar.density-compact {
             min-width: calc(48px * var(--ds));
-            padding: calc(8px * var(--ds)) calc(6px * var(--ds));
+            padding: calc(7px * var(--ds)) calc(6px * var(--ds));
+            gap: calc(5.5px * var(--ds));
+            border-radius: calc(17px * var(--ds));
         }
         body.edge-left #dockBar.density-cozy,
         body.edge-right #dockBar.density-cozy {
             min-width: calc(64px * var(--ds));
-            padding: calc(12px * var(--ds)) calc(9px * var(--ds));
+            padding: calc(11px * var(--ds)) calc(8px * var(--ds));
+            gap: calc(8.5px * var(--ds));
+            border-radius: calc(22px * var(--ds));
         }
         body.edge-left #dockBar.tucked,
         body.edge-right #dockBar.tucked {
-            width: 7px; min-width: 7px; height: 132px; min-height: 132px; padding: 0;
+            width: 6px; min-width: 6px; height: 116px; min-height: 116px; padding: 0;
             border-radius: 99px;
             background: linear-gradient(180deg, transparent 0%, var(--accent-1) 28%, var(--accent-2) 72%, transparent 100%);
+            box-shadow: 0 0 16px rgba(56, 189, 248, 0.72), 0 2px 10px rgba(0, 0, 0, 0.42);
         }
         body.edge-left .dock-sep,
         body.edge-right .dock-sep {
-            width: calc(26px * var(--ds)); height: 1px; margin: calc(2px * var(--ds)) 0;
+            width: calc(24px * var(--ds)); height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border-rim), transparent);
+            margin: calc(2px * var(--ds)) 0;
         }
+        /* Unified Squircle Grid: Search, Apps, Category Stacks, Folder Stacks & Utilities share exact same width & corner rhythm */
         body.edge-left .search-pill,
         body.edge-right .search-pill {
-            width: var(--item-sz); height: calc(var(--item-sz) * 0.92); padding: 0; justify-content: center;
+            width: var(--item-sz); height: var(--item-sz);
+            border-radius: calc(12px * var(--ds));
+            padding: 0; justify-content: center;
+            background: linear-gradient(145deg, rgba(56,189,248,0.18), rgba(129,140,248,0.13));
+            border: 1px solid rgba(56,189,248,0.34);
+        }
+        body.edge-left .search-pill:hover,
+        body.edge-right .search-pill:hover {
+            transform: none;
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+            color: var(--accent-ink); border-color: transparent;
+            box-shadow: 0 6px 18px -4px rgba(56,189,248,0.48);
+        }
+        body.edge-left .folder-chip,
+        body.edge-right .folder-chip {
+            width: var(--item-sz); height: var(--item-sz);
+            border-radius: calc(12px * var(--ds));
         }
         body.edge-left .dock-item,
-        body.edge-left .folder-chip {
+        body.edge-left .folder-chip,
+        body.edge-left .acc-bucket {
             transform-origin: center left;
         }
         body.edge-right .dock-item,
-        body.edge-right .folder-chip {
+        body.edge-right .folder-chip,
+        body.edge-right .acc-bucket {
             transform-origin: center right;
         }
+        body.edge-left .dock-item::before { inset: -3px -10px -3px -6px; }
+        body.edge-right .dock-item::before { inset: -3px -6px -3px -10px; }
         body.edge-left .dock-dot {
             left: -5px; right: auto; bottom: auto; top: 50%; transform: translateY(-50%);
-            width: 3.5px; height: 5px;
+            width: 3px; height: 5px;
         }
-        body.edge-left .dock-item.active .dock-dot { width: 3.5px; height: 16px; }
-        body.edge-left .dock-item.running:not(.active) .dock-dot { width: 3.5px; height: 5px; }
+        body.edge-left .dock-item.active .dock-dot,
+        body.edge-left .acc-bucket.has-active > .acc-head .dock-dot { width: 3px; height: 16px; background: linear-gradient(180deg, var(--accent-1), var(--accent-2)); }
+        body.edge-left .dock-item.running:not(.active) .dock-dot { width: 3px; height: 5px; }
         body.edge-right .dock-dot {
             right: -5px; left: auto; bottom: auto; top: 50%; transform: translateY(-50%);
-            width: 3.5px; height: 5px;
+            width: 3px; height: 5px;
         }
-        body.edge-right .dock-item.active .dock-dot { width: 3.5px; height: 16px; }
-        body.edge-right .dock-item.running:not(.active) .dock-dot { width: 3.5px; height: 5px; }
+        body.edge-right .dock-item.active .dock-dot,
+        body.edge-right .acc-bucket.has-active > .acc-head .dock-dot { width: 3px; height: 16px; background: linear-gradient(180deg, var(--accent-1), var(--accent-2)); }
+        body.edge-right .dock-item.running:not(.active) .dock-dot { width: 3px; height: 5px; }
         body.edge-left .hover-label,
-        body.edge-left .dock-pin-btn .hover-label {
-            left: calc(100% + 10px); right: auto; top: 50%; bottom: auto; transform: translateY(-50%);
+        body.edge-left .dock-pin-btn .hover-label,
+        body.edge-left .dock-v-btn .hover-label,
+        body.edge-left .search-pill .hover-label,
+        body.edge-left .acc-head .hover-label {
+            left: calc(100% + 12px); right: auto; top: 50%; bottom: auto;
+            transform: translateY(-50%) translateX(-4px);
+        }
+        body.edge-left .dock-item:hover:not(.radial-anchored) .hover-label,
+        body.edge-left .folder-chip:hover:not(.open) .hover-label,
+        body.edge-left .dock-pin-btn:hover .hover-label,
+        body.edge-left .dock-v-btn:hover .hover-label,
+        body.edge-left .search-pill:hover .hover-label,
+        body.edge-left .acc-bucket:not(.open) .acc-head:hover .hover-label {
+            opacity: 1;
+            transform: translateY(-50%) translateX(0);
         }
         body.edge-right .hover-label,
-        body.edge-right .dock-pin-btn .hover-label {
-            right: calc(100% + 10px); left: auto; top: 50%; bottom: auto; transform: translateY(-50%);
+        body.edge-right .dock-pin-btn .hover-label,
+        body.edge-right .dock-v-btn .hover-label,
+        body.edge-right .search-pill .hover-label,
+        body.edge-right .acc-head .hover-label {
+            right: calc(100% + 12px); left: auto; top: 50%; bottom: auto;
+            transform: translateY(-50%) translateX(4px);
         }
+        body.edge-right .dock-item:hover:not(.radial-anchored) .hover-label,
+        body.edge-right .folder-chip:hover:not(.open) .hover-label,
+        body.edge-right .dock-pin-btn:hover .hover-label,
+        body.edge-right .dock-v-btn:hover .hover-label,
+        body.edge-right .search-pill:hover .hover-label,
+        body.edge-right .acc-bucket:not(.open) .acc-head:hover .hover-label {
+            opacity: 1;
+            transform: translateY(-50%) translateX(0);
+        }
+        /* Vertical Multi-App Category Stacks: Clean iOS/macOS Folder-Style 2x2 Mosaic Squircle! */
         body.edge-left .acc-bucket,
         body.edge-right .acc-bucket {
-            flex-direction: column; width: var(--item-sz); height: auto !important; padding: 3px 0;
+            flex-direction: column;
+            width: var(--item-sz); height: auto !important;
+            padding: 0;
+            border-radius: calc(12px * var(--ds));
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            overflow: visible;
+        }
+        body.edge-left .acc-bucket.open,
+        body.edge-right .acc-bucket.open {
+            background: var(--acc-open-bg);
+            border-color: var(--accent-1);
+            padding: 2px 0 4px 0;
+            border-radius: calc(14px * var(--ds));
         }
         body.edge-left .acc-head,
         body.edge-right .acc-head {
-            width: calc(var(--item-sz) - 4px); height: auto !important; padding: 5px 2px; flex-direction: column; gap: 3px;
+            position: relative;
+            width: calc(var(--item-sz) - 2px); height: calc(var(--item-sz) - 2px) !important;
+            padding: 0; border-radius: calc(11px * var(--ds));
+            flex-direction: column; justify-content: center; align-items: center; gap: 0;
         }
-        body.edge-left .stack-icons img,
-        body.edge-right .stack-icons img {
-            width: calc(15px * var(--ds)); height: calc(15px * var(--ds)); margin-left: -4px;
+        body.edge-left .acc-head:hover,
+        body.edge-right .acc-head:hover {
+            transform: none;
+            background: var(--bg-card-hover);
+        }
+        .v-mosaic {
+            width: calc(var(--item-sz) * 0.72);
+            height: calc(var(--item-sz) * 0.72);
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 2px;
+            align-items: center; justify-items: center;
+            padding: 1px;
+        }
+        .v-mosaic img {
+            width: 100%; height: 100%;
+            object-fit: contain;
+            border-radius: calc(4px * var(--ds));
+            pointer-events: none;
+        }
+        .v-mosaic.pair {
+            grid-template-rows: 1fr;
+            align-content: center;
+            height: auto;
+        }
+        .v-mosaic.pair img {
+            width: calc(var(--item-sz) * 0.35);
+            height: calc(var(--item-sz) * 0.35);
         }
         body.edge-left .acc-drawer,
         body.edge-right .acc-drawer {
-            flex-direction: column; padding: 5px 0 2px 0; margin: 4px 0 0 0;
+            flex-direction: column; gap: 5px;
+            padding: 5px 0 1px 0; margin: 3px 0 0 0;
             border-left: none; border-top: 1px solid var(--border-subtle);
+            width: 100%; align-items: center;
         }
+        body.edge-left .acc-bucket.open .acc-drawer .dock-item,
+        body.edge-right .acc-bucket.open .acc-drawer .dock-item {
+            width: calc(var(--item-sz) * 0.84); height: calc(var(--item-sz) * 0.84);
+            border-radius: calc(10px * var(--ds));
+        }
+        body.edge-left .acc-bucket.open .acc-drawer .dock-item img,
+        body.edge-right .acc-bucket.open .acc-drawer .dock-item img {
+            width: calc(var(--img-sz) * 0.84); height: calc(var(--img-sz) * 0.84);
+        }
+        /* Unified Vertical Utility Squircles (Tray / Smart Tidy / Pin) — Zero mismatched pills! */
         body.edge-left .dock-v-btn,
-        body.edge-right .dock-v-btn {
-            width: calc(var(--item-sz) * 0.90); height: calc(30px * var(--ds)); padding: 0; justify-content: center;
-        }
+        body.edge-right .dock-v-btn,
         body.edge-left .dock-pin-btn,
         body.edge-right .dock-pin-btn {
-            width: calc(var(--item-sz) * 0.85); height: calc(var(--item-sz) * 0.85);
+            width: var(--item-sz);
+            height: calc(var(--item-sz) * 0.84);
+            border-radius: calc(11px * var(--ds));
+            padding: 0;
+            justify-content: center;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-2);
+            box-shadow: none;
+        }
+        body.edge-left .dock-v-btn:hover,
+        body.edge-right .dock-v-btn:hover,
+        body.edge-left .dock-pin-btn:hover,
+        body.edge-right .dock-pin-btn:hover {
+            transform: none;
+            background: var(--bg-card-hover);
+            border-color: var(--border-rim);
+            color: var(--text-1);
+        }
+        body.edge-left .dock-v-btn.accent,
+        body.edge-right .dock-v-btn.accent,
+        body.edge-left .dock-pin-btn.active,
+        body.edge-right .dock-pin-btn.active {
+            background: linear-gradient(145deg, rgba(56,189,248,0.22), rgba(129,140,248,0.18));
+            border-color: rgba(56,189,248,0.65);
+            color: var(--accent-1);
+            box-shadow: 0 4px 14px -4px rgba(56,189,248,0.38);
+        }
+        body.edge-left .dock-pin-btn.smart-dodge,
+        body.edge-right .dock-pin-btn.smart-dodge {
+            background: linear-gradient(145deg, rgba(129,140,248,0.24), rgba(56,189,248,0.16));
+            border-color: rgba(129,140,248,0.65);
+            color: var(--accent-2);
+        }
+        body.edge-left .dock-v-badge,
+        body.edge-right .dock-v-badge {
+            display: inline-flex;
         }
         body.edge-left .radial-stem-pip,
         body.edge-right .radial-stem-pip { display: none; }
@@ -3328,6 +3574,7 @@ public static class AuroraSurfaceTemplates
         let autoHideTimer = null;
         let hoverRadialTimer = null;
         let radialCloseTimer = null;
+        let accOpenTimer = null;
         let accCloseTimer = null;
         let orbTargetTimer = null;
         let dwmPreviewTimer = null;
@@ -3577,7 +3824,7 @@ public static class AuroraSurfaceTemplates
                 buckets[cat.id].groups.push(g);
                 buckets[cat.id].windows.push(...g.windows);
                 if (g.hasActive) buckets[cat.id].hasActive = true;
-                if (g.icon && buckets[cat.id].icons.length < 3) buckets[cat.id].icons.push(g.icon);
+                if (g.icon && buckets[cat.id].icons.length < 4) buckets[cat.id].icons.push(g.icon);
             }
             return Object.values(buckets);
         }
@@ -3627,6 +3874,7 @@ public static class AuroraSurfaceTemplates
                 <div class="search-pill" onclick="send('openOmni')">
                     ${SVG.search}
                     ${compactMode ? '' : '<span>Ara</span>'}
+                    ${isVert ? '<span class="hover-label">Evrensel Arama</span>' : ''}
                 </div>
                 <div class="dock-sep"></div>
             `;
@@ -3643,20 +3891,36 @@ public static class AuroraSurfaceTemplates
                         expandedAccordionCat = null;
                     }
                     for (const b of buckets) {
+                        if (isVert && b.groups.length === 1) {
+                            html += buildDockIconHtml(b.groups[0], -1, null);
+                            continue;
+                        }
                         const isOpen = (expandedAccordionCat === b.id) || (radialAnchorCatId === b.id && Boolean(radialGroupKey));
+                        const vMosaicHtml = b.icons.length
+                            ? `<div class="v-mosaic ${b.icons.length <= 2 ? 'pair' : ''}">${b.icons.slice(0, 4).map(ic => `<img src="data:image/png;base64,${ic}"/>`).join('')}</div>`
+                            : SVG.layers;
+                        const horizHeadHtml = `
+                            <div class="stack-icons">
+                                ${b.icons.length ? b.icons.slice(0, 3).map(ic => `<img src="data:image/png;base64,${ic}"/>`).join('') : SVG.layers}
+                            </div>
+                            ${compactMode ? '' : `<span>${escHtml(b.name)}</span>`}
+                            <span class="acc-count num">${b.windows.length}</span>
+                        `;
+                        const vertHeadHtml = `
+                            ${vMosaicHtml}
+                            <span class="count-pill num">${b.windows.length}</span>
+                            <span class="dock-dot"></span>
+                            <span class="hover-label">${escHtml(b.name)} (${b.windows.length})</span>
+                        `;
                         html += `
                             <div class="acc-bucket ${isOpen ? 'open' : ''} ${b.hasActive ? 'has-active' : ''}"
                                  data-cat-id="${b.id}"
-                                 onmouseenter="openAccordionCat('${b.id}')"
+                                 onmouseenter="scheduleAccordionOpen('${b.id}')"
                                  onmouseleave="scheduleAccordionClose('${b.id}')">
                                 <div class="acc-head"
                                      onclick="handleCategoryClick('${b.id}')"
                                      onwheel="handleCategoryWheel(event,'${b.id}')">
-                                    <div class="stack-icons">
-                                        ${b.icons.length ? b.icons.map(ic => `<img src="data:image/png;base64,${ic}"/>`).join('') : SVG.layers}
-                                    </div>
-                                    ${compactMode ? '' : `<span>${escHtml(b.name)}</span>`}
-                                    <span class="acc-count num">${b.windows.length}</span>
+                                    ${isVert ? vertHeadHtml : horizHeadHtml}
                                 </div>
                                 <div class="acc-drawer">
                                     ${b.groups.map(g => buildDockIconHtml(g, -1, b.id)).join('')}
@@ -3700,9 +3964,12 @@ public static class AuroraSurfaceTemplates
                 <div class="dock-sep"></div>
                 <button class="pill-btn dock-v-btn num" onclick="send('openTray')" title="Sistem Tepsisi (${trayCount})">
                     ${SVG.tray}${isVert ? '' : `<span>${trayCount}</span>`}
+                    ${isVert && trayCount > 0 ? `<span class="dock-v-badge num">${trayCount}</span>` : ''}
+                    ${isVert ? `<span class="hover-label">Sistem Tepsisi (${trayCount})</span>` : ''}
                 </button>
                 <button class="pill-btn dock-v-btn ${state.smartTidy?'accent':''}" onclick="send('toggleSmartTidy')" title="Akıllı Derle">
                     ${SVG.sparkles}${compactMode ? '' : `<span>${state.smartTidy ? 'Derli' : 'Derle'}</span>`}
+                    ${isVert ? `<span class="hover-label">Akıllı Derle: ${state.smartTidy ? 'Açık' : 'Kapalı'}</span>` : ''}
                 </button>
                 <button class="micro-btn dock-pin-btn ${pinCls}" onclick="toggleDockPin()">
                     ${SVG.pin}
@@ -3960,7 +4227,16 @@ public static class AuroraSurfaceTemplates
             send('launchPath', { path: 'reveal:' + it.path });
         }
 
+        function scheduleAccordionOpen(catId) {
+            clearTimeout(accCloseTimer);
+            clearTimeout(accOpenTimer);
+            if (expandedAccordionCat === catId) return;
+            const delay = expandedAccordionCat ? 95 : 175;
+            accOpenTimer = setTimeout(() => openAccordionCat(catId), delay);
+        }
+
         function openAccordionCat(catId) {
+            clearTimeout(accOpenTimer);
             clearTimeout(accCloseTimer);
             clearTimeout(radialCloseTimer);
             if (expandedAccordionCat !== catId) {
@@ -3971,6 +4247,7 @@ public static class AuroraSurfaceTemplates
         }
 
         function scheduleAccordionClose(catId) {
+            clearTimeout(accOpenTimer);
             clearTimeout(accCloseTimer);
             accCloseTimer = setTimeout(() => {
                 if (pointerInRadial || (radialGroupKey && radialAnchorCatId === catId)) return;
@@ -4061,7 +4338,8 @@ public static class AuroraSurfaceTemplates
             radialCloseTimer = setTimeout(() => {
                 if (!pointerInRadial) {
                     closeRadialHub(true);
-                    if (expandedAccordionCat && mouseX === null) {
+                    const pointerOutside = isVerticalEdge() ? (mouseY === null) : (mouseX === null);
+                    if (expandedAccordionCat && pointerOutside) {
                         expandedAccordionCat = null;
                         renderDock();
                     }
@@ -4466,13 +4744,15 @@ public static class AuroraSurfaceTemplates
         }
 
         function startPinDrag(e, pinId, startIdx) {
-            if (e.button !== 0) return;
-            dragPinState = { pinId, startIdx, targetIdx: startIdx, startX: e.clientX, moved: false };
+            if (e.button !== 0 || e.altKey) return;
+            dragPinState = { pinId, startIdx, targetIdx: startIdx, startX: e.clientX, startY: e.clientY, moved: false };
         }
 
         document.addEventListener('pointermove', e => {
             if (!dragPinState) return;
-            if (Math.abs(e.clientX - dragPinState.startX) > 12) {
+            const isVert = isVerticalEdge();
+            const delta = isVert ? Math.abs(e.clientY - dragPinState.startY) : Math.abs(e.clientX - dragPinState.startX);
+            if (delta > 12) {
                 dragPinState.moved = true;
                 clearTimeout(hoverRadialTimer);
                 closeRadialHub(false);
@@ -4482,7 +4762,9 @@ public static class AuroraSurfaceTemplates
                 pinEls.forEach(el => {
                     el.style.outline = 'none';
                     const r = el.getBoundingClientRect();
-                    const d = Math.abs(e.clientX - (r.left + r.width / 2));
+                    const d = isVert
+                        ? Math.abs(e.clientY - (r.top + r.height / 2))
+                        : Math.abs(e.clientX - (r.left + r.width / 2));
                     if (d < bestDist) {
                         bestDist = d;
                         bestIdx = parseInt(el.getAttribute('data-pin-idx'), 10);
@@ -4621,6 +4903,7 @@ public static class AuroraSurfaceTemplates
             pointerInRadial = false;
             applyParabolicWave();
             clearTimeout(hoverRadialTimer);
+            clearTimeout(accOpenTimer);
             if (radialGroupKey) scheduleRadialClose(320);
             if (expandedAccordionCat) scheduleAccordionClose(expandedAccordionCat);
             scheduleDockAutoHide(440);
@@ -4661,7 +4944,10 @@ public static class AuroraSurfaceTemplates
             let needsNextFrame = false;
             const targets = [];
 
-            // Pass 1: Measure all centers BEFORE mutating margins (prevents layout thrashing & jitter!)
+            // Zero-Drift Fitts's Law Hover Wave:
+            // NEVER mutates marginLeft/Right/Top/Bottom, so every icon stays 100% locked at its exact click coordinate (0px target drift!).
+            // Uses a crisp GPU-composited perpendicular elevation + tightly bounded scale that fits cleanly inside the static icon gap.
+            const focusRadius = 92;
             items.forEach(el => {
                 const baseDim = isVert
                     ? (el._baseH || (el._baseH = el.offsetHeight || 42))
@@ -4673,50 +4959,36 @@ public static class AuroraSurfaceTemplates
                     const rect = el.getBoundingClientRect();
                     const center = isVert ? (rect.top + rect.height / 2) : (rect.left + rect.width / 2);
                     const dist = Math.abs((isVert ? mouseY : mouseX) - center);
-                    if (dist < 160) {
-                        const t = 1 - (dist / 160);
+                    if (dist < focusRadius) {
+                        const t = 1 - (dist / focusRadius);
                         const influence = t * t * (3 - 2 * t);
                         const inAcc = Boolean(el.closest('.acc-drawer'));
                         const maxAdd = inAcc
-                            ? Math.min(0.22, magStrength * 0.42)
-                            : Math.min(0.34, magStrength * 0.68);
+                            ? Math.min(0.11, magStrength * 0.16)
+                            : Math.min(0.16, magStrength * 0.22);
                         target = 1.0 + (maxAdd * influence);
                     }
                 }
                 targets.push({ el, baseDim, cur, target });
             });
 
-            // Pass 2: Spring-lerp + apply symmetric proportional margin along primary axis so icons NEVER overlap!
             for (const it of targets) {
-                let next = it.cur + (it.target - it.cur) * 0.30;
-                if (Math.abs(next - it.target) < 0.002) next = it.target;
+                let next = it.cur + (it.target - it.cur) * 0.34;
+                if (Math.abs(next - it.target) < 0.0015) next = it.target;
                 else needsNextFrame = true;
 
                 it.el._magCur = next;
                 const extra = Math.max(0, next - 1.0);
                 if (extra < 0.001) {
                     it.el.style.transform = '';
-                    it.el.style.marginLeft = '';
-                    it.el.style.marginRight = '';
-                    it.el.style.marginTop = '';
-                    it.el.style.marginBottom = '';
                     it.el.style.zIndex = '';
                 } else {
-                    const halfMargin = (extra * it.baseDim) * 0.52;
-                    const lift = extra * it.baseDim * 0.32;
+                    const lift = Math.min(6.5, extra * it.baseDim * 0.92);
                     if (isVert) {
                         const dir = edge === 'Right' ? -1 : 1;
                         it.el.style.transform = `translateX(${(dir * lift).toFixed(1)}px) scale(${next.toFixed(3)})`;
-                        it.el.style.marginTop = `${halfMargin.toFixed(1)}px`;
-                        it.el.style.marginBottom = `${halfMargin.toFixed(1)}px`;
-                        it.el.style.marginLeft = '';
-                        it.el.style.marginRight = '';
                     } else {
                         it.el.style.transform = `translateY(-${lift.toFixed(1)}px) scale(${next.toFixed(3)})`;
-                        it.el.style.marginLeft = `${halfMargin.toFixed(1)}px`;
-                        it.el.style.marginRight = `${halfMargin.toFixed(1)}px`;
-                        it.el.style.marginTop = '';
-                        it.el.style.marginBottom = '';
                     }
                     it.el.style.zIndex = String(Math.round(next * 100));
                 }

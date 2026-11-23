@@ -24,6 +24,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-tags: true
 
       - name: Setup .NET 10 SDK
         uses: actions/setup-dotnet@v4
@@ -34,16 +36,18 @@ jobs:
         id: ver
         shell: pwsh
         run: |
+          [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
           if ("${{ github.event_name }}" -eq "workflow_dispatch") {
             $v = "${{ inputs.version }}".Trim().TrimStart('v', 'V')
             $notes = "${{ inputs.release_notes }}"
           } else {
             $v = "${{ github.ref_name }}".Trim().TrimStart('v', 'V')
-            $notes = "Project Aurora v$v — GitHub otomatik güncelleme paketi."
+            $tagMsg = (git tag -l --format='%(contents:subject)' "${{ github.ref_name }}" 2>$null | Out-String).Trim()
+            $notes = if (-not [string]::IsNullOrWhiteSpace($tagMsg)) { $tagMsg } else { "Project Aurora v$v — GitHub otomatik güncelleme paketi." }
           }
-          echo "version=$v" >> $env:GITHUB_OUTPUT
-          echo "tag=v$v" >> $env:GITHUB_OUTPUT
-          echo "notes=$notes" >> $env:GITHUB_OUTPUT
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "version=$v" -Encoding utf8NoBOM
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "tag=v$v" -Encoding utf8NoBOM
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "notes=$notes" -Encoding utf8NoBOM
 
       - name: Build & Run All Automated Tests
         shell: pwsh

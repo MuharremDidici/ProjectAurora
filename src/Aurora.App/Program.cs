@@ -219,6 +219,7 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
     private readonly ConditionalWeakTable<byte[], string> _base64IconMemo = [];
     private HotkeyWindow? _hotkeyWindow;
     private System.Windows.Forms.Timer? _syncTimer;
+    private System.Windows.Forms.Timer? _clockTickTimer;
     private System.Windows.Forms.Timer? _focusTimer;
     private System.Windows.Forms.Timer? _fullscreenTimer;
     private System.Windows.Forms.Timer? _windowEventDebounceTimer;
@@ -378,7 +379,9 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
             _fileSearch.WarmIndexInBackground();
 
             var wvDataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ProjectAurora", "webview2_cache");
-            _sharedWebViewEnv = await CoreWebView2Environment.CreateAsync(null, wvDataDir);
+            var wvOptions = new CoreWebView2EnvironmentOptions(
+                additionalBrowserArguments: "--renderer-process-limit=2 --disable-background-networking --disable-component-update --disable-domain-reliability --disable-features=Translate,msEdgeOnDeviceTranslation,msEdgeShoppingAssistant,msEdgeReadAloud,MediaRouter");
+            _sharedWebViewEnv = await CoreWebView2Environment.CreateAsync(null, wvDataDir, wvOptions);
 
             await ReconcileMonitorHostsAsync();
 
@@ -470,7 +473,7 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
             };
             bool notSmoke = ParseSmokeExitSeconds() is null;
             _osdMonitor.SetHookEnabled(_shellPrefs.HardwareOsdEnabled && notSmoke);
-            _osdTimer = new System.Windows.Forms.Timer { Interval = 160 };
+            _osdTimer = new System.Windows.Forms.Timer { Interval = 450 };
             _osdTimer.Tick += (_, _) => PollHardwareOsdSafely(forceBrightnessRead: false);
             if (notSmoke)
             {
@@ -647,8 +650,8 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
             };
             _windowEventHook.Start();
 
-            // Relaxed 2500ms passive heartbeat (1000ms when Clock Seconds enabled); yields during fullscreen gaming
-            _syncTimer = new System.Windows.Forms.Timer { Interval = _shellPrefs.ShowClockSeconds ? 1000 : 2500 };
+            // Relaxed 3000ms passive heartbeat (window/audio/clipboard events are instant via native Win32 hooks); yields during fullscreen gaming
+            _syncTimer = new System.Windows.Forms.Timer { Interval = 3000 };
             _syncTimer.Tick += async (_, _) =>
             {
                 if (_awakeService.CheckExpiration())
@@ -660,11 +663,27 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
             };
             _syncTimer.Start();
 
+            // Featherweight 1-second clock-only ticker when Clock Seconds is ON (zero WMI/SQLite/SMTC/DOM rebuild overhead!)
+            _clockTickTimer = new System.Windows.Forms.Timer { Interval = 1000 };
+            _clockTickTimer.Tick += (_, _) =>
+            {
+                if (!_shellPrefs.ShowClockSeconds || _allMonitorsFullscreen)
+                    return;
+                string clockPayload = JsonSerializer.Serialize(new { type = "clockTick", clock = DateTime.Now.ToString("HH:mm:ss") }, JsonOpts);
+                foreach (var host in _monitorHosts.Values)
+                {
+                    if (!host.CrownForm.IsSuppressedForFullscreen)
+                        host.CrownForm.PostJsonState(clockPayload);
+                }
+            };
+            if (_shellPrefs.ShowClockSeconds)
+                _clockTickTimer.Start();
+
             _focusTimer = new System.Windows.Forms.Timer { Interval = 1000 };
             _focusTimer.Tick += async (_, _) => await TickFocusAsync();
 
-            // 250ms lightweight per-monitor fullscreen detector + native taskbar zero-peek guard
-            _fullscreenTimer = new System.Windows.Forms.Timer { Interval = 250 };
+            // 400ms lightweight per-monitor fullscreen detector + native taskbar zero-peek guard
+            _fullscreenTimer = new System.Windows.Forms.Timer { Interval = 400 };
             _fullscreenTimer.Tick += (_, _) =>
             {
                 _appBarService.EnforceNativeTaskbarSuppressed();
@@ -2389,8 +2408,11 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
                 {
                     _shellPrefs = _shellPrefs with { ShowClockSeconds = !_shellPrefs.ShowClockSeconds };
                     _shellPrefsStore.Save(_shellPrefs);
-                    if (_syncTimer is not null)
-                        _syncTimer.Interval = _shellPrefs.ShowClockSeconds ? 1000 : 2500;
+                    if (_clockTickTimer is not null)
+                    {
+                        if (_shellPrefs.ShowClockSeconds) _clockTickTimer.Start();
+                        else _clockTickTimer.Stop();
+                    }
                     await RefreshAndBroadcastStateAsync(forceFull: true);
                     break;
                 }
@@ -3295,9 +3317,10 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
             bool muted = volRes.IsSuccess ? volRes.Value.IsMuted : _ccVm.IsMasterMuted;
             var mic = _audioService.GetDefaultCaptureMuteState();
 
-            // Throttle WMI internal display brightness query to every ~480ms (3 ticks) to keep idle CPU ~0%
+            // Throttle WMI internal display brightness query (~2.25s when supported, ~13s when unsupported) to keep idle CPU ~0%
             _osdBrightnessCounter++;
-            if (forceBrightnessRead || (_osdBrightnessCounter % 3 == 0))
+            int brightMod = _cachedBrightSupported ? 5 : 30;
+            if (forceBrightnessRead || (_osdBrightnessCounter % brightMod == 0))
             {
                 var br = _displayPowerService.GetBrightness();
                 _cachedBrightSupported = br.IsSupported;
@@ -3648,6 +3671,7 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
             await primary.DockForm.CapturePngAsync(Path.Combine(dir, "accordion_dock.png"));
 
             // Visually verify Left Vertical Dock mode in-memory without touching user's saved preferences!
+            primary.DockForm.PostJsonState("""{"type":"outsideDeactivate"}""");
             var savedEdgeBeforeCap = _shellPrefs.DockEdge;
             _shellPrefs = _shellPrefs with { DockEdge = "Left", DockOffsetPercent = 0 };
             RecomputeAndApplyAllMonitorBounds();
@@ -3682,6 +3706,12 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
             primary.CrownForm.PostJsonState("""{"type":"toggleDeck","tab":"shelf"}""");
             await Task.Delay(450);
             await primary.CrownForm.CapturePngAsync(Path.Combine(dir, "crown_shelf.png"));
+
+            primary.CrownForm.PostJsonState("""{"type":"toggleDeck","tab":"studio"}""");
+            await Task.Delay(120);
+            primary.CrownForm.PostJsonState("""{"type":"toggleDeck","tab":"studio"}""");
+            await Task.Delay(450);
+            await primary.CrownForm.CapturePngAsync(Path.Combine(dir, "crown_studio.png"));
 
             primary.CrownForm.PostJsonState("""{"type":"toggleOmni"}""");
             await Task.Delay(450);
@@ -3819,6 +3849,8 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
             _windowEventHook.Dispose();
             _windowEventDebounceTimer?.Stop();
             _syncTimer?.Stop();
+            _clockTickTimer?.Stop();
+            _clockTickTimer?.Dispose();
             _focusTimer?.Stop();
             _fullscreenTimer?.Stop();
             _trayPeekTimer?.Stop();

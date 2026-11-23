@@ -143,7 +143,8 @@ $manifestObj = [ordered]@{
     releaseNotes   = $ReleaseNotes
 }
 $manifestPath = Join-Path $distDir "release-manifest.json"
-$manifestObj | ConvertTo-Json -Depth 4 | Set-Content -Path $manifestPath -Encoding UTF8
+$utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+[System.IO.File]::WriteAllText($manifestPath, ($manifestObj | ConvertTo-Json -Depth 4), $utf8NoBom)
 
 Write-Host "[5/5] Paylasim paketi (.zip) hazirlaniyor..." -ForegroundColor Cyan
 $readmeTxt = Join-Path $distDir "BENIOKU-Kurulum.txt"
