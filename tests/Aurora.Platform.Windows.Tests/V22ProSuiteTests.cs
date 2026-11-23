@@ -255,4 +255,34 @@ public sealed class V22ProSuiteTests
         Assert.False(HardwareOsdMonitorService.IsNativeToastBannerMatch("Quick settings", new Rectangle(2140, 1020, 400, 380), mons));
         Assert.False(HardwareOsdMonitorService.IsNativeToastBannerMatch("", new Rectangle(2140, 200, 400, 900), mons));
     }
+
+    [Fact]
+    public void NotificationActivation_AndDockWorkAreaReservation_ComputeAccurateResults()
+    {
+        // Protocol URI deep-links (Antigravity, Snipping Tool, WhatsApp, Teams)
+        Assert.True(NotificationActivationService.TryExtractLaunchUri("antigravity-ide://google.google-antigravity/open-conversation?cascadeId=abc", "protocol", out var agUri));
+        Assert.StartsWith("antigravity-ide://", agUri);
+        Assert.True(NotificationActivationService.TryExtractLaunchUri("ms-screensketch:edit?&filePath=test.png", "protocol", out var ssUri));
+        Assert.StartsWith("ms-screensketch:", ssUri);
+        Assert.True(NotificationActivationService.TryExtractLaunchUri("whatsapp://send?phone=123", "", out var waUri));
+        Assert.StartsWith("whatsapp://", waUri);
+        Assert.False(NotificationActivationService.TryExtractLaunchUri("chatId=905551112233@s.whatsapp.net", "foreground", out _));
+
+        // Per-monitor Dock WorkArea reservation keeps chat boxes unobstructed at Bottom, Left, and Right edges
+        var mon = new Aurora.Core.Primitives.PhysicalPixelRect(0, 0, 2560, 1440);
+        var waBottom = Win32AppBarService.ComputeDockReservedWorkArea(mon, 1.0, "Bottom", 100, reserve: true);
+        Assert.Equal(0, waBottom.X);
+        Assert.Equal(2560, waBottom.Width);
+        Assert.InRange(mon.Bottom - waBottom.Bottom, 64, 80);
+
+        var waLeft = Win32AppBarService.ComputeDockReservedWorkArea(mon, 1.0, "Left", 100, reserve: true);
+        Assert.InRange(waLeft.X, 62, 78);
+        Assert.Equal(1440, waLeft.Height);
+
+        var waRight = Win32AppBarService.ComputeDockReservedWorkArea(mon, 1.0, "Right", 100, reserve: true);
+        Assert.InRange(mon.Right - waRight.Right, 62, 78);
+
+        var waFull = Win32AppBarService.ComputeDockReservedWorkArea(mon, 1.0, "Bottom", 100, reserve: false);
+        Assert.Equal(mon, waFull);
+    }
 }

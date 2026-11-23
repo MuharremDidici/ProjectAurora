@@ -156,8 +156,20 @@ internal sealed partial class AuroraDesktopCoordinator
         return (new Rectangle(crownX, crownY, crownW, crownH), dockRect);
     }
 
+    private void SyncDockWorkAreaReservation()
+    {
+        if (!_appBarService.IsNativeTaskbarSuppressed)
+            return;
+
+        _appBarService.ApplyDockWorkAreaReservation(
+            _shellPrefs.EffectiveDockEdge,
+            _shellPrefs.EffectiveDockScalePercent,
+            _shellPrefs.EffectiveReserveDockWorkArea);
+    }
+
     private void RecomputeAndApplyAllMonitorBounds()
     {
+        SyncDockWorkAreaReservation();
         var freshMonitors = _monitorService.GetMonitors().ToDictionary(m => m.DeviceId, StringComparer.OrdinalIgnoreCase);
         foreach (var (id, host) in _monitorHosts)
         {
@@ -324,12 +336,12 @@ internal sealed partial class AuroraDesktopCoordinator
 
         // Compute clean snap work-area respecting Aurora's Crown, Dock Edge (Bottom/Left/Right), and Dock Mode
         string edge = _shellPrefs.EffectiveDockEdge;
-        bool pinnedDock = _shellPrefs.EffectiveDockMode == "AlwaysVisible";
+        bool reservedDock = _shellPrefs.EffectiveReserveDockWorkArea || _shellPrefs.EffectiveDockMode == "AlwaysVisible";
         int topInset = (int)Math.Round(10 * scale);
-        int leftInset = (pinnedDock && edge == "Left") ? (int)Math.Round(66 * scale) : 0;
-        int rightInset = (pinnedDock && edge == "Right") ? (int)Math.Round(66 * scale) : 0;
+        int leftInset = (reservedDock && edge == "Left") ? (int)Math.Round(70 * scale) : 0;
+        int rightInset = (reservedDock && edge == "Right") ? (int)Math.Round(70 * scale) : 0;
         int bottomInset = _appBarService.IsNativeTaskbarSuppressed
-            ? ((pinnedDock && edge == "Bottom") ? (int)Math.Round(68 * scale) : (int)Math.Round(10 * scale))
+            ? ((reservedDock && edge == "Bottom") ? (int)Math.Round(72 * scale) : (int)Math.Round(10 * scale))
             : Math.Max(0, b.Bottom - w.Bottom);
 
         var workRect = new Rectangle(

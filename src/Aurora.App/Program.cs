@@ -397,6 +397,7 @@ internal sealed partial class AuroraDesktopCoordinator : ApplicationContext
             if (suppressNativeTaskbar)
             {
                 _appBarService.HideNativeWindowsTaskbar();
+                SyncDockWorkAreaReservation();
                 SpawnCrashWatchdogIfNeeded();
             }
 

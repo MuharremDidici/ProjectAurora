@@ -927,8 +927,8 @@ public static partial class AuroraSurfaceTemplates
 
                         <div class="card" style="flex:1;overflow-y:auto;">
                             <div class="card-title"><span class="card-title-l">${SVG.bell}<span>Canlı Windows & Sistem Bildirimleri</span></span><span style="cursor:pointer;color:var(--accent-1);" onclick="send('clearNotifications')">Temizle</span></div>
-                            ${(state.notifications || []).slice(0, 4).map(n => `
-                                <div style="font-size:11.5px;padding:5px 0;border-bottom:1px solid var(--border-subtle);">
+                            ${(state.notifications || []).slice(0, 4).map((n, idx) => `
+                                <div class="notif-row-click" onclick="activateNotificationByIdx(${idx})" title="Tıkla: uygulamada bu bildirimi aç">
                                     <div style="display:flex;justify-content:space-between;gap:6px;align-items:center;">
                                         <strong style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${n.app ? `<span style="color:var(--accent-1);">${escHtml(n.app)}</span> · ` : ''}${escHtml(n.title)}</strong>
                                         ${n.time ? `<span class="num" style="font-size:10px;color:var(--text-2);flex-shrink:0;">${escHtml(n.time)}</span>` : ''}
@@ -984,6 +984,9 @@ public static partial class AuroraSurfaceTemplates
                                 </button>
                                 <button class="pill-btn ${state.dockMode!=='AlwaysVisible'?'accent':''}" style="height:24px;font-size:10.5px;" onclick="send('cycleDockVisibilityMode')">
                                     ${SVG.chevD}<span>Dock: ${state.dockMode==='SmartDodge' ? 'Akıllı Kaçınma' : (state.dockMode==='AutoHide' ? 'Oto-Gizle' : 'Sabit')}</span>
+                                </button>
+                                <button class="pill-btn ${state.reserveDockWorkArea!==false && state.dockMode!=='AutoHide'?'accent':''}" style="height:24px;font-size:10.5px;" onclick="send('toggleReserveDockWorkArea')" title="Tam ekran pencereler (Antigravity, WhatsApp, Discord vb.) Dock'un üstünde durur; yazı kutularını asla kapatmaz">
+                                    ${SVG.snapC}<span>Alan Ayır: ${state.reserveDockWorkArea!==false && state.dockMode!=='AutoHide' ? 'Açık' : 'Kapalı'}</span>
                                 </button>
                                 <button class="pill-btn ${state.nativeTaskbarHidden?'accent':''}" style="height:24px;font-size:10.5px;" onclick="send('toggleHideNativeTaskbar')" title="Aurora açıkken Windows görev çubuğunu tamamen kapatır; kapanınca otomatik geri açar">
                                     ${SVG.desktop}<span>Win Barı: ${state.nativeTaskbarHidden ? 'Kapalı' : 'Açık'}</span>
@@ -1725,22 +1728,44 @@ public static partial class AuroraSurfaceTemplates
                     </div>
                 ` : `
                     <div style="display:flex;flex-direction:column;gap:7px;max-height:280px;overflow-y:auto;">
-                        ${items.map(n => `
-                            <div class="notif-card">
+                        ${items.map((n, idx) => `
+                            <div class="notif-card" onclick="activateNotificationByIdx(${idx})" title="Tıkla: uygulamada bu bildirimi aç">
                                 <div style="flex:1;min-width:0;">
                                     <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
                                         <span class="notif-app-tag">${escHtml(n.app || 'Windows')}</span>
-                                        ${n.time ? `<span class="num" style="font-size:10px;color:var(--text-2);">${escHtml(n.time)}</span>` : ''}
+                                        <div style="display:flex;align-items:center;gap:6px;">
+                                            <span style="font-size:9.5px;font-weight:700;color:var(--accent-1);">Aç ↗</span>
+                                            ${n.time ? `<span class="num" style="font-size:10px;color:var(--text-2);">${escHtml(n.time)}</span>` : ''}
+                                        </div>
                                     </div>
                                     <div style="font-size:12.5px;font-weight:700;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(n.title)}</div>
                                     ${n.body ? `<div style="font-size:11.5px;color:var(--text-2);margin-top:2px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${escHtml(n.body)}</div>` : ''}
                                 </div>
-                                <button class="micro-btn" onclick="send('dismissNotification',{id:'${escHtml(n.id)}'})" title="Kapat">${SVG.close}</button>
+                                <button class="micro-btn" onclick="event.stopPropagation();dismissNotificationByIdx(${idx})" title="Kapat">${SVG.close}</button>
                             </div>
                         `).join('')}
                     </div>
                 `}
             `;
+        }
+
+        function activateNotificationById(id) {
+            if (!id) return;
+            notifOpen = false;
+            expanded = false;
+            send('activateNotification', { id });
+            renderAll();
+            syncFocusDemand();
+        }
+
+        function activateNotificationByIdx(idx) {
+            const n = (state?.notifications || [])[idx];
+            if (n && n.id) activateNotificationById(n.id);
+        }
+
+        function dismissNotificationByIdx(idx) {
+            const n = (state?.notifications || [])[idx];
+            if (n && n.id) send('dismissNotification', { id: n.id });
         }
 
         function selectAudioOutputIdx(idx) {
@@ -2348,11 +2373,18 @@ public static partial class AuroraSurfaceTemplates
                 }, Math.max(700, msg.durationMs || 1450));
             } else if (msg.type === 'toast') {
                 const t = document.getElementById('toast');
-                t.innerHTML = `<span style="color:var(--accent-1);font-size:15px;font-weight:800;">✦</span><div><strong>${escHtml(msg.title)}</strong><div style="font-size:11.5px;color:var(--text-2);">${escHtml(msg.body)}</div></div>`;
-                t.className = 'glass-shell show';
+                const nId = msg.notificationId || '';
+                t.innerHTML = `<span style="color:var(--accent-1);font-size:15px;font-weight:800;">✦</span><div style="min-width:0;flex:1;"><strong>${escHtml(msg.title)}</strong><div style="font-size:11.5px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${escHtml(msg.body)}</div></div>${nId ? '<span class="toast-open-pill">Aç ↗</span>' : ''}`;
+                t.onclick = nId ? () => {
+                    t.className = 'glass-shell';
+                    t.onclick = null;
+                    clearTimeout(toastTimer);
+                    activateNotificationById(nId);
+                } : null;
+                t.className = nId ? 'glass-shell show clickable' : 'glass-shell show';
                 requestAnimationFrame(reportHitRects);
                 clearTimeout(toastTimer);
-                toastTimer = setTimeout(() => { t.className = 'glass-shell'; requestAnimationFrame(reportHitRects); }, 3800);
+                toastTimer = setTimeout(() => { t.className = 'glass-shell'; t.onclick = null; requestAnimationFrame(reportHitRects); }, nId ? 5500 : 3800);
             }
         });
         """";

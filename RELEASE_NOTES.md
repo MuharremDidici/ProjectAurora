@@ -1,5 +1,13 @@
 # Project Aurora — Sürüm Notları
 
+## v2.4.0
+> Summary: Tıklanabilir canlı bildirimler (WhatsApp sohbetine, Antigravity konuşmasına, Teams ve Ekran Alıntısı'na doğrudan derin bağlantı) ve tam ekran pencerelerin yazı kutularını asla kapatmayan otomatik Dock Çalışma Alanı (Alan Ayır) rezervasyonu.
+
+### Öne Çıkan Yenilikler
+- **Tıklanabilir Canlı Bildirimler (Native Deep-Link):** Üstte beliren bildirim kartına (`Aç ↗`), Zil açılır penceresindeki veya Telemetri listesindeki herhangi bir bildirime tıkladığınızda ilgili uygulama ve doğrudan o mesaj/konuşma açılır (`ms-screensketch:`, `antigravity-ide:`, `whatsapp:`, `msteams:` protokolleri + WhatsApp/Store uygulamaları için COM `IApplicationActivationManager` AUMID + açık pencere odaklama).
+- **Dock Çalışma Alanı Ayırma (`Alan Ayır: Açık`):** Aurora artık alt/sol/sağ Dock için Windows `WorkArea` alanında DPI ve ölçeğe tam uyumlu bir boşluk ayırır; Antigravity, WhatsApp, Discord, Opera ve VS Code gibi tam ekran pencereler Dock'un hemen üstünde/yanında biter, yazı yazma kutuları asla kapanmaz! Tam ekran oyun/videolar yine %100 ekranı kaplar; isterseniz *Stüdyo → Alan Ayır* ile tek tıkla açıp kapatabilirsiniz.
+- **Akıllı Kaçınma & Mevcut Pencereler:** Açık haldeki tam ekran pencereler bile anında yeni alana hizalanır; `Otomatik Gizle` modunda alan otomatik olarak %100'e geri açılır.
+
 ## v2.3.2
 > Summary: Windows 11 eski ses/parlaklık çubuğu ve çift çıkan sağ-alt bildirim kutularının anlık (<1 ms) bastırılması + USB/Bluetooth kulaklık ses tekeri için canlı CoreAudio geri çağrımı.
 

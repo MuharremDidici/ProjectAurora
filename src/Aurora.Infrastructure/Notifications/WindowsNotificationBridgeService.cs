@@ -9,7 +9,11 @@ public sealed record SystemToastNotification(
     string AppName,
     string Title,
     string Body,
-    DateTimeOffset ArrivedAtUtc);
+    DateTimeOffset ArrivedAtUtc,
+    string PrimaryId = "",
+    string HandlerType = "",
+    string LaunchArguments = "",
+    string ActivationType = "");
 
 /// <summary>
 /// Non-intrusive, read-only Windows 11 Action Center / WPN toast listener.
@@ -189,16 +193,41 @@ public sealed class WindowsNotificationBridgeService : IDisposable
         using var conn = new SqliteConnection(csb.ToString());
         conn.Open();
 
+        bool hasHandlerType = false;
+        using (var pragmaCmd = conn.CreateCommand())
+        {
+            pragmaCmd.CommandText = "PRAGMA table_info(NotificationHandler);";
+            using var pr = pragmaCmd.ExecuteReader();
+            while (pr.Read())
+            {
+                if (!pr.IsDBNull(1) && string.Equals(pr.GetString(1), "HandlerType", StringComparison.OrdinalIgnoreCase))
+                {
+                    hasHandlerType = true;
+                    break;
+                }
+            }
+        }
+
         using var cmd = conn.CreateCommand();
-        cmd.CommandText = """
-            SELECT n.Id, n.ArrivalTime, COALESCE(nh.PrimaryId, ''), n.Payload
-            FROM Notification n
-            LEFT JOIN NotificationHandler nh ON n.HandlerId = nh.RecordId
-            WHERE n.Type IN ('toast', 'toastCondensed')
-              AND n.Payload IS NOT NULL
-            ORDER BY n.ArrivalTime DESC
-            LIMIT 12;
-            """;
+        cmd.CommandText = hasHandlerType
+            ? """
+              SELECT n.Id, n.ArrivalTime, COALESCE(nh.PrimaryId, ''), COALESCE(nh.HandlerType, ''), n.Payload
+              FROM Notification n
+              LEFT JOIN NotificationHandler nh ON n.HandlerId = nh.RecordId
+              WHERE n.Type IN ('toast', 'toastCondensed')
+                AND n.Payload IS NOT NULL
+              ORDER BY n.ArrivalTime DESC
+              LIMIT 12;
+              """
+            : """
+              SELECT n.Id, n.ArrivalTime, COALESCE(nh.PrimaryId, ''), '', n.Payload
+              FROM Notification n
+              LEFT JOIN NotificationHandler nh ON n.HandlerId = nh.RecordId
+              WHERE n.Type IN ('toast', 'toastCondensed')
+                AND n.Payload IS NOT NULL
+              ORDER BY n.ArrivalTime DESC
+              LIMIT 12;
+              """;
 
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
@@ -206,12 +235,13 @@ public sealed class WindowsNotificationBridgeService : IDisposable
             long id = reader.GetInt64(0);
             long arrivalFileTime = reader.IsDBNull(1) ? 0 : reader.GetInt64(1);
             string primaryId = reader.IsDBNull(2) ? string.Empty : reader.GetString(2);
-            byte[]? payloadBytes = reader.IsDBNull(3) ? null : (byte[])reader[3];
+            string handlerType = reader.IsDBNull(3) ? string.Empty : reader.GetString(3);
+            byte[]? payloadBytes = reader.IsDBNull(4) ? null : (byte[])reader[4];
 
             if (payloadBytes is not { Length: > 0 })
                 continue;
 
-            var (title, body) = ParseToastXmlPayload(payloadBytes);
+            var (title, body, launchArgs, activationType) = ParseToastXmlFull(payloadBytes);
             if (string.IsNullOrWhiteSpace(title) && string.IsNullOrWhiteSpace(body))
                 continue;
 
@@ -222,13 +252,28 @@ public sealed class WindowsNotificationBridgeService : IDisposable
                 ? SafeFromFileTimeUtc(arrivalFileTime)
                 : DateTimeOffset.UtcNow;
 
-            list.Add(new SystemToastNotification(id, appName, title, body, arrivedUtc));
+            list.Add(new SystemToastNotification(
+                id,
+                appName,
+                title,
+                body,
+                arrivedUtc,
+                primaryId,
+                handlerType,
+                launchArgs,
+                activationType));
         }
 
         return list;
     }
 
     public static (string Title, string Body) ParseToastXmlPayload(byte[] payloadBytes)
+    {
+        var (title, body, _, _) = ParseToastXmlFull(payloadBytes);
+        return (title, body);
+    }
+
+    public static (string Title, string Body, string LaunchArguments, string ActivationType) ParseToastXmlFull(byte[] payloadBytes)
     {
         try
         {
@@ -237,6 +282,25 @@ public sealed class WindowsNotificationBridgeService : IDisposable
             if (lt > 0) xml = xml[lt..];
 
             var doc = XDocument.Parse(xml, LoadOptions.None);
+            var root = doc.Root;
+            string launchArgs = root?.Attribute("launch")?.Value?.Trim() ?? string.Empty;
+            string activationType = root?.Attribute("activationType")?.Value?.Trim() ?? string.Empty;
+
+            // Fallback to first foreground/protocol <action> if root <toast launch> is empty
+            if (string.IsNullOrWhiteSpace(launchArgs) && root is not null)
+            {
+                var firstAct = root.Descendants()
+                    .FirstOrDefault(e =>
+                        string.Equals(e.Name.LocalName, "action", StringComparison.OrdinalIgnoreCase) &&
+                        !string.IsNullOrWhiteSpace(e.Attribute("arguments")?.Value) &&
+                        !string.Equals(e.Attribute("activationType")?.Value, "background", StringComparison.OrdinalIgnoreCase));
+                if (firstAct is not null)
+                {
+                    launchArgs = firstAct.Attribute("arguments")?.Value?.Trim() ?? string.Empty;
+                    activationType = firstAct.Attribute("activationType")?.Value?.Trim() ?? activationType;
+                }
+            }
+
             var lines = doc.Descendants()
                 .Where(e => string.Equals(e.Name.LocalName, "text", StringComparison.OrdinalIgnoreCase))
                 .Select(e => e.Value?.Trim())
@@ -245,17 +309,17 @@ public sealed class WindowsNotificationBridgeService : IDisposable
                 .ToList();
 
             if (lines.Count == 0)
-                return (string.Empty, string.Empty);
+                return (string.Empty, string.Empty, launchArgs, activationType);
 
             string title = Truncate(lines[0]!, 90);
             string body = lines.Count > 1
                 ? Truncate(string.Join(" — ", lines.Skip(1).Take(2)), 180)
                 : string.Empty;
-            return (title, body);
+            return (title, body, launchArgs, activationType);
         }
         catch
         {
-            return (string.Empty, string.Empty);
+            return (string.Empty, string.Empty, string.Empty, string.Empty);
         }
     }
 

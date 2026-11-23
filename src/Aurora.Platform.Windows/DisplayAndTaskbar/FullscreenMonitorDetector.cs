@@ -149,27 +149,24 @@ public sealed class FullscreenMonitorDetector
                 int dockZoneRight = b.X + dockZoneSize;
                 int dockZoneTop = b.Y + (b.Height / 6);
                 int dockZoneBottom = b.Bottom - (b.Height / 6);
-                overlapsDockZone = isMaximized ||
-                                   (rc.Left < dockZoneRight && rc.Right > b.X &&
-                                    rc.Bottom > dockZoneTop && rc.Top < dockZoneBottom);
+                overlapsDockZone = rc.Left < dockZoneRight - 4 && rc.Right > b.X &&
+                                   rc.Bottom > dockZoneTop && rc.Top < dockZoneBottom;
             }
             else if (string.Equals(dockEdge, "Right", StringComparison.OrdinalIgnoreCase))
             {
                 int dockZoneLeft = b.Right - dockZoneSize;
                 int dockZoneTop = b.Y + (b.Height / 6);
                 int dockZoneBottom = b.Bottom - (b.Height / 6);
-                overlapsDockZone = isMaximized ||
-                                   (rc.Right > dockZoneLeft && rc.Left < b.Right &&
-                                    rc.Bottom > dockZoneTop && rc.Top < dockZoneBottom);
+                overlapsDockZone = rc.Right > dockZoneLeft + 4 && rc.Left < b.Right &&
+                                   rc.Bottom > dockZoneTop && rc.Top < dockZoneBottom;
             }
             else
             {
                 int dockZoneTop = b.Bottom - dockZoneSize;
                 int dockZoneLeft = b.X + (b.Width / 6);
                 int dockZoneRight = b.Right - (b.Width / 6);
-                overlapsDockZone = isMaximized ||
-                                   (rc.Bottom > dockZoneTop && rc.Top < b.Bottom &&
-                                    rc.Right > dockZoneLeft && rc.Left < dockZoneRight);
+                overlapsDockZone = rc.Bottom > dockZoneTop + 4 && rc.Top < b.Bottom &&
+                                   rc.Right > dockZoneLeft && rc.Left < dockZoneRight;
             }
             if (overlapsDockZone)
             {

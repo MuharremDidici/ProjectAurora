@@ -356,7 +356,11 @@ internal sealed partial class AuroraDesktopCoordinator
                 {
                     bool nextHide = !_appBarService.IsNativeTaskbarSuppressed;
                     _appBarService.SetNativeTaskbarHiddenWhileActive(nextHide);
-                    if (nextHide) SpawnCrashWatchdogIfNeeded();
+                    if (nextHide)
+                    {
+                        SyncDockWorkAreaReservation();
+                        SpawnCrashWatchdogIfNeeded();
+                    }
                     _shellPrefs = _shellPrefs with { HideNativeTaskbarWhileActive = nextHide };
                     _shellPrefsStore.Save(_shellPrefs);
                     await Task.Delay(80);
@@ -374,6 +378,8 @@ internal sealed partial class AuroraDesktopCoordinator
                     string nextMode = _shellPrefs.EffectiveDockMode == "AutoHide" ? "AlwaysVisible" : "AutoHide";
                     _shellPrefs = _shellPrefs with { DockVisibilityMode = nextMode, DockAutoHide = nextMode == "AutoHide" };
                     _shellPrefsStore.Save(_shellPrefs);
+                    SyncDockWorkAreaReservation();
+                    EvaluateFullscreenYieldPerMonitor();
                     SendToast(sourceMonitorId, nextMode == "AutoHide" ? "Dock Otomatik Gizleme Açık" : "Dock Sabit Görünür",
                         nextMode == "AutoHide" ? "Alt kenara yaklaştığınızda Kristal Dock otomatik açılır." : "Kristal Dock her zaman görünür kalır (tam ekran hariç).");
                     await RefreshAndBroadcastStateAsync(forceFull: true);
@@ -390,6 +396,8 @@ internal sealed partial class AuroraDesktopCoordinator
                     };
                     _shellPrefs = _shellPrefs with { DockVisibilityMode = nextMode, DockAutoHide = nextMode == "AutoHide" };
                     _shellPrefsStore.Save(_shellPrefs);
+                    SyncDockWorkAreaReservation();
+                    EvaluateFullscreenYieldPerMonitor();
                     var (tTitle, tBody) = nextMode switch
                     {
                         "SmartDodge" => ("Dock Modu: Akıllı Kaçınma", "Tam pencere alt kenara değdiğinde otomatik çekilir; masaüstünde hep görünür."),
@@ -512,6 +520,80 @@ internal sealed partial class AuroraDesktopCoordinator
                 _unreadNotifCount = 0;
                 await RefreshAndBroadcastStateAsync(windowTopologyOnly: true);
                 break;
+
+            case "activateNotification":
+                {
+                    string id = msg.TryGetProperty("id", out var idProp) ? (idProp.GetString() ?? string.Empty) : string.Empty;
+                    bool activated = false;
+
+                    if (id.StartsWith("sys-", StringComparison.OrdinalIgnoreCase) && long.TryParse(id[4..], out long sysId))
+                    {
+                        var toast = _sysNotifBridge.GetRecentSystemToasts().FirstOrDefault(t => t.NotificationId == sysId);
+                        if (toast is not null)
+                        {
+                            // 1. Direct protocol URI deep-link (ms-screensketch:, antigravity-ide:, whatsapp:, msteams:, https:, etc.)
+                            if (NotificationActivationService.TryExtractLaunchUri(toast.LaunchArguments, toast.ActivationType, out var uri))
+                            {
+                                activated = NotificationActivationService.TryActivateViaProtocolUri(uri);
+                            }
+
+                            // 2. Native Windows Action Center COM AUMID activation (WhatsApp Desktop, Teams, Store/MSIX apps with chat launch args!)
+                            if (!activated &&
+                                !string.IsNullOrWhiteSpace(toast.PrimaryId) &&
+                                (string.Equals(toast.HandlerType, "app:immersive", StringComparison.OrdinalIgnoreCase) || toast.PrimaryId.Contains('!')))
+                            {
+                                activated = NotificationActivationService.TryActivateViaAumid(toast.PrimaryId, toast.LaunchArguments);
+                            }
+
+                            // 3. Focus matching open desktop window (Antigravity, VS Code, Discord, Chrome, Opera, RustWTM, etc.)
+                            if (!activated)
+                            {
+                                var targetWin = FindMatchingOpenWindowForNotification(toast);
+                                if (targetWin is not null)
+                                {
+                                    _windowActivation.FocusWindow(targetWin.Hwnd);
+                                    activated = true;
+                                }
+                            }
+
+                            // 4. Fallback AUMID / shell:AppsFolder launch if app wasn't open yet
+                            if (!activated && !string.IsNullOrWhiteSpace(toast.PrimaryId))
+                            {
+                                activated = NotificationActivationService.TryActivateViaAumid(toast.PrimaryId, toast.LaunchArguments)
+                                    || NotificationActivationService.TryLaunchViaAppsFolder(toast.PrimaryId);
+                            }
+
+                            _dismissedSystemNotifIds.Add(sysId);
+                            _attentionService.ClearAttention(toast.AppName);
+                            if (_unreadNotifCount > 0) _unreadNotifCount--;
+                        }
+                    }
+                    else if (!string.IsNullOrWhiteSpace(id))
+                    {
+                        await _stateStore.DismissNotificationAsync(id);
+                        if (_unreadNotifCount > 0) _unreadNotifCount--;
+                        activated = true;
+                    }
+
+                    await RefreshAndBroadcastStateAsync(windowTopologyOnly: true);
+                    break;
+                }
+
+            case "toggleReserveDockWorkArea":
+                {
+                    _shellPrefs = _shellPrefs with { ReserveDockWorkArea = !_shellPrefs.ReserveDockWorkArea };
+                    _shellPrefsStore.Save(_shellPrefs);
+                    SyncDockWorkAreaReservation();
+                    EvaluateFullscreenYieldPerMonitor();
+                    SendToast(
+                        sourceMonitorId,
+                        _shellPrefs.ReserveDockWorkArea ? "Dock Alanı Ayrıldı" : "Tam Ekran Pencere Alanı",
+                        _shellPrefs.ReserveDockWorkArea
+                            ? "Tam ekran pencereler Dock'un hemen üstünde durur; yazı kutuları artık kapanmaz."
+                            : "Pencereler tüm ekran yüksekliğini kullanır (Akıllı Kaçınma ile uyumludur).");
+                    await RefreshAndBroadcastStateAsync(forceFull: true);
+                    break;
+                }
 
             case "dismissNotification":
                 {
@@ -1126,6 +1208,7 @@ internal sealed partial class AuroraDesktopCoordinator
                 {
                     _shellPrefs = _shellPrefs with { DockScalePercent = 100, DockOffsetPercent = 0 };
                     _shellPrefsStore.Save(_shellPrefs);
+                    SyncDockWorkAreaReservation();
                     SendToast(sourceMonitorId, "Dock Sıfırlandı", "Konum ortalandı ve boyut %100 olarak ayarlandı.");
                     await RefreshAndBroadcastStateAsync(forceFull: true);
                     break;
@@ -1527,6 +1610,8 @@ internal sealed partial class AuroraDesktopCoordinator
                         mode = "AlwaysVisible";
                     _shellPrefs = _shellPrefs with { DockVisibilityMode = mode, DockAutoHide = mode == "AutoHide" };
                     _shellPrefsStore.Save(_shellPrefs);
+                    SyncDockWorkAreaReservation();
+                    EvaluateFullscreenYieldPerMonitor();
                     await RefreshAndBroadcastStateAsync(forceFull: true);
                     break;
                 }
@@ -1565,6 +1650,47 @@ internal sealed partial class AuroraDesktopCoordinator
                 ShutdownCleanly();
                 break;
         }
+    }
+
+    private AppWindowEntry? FindMatchingOpenWindowForNotification(SystemToastNotification toast)
+    {
+        var wins = _taskbarVm.OpenWindows;
+        if (wins.Count == 0)
+            return null;
+
+        var hints = new List<string>();
+        if (!string.IsNullOrWhiteSpace(toast.AppName)) hints.Add(toast.AppName);
+        if (!string.IsNullOrWhiteSpace(toast.PrimaryId))
+        {
+            foreach (var seg in toast.PrimaryId.Split(['.', '!', '_', '\\', '/'], StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (seg.Length >= 3 && !seg.Equals("app", StringComparison.OrdinalIgnoreCase) && !seg.Equals("electron", StringComparison.OrdinalIgnoreCase) && !seg.Equals("microsoft", StringComparison.OrdinalIgnoreCase))
+                    hints.Add(seg);
+            }
+        }
+
+        // 1. Prefer window whose title matches toast title + process matches hint
+        if (!string.IsNullOrWhiteSpace(toast.Title) && toast.Title.Length >= 3)
+        {
+            var titleHit = wins.FirstOrDefault(w =>
+                w.Title.Contains(toast.Title, StringComparison.OrdinalIgnoreCase) &&
+                hints.Any(h => w.ProcessName.Contains(h, StringComparison.OrdinalIgnoreCase) || FormatName(w.ProcessName).Contains(h, StringComparison.OrdinalIgnoreCase)));
+            if (titleHit is not null)
+                return titleHit;
+        }
+
+        // 2. Match by friendly app name or process name
+        foreach (var h in hints)
+        {
+            var hit = wins.FirstOrDefault(w =>
+                w.ProcessName.Contains(h, StringComparison.OrdinalIgnoreCase) ||
+                FormatName(w.ProcessName).Contains(h, StringComparison.OrdinalIgnoreCase) ||
+                w.Title.Contains(h, StringComparison.OrdinalIgnoreCase));
+            if (hit is not null)
+                return hit;
+        }
+
+        return null;
     }
 
     private List<string> GetEffectiveDockFolders()

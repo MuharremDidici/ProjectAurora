@@ -377,9 +377,9 @@ internal sealed partial class AuroraDesktopCoordinator
         GetMonitorHostById(targetMonitorId)?.CrownForm.PostJsonState(json);
     }
 
-    private void SendToast(string? targetMonitorId, string title, string body)
+    private void SendToast(string? targetMonitorId, string title, string body, string? notificationId = null)
     {
-        var json = JsonSerializer.Serialize(new { type = "toast", title, body }, JsonOpts);
+        var json = JsonSerializer.Serialize(new { type = "toast", title, body, notificationId }, JsonOpts);
         GetMonitorHostById(targetMonitorId)?.CrownForm.PostJsonState(json);
     }
 
@@ -421,7 +421,11 @@ internal sealed partial class AuroraDesktopCoordinator
                     string header = string.Equals(toast.AppName, toast.Title, StringComparison.OrdinalIgnoreCase)
                         ? toast.AppName
                         : $"{toast.AppName} · {toast.Title}";
-                    SendToast(activeHost?.Monitor.DeviceId, header, string.IsNullOrWhiteSpace(toast.Body) ? "Yeni bildirim" : toast.Body);
+                    SendToast(
+                        activeHost?.Monitor.DeviceId,
+                        header,
+                        string.IsNullOrWhiteSpace(toast.Body) ? "Yeni bildirim" : toast.Body,
+                        notificationId: $"sys-{toast.NotificationId}");
                 }
 
                 await RefreshAndBroadcastStateAsync(windowTopologyOnly: true);

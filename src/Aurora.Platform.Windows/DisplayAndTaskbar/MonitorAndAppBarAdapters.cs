@@ -72,7 +72,18 @@ public sealed class Win32AppBarService(IAuroraLogger logger) : IAppBarService
     private const uint SWP_HIDEWINDOW = 0x0080;
     private const uint MONITOR_DEFAULTTONEAREST = 0x00000002;
     private const uint WM_SETTINGCHANGE = 0x001A;
+    private const uint SMTO_ABORTIFHUNG = 0x0002;
     private static readonly nint HWND_BROADCAST = new(0xFFFF);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern nint SendMessageTimeoutW(nint hWnd, uint msg, nuint wParam, nint lParam, uint fuFlags, uint uTimeout, out nint lpdwResult);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool IsZoomed(nint hWnd);
+
+    [DllImport("user32.dll")]
+    private static extern int GetSystemMetrics(int nIndex);
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     private static extern nint FindWindowW(string lpClassName, string? lpWindowName);
@@ -278,6 +289,159 @@ public sealed class Win32AppBarService(IAuroraLogger logger) : IAppBarService
             return monitorBounds;
 
         return new PhysicalPixelRect(left, top, right - left, bottom - top);
+    }
+
+    /// <summary>
+    /// Computes the exact per-monitor Windows WorkArea rectangle that leaves a clean breathing channel
+    /// for Aurora's Bottom / Left / Right Dock so maximized apps (Antigravity, WhatsApp, Discord, VS Code)
+    /// NEVER have their typing boxes or sidebars covered by the Dock.
+    /// </summary>
+    public static PhysicalPixelRect ComputeDockReservedWorkArea(
+        PhysicalPixelRect monitorBounds,
+        double scaleFactor,
+        string dockEdge,
+        int dockScalePercent,
+        bool reserve)
+    {
+        if (!reserve || monitorBounds.Width <= 0 || monitorBounds.Height <= 0)
+            return monitorBounds;
+
+        double dpi = Math.Max(1.0, scaleFactor);
+        double dockMul = Math.Clamp(dockScalePercent <= 0 ? 100 : dockScalePercent, 75, 135) / 100.0;
+
+        int left = monitorBounds.X;
+        int top = monitorBounds.Y;
+        int right = monitorBounds.Right;
+        int bottom = monitorBounds.Bottom;
+
+        if (string.Equals(dockEdge, "Left", StringComparison.OrdinalIgnoreCase))
+        {
+            int inset = (int)Math.Round(Math.Clamp(56.0 * dockMul + 14.0, 56.0, 114.0) * dpi);
+            left = Math.Min(right - 320, left + inset);
+        }
+        else if (string.Equals(dockEdge, "Right", StringComparison.OrdinalIgnoreCase))
+        {
+            int inset = (int)Math.Round(Math.Clamp(56.0 * dockMul + 14.0, 56.0, 114.0) * dpi);
+            right = Math.Max(left + 320, right - inset);
+        }
+        else
+        {
+            int inset = (int)Math.Round(Math.Clamp(58.0 * dockMul + 14.0, 58.0, 118.0) * dpi);
+            bottom = Math.Max(top + 240, bottom - inset);
+        }
+
+        return new PhysicalPixelRect(left, top, right - left, bottom - top);
+    }
+
+    /// <summary>
+    /// Applies (or releases) Aurora's Dock WorkArea reservation across all monitors via SPI_SETWORKAREA
+    /// with a bounded 220 ms SMTO_ABORTIFHUNG broadcast so Windows DWM immediately resizes maximized apps
+    /// cleanly above/beside the Dock without ever hanging or touching explorer.exe.
+    /// </summary>
+    public void ApplyDockWorkAreaReservation(string dockEdge, int dockScalePercent, bool reserve)
+    {
+        if (!_nativeTaskbarSuppressed || _disposed)
+            return;
+
+        try
+        {
+            CaptureOriginalMonitorWorkAreasIfEmpty();
+            bool anyChanged = false;
+
+            NativeMethods.EnumDisplayMonitors(0, 0, (nint hMon, nint _, ref NativeMethods.RECT _, nint _) =>
+            {
+                var info = new NativeMethods.MONITORINFOEXW { cbSize = (uint)Marshal.SizeOf<NativeMethods.MONITORINFOEXW>() };
+                if (!NativeMethods.GetMonitorInfoW(hMon, ref info))
+                    return true;
+
+                uint dpiX = 96;
+                if (NativeMethods.GetDpiForMonitor(hMon, NativeMethods.MDT_EFFECTIVE_DPI, out var dx, out _) == 0 && dx > 0)
+                    dpiX = dx;
+
+                var monPx = new PhysicalPixelRect(info.rcMonitor.Left, info.rcMonitor.Top, info.rcMonitor.Width, info.rcMonitor.Height);
+                var desired = ComputeDockReservedWorkArea(monPx, dpiX / 96.0, dockEdge, dockScalePercent, reserve);
+
+                if (info.rcWork.Left != desired.X || info.rcWork.Top != desired.Y ||
+                    info.rcWork.Right != desired.Right || info.rcWork.Bottom != desired.Bottom)
+                {
+                    var rc = new NativeMethods.RECT
+                    {
+                        Left = desired.X,
+                        Top = desired.Y,
+                        Right = desired.Right,
+                        Bottom = desired.Bottom
+                    };
+                    SystemParametersInfoW(SPI_SETWORKAREA, 0, ref rc, 0);
+                    anyChanged = true;
+                }
+                return true;
+            }, 0);
+
+            if (anyChanged)
+            {
+                SendMessageTimeoutW(HWND_BROADCAST, WM_SETTINGCHANGE, SPI_SETWORKAREA, 0, SMTO_ABORTIFHUNG, 220, out _);
+                RefitAlreadyMaximizedWindowsToWorkArea();
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Warn("AppBar", "DOCK_WORKAREA_WARN", $"Dock work-area reservation warning ({ex.GetType().Name}).");
+        }
+    }
+
+    private static void RefitAlreadyMaximizedWindowsToWorkArea()
+    {
+        try
+        {
+            uint ownPid = (uint)Environment.ProcessId;
+            int framePad = Math.Clamp(GetSystemMetrics(32 /* SM_CXSIZEFRAME */) + GetSystemMetrics(92 /* SM_CXPADDEDBORDER */), 6, 12);
+
+            NativeMethods.EnumWindows((hwnd, _) =>
+            {
+                if (hwnd == 0 || !NativeMethods.IsWindowVisible(hwnd) || NativeMethods.IsIconic(hwnd) || !IsZoomed(hwnd))
+                    return true;
+
+                NativeMethods.GetWindowThreadProcessId(hwnd, out uint pid);
+                if (pid == 0 || pid == ownPid)
+                    return true;
+
+                long ex = NativeMethods.GetWindowLongPtr64(hwnd, NativeMethods.GWL_EXSTYLE);
+                if ((ex & NativeMethods.WS_EX_TOOLWINDOW) != 0)
+                    return true;
+
+                if (NativeMethods.DwmGetWindowAttribute(hwnd, NativeMethods.DWMWA_CLOAKED, out int cloaked, sizeof(int)) == 0 && cloaked != 0)
+                    return true;
+
+                nint hMon = NativeMethods.MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+                var info = new NativeMethods.MONITORINFOEXW { cbSize = (uint)Marshal.SizeOf<NativeMethods.MONITORINFOEXW>() };
+                if (hMon == 0 || !NativeMethods.GetMonitorInfoW(hMon, ref info))
+                    return true;
+
+                var wa = info.rcWork;
+                if (!GetWindowRect(hwnd, out var cur))
+                    return true;
+
+                bool needsRefit =
+                    Math.Abs(cur.Bottom - (wa.Bottom + framePad)) > 6 ||
+                    Math.Abs(cur.Left - (wa.Left - framePad)) > 6 ||
+                    Math.Abs(cur.Right - (wa.Right + framePad)) > 6;
+
+                if (needsRefit)
+                {
+                    NativeMethods.SetWindowPos(
+                        hwnd,
+                        0,
+                        wa.Left - framePad,
+                        wa.Top - framePad,
+                        (wa.Right - wa.Left) + framePad * 2,
+                        (wa.Bottom - wa.Top) + framePad * 2,
+                        SWP_NOZORDER | NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_FRAMECHANGED);
+                }
+
+                return true;
+            }, 0);
+        }
+        catch { }
     }
 
     private static List<nint> EnumerateAllTrayWindows()

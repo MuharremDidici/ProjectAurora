@@ -453,10 +453,24 @@ public static partial class AuroraSurfaceTemplates
         #toast {
             pointer-events: auto;
             margin-top: 8px; padding: 10px 15px; border-radius: 16px;
-            display: none; align-items: center; gap: 10px; max-width: 440px;
+            display: none; align-items: center; gap: 10px; max-width: 460px;
             font-size: 12px;
+            transition: border-color 0.16s, transform 0.16s;
         }
         #toast.show { display: flex; }
+        #toast.clickable { cursor: pointer; }
+        #toast.clickable:hover { border-color: var(--accent-1); transform: translateY(-1px); }
+        .toast-open-pill {
+            font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 99px;
+            background: rgba(56, 189, 248, 0.16); color: var(--accent-1);
+            border: 1px solid rgba(56, 189, 248, 0.34); flex-shrink: 0; white-space: nowrap;
+        }
+        .notif-row-click {
+            font-size: 11.5px; padding: 6px 7px; border-radius: 9px;
+            border-bottom: 1px solid var(--border-subtle);
+            cursor: pointer; transition: background 0.14s;
+        }
+        .notif-row-click:hover { background: var(--bg-card-hover); }
         .omni-filters {
             display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
         }
@@ -485,9 +499,10 @@ public static partial class AuroraSurfaceTemplates
             display: flex; align-items: flex-start; gap: 9px;
             padding: 9px 11px; border-radius: 13px;
             background: var(--bg-card); border: 1px solid var(--border-subtle);
+            cursor: pointer;
             transition: background 0.14s, border-color 0.14s;
         }
-        .notif-card:hover { background: var(--bg-card-hover); border-color: var(--border-rim); }
+        .notif-card:hover { background: var(--bg-card-hover); border-color: var(--accent-1); }
         .notif-app-tag {
             font-size: 10px; font-weight: 800; letter-spacing: 0.03em;
             color: var(--accent-1); text-transform: uppercase;
