@@ -1,0 +1,82 @@
+name: Build & Publish Project Aurora Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Yayınlanacak SemVer sürümü (ör. 2.1.0)'
+        required: true
+        default: '2.0.0'
+      release_notes:
+        description: 'Sürüm notları (isteğe bağlı)'
+        required: false
+        default: 'Yeni özellikler, kararlılık ve performans iyileştirmeleri.'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Resolve Release Version
+        id: ver
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            $v = "${{ inputs.version }}".Trim().TrimStart('v', 'V')
+            $notes = "${{ inputs.release_notes }}"
+          } else {
+            $v = "${{ github.ref_name }}".Trim().TrimStart('v', 'V')
+            $notes = "Project Aurora v$v — GitHub otomatik güncelleme paketi."
+          }
+          echo "version=$v" >> $env:GITHUB_OUTPUT
+          echo "tag=v$v" >> $env:GITHUB_OUTPUT
+          echo "notes=$notes" >> $env:GITHUB_OUTPUT
+
+      - name: Build & Run All Automated Tests
+        shell: pwsh
+        run: |
+          dotnet build .\Aurora.sln -c Release -p:Platform=x64 -p:Version=${{ steps.ver.outputs.version }} --nologo
+          dotnet test .\Aurora.sln -c Release -p:Platform=x64 --no-build --nologo --verbosity normal
+
+      - name: Build Self-Contained Installer & SHA-256 Manifest
+        shell: pwsh
+        run: |
+          $baseUrl = "https://github.com/${{ github.repository }}/releases/download/${{ steps.ver.outputs.tag }}"
+          .\Build-Installer.ps1 `
+            -Version "${{ steps.ver.outputs.version }}" `
+            -ReleaseDownloadBaseUrl "$baseUrl" `
+            -ReleaseNotes "${{ steps.ver.outputs.notes }}"
+
+      - name: Publish GitHub Release with Installer + Manifest
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.ver.outputs.tag }}
+          name: Project Aurora ${{ steps.ver.outputs.tag }}
+          body: |
+            ## ✦ Project Aurora ${{ steps.ver.outputs.tag }}
+
+            ${{ steps.ver.outputs.notes }}
+
+            ### Tek Tık Kurulum (Windows 11 x64)
+            - Aşağıdaki **`Aurora-Kurulum-v*-x64.exe`** dosyasını indirip çalıştırın (yönetici izni / UAC veya ek .NET kurulumu gerektirmez).
+            - Mevcut Project Aurora kullanıcıları uygulama içindeki **Üst Damla → Stüdyo & Ayarlar → Güncellemeleri Kontrol Et** butonundan ayarlarını kaybetmeden tek tıkla güncelleyebilir.
+          files: |
+            dist/Aurora-Kurulum-*.exe
+            dist/release-manifest.json
+            dist/Project-Aurora-TekTik-Kurulum-*.zip
+            dist/BENIOKU-Kurulum.txt
+          draft: false
+          prerelease: false

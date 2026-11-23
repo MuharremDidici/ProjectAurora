@@ -1,0 +1,26 @@
+## .NET / Visual Studio / Rider
+bin/
+obj/
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.cache
+*.log
+*.pdb
+*.tmp
+TestResults/
+BenchmarkDotNet.Artifacts/
+
+## Project Aurora build & installer outputs (distributed via GitHub Releases)
+dist/
+installer/stage/
+installer/Aurora.Setup/Payload/*.zip
+*.aurora-backup
+
+## OS files
+Thumbs.db
+Desktop.ini
+.DS_Store

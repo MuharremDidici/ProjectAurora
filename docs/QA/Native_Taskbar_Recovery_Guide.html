@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project Aurora — Yerel Windows Görev Çubuğu Kurtarma Rehberi</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0f19;
+      --card: #131a2a;
+      --border: rgba(255, 255, 255, 0.12);
+      --accent: #38bdf8;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --ok: #34d399;
+    }
+    body {
+      margin: 0;
+      padding: 40px 20px;
+      font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+      background: radial-gradient(circle at top right, #162447 0%, var(--bg) 55%);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .container { max-width: 780px; margin: 0 auto; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      margin-bottom: 20px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    }
+    h1 { margin-top: 0; font-size: 1.85rem; }
+    h2 { font-size: 1.2rem; color: var(--accent); margin-top: 0; }
+    kbd {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-family: Consolas, monospace;
+      font-size: 0.9rem;
+    }
+    .btn {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 10px 18px;
+      background: var(--accent);
+      color: #06101f;
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: 10px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(52, 211, 153, 0.15);
+      color: var(--ok);
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    p.muted { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <span class="badge">AURORA BAĞIMSIZ KURTARMA REHBERİ (OFFLINE)</span>
+      <h1>Windows 11 Görev Çubuğunu Geri Yükleme</h1>
+      <p class="muted">
+        Project Aurora hiçbir zaman Windows Explorer (<code>explorer.exe</code>) işlemini değiştirmez, sonlandırmaz veya
+        belgelenmemiş kayıt defteri ayarlarına müdahale etmez. Aurora kapalı veya kaldırılmış olsa bile aşağıdaki adımlarla
+        Windows görev çubuğunuzu saniyeler içinde kalıcı görünür hale getirebilirsiniz.
+      </p>
+      <a class="btn" href="ms-settings:taskbar">Windows Görev Çubuğu Ayarlarını Aç</a>
+    </div>
+
+    <div class="card">
+      <h2>Adım 1 — Windows Görev Çubuğu Ayarlarını Açın</h2>
+      <ol>
+        <li>Klavyeden <kbd>Win</kbd> + <kbd>I</kbd> tuşlarına basarak <strong>Ayarlar</strong> uygulamasını açın (veya <kbd>Win</kbd> + <kbd>R</kbd> tuşlarına basıp <code>ms-settings:taskbar</code> yazarak <kbd>Enter</kbd>'a basın).</li>
+        <li><strong>Kişiselleştirme &rarr; Görev Çubuğu &rarr; Görev çubuğu davranışları</strong> bölümünü genişletin.</li>
+        <li><strong>Görev çubuğunu otomatik olarak gizle</strong> (<em>Automatically hide the taskbar</em>) seçeneğinin işaretini kaldırın.</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h2>Adım 2 — Aurora Güvenli Mod veya Temiz Kaldırma</h2>
+      <ul>
+        <li><strong>Güvenli Modda Başlatma:</strong> Komut satırından <code>Aurora.App.exe --safe-mode</code> çalıştırarak varsayılan kurtarma temasıyla ve minimum modüllerle açabilirsiniz.</li>
+        <li><strong>Başlangıçtan Kaldırma:</strong> <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Esc</kbd> ile Görev Yöneticisi'ni açıp <strong>Başlangıç uygulamaları</strong> sekmesinden <em>Project Aurora</em> öğesini devre dışı bırakabilirsiniz.</li>
+        <li><strong>Kullanıcı Verileri Konumu:</strong> Tüm yerel veriler yalnızca <code>%LOCALAPPDATA%\ProjectAurora</code> klasöründedir.</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>
