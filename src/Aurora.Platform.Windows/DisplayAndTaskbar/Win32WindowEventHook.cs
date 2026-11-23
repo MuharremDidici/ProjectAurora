@@ -18,11 +18,12 @@ public sealed class Win32WindowEventHook : IDisposable
     public const uint EventSystemMoveSizeEnd = 0x000B;
     private const uint EventSystemMinimizeStart = 0x0016;
     private const uint EventSystemMinimizeEnd = 0x0017;
-    private const uint EventObjectCreate = 0x8000;
+    public const uint EventObjectCreate = 0x8000;
     private const uint EventObjectDestroy = 0x8001;
     public const uint EventObjectShow = 0x8002;
-    private const uint EventObjectHide = 0x8003;
-    private const uint EventObjectNameChange = 0x800C;
+    public const uint EventObjectHide = 0x8003;
+    public const uint EventObjectNameChange = 0x800C;
+    public const uint EventObjectUncloaked = 0x8018;
 
     private const int ObjidWindow = 0;
 
@@ -74,6 +75,7 @@ public sealed class Win32WindowEventHook : IDisposable
         TryInstallHook(EventSystemMinimizeStart, EventSystemMinimizeEnd, flags);
         TryInstallHook(EventObjectCreate, EventObjectHide, flags);
         TryInstallHook(EventObjectNameChange, EventObjectNameChange, flags);
+        TryInstallHook(EventObjectUncloaked, EventObjectUncloaked, flags);
     }
 
     private void TryInstallHook(uint min, uint max, uint flags)

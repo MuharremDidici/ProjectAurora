@@ -221,4 +221,38 @@ public sealed class V22ProSuiteTests
         Assert.NotNull(mons);
         Assert.All(mons, m => Assert.DoesNotContain("\\", m.Id));
     }
+
+    [Fact]
+    public void NativeShellSuppression_MatchesWin11OsdAndToasts_WhileProtectingSystemPanels()
+    {
+        // Volume key interception covers physical AND driver-injected volume keys (Lenovo Fn / Logitech G HUB)
+        Assert.True(HardwareOsdMonitorService.ShouldInterceptVolumeKey(true, HardwareOsdMonitorService.VkVolumeUp));
+        Assert.True(HardwareOsdMonitorService.ShouldInterceptVolumeKey(true, HardwareOsdMonitorService.VkVolumeDown));
+        Assert.True(HardwareOsdMonitorService.ShouldInterceptVolumeKey(true, HardwareOsdMonitorService.VkVolumeMute));
+        Assert.False(HardwareOsdMonitorService.ShouldInterceptVolumeKey(false, HardwareOsdMonitorService.VkVolumeUp));
+        Assert.False(HardwareOsdMonitorService.ShouldInterceptVolumeKey(true, HardwareOsdMonitorService.VkCapital));
+
+        Rectangle[] mons = [new Rectangle(0, 0, 2560, 1440)];
+
+        // Bottom-center high-DPI Win11 volume flyout (with DWM shadow padding)
+        Assert.True(HardwareOsdMonitorService.IsCompactBottomCenterOsdGeometry(new Rectangle(1060, 1270, 440, 110), mons));
+        // Top-center Win11 on-screen indicator
+        Assert.True(HardwareOsdMonitorService.IsCompactBottomCenterOsdGeometry(new Rectangle(1080, 42, 400, 90), mons));
+        // Start Menu & Quick Settings must NEVER be matched
+        Assert.False(HardwareOsdMonitorService.IsCompactBottomCenterOsdGeometry(new Rectangle(930, 680, 700, 720), mons));
+        Assert.False(HardwareOsdMonitorService.IsCompactBottomCenterOsdGeometry(new Rectangle(2160, 960, 380, 440), mons));
+
+        // Turkish & English native toast banners -> MATCH
+        Assert.True(HardwareOsdMonitorService.IsNativeToastBannerMatch("Yeni bildirim", new Rectangle(2140, 1240, 400, 140), mons));
+        Assert.True(HardwareOsdMonitorService.IsNativeToastBannerMatch("New notification", new Rectangle(2140, 1240, 400, 140), mons));
+        // Untitled bottom-right toast banner -> MATCH
+        Assert.True(HardwareOsdMonitorService.IsNativeToastBannerMatch("", new Rectangle(2150, 1260, 390, 130), mons));
+
+        // Action Center / Notification Center / Quick Settings / Start -> STRICTLY PROTECTED (false)
+        Assert.False(HardwareOsdMonitorService.IsNativeToastBannerMatch("Bildirim Merkezi", new Rectangle(2140, 1240, 400, 140), mons));
+        Assert.False(HardwareOsdMonitorService.IsNativeToastBannerMatch("Notification Center", new Rectangle(2140, 600, 400, 800), mons));
+        Assert.False(HardwareOsdMonitorService.IsNativeToastBannerMatch("Hızlı ayarlar", new Rectangle(2140, 1020, 400, 380), mons));
+        Assert.False(HardwareOsdMonitorService.IsNativeToastBannerMatch("Quick settings", new Rectangle(2140, 1020, 400, 380), mons));
+        Assert.False(HardwareOsdMonitorService.IsNativeToastBannerMatch("", new Rectangle(2140, 200, 400, 900), mons));
+    }
 }

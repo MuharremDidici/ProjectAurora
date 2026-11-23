@@ -2336,6 +2336,10 @@ public static partial class AuroraSurfaceTemplates
                     percent: (typeof msg.percent === 'number') ? msg.percent : null,
                     active: Boolean(msg.active)
                 };
+                if (state && state.audio && (activeOsd.kind === 'volume' || activeOsd.kind === 'mute')) {
+                    if (typeof activeOsd.percent === 'number') state.audio.volume = activeOsd.percent;
+                    state.audio.muted = (activeOsd.kind === 'mute' || activeOsd.percent === 0);
+                }
                 renderAll();
                 clearTimeout(osdHideTimer);
                 osdHideTimer = setTimeout(() => {

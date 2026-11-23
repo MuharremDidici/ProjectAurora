@@ -39,6 +39,70 @@ namespace Aurora.App;
 
 internal sealed partial class AuroraDesktopCoordinator
 {
+    private void ScheduleDelayedOverlayRehide(nint hwnd)
+    {
+        var prim = GetPrimaryMonitorHost();
+        if (prim is null || prim.CrownForm.IsDisposed || !prim.CrownForm.IsHandleCreated)
+            return;
+
+        try
+        {
+            prim.CrownForm.BeginInvoke(async () =>
+            {
+                await Task.Delay(35);
+                _osdMonitor.RehideIfVisible(hwnd);
+                await Task.Delay(85);
+                _osdMonitor.RehideIfVisible(hwnd);
+            });
+        }
+        catch { }
+    }
+
+    private void OnExternalMasterVolumeChanged(int volPct, bool muted)
+    {
+        if (!_shellPrefs.HardwareOsdEnabled || _allMonitorsFullscreen)
+            return;
+
+        var prim = GetPrimaryMonitorHost();
+        if (prim is null || prim.CrownForm.IsDisposed || !prim.CrownForm.IsHandleCreated)
+            return;
+
+        try
+        {
+            prim.CrownForm.BeginInvoke(() =>
+            {
+                // Immediately hide Windows 11's native bottom-center HID volume flyout + staggered re-sweep
+                var monRects = GetAllMonitorRectangles();
+                _osdMonitor.TrySuppressNativeHardwareOsdWindows(monRects);
+                _ = Task.Run(async () =>
+                {
+                    await Task.Delay(35);
+                    _osdMonitor.TrySuppressNativeHardwareOsdWindows(monRects);
+                    await Task.Delay(95);
+                    _osdMonitor.TrySuppressNativeHardwareOsdWindows(monRects);
+                });
+
+                _osdMonitor.SyncVolumeBaseline(volPct, muted);
+                var evt = muted || volPct == 0
+                    ? new HardwareOsdEvent("mute", "Ses", "Sessiz", 0, Active: false)
+                    : new HardwareOsdEvent("volume", "Ses", $"%{volPct}", volPct, Active: true);
+
+                var activeHost = GetMonitorHostUnderCursor();
+                if (activeHost is not null && !activeHost.CrownForm.IsSuppressedForFullscreen)
+                {
+                    SendOsdHud(activeHost.Monitor.DeviceId, evt);
+                }
+
+                if (_volumeRefreshDebounceTimer is not null)
+                {
+                    _volumeRefreshDebounceTimer.Stop();
+                    _volumeRefreshDebounceTimer.Start();
+                }
+            });
+        }
+        catch { }
+    }
+
     private void HandleInterceptedVolumeKey(uint vk)
     {
         if (!_shellPrefs.HardwareOsdEnabled)
@@ -332,6 +396,17 @@ internal sealed partial class AuroraDesktopCoordinator
         {
             primary.CrownForm.BeginInvoke(async () =>
             {
+                // Suppress any duplicate Windows 11 native bottom-right toast banner while Aurora displays it in the Crown Droplet
+                var monRects = GetAllMonitorRectangles();
+                _osdMonitor.TrySuppressNativeToastBanners(monRects);
+                _ = Task.Run(async () =>
+                {
+                    await Task.Delay(45);
+                    _osdMonitor.TrySuppressNativeToastBanners(monRects);
+                    await Task.Delay(110);
+                    _osdMonitor.TrySuppressNativeToastBanners(monRects);
+                });
+
                 _unreadNotifCount++;
                 var activeWin = _taskbarVm.OpenWindows.FirstOrDefault(w => w.IsActive);
                 if (activeWin is null || !toast.AppName.Contains(activeWin.ProcessName, StringComparison.OrdinalIgnoreCase))

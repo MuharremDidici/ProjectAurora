@@ -510,6 +510,8 @@ internal sealed partial class AuroraDesktopCoordinator : ApplicationContext
             if (notSmoke)
             {
                 PollHardwareOsdSafely(forceBrightnessRead: true); // Seed baseline silently
+                _audioService.MasterVolumeExternallyChanged += OnExternalMasterVolumeChanged;
+                _audioService.StartVolumeChangeMonitor();
                 _osdTimer.Start();
             }
 
@@ -642,6 +644,27 @@ internal sealed partial class AuroraDesktopCoordinator : ApplicationContext
                 if (eventType == Win32WindowEventHook.EventObjectShow && _appBarService.IsNativeTaskbarSuppressed)
                 {
                     _appBarService.EnforceNativeTaskbarSuppressed(hwnd);
+                }
+
+                // Instant (<1ms) suppression of Windows 11 duplicate Volume/Brightness flyout & Bottom-Right Toast banners
+                // Includes EVENT_OBJECT_UNCLOAKED (0x8018) because Windows 11 22H2-24H2 shows pre-created XAML Islands & CoreWindow toasts by uncloaking them!
+                if (eventType is Win32WindowEventHook.EventObjectShow
+                    or Win32WindowEventHook.EventObjectCreate
+                    or Win32WindowEventHook.EventObjectNameChange
+                    or Win32WindowEventHook.EventObjectUncloaked)
+                {
+                    string? suppressedKind = _osdMonitor.TrySuppressShellOverlayHwnd(
+                        hwnd,
+                        GetAllMonitorRectangles(),
+                        suppressHardwareOsd: _shellPrefs.HardwareOsdEnabled,
+                        suppressToastBanners: _shellPrefs.SystemNotificationBridgeEnabled);
+                    if (suppressedKind is not null)
+                    {
+                        ScheduleDelayedOverlayRehide(hwnd);
+                        if (suppressedKind == "osd")
+                            PollHardwareOsdSafely(forceBrightnessRead: false);
+                        return;
+                    }
                 }
 
                 var owned = CollectOwnedHwnds();
@@ -851,6 +874,7 @@ internal sealed partial class AuroraDesktopCoordinator : ApplicationContext
             SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
             SystemEvents.SessionEnding -= OnSessionEnding;
             _awakeService.Dispose();
+            _audioService.StopVolumeChangeMonitor();
             _osdMonitor.Dispose();
             _lanQrShareService.Dispose();
             _gifRecorder.Dispose();

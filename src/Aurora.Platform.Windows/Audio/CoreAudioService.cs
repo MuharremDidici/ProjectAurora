@@ -12,6 +12,101 @@ public sealed class CoreAudioService(IAuroraLogger logger) : IAudioEndpointServi
     private static readonly Guid ClsidPolicyConfigClient = new("870AF99C-171D-4F9E-AF0D-E63DF40C2BC9");
     private static readonly Guid IidIAudioEndpointVolume = new("5CDF2C82-841E-4546-9722-0CF74078229A");
     private static readonly Guid IidIAudioSessionManager2 = new("77AA99A0-1BD6-484F-8BC7-2C654C9A9B6F");
+    private static readonly Guid AuroraVolumeEventContext = new("7E4F91D2-9A2B-4C5E-8B11-2D63F01A94C8");
+
+    private readonly object _volMonitorLock = new();
+    private IAudioEndpointVolume? _monitoredEndpointVolume;
+    private EndpointVolumeCallbackImpl? _volCallback;
+    private nint _volCallbackComPtr;
+
+    /// <summary>
+    /// Fires in &lt; 2 ms whenever an external hardware source (USB/Bluetooth headset wheel,
+    /// media knob, or another app) changes Windows' master volume or mute state.
+    /// </summary>
+    public event Action<int, bool>? MasterVolumeExternallyChanged;
+
+    public void StartVolumeChangeMonitor()
+    {
+        lock (_volMonitorLock)
+        {
+            StopVolumeChangeMonitorLocked();
+            try
+            {
+                var enumerator = CreateDeviceEnumerator();
+                if (enumerator is null) return;
+                try
+                {
+                    if (enumerator.GetDefaultAudioEndpoint(EDataFlowRender, ERoleMultimedia, out var dev) != 0 || dev is null)
+                        return;
+                    try
+                    {
+                        var iid = IidIAudioEndpointVolume;
+                        if (dev.Activate(ref iid, ClsctxAll, 0, out var obj) == 0 && obj is IAudioEndpointVolume epVol)
+                        {
+                            var cb = new EndpointVolumeCallbackImpl(OnEndpointVolumeNotified);
+                            nint cbPtr = Marshal.GetComInterfaceForObject<EndpointVolumeCallbackImpl, IAudioEndpointVolumeCallback>(cb);
+                            if (epVol.RegisterControlChangeNotify(cbPtr) == 0)
+                            {
+                                _monitoredEndpointVolume = epVol;
+                                _volCallback = cb;
+                                _volCallbackComPtr = cbPtr;
+                            }
+                            else
+                            {
+                                Marshal.Release(cbPtr);
+                                Marshal.ReleaseComObject(epVol);
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        Marshal.ReleaseComObject(dev);
+                    }
+                }
+                finally
+                {
+                    Marshal.ReleaseComObject(enumerator);
+                }
+            }
+            catch { }
+        }
+    }
+
+    public void StopVolumeChangeMonitor()
+    {
+        lock (_volMonitorLock)
+            StopVolumeChangeMonitorLocked();
+    }
+
+    private void StopVolumeChangeMonitorLocked()
+    {
+        try
+        {
+            if (_monitoredEndpointVolume is not null && _volCallbackComPtr != 0)
+                _monitoredEndpointVolume.UnregisterControlChangeNotify(_volCallbackComPtr);
+        }
+        catch { }
+        if (_volCallbackComPtr != 0)
+        {
+            try { Marshal.Release(_volCallbackComPtr); } catch { }
+            _volCallbackComPtr = 0;
+        }
+        if (_monitoredEndpointVolume is not null)
+        {
+            try { Marshal.ReleaseComObject(_monitoredEndpointVolume); } catch { }
+            _monitoredEndpointVolume = null;
+        }
+        _volCallback = null;
+    }
+
+    private void OnEndpointVolumeNotified(Guid eventContext, bool muted, float masterScalar)
+    {
+        if (eventContext == AuroraVolumeEventContext)
+            return;
+
+        int pct = Math.Clamp((int)Math.Round(masterScalar * 100.0f), 0, 100);
+        try { MasterVolumeExternallyChanged?.Invoke(pct, muted); } catch { }
+    }
 
     private const int EDataFlowRender = 0;
     private const int EDataFlowCapture = 1;
@@ -151,8 +246,8 @@ public sealed class CoreAudioService(IAuroraLogger logger) : IAudioEndpointServi
         float clamped = (float)Math.Clamp(volumeScalar, 0.0, 1.0);
         return WithDefaultEndpointVolume(epVol =>
         {
-            var emptyCtx = Guid.Empty;
-            int hr = epVol.SetMasterVolumeLevelScalar(clamped, ref emptyCtx);
+            var ctx = AuroraVolumeEventContext;
+            int hr = epVol.SetMasterVolumeLevelScalar(clamped, ref ctx);
             return hr == 0
                 ? AuroraResult.Ok()
                 : AuroraResult.Fail("AUDIO_SET_VOL_HR", $"Ses düzeyi değiştirilemedi (0x{hr:X8}).", CapabilityState.Error, "ms-settings:sound");
@@ -163,8 +258,8 @@ public sealed class CoreAudioService(IAuroraLogger logger) : IAudioEndpointServi
     {
         return WithDefaultEndpointVolume(epVol =>
         {
-            var emptyCtx = Guid.Empty;
-            int hr = epVol.SetMute(isMuted, ref emptyCtx);
+            var ctx = AuroraVolumeEventContext;
+            int hr = epVol.SetMute(isMuted, ref ctx);
             return hr == 0
                 ? AuroraResult.Ok()
                 : AuroraResult.Fail("AUDIO_SET_MUTE_HR", $"Sessize alma işlemi başarısız (0x{hr:X8}).", CapabilityState.Error, "ms-settings:sound");
@@ -192,7 +287,11 @@ public sealed class CoreAudioService(IAuroraLogger logger) : IAudioEndpointServi
                 int hr2 = policy.SetDefaultEndpoint(deviceId, ERoleMultimedia);
                 int hr3 = policy.SetDefaultEndpoint(deviceId, ERoleCommunications);
                 if (hr1 == 0 || hr2 == 0 || hr3 == 0)
+                {
+                    if (_volCallback is not null)
+                        StartVolumeChangeMonitor();
                     return AuroraResult.Ok();
+                }
 
                 return AuroraResult.Fail("AUDIO_SWITCH_HR", $"Ses çıkışı değiştirilemedi (0x{hr2:X8}).", CapabilityState.Error, "ms-settings:sound");
             }
@@ -647,6 +746,38 @@ public sealed class CoreAudioService(IAuroraLogger logger) : IAudioEndpointServi
         [PreserveSig] int GetCount(out uint cProps);
         [PreserveSig] int GetAt(uint iProp, out PROPERTYKEY pkey);
         [PreserveSig] int GetValue(ref PROPERTYKEY key, out PROPVARIANT pv);
+    }
+
+    [ComImport, Guid("657804FA-D6AD-4496-8A60-352752AF4F89"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    private interface IAudioEndpointVolumeCallback
+    {
+        [PreserveSig] int OnNotify(nint pNotifyData);
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct AUDIO_VOLUME_NOTIFICATION_DATA
+    {
+        public Guid guidEventContext;
+        public int bMuted;
+        public float fMasterVolume;
+    }
+
+    [ComVisible(true)]
+    private sealed class EndpointVolumeCallbackImpl(Action<Guid, bool, float> onNotify) : IAudioEndpointVolumeCallback
+    {
+        public int OnNotify(nint pNotifyData)
+        {
+            if (pNotifyData != 0)
+            {
+                try
+                {
+                    var data = Marshal.PtrToStructure<AUDIO_VOLUME_NOTIFICATION_DATA>(pNotifyData);
+                    onNotify(data.guidEventContext, data.bMuted != 0, data.fMasterVolume);
+                }
+                catch { }
+            }
+            return 0;
+        }
     }
 
     [ComImport, Guid("5CDF2C82-841E-4546-9722-0CF74078229A"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]

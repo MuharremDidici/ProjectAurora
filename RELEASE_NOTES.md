@@ -1,5 +1,13 @@
 # Project Aurora — Sürüm Notları
 
+## v2.3.2
+> Summary: Windows 11 eski ses/parlaklık çubuğu ve çift çıkan sağ-alt bildirim kutularının anlık (<1 ms) bastırılması + USB/Bluetooth kulaklık ses tekeri için canlı CoreAudio geri çağrımı.
+
+### Öne Çıkan Yenilikler
+- **Eski Windows Ses & Parlaklık Çubuğu Tamamen Bastırıldı:** Klavye, Lenovo Fn ve Logitech G HUB/medya tekeri enjekte ses tuşları doğrudan yakalanır; USB/Bluetooth kulaklık tekerinden gelen donanım değişimleri ise canlı CoreAudio `IAudioEndpointVolumeCallback` (< 2 ms) ve `EVENT_OBJECT_UNCLOAKED` (`0x8018`) kancasıyla Windows 11'in alt-orta ses kutusunu göstermeden anında Aurora Üst Damla'ya yönlendirir.
+- **Çift Çıkan Windows Sağ-Alt Bildirimleri Bastırıldı:** Aurora'nın Bildirim Köprüsü açıkken Windows 11'in `ShellExperienceHost`/`ShellHost` (`Yeni bildirim` / `New notification`) sağ-alt bildirim penceresi uncloak anında (< 1 ms) gizlenir; `wpndatabase.db` ve İşlem Merkezi bozulmadan tüm bildirimler yalnızca Aurora Üst Damla'da görünür.
+- **Anlık Üst Hap Ses Senkronizasyonu:** Ses değiştirildiğinde Üst Damla'daki `%` göstergesi ile canlı OSD çubuğu gecikmesiz aynı karede güncellenir.
+
 ## v2.3.1
 > Summary: Tüm güncel özellikleri kapsayan 6 adımlı interaktif Özellik Turu (canlı tema/Dock seçici, DDC/CI, Bluetooth Pil, Gizlilik LED, 3 Bölgeli Drop + QR AirDrop, GIF/OCR, Telemetri ve kısayol haritası).
 

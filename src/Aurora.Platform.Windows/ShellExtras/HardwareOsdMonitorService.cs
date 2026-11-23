@@ -28,7 +28,6 @@ public sealed class HardwareOsdMonitorService : IDisposable
     private const int WmKeyUp = 0x0101;
     private const int WmSysKeyDown = 0x0104;
     private const int WmSysKeyUp = 0x0105;
-    private const uint LlkhfInjected = 0x00000010;
 
     public const uint VkCapital = 0x14;
     public const uint VkNumLock = 0x90;
@@ -37,6 +36,42 @@ public sealed class HardwareOsdMonitorService : IDisposable
     public const uint VkVolumeUp = 0xAF;
 
     private const int SwHide = 0;
+    private const uint SwpNoSize = 0x0001;
+    private const uint SwpNoMove = 0x0002;
+    private const uint SwpNoZOrder = 0x0004;
+    private const uint SwpNoActivate = 0x0010;
+    private const uint SwpHideWindow = 0x0080;
+
+    private static readonly string[] ToastBannerTitles =
+    [
+        "New notification",
+        "Yeni bildirim",
+        "Neue Benachrichtigung",
+        "Nouvelle notification",
+        "Nueva notificación",
+        "Notificación nueva",
+        "Nuova notifica",
+        "Новое уведомление",
+        "新しい通知",
+        "新通知",
+        "새 알림"
+    ];
+
+    private static readonly string[] ExcludedShellTitles =
+    [
+        "Notification Center",
+        "Bildirim Merkezi",
+        "Action Center",
+        "İşlem Merkezi",
+        "Quick settings",
+        "Hızlı ayarlar",
+        "Start",
+        "Başlat",
+        "Search",
+        "Ara",
+        "Task View",
+        "Görev Görünümü"
+    ];
 
     private delegate nint LowLevelKeyboardProc(int nCode, nint wParam, nint lParam);
     private delegate bool EnumWindowsProc(nint hWnd, nint lParam);
@@ -219,12 +254,13 @@ public sealed class HardwareOsdMonitorService : IDisposable
     }
 
     /// <summary>
-    /// Precision check for Windows 11's compact bottom-center hardware slider pill
-    /// (volume/brightness flyout), avoiding Start Menu, Alt+Tab, Snap Layouts, and Quick Settings.
+    /// Precision check for Windows 11's compact hardware slider pill (volume/brightness flyout)
+    /// across Bottom-Center, Top-Center, and Top-Left indicator placements and 100%-225% DPI,
+    /// strictly excluding Start Menu, Alt+Tab, Task View, and Quick Settings.
     /// </summary>
     public static bool IsCompactBottomCenterOsdGeometry(Rectangle winRect, IReadOnlyList<Rectangle> monitorBounds)
     {
-        if (winRect.Width < 120 || winRect.Width > 540 || winRect.Height < 28 || winRect.Height > 140)
+        if (winRect.Width < 110 || winRect.Width > 680 || winRect.Height < 28 || winRect.Height > 220)
             return false;
 
         int winCenterX = winRect.Left + (winRect.Width / 2);
@@ -232,45 +268,200 @@ public sealed class HardwareOsdMonitorService : IDisposable
         {
             if (winCenterX < mon.Left || winCenterX > mon.Right)
                 continue;
-            if (winRect.Top < mon.Top || winRect.Bottom > mon.Bottom + 16)
+            if (winRect.Top < mon.Top - 24 || winRect.Bottom > mon.Bottom + 24)
                 continue;
 
             int monCenterX = mon.Left + (mon.Width / 2);
-            bool horizontallyCentered = Math.Abs(winCenterX - monCenterX) <= Math.Max(140, mon.Width / 10);
-            bool nearBottomEdge = winRect.Bottom >= mon.Bottom - Math.Max(220, mon.Height / 4);
-            if (horizontallyCentered && nearBottomEdge)
+            bool horizontallyCentered = Math.Abs(winCenterX - monCenterX) <= Math.Max(160, mon.Width / 9);
+            bool nearBottomEdge = winRect.Bottom >= mon.Bottom - Math.Max(260, mon.Height / 3);
+            bool nearTopEdge = winRect.Top <= mon.Top + Math.Max(200, mon.Height / 4);
+            bool topLeftCorner = winRect.Left <= mon.Left + 140 && winRect.Top <= mon.Top + 190;
+
+            if ((horizontallyCentered && (nearBottomEdge || nearTopEdge)) || topLeftCorner)
                 return true;
         }
         return false;
     }
 
     /// <summary>
+    /// Precision check for Windows 10/11 native bottom-right toast notification banners
+    /// hosted by ShellExperienceHost / ShellHost (Windows.UI.Core.CoreWindow),
+    /// strictly excluding Notification Center / Action Center / Quick Settings / Start / Search.
+    /// </summary>
+    public static bool IsNativeToastBannerMatch(string? windowTitle, Rectangle winRect, IReadOnlyList<Rectangle> monitorBounds)
+    {
+        string title = (windowTitle ?? string.Empty).Trim();
+        if (title.Length > 0)
+        {
+            foreach (var excluded in ExcludedShellTitles)
+            {
+                if (title.Contains(excluded, StringComparison.OrdinalIgnoreCase))
+                    return false;
+            }
+
+            foreach (var toastTitle in ToastBannerTitles)
+            {
+                if (string.Equals(title, toastTitle, StringComparison.OrdinalIgnoreCase) ||
+                    title.Contains(toastTitle, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Guard against tall Notification Center sidebars even if localized oddly
+                    return winRect.Height <= 560 && winRect.Width <= 720;
+                }
+            }
+        }
+
+        // Geometry fallback for untitled or other-locale compact bottom-right toast popups
+        if (winRect.Width < 260 || winRect.Width > 620 || winRect.Height < 56 || winRect.Height > 480)
+            return false;
+
+        int cx = winRect.Left + (winRect.Width / 2);
+        foreach (var mon in monitorBounds)
+        {
+            if (cx < mon.Left || cx > mon.Right)
+                continue;
+            bool dockedRight = winRect.Right >= mon.Right - 96 && winRect.Right <= mon.Right + 24;
+            bool dockedBottom = winRect.Bottom >= mon.Bottom - 260 && winRect.Bottom <= mon.Bottom + 24;
+            if (dockedRight && dockedBottom)
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Returns true if a volume virtual key should be intercepted by Aurora so Windows' native flyout never flashes.
+    /// Includes driver-injected volume keys (Lenovo Fn utility, Logitech G HUB, media wheels) since Aurora drives CoreAudio directly.
+    /// </summary>
+    public static bool ShouldInterceptVolumeKey(bool suppressNativeVolumeKeys, uint vkCode) =>
+        suppressNativeVolumeKeys && vkCode is VkVolumeMute or VkVolumeDown or VkVolumeUp;
+
+    /// <summary>
+    /// Ultra-fast (&lt; 2 µs fast-path) single-HWND filter for Win32WindowEventHook (EVENT_OBJECT_SHOW / CREATE / NAMECHANGE).
+    /// Returns "osd", "toast", or null if the window is unrelated.
+    /// </summary>
+    public string? TrySuppressShellOverlayHwnd(
+        nint hwnd,
+        IReadOnlyList<Rectangle> monitorBounds,
+        bool suppressHardwareOsd,
+        bool suppressToastBanners)
+    {
+        if (hwnd == 0 || (!suppressHardwareOsd && !suppressToastBanners))
+            return null;
+
+        try
+        {
+            var clsBuf = new StringBuilder(128);
+            if (GetClassNameW(hwnd, clsBuf, clsBuf.Capacity) <= 0)
+                return null;
+
+            string cls = clsBuf.ToString();
+            bool isLegacyOsd = cls.Equals("NativeHWNDHost", StringComparison.OrdinalIgnoreCase);
+            bool isXamlIsland = cls.Equals("XamlExplorerHostIslandWindow", StringComparison.OrdinalIgnoreCase);
+            bool isCoreWindow = cls.Equals("Windows.UI.Core.CoreWindow", StringComparison.OrdinalIgnoreCase);
+
+            if (!isLegacyOsd && !isXamlIsland && !isCoreWindow)
+                return null;
+
+            if (isLegacyOsd)
+            {
+                if (!suppressHardwareOsd)
+                    return null;
+                if (FindWindowExW(hwnd, 0, "DirectUIHWND", null) == 0)
+                    return null;
+                var ttl = new StringBuilder(64);
+                GetWindowTextW(hwnd, ttl, ttl.Capacity);
+                if (ttl.Length != 0)
+                    return null;
+
+                HideNativeOverlayWindow(hwnd);
+                return "osd";
+            }
+
+            GetWindowThreadProcessId(hwnd, out uint pid);
+            if (pid == 0 || pid == (uint)Environment.ProcessId)
+                return null;
+
+            string? procName = TryGetProcessName(pid);
+            if (procName is null)
+                return null;
+
+            bool isShellProc = procName.Equals("explorer", StringComparison.OrdinalIgnoreCase)
+                || procName.Equals("ShellHost", StringComparison.OrdinalIgnoreCase)
+                || procName.Equals("ShellExperienceHost", StringComparison.OrdinalIgnoreCase);
+            if (!isShellProc)
+                return null;
+
+            if (!GetWindowRect(hwnd, out var rc))
+                return null;
+
+            var rect = Rectangle.FromLTRB(rc.Left, rc.Top, rc.Right, rc.Bottom);
+            var titleBuf = new StringBuilder(128);
+            GetWindowTextW(hwnd, titleBuf, titleBuf.Capacity);
+            string title = titleBuf.ToString();
+
+            if (suppressHardwareOsd && isXamlIsland && IsCompactBottomCenterOsdGeometry(rect, monitorBounds))
+            {
+                HideNativeOverlayWindow(hwnd);
+                return "osd";
+            }
+
+            if (suppressToastBanners && (isCoreWindow || isXamlIsland) && !IsWindowCloaked(hwnd) && IsNativeToastBannerMatch(title, rect, monitorBounds))
+            {
+                HideNativeOverlayWindow(hwnd);
+                return "toast";
+            }
+        }
+        catch { }
+
+        return null;
+    }
+
+    public void RehideIfVisible(nint hwnd)
+    {
+        if (hwnd == 0) return;
+        try
+        {
+            if (IsWindow(hwnd) && IsWindowVisible(hwnd))
+                HideNativeOverlayWindow(hwnd);
+        }
+        catch { }
+    }
+
+    private void HideNativeOverlayWindow(nint hwnd)
+    {
+        ShowWindowAsync(hwnd, SwHide);
+        SetWindowPos(hwnd, 0, 0, 0, 0, 0, SwpNoMove | SwpNoSize | SwpNoZOrder | SwpNoActivate | SwpHideWindow);
+        _suppressedNativeOsdHwnds.Add(hwnd);
+    }
+
+    private static string? TryGetProcessName(uint pid)
+    {
+        try
+        {
+            using var p = Process.GetProcessById((int)pid);
+            return p.ProcessName;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
     /// Safely hides Windows' native hardware volume/brightness flyout windows when triggered
-    /// by non-keyboard paths (laptop Fn brightness keys, USB HID wheels). Never kills or injects explorer.
+    /// by non-keyboard paths (laptop Fn brightness keys, USB/Bluetooth HID wheels). Never kills or injects explorer.
     /// </summary>
     public int TrySuppressNativeHardwareOsdWindows(IReadOnlyList<Rectangle> monitorBounds)
     {
         int hiddenCount = 0;
         try
         {
-            var clsBuf = new StringBuilder(128);
-            var titleBuf = new StringBuilder(64);
-
             // 1. Legacy Windows 10/11 NativeHWNDHost -> DirectUIHWND (classic volume/brightness OSD host)
             nint cur = 0;
             while ((cur = FindWindowExW(0, cur, "NativeHWNDHost", null)) != 0)
             {
-                if (FindWindowExW(cur, 0, "DirectUIHWND", null) != 0)
-                {
-                    titleBuf.Clear();
-                    GetWindowTextW(cur, titleBuf, titleBuf.Capacity);
-                    if (titleBuf.Length == 0 && IsWindowVisible(cur))
-                    {
-                        ShowWindow(cur, SwHide);
-                        _suppressedNativeOsdHwnds.Add(cur);
-                        hiddenCount++;
-                    }
-                }
+                if (IsWindowVisible(cur) && TrySuppressShellOverlayHwnd(cur, monitorBounds, suppressHardwareOsd: true, suppressToastBanners: false) == "osd")
+                    hiddenCount++;
             }
 
             // 2. Modern Windows 11 XamlExplorerHostIslandWindow hardware confirmation slider pill
@@ -278,49 +469,35 @@ public sealed class HardwareOsdMonitorService : IDisposable
             {
                 EnumWindows((hwnd, _) =>
                 {
-                    if (!IsWindowVisible(hwnd))
-                        return true;
-
-                    clsBuf.Clear();
-                    if (GetClassNameW(hwnd, clsBuf, clsBuf.Capacity) <= 0)
-                        return true;
-
-                    string cls = clsBuf.ToString();
-                    if (!cls.Equals("XamlExplorerHostIslandWindow", StringComparison.OrdinalIgnoreCase))
-                        return true;
-
-                    if (!GetWindowRect(hwnd, out var rc))
-                        return true;
-
-                    var rect = Rectangle.FromLTRB(rc.Left, rc.Top, rc.Right, rc.Bottom);
-                    if (!IsCompactBottomCenterOsdGeometry(rect, monitorBounds))
-                        return true;
-
-                    GetWindowThreadProcessId(hwnd, out uint pid);
-                    if (pid == 0 || pid == (uint)Environment.ProcessId)
-                        return true;
-
-                    string? procName = null;
-                    try
-                    {
-                        using var p = Process.GetProcessById((int)pid);
-                        procName = p.ProcessName;
-                    }
-                    catch { }
-
-                    if (procName is not null &&
-                        (procName.Equals("explorer", StringComparison.OrdinalIgnoreCase) ||
-                         procName.Equals("ShellHost", StringComparison.OrdinalIgnoreCase) ||
-                         procName.Equals("ShellExperienceHost", StringComparison.OrdinalIgnoreCase)))
-                    {
-                        ShowWindow(hwnd, SwHide);
-                        _suppressedNativeOsdHwnds.Add(hwnd);
+                    if (IsWindowVisible(hwnd) && TrySuppressShellOverlayHwnd(hwnd, monitorBounds, suppressHardwareOsd: true, suppressToastBanners: false) == "osd")
                         hiddenCount++;
-                    }
-
                     return true;
                 }, 0);
             }
+        }
+        catch { }
+
+        return hiddenCount;
+    }
+
+    /// <summary>
+    /// Sweeps and hides any visible duplicate Windows 10/11 native bottom-right toast banners
+    /// while leaving wpndatabase.db &amp; Action Center completely intact for Aurora's notification bridge.
+    /// </summary>
+    public int TrySuppressNativeToastBanners(IReadOnlyList<Rectangle> monitorBounds)
+    {
+        int hiddenCount = 0;
+        if (monitorBounds.Count == 0)
+            return 0;
+
+        try
+        {
+            EnumWindows((hwnd, _) =>
+            {
+                if (IsWindowVisible(hwnd) && TrySuppressShellOverlayHwnd(hwnd, monitorBounds, suppressHardwareOsd: false, suppressToastBanners: true) == "toast")
+                    hiddenCount++;
+                return true;
+            }, 0);
         }
         catch { }
 
@@ -354,10 +531,9 @@ public sealed class HardwareOsdMonitorService : IDisposable
             int msg = (int)wParam;
             var kb = Marshal.PtrToStructure<KBDLLHOOKSTRUCT>(lParam);
 
-            // Intercept hardware volume keys directly so Windows 11's native volume flyout NEVER flashes
-            if (SuppressNativeVolumeKeys &&
-                (kb.flags & LlkhfInjected) == 0 &&
-                kb.vkCode is VkVolumeMute or VkVolumeDown or VkVolumeUp)
+            // Intercept ALL hardware & driver-injected volume keys (keyboard, Lenovo Fn, Logitech G HUB/wheels)
+            // directly so Windows 11's native volume flyout NEVER flashes (Aurora writes to CoreAudio, never injects VK_VOLUME_*)
+            if (ShouldInterceptVolumeKey(SuppressNativeVolumeKeys, kb.vkCode))
             {
                 if (msg is WmKeyDown or WmSysKeyDown)
                 {
@@ -446,7 +622,11 @@ public sealed class HardwareOsdMonitorService : IDisposable
 
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool ShowWindow(nint hWnd, int nCmdShow);
+    private static extern bool ShowWindowAsync(nint hWnd, int nCmdShow);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetWindowPos(nint hWnd, nint hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags);
 
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -458,6 +638,21 @@ public sealed class HardwareOsdMonitorService : IDisposable
 
     [DllImport("user32.dll")]
     private static extern uint GetWindowThreadProcessId(nint hWnd, out uint lpdwProcessId);
+
+    private static bool IsWindowCloaked(nint hwnd)
+    {
+        try
+        {
+            return DwmGetWindowAttribute(hwnd, 14 /* DWMWA_CLOAKED */, out int cloaked, sizeof(int)) == 0 && cloaked != 0;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmGetWindowAttribute(nint hwnd, int dwAttribute, out int pvAttribute, int cbAttribute);
 
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
     private static extern nint GetModuleHandleW(string? lpModuleName);
