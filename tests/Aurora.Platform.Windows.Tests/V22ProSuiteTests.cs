@@ -116,7 +116,13 @@ public sealed class V22ProSuiteTests
             byte[] downloaded = await http.GetByteArrayAsync($"{baseLocal}/d/{session.Token}");
             Assert.Equal(expectedBytes, downloaded);
 
-            var updated = share.GetActiveSession();
+            // Server increments DownloadCount immediately after flushing response bytes on its worker task
+            LanQrShareSession? updated = share.GetActiveSession();
+            for (int i = 0; i < 40 && (updated is null || updated.DownloadCount < 1); i++)
+            {
+                await Task.Delay(25);
+                updated = share.GetActiveSession();
+            }
             Assert.NotNull(updated);
             Assert.Equal(1, updated!.DownloadCount);
         }
