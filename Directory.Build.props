@@ -7,6 +7,6 @@
     <Deterministic>true</Deterministic>
     <Authors>Muharrem Didici • Project Aurora</Authors>
     <Product>Project Aurora Desktop Experience</Product>
-    <Version>2.2.0</Version>
+    <Version>2.2.1</Version>
   </PropertyGroup>
 </Project>

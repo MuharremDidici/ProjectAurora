@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Management;
 using System.Runtime.InteropServices;
 
@@ -17,7 +18,8 @@ public sealed record MonitorBrightnessEntry(
 /// Unified real hardware monitor brightness controller supporting BOTH:
 ///   1) Internal laptop displays via root\WMI WmiMonitorBrightness / WmiSetBrightness
 ///   2) External desktop monitors (ViewSonic, Dell, LG, Samsung, ASUS, etc.) via native dxva2.dll DDC/CI VCP 0x10!
-/// Runs completely zero-UAC (asInvoker) and releases every physical monitor handle immediately.
+/// Includes real EDID friendly model resolution (WmiMonitorID -> "VA2715-QHD", "F-419") and per-monitor
+/// latest-wins I2C write coalescing so rapid slider drags stay buttery-smooth with zero handle leaks.
 /// </summary>
 public sealed class DdcCiMonitorBrightnessService
 {
@@ -95,6 +97,18 @@ public sealed class DdcCiMonitorBrightnessService
 
     [DllImport("dxva2.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetMonitorBrightness(
+        nint hMonitor,
+        out uint pdwMinimumBrightness,
+        out uint pdwCurrentBrightness,
+        out uint pdwMaximumBrightness);
+
+    [DllImport("dxva2.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetMonitorBrightness(nint hMonitor, uint dwNewBrightness);
+
+    [DllImport("dxva2.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GetVCPFeatureAndVCPFeatureReply(
         nint hMonitor,
         byte bVCPCode,
@@ -109,6 +123,10 @@ public sealed class DdcCiMonitorBrightnessService
     private readonly object _sync = new();
     private List<MonitorBrightnessEntry> _cached = [];
 
+    // Latest-wins per-monitor I2C write coalescer (prevents queuing 30 overlapping DDC transactions during slider drag)
+    private readonly ConcurrentDictionary<string, int> _pendingTargets = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, int> _activeWriters = new(StringComparer.OrdinalIgnoreCase);
+
     public IReadOnlyList<MonitorBrightnessEntry> GetCachedMonitors()
     {
         lock (_sync)
@@ -118,6 +136,7 @@ public sealed class DdcCiMonitorBrightnessService
     public IReadOnlyList<MonitorBrightnessEntry> DiscoverMonitors()
     {
         var discovered = new List<MonitorBrightnessEntry>();
+        var edidMap = QueryWmiEdidFriendlyNames();
 
         // 1. Check internal laptop panel via WMI
         int? wmiBrightness = TryReadWmiBrightness();
@@ -163,15 +182,36 @@ public sealed class DdcCiMonitorBrightnessService
                     for (int i = 0; i < count; i++)
                     {
                         var pm = physicals[i];
-                        if (pm.hPhysicalMonitor == 0)
-                            continue;
+                        // NOTE: Windows dxva2.dll returns 0-based index handles (0, 1, 2...) where 0 IS A VALID physical monitor handle!
+                        bool readOk = false;
+                        uint minVal = 0;
+                        uint curVal = 0;
+                        uint maxVal = 100;
 
-                        if (GetVCPFeatureAndVCPFeatureReply(pm.hPhysicalMonitor, VcpCodeBrightness, out _, out uint curVal, out uint maxVal)
-                            && maxVal > 0 && maxVal <= 1000)
+                        if (GetMonitorBrightness(pm.hPhysicalMonitor, out uint hlMin, out uint hlCur, out uint hlMax)
+                            && hlMax > hlMin && hlMax <= 1000)
                         {
-                            int pct = Math.Clamp((int)Math.Round((curVal / (double)maxVal) * 100.0), 0, 100);
-                            string friendly = ResolveFriendlyMonitorName(devName, pm.szPhysicalMonitorDescription, extIndex);
-                            string id = $"ddc:{devName}:{i}";
+                            minVal = hlMin;
+                            curVal = hlCur;
+                            maxVal = hlMax;
+                            readOk = true;
+                        }
+                        else if (GetVCPFeatureAndVCPFeatureReply(pm.hPhysicalMonitor, VcpCodeBrightness, out _, out uint vcpCur, out uint vcpMax)
+                            && vcpMax > 0 && vcpMax <= 1000)
+                        {
+                            minVal = 0;
+                            curVal = vcpCur;
+                            maxVal = vcpMax;
+                            readOk = true;
+                        }
+
+                        if (readOk)
+                        {
+                            double span = Math.Max(1.0, maxVal - minVal);
+                            int pct = Math.Clamp((int)Math.Round(((curVal - minVal) / span) * 100.0), 0, 100);
+                            string friendly = ResolveFriendlyMonitorName(devName, pm.szPhysicalMonitorDescription, edidMap, extIndex);
+                            string cleanDev = SanitizeMonitorIdSegment(devName);
+                            string id = $"ddc-{cleanDev}-{i}";
 
                             discovered.Add(new MonitorBrightnessEntry(
                                 Id: id,
@@ -180,7 +220,7 @@ public sealed class DdcCiMonitorBrightnessService
                                 IsInternal: false,
                                 IsPrimary: isPrimary,
                                 DeviceName: devName,
-                                MinValue: 0,
+                                MinValue: minVal,
                                 MaxValue: maxVal));
                             extIndex++;
                         }
@@ -202,6 +242,42 @@ public sealed class DdcCiMonitorBrightnessService
             _cached = discovered;
             return [.. _cached];
         }
+    }
+
+    /// <summary>
+    /// Non-blocking latest-wins hardware brightness update. Rapid slider events collapse cleanly into a single smooth I2C write loop.
+    /// </summary>
+    public void QueueSetMonitorBrightness(string monitorId, int brightnessPercent)
+    {
+        if (string.IsNullOrWhiteSpace(monitorId))
+            return;
+
+        int clamped = Math.Clamp(brightnessPercent, 0, 100);
+        UpdateCachedPercent(monitorId, clamped);
+        _pendingTargets[monitorId] = clamped;
+
+        if (!_activeWriters.TryAdd(monitorId, 1))
+            return;
+
+        _ = Task.Run(() =>
+        {
+            try
+            {
+                while (_pendingTargets.TryRemove(monitorId, out int nextVal))
+                {
+                    TrySetMonitorBrightness(monitorId, nextVal);
+                }
+            }
+            finally
+            {
+                _activeWriters.TryRemove(monitorId, out _);
+                // Re-check in case a final value arrived right before TryRemove
+                if (_pendingTargets.TryGetValue(monitorId, out int tailVal))
+                {
+                    QueueSetMonitorBrightness(monitorId, tailVal);
+                }
+            }
+        });
     }
 
     public bool TrySetMonitorBrightness(string monitorId, int brightnessPercent)
@@ -250,13 +326,15 @@ public sealed class DdcCiMonitorBrightnessService
             try
             {
                 int physIdx = 0;
-                var parts = entry.Id.Split(':');
+                var parts = entry.Id.Split('-');
                 if (parts.Length >= 3 && int.TryParse(parts[^1], out int parsed))
                     physIdx = Math.Clamp(parsed, 0, (int)count - 1);
 
-                uint maxVal = entry.MaxValue > 0 ? entry.MaxValue : 100u;
-                uint vcpValue = (uint)Math.Clamp(Math.Round((clamped / 100.0) * maxVal), 0, maxVal);
-                bool ok = SetVCPFeature(physicals[physIdx].hPhysicalMonitor, VcpCodeBrightness, vcpValue);
+                uint minVal = entry.MinValue;
+                uint maxVal = entry.MaxValue > minVal ? entry.MaxValue : 100u;
+                uint targetVal = (uint)Math.Clamp(Math.Round(minVal + (clamped / 100.0) * (maxVal - minVal)), minVal, maxVal);
+                bool ok = SetMonitorBrightness(physicals[physIdx].hPhysicalMonitor, targetVal)
+                    || SetVCPFeature(physicals[physIdx].hPhysicalMonitor, VcpCodeBrightness, targetVal);
                 if (ok)
                     UpdateCachedPercent(monitorId, clamped);
                 return ok;
@@ -287,13 +365,68 @@ public sealed class DdcCiMonitorBrightnessService
         }
     }
 
-    private static string ResolveFriendlyMonitorName(string gdiDeviceName, string physicalDesc, int fallbackIndex)
+    public static string SanitizeMonitorIdSegment(string rawDeviceName)
+    {
+        var chars = (rawDeviceName ?? string.Empty).Where(char.IsLetterOrDigit).ToArray();
+        return chars.Length > 0 ? new string(chars) : "DISP";
+    }
+
+    private static Dictionary<string, string> QueryWmiEdidFriendlyNames()
+    {
+        var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        try
+        {
+            using var searcher = new ManagementObjectSearcher(@"root\WMI", "SELECT InstanceName, UserFriendlyName FROM WmiMonitorID");
+            using var col = searcher.Get();
+            foreach (ManagementObject obj in col)
+            {
+                using (obj)
+                {
+                    string inst = obj["InstanceName"]?.ToString() ?? string.Empty;
+                    if (obj["UserFriendlyName"] is ushort[] rawChars && rawChars.Length > 0)
+                    {
+                        var friendly = new string(rawChars.TakeWhile(c => c != 0).Select(c => (char)c).ToArray()).Trim();
+                        if (!string.IsNullOrWhiteSpace(friendly))
+                        {
+                            string? hwCode = ExtractMonitorHardwareCode(inst);
+                            if (!string.IsNullOrWhiteSpace(hwCode))
+                                map[hwCode] = friendly;
+                        }
+                    }
+                }
+            }
+        }
+        catch { }
+        return map;
+    }
+
+    public static string? ExtractMonitorHardwareCode(string? deviceOrInstanceId)
+    {
+        if (string.IsNullOrWhiteSpace(deviceOrInstanceId))
+            return null;
+
+        var segs = deviceOrInstanceId.Split('\\', '#', '&');
+        return segs.Skip(1).FirstOrDefault(s => s.Length >= 5 && s.Length <= 10 && char.IsLetter(s[0]) && s.Any(char.IsDigit));
+    }
+
+    private static string ResolveFriendlyMonitorName(
+        string gdiDeviceName,
+        string physicalDesc,
+        Dictionary<string, string> edidMap,
+        int fallbackIndex)
     {
         try
         {
             var dd = new DISPLAY_DEVICEW { cb = (uint)Marshal.SizeOf<DISPLAY_DEVICEW>() };
             if (EnumDisplayDevicesW(gdiDeviceName, 0, ref dd, EddGetDeviceInterfaceName))
             {
+                // 1. Prefer real EDID model name (e.g. "VA2715-QHD", "F-419") matched by hardware PnP code!
+                string? hwCode = ExtractMonitorHardwareCode(dd.DeviceID);
+                if (!string.IsNullOrWhiteSpace(hwCode) && edidMap.TryGetValue(hwCode, out var edidFriendly))
+                {
+                    return TrimDisplayName(edidFriendly);
+                }
+
                 string ds = (dd.DeviceString ?? string.Empty).Trim();
                 if (!string.IsNullOrWhiteSpace(ds) &&
                     !ds.Equals("Generic PnP Monitor", StringComparison.OrdinalIgnoreCase) &&
@@ -302,14 +435,8 @@ public sealed class DdcCiMonitorBrightnessService
                     return TrimDisplayName(ds);
                 }
 
-                // Extract hardware PnP model code from DeviceID e.g. MONITOR\VSC1527\...
-                if (!string.IsNullOrWhiteSpace(dd.DeviceID))
-                {
-                    var segs = dd.DeviceID.Split('\\', '#');
-                    var code = segs.Skip(1).FirstOrDefault(s => s.Length >= 4 && s.Length <= 12 && char.IsLetter(s[0]));
-                    if (!string.IsNullOrWhiteSpace(code))
-                        return $"Monitör {fallbackIndex} ({code})";
-                }
+                if (!string.IsNullOrWhiteSpace(hwCode))
+                    return $"Monitör {fallbackIndex} ({hwCode})";
             }
         }
         catch { }

@@ -19,7 +19,9 @@ public sealed class V22ProSuiteTests
         Assert.Equal("AirPods Pro", BluetoothBatteryService.NormalizeBluetoothDeviceName("AirPods Pro Avrcp Transport"));
         Assert.Equal("earbuds", BluetoothBatteryService.ClassifyCategory("AirPods Pro"));
         Assert.Equal("headset", BluetoothBatteryService.ClassifyCategory("Logitech Headset"));
+        Assert.Equal("headset", BluetoothBatteryService.ClassifyCategory("G435 Bluetooth Gaming Headset"));
         Assert.Equal("mouse", BluetoothBatteryService.ClassifyCategory("MX Master 3S"));
+        Assert.Equal("mouse", BluetoothBatteryService.ClassifyCategory("Logitech Pebble"));
         Assert.Equal("keyboard", BluetoothBatteryService.ClassifyCategory("Keychron K2"));
         Assert.Equal("gamepad", BluetoothBatteryService.ClassifyCategory("Xbox Wireless Controller"));
 
@@ -206,7 +208,11 @@ public sealed class V22ProSuiteTests
         Assert.False(WindowsSystemMetricsService.TryTerminateUserProcessSafe("Aurora.App", Environment.ProcessId));
 
         var ddc = new DdcCiMonitorBrightnessService();
+        Assert.Equal("VSC803C", DdcCiMonitorBrightnessService.ExtractMonitorHardwareCode(@"MONITOR\VSC803C\{4d36e96e-e325-11ce-bfc1-08002be10318}\0002"));
+        Assert.Equal("AIC9450", DdcCiMonitorBrightnessService.ExtractMonitorHardwareCode(@"DISPLAY\AIC9450\5&298d202f&0&UID4354_0"));
+        Assert.Equal("DISPLAY1", DdcCiMonitorBrightnessService.SanitizeMonitorIdSegment(@"\\.\DISPLAY1"));
         var mons = ddc.DiscoverMonitors();
         Assert.NotNull(mons);
+        Assert.All(mons, m => Assert.DoesNotContain("\\", m.Id));
     }
 }

@@ -237,6 +237,15 @@ public sealed class AnimatedGifRecorderService : IDisposable
         return (byte)((ri * 36) + (gi * 6) + bi);
     }
 
+    // 4x4 Ordered Bayer threshold matrix (centered -7.5..+7.5 -> scaled gently for smooth gradient dithering without speckling solid UI!)
+    private static readonly sbyte[] Bayer4x4 =
+    [
+        -8,  0, -6,  2,
+         4, -4,  6, -2,
+        -5,  3, -7,  1,
+         7, -1,  5, -3
+    ];
+
     public static byte[] QuantizeBitmapToPaletteIndices(Bitmap bmp)
     {
         int w = bmp.Width;
@@ -253,12 +262,25 @@ public sealed class AnimatedGifRecorderService : IDisposable
             for (int y = 0; y < h; y++)
             {
                 int row = y * stride;
+                int by = (y & 3) << 2;
                 for (int x = 0; x < w; x++)
                 {
                     int px = row + (x * 4);
                     byte b = raw[px];
                     byte g = raw[px + 1];
                     byte r = raw[px + 2];
+
+                    // Keep near-neutral grays & crisp UI text un-dithered on the 40-step gray ramp;
+                    // apply subtle 4x4 Bayer dithering to chromatic pixels to eliminate gradient banding!
+                    int spread = Math.Max(r, Math.Max(g, b)) - Math.Min(r, Math.Min(g, b));
+                    if (spread > 10)
+                    {
+                        int d = Bayer4x4[by | (x & 3)] * 2; // ±16 around the 51-step cube stride
+                        r = (byte)Math.Clamp(r + d, 0, 255);
+                        g = (byte)Math.Clamp(g + d, 0, 255);
+                        b = (byte)Math.Clamp(b + d, 0, 255);
+                    }
+
                     indices[dst++] = MapRgbToPaletteIndex(r, g, b);
                 }
             }

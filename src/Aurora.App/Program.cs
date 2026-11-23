@@ -200,6 +200,7 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
     private DwmLivePreviewForm? _dwmPreviewForm;
     private SnapZonesOverlayForm? _snapZonesOverlay;
     private DockDragOverlayForm? _dockDragOverlay;
+    private GifRecordingBorderForm? _gifBorderOverlay;
     private System.Windows.Forms.Timer? _snapDragTimer;
     private System.Windows.Forms.Timer? _volumeRefreshDebounceTimer;
     private nint _draggingWindowHwnd;
@@ -759,6 +760,7 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
                 {
                     primaryForRec.CrownForm.BeginInvoke(async () =>
                     {
+                        _gifBorderOverlay?.HideBorder();
                         BroadcastGifRecordingState(false, 0);
                         string? srcMon = _gifRecSourceMonitorId;
                         _gifRecSourceMonitorId = null;
@@ -1020,6 +1022,8 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
             owned.Add(_snapZonesOverlay.Handle);
         if (_dockDragOverlay is not null && !_dockDragOverlay.IsDisposed && _dockDragOverlay.IsHandleCreated)
             owned.Add(_dockDragOverlay.Handle);
+        if (_gifBorderOverlay is not null && !_gifBorderOverlay.IsDisposed && _gifBorderOverlay.IsHandleCreated)
+            owned.Add(_gifBorderOverlay.Handle);
         return owned;
     }
 
@@ -2362,7 +2366,7 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
                     string id = msg.GetProperty("id").GetString() ?? string.Empty;
                     int val = Math.Clamp(msg.GetProperty("value").GetInt32(), 0, 100);
                     string label = msg.TryGetProperty("name", out var nm) ? (nm.GetString() ?? "Parlaklık") : "Parlaklık";
-                    _ = Task.Run(() => _ddcBrightnessService.TrySetMonitorBrightness(id, val));
+                    _ddcBrightnessService.QueueSetMonitorBrightness(id, val);
                     if (_shellPrefs.HardwareOsdEnabled)
                     {
                         SendOsdHud(sourceMonitorId, new HardwareOsdEvent("brightness", label, $"%{val}", val, true));
@@ -2372,7 +2376,10 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
 
             case "refreshMonitorsBrightness":
                 {
-                    await Task.Run(() => _ddcBrightnessService.DiscoverMonitors());
+                    var found = await Task.Run(() => _ddcBrightnessService.DiscoverMonitors());
+                    SendToast(sourceMonitorId, "Ekran Parlaklığı Tarandı", found.Count > 0
+                        ? $"{found.Count} ekran algılandı: {string.Join(", ", found.Select(f => f.Name))}"
+                        : "DDC/CI destekli ekran bulunamadı (monitör menüsünden DDC/CI açık olmalı).");
                     await RefreshAndBroadcastStateAsync(forceFull: true);
                     break;
                 }
@@ -2380,6 +2387,9 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
             case "refreshBluetoothBatteries":
                 {
                     await PollBluetoothBatteriesBackgroundAsync(forceBroadcast: true);
+                    SendToast(sourceMonitorId, "Bluetooth Pil Tarandı", _cachedBtDevices.Count > 0
+                        ? string.Join(" · ", _cachedBtDevices.Select(d => $"{d.Name} %{d.BatteryPercent}"))
+                        : "Pil bilgisi paylaşan bağlı Bluetooth cihazı algılanmadı.");
                     break;
                 }
 
@@ -2483,10 +2493,16 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
                     if (region is { Width: >= 16, Height: >= 16 } r)
                     {
                         _gifRecSourceMonitorId = sourceMonitorId;
+                        _gifBorderOverlay ??= new GifRecordingBorderForm();
+                        _gifBorderOverlay.ShowAroundRegion(r);
                         if (_gifRecorder.StartRecording(r))
                         {
                             BroadcastGifRecordingState(true, 0);
                             await RefreshAndBroadcastStateAsync(forceFull: true);
+                        }
+                        else
+                        {
+                            _gifBorderOverlay.HideBorder();
                         }
                     }
                     break;
@@ -2494,6 +2510,7 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
 
             case "stopGifRecording":
                 {
+                    _gifBorderOverlay?.HideBorder();
                     _gifRecorder.RequestStop();
                     break;
                 }
@@ -4121,6 +4138,17 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
             await Task.Delay(450);
             await primary.CrownForm.CapturePngAsync(Path.Combine(dir, "tray_drawer.png"));
 
+            // Hydrate live DDC/CI monitors & Bluetooth battery devices for accurate Control Center visual verification
+            await Task.Run(async () =>
+            {
+                try
+                {
+                    _ddcBrightnessService.DiscoverMonitors();
+                    _cachedBtDevices = await _btBatteryService.QueryConnectedDevicesAsync(includeBleGattFallback: false);
+                }
+                catch { }
+            });
+            await RefreshAndBroadcastStateAsync(forceFull: true);
             primary.CrownForm.PostJsonState("""{"type":"toggleDeck","tab":"control"}""");
             await Task.Delay(450);
             await primary.CrownForm.CapturePngAsync(Path.Combine(dir, "crown_control.png"));
@@ -4155,6 +4183,27 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
             primary.CrownForm.PostJsonState("""{"type":"toggleOmni"}""");
             await Task.Delay(450);
             await primary.CrownForm.CapturePngAsync(Path.Combine(dir, "omnibar_apps.png"));
+
+            // Visually verify Light Theme (Aurora Glass Açık) contrast on Control Deck, Metrics Deck & Vertical Dock!
+            var prevTheme = _stateStore.EffectiveTheme;
+            await _stateStore.ApplyThemeAsync(BuiltInThemes.AuroraGlassLight);
+            _shellPrefs = _shellPrefs with { DockEdge = "Left", DockOffsetPercent = 0 };
+            RecomputeAndApplyAllMonitorBounds();
+            await RefreshAndBroadcastStateAsync(forceFull: true);
+            primary.CrownForm.PostJsonState("""{"type":"outsideDeactivate"}""");
+            await Task.Delay(150);
+            primary.CrownForm.PostJsonState("""{"type":"toggleDeck","tab":"control"}""");
+            await Task.Delay(450);
+            await primary.CrownForm.CapturePngAsync(Path.Combine(dir, "crown_control_light.png"));
+            await primary.DockForm.CapturePngAsync(Path.Combine(dir, "dock_left_vertical_light.png"));
+            primary.CrownForm.PostJsonState("""{"type":"toggleDeck","tab":"metrics"}""");
+            await Task.Delay(120);
+            primary.CrownForm.PostJsonState("""{"type":"toggleDeck","tab":"metrics"}""");
+            await Task.Delay(450);
+            await primary.CrownForm.CapturePngAsync(Path.Combine(dir, "crown_metrics_light.png"));
+            await _stateStore.ApplyThemeAsync(prevTheme);
+            _shellPrefs = _shellPrefs with { DockEdge = savedEdgeBeforeCap };
+            RecomputeAndApplyAllMonitorBounds();
         }
 
         if (ParseSmokeExitSeconds() is { } sec)
@@ -4288,6 +4337,7 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
             _dwmPreviewForm?.Dispose();
             _snapZonesOverlay?.Dispose();
             _dockDragOverlay?.Dispose();
+            _gifBorderOverlay?.Dispose();
             _snapDragTimer?.Stop();
             _volumeRefreshDebounceTimer?.Stop();
             _volumeRefreshDebounceTimer?.Dispose();

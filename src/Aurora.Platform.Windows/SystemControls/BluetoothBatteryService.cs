@@ -216,7 +216,7 @@ public sealed partial class BluetoothBatteryService
                                     Id: key,
                                     Name: cleanName,
                                     BatteryPercent: batt.Value,
-                                    Category: ClassifyCategory(cleanName),
+                                    Category: ClassifyCategory(rawName),
                                     Source: "PnP"));
                             }
                         }
@@ -271,7 +271,7 @@ public sealed partial class BluetoothBatteryService
                     Id: key,
                     Name: cleanName,
                     BatteryPercent: level,
-                    Category: ClassifyCategory(cleanName),
+                    Category: ClassifyCategory(rawName),
                     Source: "BLE"));
             }
             catch
@@ -296,11 +296,16 @@ public sealed partial class BluetoothBatteryService
             ? candidate.Name
             : existing.Name;
         int bestBatt = candidate.BatteryPercent > 0 ? candidate.BatteryPercent : existing.BatteryPercent;
+        string bestCategory = !string.Equals(existing.Category, "device", StringComparison.OrdinalIgnoreCase)
+            ? existing.Category
+            : !string.Equals(candidate.Category, "device", StringComparison.OrdinalIgnoreCase)
+                ? candidate.Category
+                : ClassifyCategory(bestName);
         map[candidate.Id] = existing with
         {
             Name = bestName,
             BatteryPercent = bestBatt,
-            Category = ClassifyCategory(bestName)
+            Category = bestCategory
         };
     }
 
@@ -373,11 +378,11 @@ public sealed partial class BluetoothBatteryService
         string n = (name ?? string.Empty).ToLowerInvariant();
         if (n.Contains("airpod") || n.Contains("buds") || n.Contains("earbud") || n.Contains("freebud") || n.Contains("wf-"))
             return "earbuds";
-        if (n.Contains("headset") || n.Contains("headphone") || n.Contains("kulak") || n.Contains("wh-") || n.Contains("jbl") || n.Contains("bose") || n.Contains("beats") || n.Contains("cloud") || n.Contains("arctis") || n.Contains("kraken"))
+        if (n.Contains("headset") || n.Contains("headphone") || n.Contains("kulak") || n.Contains("wh-") || n.Contains("jbl") || n.Contains("bose") || n.Contains("beats") || n.Contains("cloud") || n.Contains("arctis") || n.Contains("kraken") || n.Contains("g435") || n.Contains("g733") || n.Contains("g535") || n.Contains("barracuda") || n.Contains("blackshark") || n.Contains("hs80") || n.Contains("virtuoso"))
             return "headset";
-        if (n.Contains("mouse") || n.Contains("fare") || n.Contains("mx master") || n.Contains("mx anywhere") || n.Contains("superlight") || n.Contains("viper") || n.Contains("deathadder"))
+        if (n.Contains("mouse") || n.Contains("fare") || n.Contains("pebble") || n.Contains("mx master") || n.Contains("mx anywhere") || n.Contains("mx vertical") || n.Contains("superlight") || n.Contains("viper") || n.Contains("deathadder") || n.Contains("basilisk") || n.Contains("aerox") || n.Contains("g305") || n.Contains("g502") || n.Contains("m720") || n.Contains("m650"))
             return "mouse";
-        if (n.Contains("keyboard") || n.Contains("klavye") || n.Contains("keychron") || n.Contains("mx keys") || n.Contains("k380"))
+        if (n.Contains("keyboard") || n.Contains("klavye") || n.Contains("keychron") || n.Contains("mx keys") || n.Contains("k380") || n.Contains("g915"))
             return "keyboard";
         if (n.Contains("xbox") || n.Contains("dualsense") || n.Contains("dualshock") || n.Contains("wireless controller") || n.Contains("gamepad"))
             return "gamepad";

@@ -160,6 +160,8 @@ public static class AuroraSurfaceTemplates
             record: '<svg class="svg-ic sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5" fill="currentColor"/></svg>',
             camera: '<svg class="svg-ic sm" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>',
             battery: '<svg class="svg-ic sm" viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 11v2"/></svg>',
+            mouse: '<svg class="svg-ic sm" viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="6"/><path d="M12 7v4"/></svg>',
+            keyboard: '<svg class="svg-ic sm" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M7 13h.01M11 13h.01M15 13h.01M8 16h8"/></svg>',
             zip: '<svg class="svg-ic sm" viewBox="0 0 24 24"><path d="M21 8v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8"/><path d="M23 4H1v4h22V4z"/><path d="M10 12h4"/></svg>',
             extLink: '<svg class="svg-ic sm" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>'
         };
@@ -440,7 +442,7 @@ public static class AuroraSurfaceTemplates
         .tile .t-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
         .tile .t-icon {
             width: 28px; height: 28px; border-radius: 9px;
-            background: rgba(255,255,255,0.07); color: var(--text-2);
+            background: var(--bg-inset); color: var(--text-2);
             display: flex; align-items: center; justify-content: center; flex-shrink: 0;
         }
         .tile.on .t-icon { background: rgba(56,189,248,0.24); color: var(--accent-1); }
@@ -457,7 +459,7 @@ public static class AuroraSurfaceTemplates
         }
         .media-art {
             width: 54px; height: 54px; border-radius: 13px; object-fit: cover;
-            background: rgba(255,255,255,0.07); color: var(--accent-1); flex-shrink: 0;
+            background: var(--bg-inset); color: var(--accent-1); flex-shrink: 0;
             display: flex; align-items: center; justify-content: center;
         }
         textarea.scratchpad {
@@ -544,7 +546,7 @@ public static class AuroraSurfaceTemplates
         .app-card .pin-mini {
             opacity: 0; width: 22px; height: 22px; border-radius: 6px;
             display: inline-flex; align-items: center; justify-content: center;
-            background: rgba(255,255,255,0.12); color: var(--text-1);
+            background: var(--bg-card-hover); color: var(--text-1);
             transition: opacity 0.12s;
         }
         .app-card:hover .pin-mini { opacity: 1; }
@@ -594,7 +596,7 @@ public static class AuroraSurfaceTemplates
             position: absolute; bottom: 3px; width: 4.5px; height: 4.5px;
             border-radius: 50%; background: var(--accent-1);
         }
-        .cal-day.today .note-dot { background: #04101F; }
+        .cal-day.today .note-dot { background: var(--accent-ink); }
 
         .drop-zone-box {
             border: 1.5px dashed var(--accent-1);
@@ -759,8 +761,8 @@ public static class AuroraSurfaceTemplates
         .clip-actions .micro-btn { width: 25px; height: 25px; border-radius: 7px; }
         .clip-color-swatch {
             width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
-            border: 1.5px solid rgba(255,255,255,0.28);
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), 0 3px 10px rgba(0,0,0,0.35);
+            border: 1.5px solid var(--border-rim);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), 0 3px 10px rgba(0,0,0,0.25);
         }
 
         /* v2.2 Hardware & Productivity Visual Polish */
@@ -768,11 +770,11 @@ public static class AuroraSurfaceTemplates
             width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
             display: inline-block;
         }
-        .priv-dot.cam { background: #22C55E; box-shadow: 0 0 8px #22C55E; }
-        .priv-dot.mic { background: #F97316; box-shadow: 0 0 8px #F97316; }
+        .priv-dot.cam { background: var(--success); box-shadow: 0 0 8px var(--success); }
+        .priv-dot.mic { background: var(--warning); box-shadow: 0 0 8px var(--warning); }
         .rec-dot {
             width: 8px; height: 8px; border-radius: 50%;
-            background: #FB7185; box-shadow: 0 0 10px #FB7185;
+            background: var(--danger); box-shadow: 0 0 10px var(--danger);
             animation: recBlink 1s ease-in-out infinite alternate;
         }
         @keyframes recBlink { from { opacity: 1; } to { opacity: 0.35; } }
@@ -812,14 +814,14 @@ public static class AuroraSurfaceTemplates
         }
         .qr-svg-wrap svg { width: 100%; height: 100%; display: block; }
         .bt-batt-strip {
-            display: flex; flex-wrap: wrap; gap: 5px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(168px, 1fr)); gap: 6px;
             margin-top: 7px; padding-top: 7px; border-top: 1px solid var(--border-subtle);
         }
         .bt-batt-chip {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 4px 8px; border-radius: 10px;
+            display: flex; align-items: center; gap: 6px; min-width: 0;
+            padding: 5px 8px; border-radius: 10px;
             background: var(--bg-inset); border: 1px solid var(--border-subtle);
-            font-size: 10.5px; font-weight: 700; max-width: 192px;
+            font-size: 10.5px; font-weight: 700;
         }
         .bt-batt-bar {
             width: 26px; height: 5px; border-radius: 99px;
@@ -931,6 +933,8 @@ public static class AuroraSurfaceTemplates
         let isDraggingFile = false;
         let dragDropZone = 'shelf';
         let liveGifRec = null;
+        let armedKillProcKey = null;
+        let armedKillProcTimer = null;
         let omniIdx = 0;
         let currentOmniItems = [];
         let scratchText = '';
@@ -1005,6 +1009,9 @@ public static class AuroraSurfaceTemplates
             root.setProperty('--accent-1', t.colors.accentPrimary);
             root.setProperty('--accent-2', t.colors.accentSecondary);
             root.setProperty('--accent-ink', isLight ? '#FFFFFF' : '#04101F');
+            root.setProperty('--success', isLight ? '#059669' : '#34D399');
+            root.setProperty('--warning', isLight ? '#D97706' : '#FBBF24');
+            root.setProperty('--danger', isLight ? '#E11D48' : '#FB7185');
         }
 
         function hexToRgba(hex, alpha) {
@@ -1194,7 +1201,7 @@ public static class AuroraSurfaceTemplates
                         <div style="font-size:13px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escHtml(qr.name)}">${escHtml(qr.name)}</div>
                         <div style="font-size:11px;color:var(--text-2);" class="num">${escHtml(qr.size)} · Aynı Wi-Fi</div>
                         <div style="font-size:10px;color:var(--accent-1);word-break:break-all;font-family:monospace;background:var(--bg-inset);padding:4px 6px;border-radius:7px;">${escHtml(qr.url)}</div>
-                        ${qr.downloads > 0 ? `<div style="font-size:10.5px;font-weight:700;color:var(--success);">✓ ${qr.downloads} kez indirildi</div>` : `<div style="font-size:10.5px;color:var(--text-2);">Telefon kamerasıyla okutun</div>`}
+                        ${qr.downloads > 0 ? `<div style="font-size:10.5px;font-weight:700;color:var(--success);">✓ ${qr.downloads} kez indirildi</div>` : `<div style="font-size:10px;color:var(--text-2);line-height:1.3;">Telefon kamerasıyla okutun · İlk seferde Güvenlik Duvarı'na izin verin</div>`}
                     </div>
                 </div>
                 <div style="display:flex;gap:6px;justify-content:flex-end;">
@@ -1296,13 +1303,14 @@ public static class AuroraSurfaceTemplates
                         </div>
                     </div>
                 `;
-                } else if (recState.recording && !crownHovered && !crownPinned && !isAnyPopupOpen()) {
+                } else if (recState.recording && !isAnyPopupOpen()) {
+                    // Lock compact recording pill even on hover so the Stop button NEVER shifts sideways (Fitts's Law!)
                     lastDropletSig = '';
                     crown.className = 'glass-shell droplet rec-live';
                     crown.innerHTML = `
                         <span class="rec-dot"></span>
-                        <span class="num" style="font-size:11.5px;font-weight:800;color:#FB7185;">REC ${formatRecTime(recState.elapsed)}</span>
-                        <button class="pill-btn" style="height:21px;padding:0 9px;font-size:10px;border-color:rgba(251,113,133,0.65);color:#FB7185;" onclick="event.stopPropagation();send('stopGifRecording')">Durdur</button>
+                        <span class="num" style="font-size:11.5px;font-weight:800;color:var(--danger);">REC ${formatRecTime(recState.elapsed)}</span>
+                        <button class="pill-btn" style="height:22px;padding:0 10px;font-size:10.5px;border-color:var(--danger);color:var(--danger);background:rgba(225,29,72,0.12);" onclick="event.stopPropagation();send('stopGifRecording')">Durdur</button>
                     `;
                 } else if (!crownHovered && !crownPinned && !isAnyPopupOpen()) {
                     // LIVE HARDWARE OSD MORPH INSIDE QUIET LIQUID DROPLET ("Damla")
@@ -1391,17 +1399,17 @@ public static class AuroraSurfaceTemplates
                         <button class="pill-btn awake-on num" onclick="send('cycleAwake')" title="${escHtml(state.awake.fullLabel)} • Değiştirmek için tıklayın">${SVG.coffee}<span>${escHtml(state.awake.shortLabel)}</span></button>
                     ` : ''}
                     ${recState.recording ? `
-                        <button class="pill-btn num" style="border-color:rgba(251,113,133,0.65);color:#FB7185;background:rgba(251,113,133,0.14);" onclick="send('stopGifRecording')" title="GIF Ekran Kaydını Durdur ve Kaydet">
+                        <button class="pill-btn num" style="border-color:var(--danger);color:var(--danger);background:rgba(225,29,72,0.12);" onclick="send('stopGifRecording')" title="GIF Ekran Kaydını Durdur ve Kaydet">
                             <span class="rec-dot"></span><span>${formatRecTime(recState.elapsed)}</span>
                         </button>
                     ` : ''}
                     ${state.privacy?.camera ? `
-                        <button class="pill-btn" style="border-color:rgba(34,197,94,0.55);color:#4ADE80;background:rgba(34,197,94,0.12);" onclick="send('openUri',{uri:'ms-settings:privacy-webcam'})" title="Kamera aktif: ${escHtml((state.privacy.cameraApps||[]).join(', '))}">
+                        <button class="pill-btn" style="border-color:var(--success);color:var(--success);background:rgba(5,150,105,0.12);" onclick="send('openUri',{uri:'ms-settings:privacy-webcam'})" title="Kamera aktif: ${escHtml((state.privacy.cameraApps||[]).join(', '))}">
                             <span class="priv-dot cam"></span><span>${escHtml((state.privacy.cameraApps||['Kamera'])[0])}</span>
                         </button>
                     ` : ''}
                     ${state.privacy?.mic ? `
-                        <button class="pill-btn" style="border-color:rgba(249,115,22,0.55);color:#FB923C;background:rgba(249,115,22,0.12);" onclick="send('toggleMicMute')" title="Mikrofon aktif: ${escHtml((state.privacy.micApps||[]).join(', '))} (Susturmak için tıklayın)">
+                        <button class="pill-btn" style="border-color:var(--warning);color:var(--warning);background:rgba(217,119,6,0.12);" onclick="send('toggleMicMute')" title="Mikrofon aktif: ${escHtml((state.privacy.micApps||[]).join(', '))} (Susturmak için tıklayın)">
                             <span class="priv-dot mic"></span><span>${escHtml((state.privacy.micApps||['Mikrofon'])[0])}</span>
                         </button>
                     ` : ''}
@@ -1545,11 +1553,11 @@ public static class AuroraSurfaceTemplates
                                 <input type="range" min="0" max="100" value="${state.audio.volume}" oninput="send('setVolume',{value:+this.value})" />
                                 <span class="num" style="width:36px;text-align:right;font-size:11.5px;font-weight:700;">%${state.audio.volume}</span>
                             </div>
-                            ${monBrights.length > 0 ? monBrights.slice(0, 3).map(mb => `
+                            ${monBrights.length > 0 ? monBrights.slice(0, 3).map((mb, idx) => `
                             <div class="slider-row" style="margin-bottom:5px;gap:7px;">
                                 <span class="micro-btn" title="${escHtml(mb.name)} (${mb.isInternal ? 'Dahili WMI' : 'Harici DDC/CI'})">${SVG.sun}</span>
-                                <span style="width:76px;font-size:10.5px;font-weight:600;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escHtml(mb.name)}">${escHtml(mb.name)}</span>
-                                <input type="range" min="${mb.isInternal ? 5 : 0}" max="100" value="${mb.percent}" oninput="send('setMonitorBrightness',{id:'${escHtml(mb.id)}',name:'${escHtml(mb.name)}',value:+this.value});this.nextElementSibling.textContent='%'+this.value;" />
+                                <span style="width:82px;font-size:10.5px;font-weight:600;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escHtml(mb.name)}">${escHtml(mb.name)}</span>
+                                <input type="range" min="${mb.isInternal ? 5 : 0}" max="100" value="${mb.percent}" oninput="setMonitorBrightnessByIdx(${idx}, +this.value, this)" />
                                 <span class="num" style="width:34px;text-align:right;font-size:11px;font-weight:700;">%${mb.percent}</span>
                             </div>`).join('') : (state.brightness.supported ? `
                             <div class="slider-row" style="margin-bottom:5px;">
@@ -1569,12 +1577,19 @@ public static class AuroraSurfaceTemplates
                             <div class="bt-batt-strip">
                                 ${btDevs.slice(0, 4).map(d => {
                                     const col = getBattColor(d.percent);
+                                    const btIcon = (d.category === 'headset' || d.category === 'earbuds')
+                                        ? SVG.headphones
+                                        : d.category === 'mouse'
+                                            ? SVG.mouse
+                                            : d.category === 'keyboard'
+                                                ? SVG.keyboard
+                                                : SVG.battery;
                                     return `
                                     <div class="bt-batt-chip" title="${escHtml(d.name)} · %${d.percent} (${escHtml(d.source)})">
-                                        <span style="color:${col};display:inline-flex;">${SVG.bluetooth}</span>
-                                        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(d.name)}</span>
+                                        <span style="color:${col};display:inline-flex;flex-shrink:0;">${btIcon}</span>
+                                        <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(d.name)}</span>
                                         <div class="bt-batt-bar"><div class="bt-batt-fill" style="width:${d.percent}%;background:${col};"></div></div>
-                                        <span class="num" style="color:${col};">%${d.percent}</span>
+                                        <span class="num" style="color:${col};flex-shrink:0;">%${d.percent}</span>
                                     </div>`;
                                 }).join('')}
                             </div>` : ''}
@@ -1751,6 +1766,7 @@ public static class AuroraSurfaceTemplates
                                         <span class="num" style="font-size:16px;font-weight:800;">%${m.cpu}</span>
                                     </div>
                                     ${cpuSpark}
+                                    <div class="t-sub" style="margin-top:-2px;">${m.cpu < 30 ? 'Serin & Sakin' : (m.cpu < 70 ? 'Dengeli Yük' : 'Yoğun Kullanım')}</div>
                                 </div>
                                 <div class="spark-tile accent-tile">
                                     <div style="display:flex;justify-content:space-between;align-items:baseline;">
@@ -1772,19 +1788,23 @@ public static class AuroraSurfaceTemplates
                         </div>
 
                         <div class="card" style="padding:10px 12px;flex:1;">
-                            <div class="card-title" style="margin-bottom:6px;"><span class="card-title-l">${SVG.layers}<span>En Çok RAM Kullananlar (Top 3)</span></span><span>Tek Tık Kapat</span></div>
+                            <div class="card-title" style="margin-bottom:6px;"><span class="card-title-l">${SVG.layers}<span>En Çok RAM Kullananlar (Top 3)</span></span><span>Çift Tık Kapat</span></div>
                             <div style="display:flex;flex-direction:column;gap:5px;">
                                 ${topProcs.length === 0 ? `<div style="font-size:11px;color:var(--text-2);">Süreç listesi hazırlanıyor...</div>` :
-                                  topProcs.map(p => `
+                                  topProcs.map((p, idx) => {
+                                    const isArmed = armedKillProcKey === p.name;
+                                    return `
                                     <div class="proc-row">
                                         <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                                             <strong style="font-weight:700;">${escHtml(p.displayName)}</strong>
                                             ${p.instances > 1 ? `<span style="font-size:10px;color:var(--text-2);"> (${p.instances})</span>` : ''}
                                         </div>
                                         <span class="num" style="font-weight:700;color:var(--accent-1);flex-shrink:0;">${p.memoryMb} MB</span>
-                                        <button class="micro-btn danger" style="width:22px;height:22px;" onclick="send('killTopProcess',{name:'${escHtml(p.name)}',pid:${p.pid}})" title="${escHtml(p.displayName)} uygulamasını güvenli kapat">${SVG.close}</button>
-                                    </div>
-                                  `).join('')}
+                                        ${isArmed
+                                            ? `<button class="pill-btn danger-arm" style="height:22px;padding:0 8px;font-size:10px;flex-shrink:0;" onclick="armKillTopProcess(${idx})">Onayla?</button>`
+                                            : `<button class="micro-btn danger" style="width:22px;height:22px;" onclick="armKillTopProcess(${idx})" title="${escHtml(p.displayName)} kapatmak için 2 kez tıklayın">${SVG.close}</button>`}
+                                    </div>`;
+                                  }).join('')}
                             </div>
                         </div>
                     </div>
@@ -2624,6 +2644,39 @@ public static class AuroraSurfaceTemplates
             if (ep && ep.id) send('setAudioOutputDevice', { id: ep.id });
         }
 
+        function setMonitorBrightnessByIdx(idx, value, inputEl) {
+            const mb = (state?.monitorBrightness || [])[idx];
+            if (!mb || !mb.id) return;
+            if (inputEl && inputEl.nextElementSibling) inputEl.nextElementSibling.textContent = `%${value}`;
+            send('setMonitorBrightness', { id: mb.id, name: mb.name, value });
+        }
+
+        function openClipUrlById(id) {
+            const c = (state?.clipboard || []).find(x => x.id === id);
+            const raw = (c?.text || c?.preview || '').trim();
+            if (/^https?:\/\/\S+$/i.test(raw)) send('openUri', { uri: raw });
+        }
+
+        function armKillTopProcess(idx) {
+            const p = (state?.topProcesses || [])[idx];
+            if (!p) return;
+            if (armedKillProcKey === p.name) {
+                armedKillProcKey = null;
+                clearTimeout(armedKillProcTimer);
+                send('killTopProcess', { name: p.name, pid: p.pid });
+                return;
+            }
+            armedKillProcKey = p.name;
+            clearTimeout(armedKillProcTimer);
+            lastExpandedSig = '';
+            renderAll();
+            armedKillProcTimer = setTimeout(() => {
+                armedKillProcKey = null;
+                lastExpandedSig = '';
+                renderAll();
+            }, 3500);
+        }
+
         function confirmPowerAction(kind) {
             const btn = document.getElementById(kind === 'restart' ? 'pwRestart' : 'pwShutdown');
             if (armedPowerAction === kind) {
@@ -2775,7 +2828,7 @@ public static class AuroraSurfaceTemplates
                         </div>
                     </div>
                     <div class="clip-actions">
-                        ${isUrl ? `<button class="micro-btn" onclick="event.stopPropagation();send('openUri',{uri:'${escHtml(rawTxt)}'})" title="Tarayıcıda Aç">${SVG.extLink}</button>` : ''}
+                        ${isUrl ? `<button class="micro-btn" onclick="event.stopPropagation();openClipUrlById(${c.id})" title="Tarayıcıda Aç">${SVG.extLink}</button>` : ''}
                         <button class="micro-btn ${c.pinned ? 'active' : ''}" onclick="event.stopPropagation();send('togglePinClip',{id:${c.id}})" title="${c.pinned ? 'Sabitlemeyi Kaldır' : 'Sabitle (Silinmez)'}">${SVG.pin}</button>
                         <button class="micro-btn danger" onclick="event.stopPropagation();send('deleteClip',{id:${c.id}})" title="Sil">${SVG.close}</button>
                     </div>
@@ -3432,8 +3485,8 @@ public static class AuroraSurfaceTemplates
         }
         .dock-item:hover {
             background: var(--bg-card-hover);
-            border-color: rgba(255, 255, 255, 0.24);
-            box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(56, 189, 248, 0.22);
+            border-color: var(--border-rim);
+            box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.42), 0 0 0 1px rgba(56, 189, 248, 0.28);
         }
         .dock-item.active {
             background: linear-gradient(145deg, rgba(56,189,248,0.22), rgba(129,140,248,0.18));
@@ -3492,13 +3545,13 @@ public static class AuroraSurfaceTemplates
             position: absolute; top: -4px; right: -4px;
             min-width: 15px; height: 15px; padding: 0 3.5px;
             border-radius: 99px;
-            background: rgba(15, 23, 42, 0.94);
+            background: var(--bg-glass-2);
             border: 1px solid var(--border-rim);
             color: var(--text-1);
             font-size: 8.5px; font-weight: 800;
             align-items: center; justify-content: center;
             pointer-events: none;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.38);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.28);
         }
         .dock-sep {
             width: 1px; height: 26px;
@@ -3975,6 +4028,9 @@ public static class AuroraSurfaceTemplates
             root.setProperty('--accent-1', t.colors.accentPrimary);
             root.setProperty('--accent-2', t.colors.accentSecondary);
             root.setProperty('--accent-ink', isLight ? '#FFFFFF' : '#04101F');
+            root.setProperty('--success', isLight ? '#059669' : '#34D399');
+            root.setProperty('--warning', isLight ? '#D97706' : '#FBBF24');
+            root.setProperty('--danger', isLight ? '#E11D48' : '#FB7185');
 
             root.setProperty('--radial-disc-bg', isLight
                 ? 'radial-gradient(circle at 50% 25%, rgba(255,255,255,0.985), rgba(232,240,251,0.985))'

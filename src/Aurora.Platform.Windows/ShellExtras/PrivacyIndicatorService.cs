@@ -43,11 +43,19 @@ public sealed class PrivacyIndicatorService
                 {
                     using var nonPkg = capKey.OpenSubKey("NonPackaged");
                     if (nonPkg is null) continue;
+                    HashSet<string>? runningNames = null;
                     foreach (var exeKeyName in nonPkg.GetSubKeyNames())
                     {
                         using var appKey = nonPkg.OpenSubKey(exeKeyName);
                         if (appKey is not null && IsActiveConsentKey(appKey))
                         {
+                            // Ghost-crash guard: verify the Win32 executable is genuinely still running
+                            // (Windows sometimes leaves LastUsedTimeStop == 0 if an app crashed mid-call!)
+                            string exeStem = Path.GetFileNameWithoutExtension(exeKeyName.Replace('#', '\\'));
+                            runningNames ??= SnapshotRunningProcessNames();
+                            if (!string.IsNullOrWhiteSpace(exeStem) && !runningNames.Contains(exeStem))
+                                continue;
+
                             string friendly = FormatConsentAppName(exeKeyName, isNonPackaged: true);
                             if (!string.IsNullOrWhiteSpace(friendly) && !friendly.Contains("Aurora", StringComparison.OrdinalIgnoreCase))
                                 active.Add(friendly);
@@ -72,6 +80,23 @@ public sealed class PrivacyIndicatorService
         }
 
         return [.. active.Take(4)];
+    }
+
+    private static HashSet<string> SnapshotRunningProcessNames()
+    {
+        var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        try
+        {
+            foreach (var p in System.Diagnostics.Process.GetProcesses())
+            {
+                using (p)
+                {
+                    try { names.Add(p.ProcessName); } catch { }
+                }
+            }
+        }
+        catch { }
+        return names;
     }
 
     private static bool IsActiveConsentKey(RegistryKey key)
