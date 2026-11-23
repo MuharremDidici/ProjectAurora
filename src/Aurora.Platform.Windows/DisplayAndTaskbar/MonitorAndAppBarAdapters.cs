@@ -66,20 +66,60 @@ public sealed class MonitorTopologyService : IMonitorTopologyService
 public sealed class Win32AppBarService(IAuroraLogger logger) : IAppBarService
 {
     private const uint ABM_SETSTATE = 0x0000000A;
+    private const uint ABE_LEFT = 0;
+    private const uint ABE_RIGHT = 2;
+    private const uint ABE_BOTTOM = 3;
     private const uint SPI_SETWORKAREA = 0x002F;
     private const uint SWP_NOZORDER = 0x0004;
     private const uint SWP_SHOWWINDOW = 0x0040;
     private const uint SWP_HIDEWINDOW = 0x0080;
+    private const uint SWP_NOSENDCHANGING = 0x0400;
+    private const uint SWP_ASYNCWINDOWPOS = 0x4000;
+    private const int SW_SHOWNOACTIVATE = 4;
     private const uint MONITOR_DEFAULTTONEAREST = 0x00000002;
     private const uint WM_SETTINGCHANGE = 0x001A;
+    private const uint WS_POPUP = 0x80000000u;
+    private const uint WS_EX_TRANSPARENT = 0x00000020u;
+    private const uint WS_EX_TOOLWINDOW_U = 0x00000080u;
+    private const uint WS_EX_LAYERED = 0x00080000u;
+    private const uint WS_EX_NOACTIVATE_U = 0x08000000u;
+    private const uint LWA_ALPHA = 0x00000002u;
+    private const int DWMWA_EXTENDED_FRAME_BOUNDS = 9;
     private static readonly nint HWND_BROADCAST = new(0xFFFF);
+    private static readonly nint HWND_BOTTOM = new(1);
+
+    private sealed record DockAppBarSlot(nint Hwnd, uint CallbackMsg, string MonitorDeviceId);
 
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool IsZoomed(nint hWnd);
 
     [DllImport("user32.dll")]
-    private static extern int GetSystemMetrics(int nIndex);
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool IsWindow(nint hWnd);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern nint CreateWindowExW(
+        uint dwExStyle,
+        string lpClassName,
+        string lpWindowName,
+        uint dwStyle,
+        int x, int y, int nWidth, int nHeight,
+        nint hWndParent,
+        nint hMenu,
+        nint hInstance,
+        nint lpParam);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool DestroyWindow(nint hWnd);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetLayeredWindowAttributes(nint hwnd, uint crKey, byte bAlpha, uint dwFlags);
+
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmGetWindowAttribute(nint hwnd, int dwAttribute, out NativeMethods.RECT pvAttribute, int cbAttribute);
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     private static extern nint FindWindowW(string lpClassName, string? lpWindowName);
@@ -90,10 +130,6 @@ public sealed class Win32AppBarService(IAuroraLogger logger) : IAppBarService
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool EnableWindow(nint hWnd, [MarshalAs(UnmanagedType.Bool)] bool bEnable);
-
-    [DllImport("user32.dll")]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool IsWindowEnabled(nint hWnd);
 
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -111,7 +147,9 @@ public sealed class Win32AppBarService(IAuroraLogger logger) : IAppBarService
     private static extern bool SendNotifyMessageW(nint hWnd, uint msg, nuint wParam, nint lParam);
 
     private readonly ConcurrentDictionary<nint, uint> _registeredBars = new();
+    private readonly Dictionary<string, DockAppBarSlot> _dockAppBarSlots = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, NativeMethods.RECT> _savedMonitorWorkAreas = new(StringComparer.OrdinalIgnoreCase);
+    private string? _lastDockReservationSignature;
     private int? _originalNativeTaskbarState;
     private bool _nativeTaskbarSuppressed;
     private bool _disposed;
@@ -132,10 +170,10 @@ public sealed class Win32AppBarService(IAuroraLogger logger) : IAppBarService
     }
 
     /// <summary>
-    /// Completely hides and disables the native Windows taskbar across ALL monitors
-    /// WITHOUT enabling Windows Auto-Hide (so moving the cursor to the bottom edge
-    /// NEVER slides or peeks the Windows taskbar back up), while reclaiming full
-    /// monitor work area for maximized applications. Automatically restored on exit.
+    /// Completely hides the native Windows taskbar across ALL monitors while releasing its
+    /// default reservation via ABM_SETSTATE(ABS_AUTOHIDE) so Aurora's own native AppBar slots
+    /// (in Pinned Fixed Bar mode) or full 100% WorkArea (in Intellihide / AutoHide mode) govern
+    /// window sizing cleanly without fighting Explorer. Automatically restored on exit.
     /// </summary>
     public void HideNativeWindowsTaskbar()
     {
@@ -154,8 +192,8 @@ public sealed class Win32AppBarService(IAuroraLogger logger) : IAppBarService
             CaptureOriginalMonitorWorkAreasIfEmpty();
 
             // Release the OS 48px AppBar WorkArea reservation cleanly across all monitors via ABM_SETSTATE,
-            // then immediately hide & disable Shell_TrayWnd + all Shell_SecondaryTrayWnd so Windows Auto-Hide
-            // NEVER peeks or slides up from the bottom edge!
+            // then hide Shell_TrayWnd + all Shell_SecondaryTrayWnd (keeping Shell_TrayWnd enabled so
+            // Explorer's AppBar manager cleanly handles Aurora's SHAppBarMessage ABM_NEW / ABM_SETPOS / ABM_REMOVE!).
             if (primaryTray != 0)
             {
                 EnableWindow(primaryTray, true);
@@ -164,11 +202,11 @@ public sealed class Win32AppBarService(IAuroraLogger logger) : IAppBarService
                 NativeMethods.SHAppBarMessage(ABM_SETSTATE, ref abd);
             }
 
-            // Completely hide and disable primary + all secondary monitor taskbars (Explorer stays intact!)
             SuppressAllTrayWindows();
 
             _nativeTaskbarSuppressed = true;
-            logger.Info("AppBar", "NATIVE_TB_LOCKED_OFF", "Completely hidden & disabled native Windows taskbar across all monitors with full work area and zero peek.");
+            _lastDockReservationSignature = null;
+            logger.Info("AppBar", "NATIVE_TB_LOCKED_OFF", "Hidden native Windows taskbar across all monitors with full work area and zero peek.");
         }
         catch (Exception ex)
         {
@@ -189,18 +227,18 @@ public sealed class Win32AppBarService(IAuroraLogger logger) : IAppBarService
         {
             if (changedHwnd is { } hwnd && hwnd != 0)
             {
-                if (IsNativeTaskbarWindow(hwnd))
+                if (IsNativeTaskbarWindow(hwnd) && NativeMethods.IsWindowVisible(hwnd))
                 {
-                    HideAndDisableTrayWindow(hwnd);
+                    HideTrayWindow(hwnd);
                 }
                 return;
             }
 
             foreach (var trayHwnd in EnumerateAllTrayWindows())
             {
-                if (NativeMethods.IsWindowVisible(trayHwnd) || IsWindowEnabled(trayHwnd))
+                if (NativeMethods.IsWindowVisible(trayHwnd))
                 {
-                    HideAndDisableTrayWindow(trayHwnd);
+                    HideTrayWindow(trayHwnd);
                 }
             }
         }
@@ -211,8 +249,11 @@ public sealed class Win32AppBarService(IAuroraLogger logger) : IAppBarService
     {
         try
         {
-            // Disarm real-time lockdown BEFORE restoring visibility!
+            // Disarm real-time lockdown and remove Aurora's AppBar slots BEFORE restoring native taskbar!
             _nativeTaskbarSuppressed = false;
+            _lastDockReservationSignature = null;
+            ReleaseAllDockAppBarSlots();
+
             int stateToRestore = explicitState ?? _originalNativeTaskbarState ?? 0;
 
             var trayWindows = EnumerateAllTrayWindows();
@@ -337,67 +378,178 @@ public sealed class Win32AppBarService(IAuroraLogger logger) : IAppBarService
     }
 
     /// <summary>
-    /// Applies (or releases) Aurora's Dock WorkArea reservation across all monitors via SPI_SETWORKAREA
-    /// (fWinIni = 0, NEVER broadcasting WM_SETTINGCHANGE(SPI_SETWORKAREA) to HWND_BROADCAST because
-    /// Shell_TrayWnd responds to that broadcast in ABS_AUTOHIDE mode by immediately wiping rcWork back
-    /// to 100%!), and directly notifies & refits already-maximized user windows cleanly above/beside the Dock.
+    /// Computes the exact edge strip rectangle to reserve via SHAppBarMessage(ABM_QUERYPOS / ABM_SETPOS)
+    /// for Aurora's Pinned Fixed Bar on a given monitor.
     /// </summary>
-    public void ApplyDockWorkAreaReservation(string dockEdge, int dockScalePercent, bool reserve, string dockDensity = "Standard")
+    public static PhysicalPixelRect ComputeAppBarReservationRect(
+        PhysicalPixelRect monitorBounds,
+        double scaleFactor,
+        string dockEdge,
+        int dockScalePercent,
+        string dockDensity = "Standard")
+    {
+        var workArea = ComputeDockReservedWorkArea(monitorBounds, scaleFactor, dockEdge, dockScalePercent, reserve: true, dockDensity);
+
+        if (string.Equals(dockEdge, "Left", StringComparison.OrdinalIgnoreCase))
+        {
+            int w = Math.Max(1, workArea.X - monitorBounds.X);
+            return new PhysicalPixelRect(monitorBounds.X, monitorBounds.Y, w, monitorBounds.Height);
+        }
+
+        if (string.Equals(dockEdge, "Right", StringComparison.OrdinalIgnoreCase))
+        {
+            int w = Math.Max(1, monitorBounds.Right - workArea.Right);
+            return new PhysicalPixelRect(workArea.Right, monitorBounds.Y, w, monitorBounds.Height);
+        }
+
+        int h = Math.Max(1, monitorBounds.Bottom - workArea.Bottom);
+        return new PhysicalPixelRect(monitorBounds.X, workArea.Bottom, monitorBounds.Width, h);
+    }
+
+    /// <summary>
+    /// Applies (or releases) Aurora's Dock WorkArea reservation across all monitors using genuine
+    /// Win32 AppBar registrations (SHAppBarMessage ABM_NEW / ABM_QUERYPOS / ABM_SETPOS / ABM_REMOVE)
+    /// hosted on invisible, click-through per-monitor helper windows.
+    /// Because Windows Explorer itself owns these AppBar entries, Explorer NEVER fights or resets
+    /// rcWork back and forth — eliminating periodic window resize oscillation completely.
+    /// Returns true when a real state transition occurred.
+    /// </summary>
+    public bool ApplyDockWorkAreaReservation(
+        string dockEdge,
+        int dockScalePercent,
+        bool reserve,
+        string dockDensity = "Standard",
+        bool forceReapply = false)
+    {
+        if (!_nativeTaskbarSuppressed || _disposed)
+            return false;
+
+        try
+        {
+            CaptureOriginalMonitorWorkAreasIfEmpty();
+
+            var monitors = EnumerateLiveMonitorSnapshots();
+            if (monitors.Count == 0)
+                return false;
+
+            string signature = BuildDockReservationSignature(reserve, dockEdge, dockScalePercent, dockDensity, monitors);
+            if (!forceReapply && string.Equals(_lastDockReservationSignature, signature, StringComparison.Ordinal))
+            {
+                bool slotsHealthy = !reserve
+                    ? _dockAppBarSlots.Count == 0
+                    : monitors.All(m => _dockAppBarSlots.TryGetValue(m.DeviceId, out var slot) && slot.Hwnd != 0 && IsWindow(slot.Hwnd));
+                if (slotsHealthy)
+                    return false;
+            }
+
+            _lastDockReservationSignature = signature;
+
+            if (!reserve)
+            {
+                // Unpinned (SmartDodge Intellihide / AutoHide): cleanly unregister all AppBar slots so
+                // Explorer natively restores 100% monitor WorkArea and expands maximized windows ONCE.
+                ReleaseAllDockAppBarSlots();
+                SuppressAllTrayWindows();
+
+                // Verify every monitor's rcWork is cleanly back to 100% monitor bounds (handles secondary monitors / fallback)
+                foreach (var mon in monitors)
+                {
+                    if (TryGetMonitorWorkArea(mon.HMonitor, out var liveWork) &&
+                        (liveWork.Left != mon.Bounds.X || liveWork.Top != mon.Bounds.Y ||
+                         liveWork.Right != mon.Bounds.Right || liveWork.Bottom != mon.Bounds.Bottom))
+                    {
+                        var fullRc = new NativeMethods.RECT
+                        {
+                            Left = mon.Bounds.X,
+                            Top = mon.Bounds.Y,
+                            Right = mon.Bounds.Right,
+                            Bottom = mon.Bounds.Bottom
+                        };
+                        SystemParametersInfoW(SPI_SETWORKAREA, 0, ref fullRc, 0);
+                    }
+                }
+
+                return true;
+            }
+
+            // Pinned Fixed Bar: maintain one invisible click-through AppBar slot per active monitor
+            var activeIds = monitors.Select(m => m.DeviceId).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            foreach (var staleId in _dockAppBarSlots.Keys.Where(id => !activeIds.Contains(id)).ToArray())
+            {
+                ReleaseDockAppBarSlot(staleId);
+            }
+
+            uint uEdge = string.Equals(dockEdge, "Left", StringComparison.OrdinalIgnoreCase)
+                ? ABE_LEFT
+                : (string.Equals(dockEdge, "Right", StringComparison.OrdinalIgnoreCase) ? ABE_RIGHT : ABE_BOTTOM);
+
+            foreach (var mon in monitors)
+            {
+                var strip = ComputeAppBarReservationRect(mon.Bounds, mon.ScaleFactor, dockEdge, dockScalePercent, dockDensity);
+                var desiredWork = ComputeDockReservedWorkArea(mon.Bounds, mon.ScaleFactor, dockEdge, dockScalePercent, reserve: true, dockDensity);
+
+                bool registeredViaAppBar = EnsureAndPositionMonitorAppBarSlot(mon, uEdge, strip);
+                if (!registeredViaAppBar)
+                {
+                    // Fallback if Explorer shell is absent: apply SPI_SETWORKAREA once
+                    var rc = new NativeMethods.RECT
+                    {
+                        Left = desiredWork.X,
+                        Top = desiredWork.Y,
+                        Right = desiredWork.Right,
+                        Bottom = desiredWork.Bottom
+                    };
+                    SystemParametersInfoW(SPI_SETWORKAREA, 0, ref rc, 0);
+                }
+                else if (TryGetMonitorWorkArea(mon.HMonitor, out var liveWork))
+                {
+                    // Secondary monitor guard: if Windows didn't carve this monitor's rcWork via ABM_SETPOS, apply once
+                    bool carved = uEdge switch
+                    {
+                        ABE_LEFT => liveWork.Left >= mon.Bounds.X + strip.Width - 2,
+                        ABE_RIGHT => liveWork.Right <= mon.Bounds.Right - strip.Width + 2,
+                        _ => liveWork.Bottom <= mon.Bounds.Bottom - strip.Height + 2
+                    };
+                    if (!carved)
+                    {
+                        var rc = new NativeMethods.RECT
+                        {
+                            Left = desiredWork.X,
+                            Top = desiredWork.Y,
+                            Right = desiredWork.Right,
+                            Bottom = desiredWork.Bottom
+                        };
+                        SystemParametersInfoW(SPI_SETWORKAREA, 0, ref rc, 0);
+                    }
+                }
+            }
+
+            // Explorer occasionally tries to show Shell_SecondaryTrayWnd after AppBar position changes
+            SuppressAllTrayWindows();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            logger.Warn("AppBar", "DOCK_WORKAREA_WARN", $"Dock work-area reservation warning ({ex.GetType().Name}).");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// One-shot post-transition check (invoked ONCE ~150ms after an explicit Pin/Mode/Edge change,
+    /// NEVER on a repeating timer). Inspects each maximized user window's actual visible bounds via
+    /// DWMWA_EXTENDED_FRAME_BOUNDS; windows already resized by Windows Explorer are left completely
+    /// untouched, and any stubborn Chromium/Electron/UWP window is snapped cleanly ONCE using its
+    /// exact measured invisible shadow margins.
+    /// </summary>
+    public void RefitMismatchedMaximizedWindowsOnce()
     {
         if (!_nativeTaskbarSuppressed || _disposed)
             return;
 
         try
         {
-            CaptureOriginalMonitorWorkAreasIfEmpty();
-            bool anyChanged = false;
-
-            NativeMethods.EnumDisplayMonitors(0, 0, (nint hMon, nint _, ref NativeMethods.RECT _, nint _) =>
-            {
-                var info = new NativeMethods.MONITORINFOEXW { cbSize = (uint)Marshal.SizeOf<NativeMethods.MONITORINFOEXW>() };
-                if (!NativeMethods.GetMonitorInfoW(hMon, ref info))
-                    return true;
-
-                uint dpiX = 96;
-                if (NativeMethods.GetDpiForMonitor(hMon, NativeMethods.MDT_EFFECTIVE_DPI, out var dx, out _) == 0 && dx > 0)
-                    dpiX = dx;
-
-                var monPx = new PhysicalPixelRect(info.rcMonitor.Left, info.rcMonitor.Top, info.rcMonitor.Width, info.rcMonitor.Height);
-                var desired = ComputeDockReservedWorkArea(monPx, dpiX / 96.0, dockEdge, dockScalePercent, reserve, dockDensity);
-
-                if (info.rcWork.Left != desired.X || info.rcWork.Top != desired.Y ||
-                    info.rcWork.Right != desired.Right || info.rcWork.Bottom != desired.Bottom)
-                {
-                    var rc = new NativeMethods.RECT
-                    {
-                        Left = desired.X,
-                        Top = desired.Y,
-                        Right = desired.Right,
-                        Bottom = desired.Bottom
-                    };
-                    SystemParametersInfoW(SPI_SETWORKAREA, 0, ref rc, 0);
-                    anyChanged = true;
-                }
-                return true;
-            }, 0);
-
-            if (anyChanged)
-            {
-                RefitAlreadyMaximizedWindowsToWorkArea();
-            }
-        }
-        catch (Exception ex)
-        {
-            logger.Warn("AppBar", "DOCK_WORKAREA_WARN", $"Dock work-area reservation warning ({ex.GetType().Name}).");
-        }
-    }
-
-    private static void RefitAlreadyMaximizedWindowsToWorkArea()
-    {
-        try
-        {
             uint ownPid = (uint)Environment.ProcessId;
-            int framePad = Math.Clamp(GetSystemMetrics(32 /* SM_CXSIZEFRAME */) + GetSystemMetrics(92 /* SM_CXPADDEDBORDER */), 6, 12);
 
             NativeMethods.EnumWindows((hwnd, _) =>
             {
@@ -424,33 +576,205 @@ public sealed class Win32AppBarService(IAuroraLogger logger) : IAppBarService
                     return true;
 
                 var wa = info.rcWork;
-                if (!GetWindowRect(hwnd, out var cur))
+                if (!GetWindowRect(hwnd, out var winRc))
                     return true;
 
-                // Notify ONLY this user application window (never Shell_TrayWnd) so Chromium/Electron updates WM_GETMINMAXINFO
+                NativeMethods.RECT visRc = winRc;
+                bool hasDwmVis = DwmGetWindowAttribute(hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, out var extRc, Marshal.SizeOf<NativeMethods.RECT>()) == 0
+                                 && extRc.Width > 0 && extRc.Height > 0;
+                if (hasDwmVis)
+                    visRc = extRc;
+
+                // If Explorer already aligned this maximized window cleanly to rcWork, DO NOT touch it!
+                bool alreadyAligned =
+                    Math.Abs(visRc.Left - wa.Left) <= 4 &&
+                    Math.Abs(visRc.Top - wa.Top) <= 4 &&
+                    Math.Abs(visRc.Right - wa.Right) <= 4 &&
+                    Math.Abs(visRc.Bottom - wa.Bottom) <= 4;
+
+                if (alreadyAligned)
+                    return true;
+
+                int padL = hasDwmVis ? Math.Clamp(visRc.Left - winRc.Left, 0, 20) : 0;
+                int padT = hasDwmVis ? Math.Clamp(visRc.Top - winRc.Top, 0, 20) : 0;
+                int padR = hasDwmVis ? Math.Clamp(winRc.Right - visRc.Right, 0, 20) : 0;
+                int padB = hasDwmVis ? Math.Clamp(winRc.Bottom - visRc.Bottom, 0, 20) : 0;
+
+                // Notify ONLY this lagging user window (never Shell_TrayWnd) and snap once cleanly
                 SendNotifyMessageW(hwnd, WM_SETTINGCHANGE, SPI_SETWORKAREA, 0);
-
-                bool needsRefit =
-                    Math.Abs(cur.Bottom - (wa.Bottom + framePad)) > 6 ||
-                    Math.Abs(cur.Left - (wa.Left - framePad)) > 6 ||
-                    Math.Abs(cur.Right - (wa.Right + framePad)) > 6;
-
-                if (needsRefit)
-                {
-                    NativeMethods.SetWindowPos(
-                        hwnd,
-                        0,
-                        wa.Left - framePad,
-                        wa.Top - framePad,
-                        (wa.Right - wa.Left) + framePad * 2,
-                        (wa.Bottom - wa.Top) + framePad * 2,
-                        SWP_NOZORDER | NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_FRAMECHANGED);
-                }
+                NativeMethods.SetWindowPos(
+                    hwnd,
+                    0,
+                    wa.Left - padL,
+                    wa.Top - padT,
+                    (wa.Right - wa.Left) + padL + padR,
+                    (wa.Bottom - wa.Top) + padT + padB,
+                    SWP_NOZORDER | NativeMethods.SWP_NOACTIVATE | SWP_ASYNCWINDOWPOS);
 
                 return true;
             }, 0);
         }
         catch { }
+    }
+
+    private sealed record LiveMonitorSnapshot(nint HMonitor, string DeviceId, PhysicalPixelRect Bounds, double ScaleFactor);
+
+    private static List<LiveMonitorSnapshot> EnumerateLiveMonitorSnapshots()
+    {
+        var list = new List<LiveMonitorSnapshot>(4);
+        int idx = 1;
+        NativeMethods.EnumDisplayMonitors(0, 0, (nint hMon, nint _, ref NativeMethods.RECT _, nint _) =>
+        {
+            var info = new NativeMethods.MONITORINFOEXW { cbSize = (uint)Marshal.SizeOf<NativeMethods.MONITORINFOEXW>() };
+            if (!NativeMethods.GetMonitorInfoW(hMon, ref info))
+                return true;
+
+            uint dpiX = 96;
+            if (NativeMethods.GetDpiForMonitor(hMon, NativeMethods.MDT_EFFECTIVE_DPI, out var dx, out _) == 0 && dx > 0)
+                dpiX = dx;
+
+            string devId = string.IsNullOrWhiteSpace(info.szDevice) ? $"DISPLAY_{idx}" : info.szDevice.Trim();
+            var monPx = new PhysicalPixelRect(info.rcMonitor.Left, info.rcMonitor.Top, info.rcMonitor.Width, info.rcMonitor.Height);
+            list.Add(new LiveMonitorSnapshot(hMon, devId, monPx, Math.Max(1.0, dpiX / 96.0)));
+            idx++;
+            return true;
+        }, 0);
+        return list;
+    }
+
+    private static string BuildDockReservationSignature(
+        bool reserve,
+        string dockEdge,
+        int dockScalePercent,
+        string dockDensity,
+        IReadOnlyList<LiveMonitorSnapshot> monitors)
+    {
+        var monPart = string.Join(";", monitors.Select(m => $"{m.DeviceId}:{m.Bounds.X},{m.Bounds.Y},{m.Bounds.Width}x{m.Bounds.Height}@{m.ScaleFactor:F2}"));
+        return $"{reserve}|{dockEdge}|{dockScalePercent}|{dockDensity}|{monPart}";
+    }
+
+    private static bool TryGetMonitorWorkArea(nint hMon, out NativeMethods.RECT workArea)
+    {
+        var info = new NativeMethods.MONITORINFOEXW { cbSize = (uint)Marshal.SizeOf<NativeMethods.MONITORINFOEXW>() };
+        if (NativeMethods.GetMonitorInfoW(hMon, ref info))
+        {
+            workArea = info.rcWork;
+            return true;
+        }
+        workArea = default;
+        return false;
+    }
+
+    private bool EnsureAndPositionMonitorAppBarSlot(LiveMonitorSnapshot mon, uint uEdge, PhysicalPixelRect strip)
+    {
+        if (!_dockAppBarSlots.TryGetValue(mon.DeviceId, out var slot) || slot.Hwnd == 0 || !IsWindow(slot.Hwnd))
+        {
+            if (slot is not null)
+                ReleaseDockAppBarSlot(mon.DeviceId);
+
+            nint hwnd = CreateWindowExW(
+                WS_EX_TOOLWINDOW_U | WS_EX_NOACTIVATE_U | WS_EX_TRANSPARENT | WS_EX_LAYERED,
+                "STATIC",
+                $"ProjectAurora_DockSlot_{mon.DeviceId}",
+                WS_POPUP,
+                strip.X, strip.Y, strip.Width, strip.Height,
+                0, 0, 0, 0);
+
+            if (hwnd == 0)
+                return false;
+
+            SetLayeredWindowAttributes(hwnd, 0, 0, LWA_ALPHA);
+            NativeMethods.ShowWindow(hwnd, SW_SHOWNOACTIVATE);
+
+            uint cbMsg = NativeMethods.RegisterWindowMessageW($"ProjectAurora_DockAppBar_{hwnd}");
+            var newAbd = new NativeMethods.APPBARDATA
+            {
+                cbSize = (uint)Marshal.SizeOf<NativeMethods.APPBARDATA>(),
+                hWnd = hwnd,
+                uCallbackMessage = cbMsg
+            };
+
+            if (NativeMethods.SHAppBarMessage(NativeMethods.ABM_NEW, ref newAbd) == 0)
+            {
+                DestroyWindow(hwnd);
+                return false;
+            }
+
+            slot = new DockAppBarSlot(hwnd, cbMsg, mon.DeviceId);
+            _dockAppBarSlots[mon.DeviceId] = slot;
+        }
+
+        var abd = new NativeMethods.APPBARDATA
+        {
+            cbSize = (uint)Marshal.SizeOf<NativeMethods.APPBARDATA>(),
+            hWnd = slot.Hwnd,
+            uEdge = uEdge,
+            rc = new NativeMethods.RECT
+            {
+                Left = mon.Bounds.X,
+                Top = mon.Bounds.Y,
+                Right = mon.Bounds.Right,
+                Bottom = mon.Bounds.Bottom
+            }
+        };
+
+        NativeMethods.SHAppBarMessage(NativeMethods.ABM_QUERYPOS, ref abd);
+
+        switch (uEdge)
+        {
+            case ABE_LEFT:
+                abd.rc.Right = abd.rc.Left + strip.Width;
+                break;
+            case ABE_RIGHT:
+                abd.rc.Left = abd.rc.Right - strip.Width;
+                break;
+            default:
+                abd.rc.Top = abd.rc.Bottom - strip.Height;
+                break;
+        }
+
+        NativeMethods.SHAppBarMessage(NativeMethods.ABM_SETPOS, ref abd);
+
+        NativeMethods.SetWindowPos(
+            slot.Hwnd,
+            HWND_BOTTOM,
+            abd.rc.Left,
+            abd.rc.Top,
+            Math.Max(1, abd.rc.Width),
+            Math.Max(1, abd.rc.Height),
+            NativeMethods.SWP_NOACTIVATE | SWP_NOSENDCHANGING);
+
+        return true;
+    }
+
+    private void ReleaseDockAppBarSlot(string monitorDeviceId)
+    {
+        if (!_dockAppBarSlots.Remove(monitorDeviceId, out var slot))
+            return;
+
+        try
+        {
+            if (slot.Hwnd != 0)
+            {
+                var abd = new NativeMethods.APPBARDATA
+                {
+                    cbSize = (uint)Marshal.SizeOf<NativeMethods.APPBARDATA>(),
+                    hWnd = slot.Hwnd
+                };
+                NativeMethods.SHAppBarMessage(NativeMethods.ABM_REMOVE, ref abd);
+                if (IsWindow(slot.Hwnd))
+                    DestroyWindow(slot.Hwnd);
+            }
+        }
+        catch { }
+    }
+
+    private void ReleaseAllDockAppBarSlots()
+    {
+        foreach (var id in _dockAppBarSlots.Keys.ToArray())
+        {
+            ReleaseDockAppBarSlot(id);
+        }
     }
 
     private static List<nint> EnumerateAllTrayWindows()
@@ -477,22 +801,21 @@ public sealed class Win32AppBarService(IAuroraLogger logger) : IAppBarService
                span.Equals("Shell_SecondaryTrayWnd", StringComparison.Ordinal);
     }
 
-    private static void HideAndDisableTrayWindow(nint hwnd)
+    private static void HideTrayWindow(nint hwnd)
     {
         if (hwnd == 0) return;
         NativeMethods.ShowWindow(hwnd, NativeMethods.SW_HIDE);
-        EnableWindow(hwnd, false);
         NativeMethods.SetWindowPos(
             hwnd,
-            0,
+            HWND_BOTTOM,
             0, 0, 0, 0,
-            SWP_HIDEWINDOW | NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | SWP_NOZORDER | NativeMethods.SWP_NOACTIVATE);
+            SWP_HIDEWINDOW | NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE);
     }
 
     private static void SuppressAllTrayWindows()
     {
         foreach (var hwnd in EnumerateAllTrayWindows())
-            HideAndDisableTrayWindow(hwnd);
+            HideTrayWindow(hwnd);
     }
 
     private void CaptureOriginalMonitorWorkAreasIfEmpty()
@@ -728,6 +1051,8 @@ public sealed class Win32AppBarService(IAuroraLogger logger) : IAppBarService
         {
             UnregisterBar(hwnd);
         }
+
+        ReleaseAllDockAppBarSlots();
 
         if (_nativeTaskbarSuppressed)
         {

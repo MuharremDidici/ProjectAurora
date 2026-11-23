@@ -64,141 +64,287 @@ public static partial class AuroraSurfaceTemplates
         .glass-shell {
             position: relative;
             background:
-                radial-gradient(ellipse 68% 58% at 18% 0%, rgba(var(--a1-rgb), 0.11), transparent 66%),
-                radial-gradient(ellipse 52% 46% at 86% 100%, rgba(var(--a2-rgb), 0.08), transparent 62%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.11) 0%, rgba(255, 255, 255, 0.025) 34%, transparent 64%),
+                radial-gradient(ellipse 68% 58% at 18% 0%, rgba(var(--a1-rgb), 0.12), transparent 66%),
+                radial-gradient(ellipse 52% 46% at 86% 100%, rgba(var(--a2-rgb), 0.09), transparent 62%),
                 linear-gradient(165deg, var(--bg-glass-1), var(--bg-glass-2));
             border: 1px solid var(--border-rim);
             box-shadow: var(--shadow-shell);
         }
 
-        /* ========== 2026 ARCHITECTURAL THEME OVERRIDES (Distinct Geometry, Material & Craft) ========== */
+        /* ========== 2026 ARCHITECTURAL VISUAL STYLES (Distinct Silhouette, Material, Texture & Controls) ========== */
 
-        /* 1. LIQUID GLASS 26 — Apple Tahoe / visionOS refractive optical crystal */
-        body.style-liquid-glass .glass-shell {
-            background:
-                linear-gradient(180deg, rgba(255,255,255,0.085) 0%, rgba(255,255,255,0.015) 38%, transparent 100%),
-                radial-gradient(ellipse 64% 56% at 20% 0%, rgba(var(--a1-rgb), 0.13), transparent 65%),
-                linear-gradient(165deg, var(--bg-glass-1), var(--bg-glass-2));
-            border: 1px solid rgba(255, 255, 255, 0.20);
-            box-shadow:
-                0 24px 56px -14px rgba(0, 0, 0, 0.72),
-                0 6px 20px -6px rgba(0, 0, 0, 0.42),
-                inset 0 1px 0 rgba(255, 255, 255, 0.30),
-                inset 0 -1px 0 rgba(255, 255, 255, 0.06);
-        }
-
-        /* 2. BENTO SILK (AÇIK) — Scandinavian porcelain daylight layers, soft architectural shadow */
-        body.style-bento-silk {
-            --radius-shell: 20px;
-            --radius-card: 16px;
-            --radius-item: 12px;
+        /* 1. LIQUID GLASS 26 — Apple macOS Tahoe / iOS 26 Refractive Optical Crystal */
+        body.style-liquid-glass {
+            --radius-shell: 24px;
+            --radius-card: 17px;
+            --radius-item: 13px;
             --radius-btn: 999px;
         }
-        body.style-bento-silk .glass-shell {
+        body.style-liquid-glass .glass-shell {
             background:
-                linear-gradient(180deg, rgba(255,255,255,0.58) 0%, rgba(255,255,255,0.08) 100%),
+                linear-gradient(180deg, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0.03) 34%, transparent 66%),
+                radial-gradient(ellipse 66% 54% at 22% 0%, rgba(var(--a1-rgb), 0.14), transparent 65%),
+                radial-gradient(ellipse 50% 45% at 85% 100%, rgba(var(--a2-rgb), 0.09), transparent 64%),
                 linear-gradient(165deg, var(--bg-glass-1), var(--bg-glass-2));
-            border: 1px solid rgba(20, 22, 26, 0.11);
+            border: 1px solid rgba(255, 255, 255, 0.22);
             box-shadow:
-                0 20px 44px -14px rgba(20, 22, 26, 0.20),
-                0 4px 12px -4px rgba(20, 22, 26, 0.10),
-                inset 0 1px 0 rgba(255, 255, 255, 0.92);
+                0 26px 58px -14px rgba(0, 0, 0, 0.72),
+                0 6px 20px -6px rgba(0, 0, 0, 0.42),
+                inset 0 1.5px 0 rgba(255, 255, 255, 0.34),
+                inset 0 -1px 0 rgba(255, 255, 255, 0.07);
         }
 
-        /* 3. LINEAR PRECISION — Matte carbon, razor 1px hairlines, tight 10px corners, zero decorative glow */
+        /* 2. BENTO SILK — Scandinavian Tactile Porcelain & Layered Ceramic (Zero Neon Glow, Real Elevation!) */
+        body.style-bento-silk {
+            --radius-shell: 22px;
+            --radius-card: 16px;
+            --radius-item: 13px;
+            --radius-btn: 11px;
+        }
+        body.style-bento-silk .glass-shell {
+            background: linear-gradient(180deg, var(--bg-glass-1), var(--bg-glass-2));
+            border: 1px solid rgba(20, 22, 26, 0.13);
+            box-shadow:
+                0 22px 46px -14px rgba(20, 22, 26, 0.22),
+                0 6px 16px -4px rgba(20, 22, 26, 0.11),
+                inset 0 1px 0 rgba(255, 255, 255, 0.94);
+        }
+        body.style-bento-silk:not(.mode-light) .glass-shell {
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow:
+                0 22px 46px -14px rgba(0, 0, 0, 0.62),
+                inset 0 1px 0 rgba(255, 255, 255, 0.14);
+        }
+        body.style-bento-silk .pill-btn {
+            border-radius: 10px;
+            border: 1px solid var(--border-rim);
+            border-bottom-width: 2px;
+            box-shadow: 0 1px 2px rgba(20, 22, 26, 0.06);
+        }
+        body.style-bento-silk.mode-light .pill-btn:not(.accent):not(.subtle) {
+            background: rgba(255, 255, 255, 0.86);
+        }
+        body.style-bento-silk.mode-light .pill-btn:not(.accent):not(.subtle):hover {
+            background: #FFFFFF;
+            border-color: rgba(20, 22, 26, 0.22);
+        }
+        body.style-bento-silk .pill-btn.accent {
+            background: var(--accent-1);
+            border-color: rgba(0, 0, 0, 0.18);
+            border-bottom-width: 2px;
+            box-shadow: 0 2px 6px rgba(20, 22, 26, 0.14);
+        }
+        body.style-bento-silk .micro-btn {
+            border-radius: 10px;
+            border: 1px solid var(--border-subtle);
+            border-bottom-width: 2px;
+        }
+        body.style-bento-silk.mode-light .micro-btn:not(.active) {
+            background: rgba(255, 255, 255, 0.78);
+        }
+
+        /* 3. LINEAR SWISS — Raycast / Linear / Vercel Matte Carbon, Razor 1px Hairlines, Zero Glow */
         body.style-linear-precision {
-            --radius-shell: 12px;
-            --radius-card: 10px;
-            --radius-item: 8px;
-            --radius-btn: 8px;
+            --radius-shell: 10px;
+            --radius-card: 7px;
+            --radius-item: 7px;
+            --radius-btn: 6px;
         }
         body.style-linear-precision .glass-shell {
-            background: linear-gradient(180deg, var(--bg-glass-1), var(--bg-glass-2));
+            background: var(--bg-glass-1);
             border: 1px solid var(--border-rim);
             box-shadow:
-                0 16px 36px -12px rgba(0, 0, 0, 0.65),
-                inset 0 1px 0 rgba(255, 255, 255, 0.075);
+                0 18px 40px -12px rgba(0, 0, 0, 0.72),
+                inset 0 1px 0 rgba(255, 255, 255, 0.065);
         }
-        body.style-linear-precision .pill-btn { border-radius: 8px; }
-        body.style-linear-precision .micro-btn { border-radius: 7px; }
+        body.style-linear-precision .pill-btn {
+            border-radius: 6px;
+            font-weight: 600;
+            letter-spacing: -0.015em;
+            transition: background 0.10s ease, border-color 0.10s ease, color 0.10s ease;
+        }
+        body.style-linear-precision .pill-btn:hover { transform: none; }
+        body.style-linear-precision .pill-btn.accent {
+            background: var(--accent-1);
+            box-shadow: none;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+        }
+        body.style-linear-precision .micro-btn {
+            border-radius: 6px;
+            transition: background 0.10s ease, border-color 0.10s ease, color 0.10s ease;
+        }
 
-        /* 4. MONO MATRIX — Nothing OS / Teenage Engineering industrial pitch + dot-matrix + monospace accents */
+        /* 4. MONO MATRIX — Nothing OS 3.0 / Teenage Engineering Industrial Dot-Matrix Hardware */
         body.style-mono-matrix {
-            --radius-shell: 14px;
-            --radius-card: 11px;
-            --radius-item: 9px;
+            --radius-shell: 18px;
+            --radius-card: 12px;
+            --radius-item: 50%;
             --radius-btn: 999px;
         }
         body.style-mono-matrix .glass-shell {
             background:
-                radial-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+                radial-gradient(rgba(255, 255, 255, 0.10) 1px, transparent 1px),
                 linear-gradient(180deg, var(--bg-glass-1), var(--bg-glass-2));
-            background-size: 10px 10px, 100% 100%;
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            background-size: 8px 8px, 100% 100%;
+            border: 1.5px solid rgba(255, 255, 255, 0.20);
             box-shadow:
-                0 20px 44px -14px rgba(0, 0, 0, 0.78),
-                inset 0 1px 0 rgba(255, 255, 255, 0.11);
+                0 22px 48px -14px rgba(0, 0, 0, 0.82),
+                inset 0 1px 0 rgba(255, 255, 255, 0.14);
+        }
+        body.style-mono-matrix.mode-light .glass-shell {
+            background:
+                radial-gradient(rgba(15, 23, 42, 0.11) 1px, transparent 1px),
+                linear-gradient(180deg, var(--bg-glass-1), var(--bg-glass-2));
+            background-size: 8px 8px, 100% 100%;
+            border-color: rgba(15, 23, 42, 0.22);
         }
         body.style-mono-matrix .num,
         body.style-mono-matrix .drop-time,
         body.style-mono-matrix .card-title,
+        body.style-mono-matrix .studio-sec-lbl,
+        body.style-mono-matrix .tab,
         body.style-mono-matrix .count-pill,
-        body.style-mono-matrix .acc-count {
+        body.style-mono-matrix .acc-count,
+        body.style-mono-matrix .hover-label,
+        body.style-mono-matrix .wcag-pill {
             font-family: var(--font-mono);
-            letter-spacing: 0.02em;
+            letter-spacing: 0.05em;
         }
-        body.style-mono-matrix .micro-btn { border-radius: 50%; }
+        body.style-mono-matrix .pill-btn {
+            border-radius: 999px;
+            border: 1px solid var(--border-rim);
+            font-family: var(--font-mono);
+            font-size: 10.5px;
+            letter-spacing: 0.03em;
+        }
+        body.style-mono-matrix .pill-btn.accent {
+            background: var(--accent-1);
+            box-shadow: none;
+            border-color: var(--accent-1);
+        }
+        body.style-mono-matrix .micro-btn {
+            border-radius: 50%;
+            border: 1px solid var(--border-rim);
+        }
+        body.style-mono-matrix .micro-btn:hover {
+            border-style: dashed;
+            border-color: var(--accent-1);
+        }
 
-        /* 5. SPATIAL VISION — visionOS full-stadium capsule, circular hover halos, prismatic rim */
+        /* 5. SPATIAL VISION — Apple visionOS 26 Floating Spatial Capsules & Double Frosted Glass Rim */
         body.style-spatial-vision {
-            --radius-shell: 28px;
-            --radius-card: 20px;
+            --radius-shell: 30px;
+            --radius-card: 22px;
             --radius-item: 50%;
             --radius-btn: 999px;
         }
         body.style-spatial-vision .glass-shell {
             background:
-                radial-gradient(ellipse 80% 60% at 15% 0%, rgba(var(--a1-rgb), 0.16), transparent 64%),
-                radial-gradient(ellipse 60% 55% at 88% 100%, rgba(var(--a2-rgb), 0.13), transparent 62%),
-                linear-gradient(155deg, var(--bg-glass-1), var(--bg-glass-2));
-            border: 1px solid rgba(255, 255, 255, 0.22);
+                radial-gradient(ellipse 84% 58% at 50% 0%, rgba(255, 255, 255, 0.16), transparent 64%),
+                radial-gradient(ellipse 64% 55% at 15% 100%, rgba(var(--a1-rgb), 0.15), transparent 62%),
+                radial-gradient(ellipse 60% 55% at 88% 100%, rgba(var(--a2-rgb), 0.14), transparent 62%),
+                linear-gradient(160deg, var(--bg-glass-1), var(--bg-glass-2));
+            border: 1.5px solid rgba(255, 255, 255, 0.28);
             box-shadow:
-                0 26px 60px -12px rgba(0, 0, 0, 0.72),
-                0 0 0 0.5px rgba(255, 255, 255, 0.10),
-                inset 0 1.5px 0 rgba(255, 255, 255, 0.34),
-                inset 0 -1px 0 rgba(255, 255, 255, 0.08);
+                0 30px 66px -14px rgba(0, 0, 0, 0.72),
+                0 0 0 0.5px rgba(255, 255, 255, 0.14),
+                inset 0 2px 0 rgba(255, 255, 255, 0.44),
+                inset 0 -1.5px 0 rgba(255, 255, 255, 0.12),
+                inset 1px 0 0 rgba(255, 255, 255, 0.16),
+                inset -1px 0 0 rgba(255, 255, 255, 0.16);
+        }
+        body.style-spatial-vision .pill-btn {
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.085);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+        }
+        body.style-spatial-vision .pill-btn:hover {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.40);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 6px 18px -6px rgba(0, 0, 0, 0.40);
+        }
+        body.style-spatial-vision .pill-btn.accent {
+            background: linear-gradient(135deg, rgba(255,255,255,0.28), rgba(var(--a1-rgb),0.45));
+            color: var(--text-1);
+            border: 1px solid rgba(255, 255, 255, 0.48);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 8px 22px -6px var(--accent-glow);
+        }
+        body.style-spatial-vision .micro-btn {
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.09);
+            border: 1px solid rgba(255, 255, 255, 0.20);
+        }
+        body.style-spatial-vision .micro-btn:hover {
+            background: rgba(255, 255, 255, 0.22);
+            border-color: rgba(255, 255, 255, 0.48);
+            box-shadow: 0 0 14px rgba(255, 255, 255, 0.22);
         }
 
-        /* 6. CYBER PRISM — Deep OLED edge-lit HUD with crisp accent top trace & technical geometry */
+        /* 6. CYBER HUD — Precision Sci-Fi Chamfered Tactical HUD, Blueprint Grid & Laser Rail */
         body.style-cyber-prism {
-            --radius-shell: 9px;
-            --radius-card: 8px;
-            --radius-item: 7px;
-            --radius-btn: 7px;
+            --radius-shell: 3px;
+            --radius-card: 3px;
+            --radius-item: 3px;
+            --radius-btn: 3px;
         }
         body.style-cyber-prism .glass-shell {
             background:
-                linear-gradient(90deg, rgba(var(--a1-rgb), 0.16) 0%, transparent 28%, transparent 72%, rgba(var(--a2-rgb), 0.14) 100%),
+                linear-gradient(var(--accent-1), var(--accent-1)) 0 0 / 12px 2px no-repeat,
+                linear-gradient(var(--accent-1), var(--accent-1)) 0 0 / 2px 12px no-repeat,
+                linear-gradient(var(--accent-2), var(--accent-2)) 100% 100% / 12px 2px no-repeat,
+                linear-gradient(var(--accent-2), var(--accent-2)) 100% 100% / 2px 12px no-repeat,
+                linear-gradient(rgba(var(--a1-rgb), 0.055) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(var(--a1-rgb), 0.055) 1px, transparent 1px),
                 linear-gradient(180deg, var(--bg-glass-1), var(--bg-glass-2));
-            border: 1px solid rgba(var(--a1-rgb), 0.32);
+            background-size: 12px 2px, 2px 12px, 12px 2px, 2px 12px, 16px 16px, 16px 16px, 100% 100%;
+            border: 1px solid rgba(var(--a1-rgb), 0.34);
+            border-top: 2px solid var(--accent-1);
             box-shadow:
-                0 20px 46px -12px rgba(0, 0, 0, 0.86),
-                0 0 24px -8px rgba(var(--a1-rgb), 0.26),
-                inset 0 1px 0 rgba(var(--a1-rgb), 0.55);
+                0 22px 50px -12px rgba(0, 0, 0, 0.88),
+                0 0 26px -10px rgba(var(--a1-rgb), 0.32),
+                inset 0 1px 16px -6px rgba(var(--a1-rgb), 0.26);
         }
-        body.style-cyber-prism .pill-btn { border-radius: 7px; }
-        body.style-cyber-prism .micro-btn { border-radius: 6px; }
+        body.style-cyber-prism .num,
+        body.style-cyber-prism .drop-time,
+        body.style-cyber-prism .card-title,
+        body.style-cyber-prism .tab,
+        body.style-cyber-prism .studio-sec-lbl,
+        body.style-cyber-prism .wcag-pill {
+            font-family: var(--font-mono);
+            letter-spacing: 0.04em;
+        }
+        body.style-cyber-prism .pill-btn {
+            border-radius: 3px;
+            border: 1px solid rgba(var(--a1-rgb), 0.24);
+            background: rgba(var(--a1-rgb), 0.055);
+        }
+        body.style-cyber-prism .pill-btn:hover {
+            border-color: var(--accent-1);
+            background: rgba(var(--a1-rgb), 0.14);
+            box-shadow: 0 0 12px -4px var(--accent-glow);
+        }
+        body.style-cyber-prism .pill-btn.accent {
+            background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+            border-radius: 3px;
+            box-shadow: 0 0 16px -4px var(--accent-glow);
+        }
+        body.style-cyber-prism .micro-btn {
+            border-radius: 3px;
+            border: 1px solid rgba(var(--a1-rgb), 0.24);
+        }
 
         /* 7. HIGH CONTRAST — Zero blur, crisp WCAG AAA outlines */
         body.style-high-contrast {
-            --radius-shell: 8px;
-            --radius-card: 6px;
-            --radius-item: 6px;
-            --radius-btn: 6px;
+            --radius-shell: 6px;
+            --radius-card: 5px;
+            --radius-item: 5px;
+            --radius-btn: 5px;
         }
         body.style-high-contrast .glass-shell {
             background: var(--bg-glass-1);
-            border: 1.5px solid var(--border-rim);
+            border: 2px solid var(--border-rim);
             box-shadow: none;
         }
 

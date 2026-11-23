@@ -49,43 +49,75 @@ public static partial class AuroraSurfaceTemplates
             opacity: 0.68;
         }
 
-        /* 2026 ARCHITECTURAL CROWN SILHOUETTES */
-        body.style-bento-silk #crown.droplet,
-        body.style-spatial-vision #crown.droplet {
-            margin-top: 5px;
+        /* 2026 ARCHITECTURAL CROWN SILHOUETTES (Unmistakably Distinct Top Form-Factors) */
+        body.style-liquid-glass #crown.droplet {
             height: 26px;
+            border-radius: 0 0 21px 21px;
+            padding: 0 17px;
+        }
+        body.style-bento-silk #crown.droplet {
+            margin-top: 7px;
+            height: 27px;
             border-top: 1px solid var(--border-rim);
             border-radius: 999px;
-            padding: 0 14px;
-            box-shadow: var(--shadow-shell);
+            padding: 0 15px;
+            box-shadow: 0 8px 22px -6px rgba(20, 22, 26, 0.20), 0 1px 3px rgba(20, 22, 26, 0.08), inset 0 1px 0 rgba(255,255,255,0.92);
         }
-        body.style-bento-silk #crown.droplet::after,
-        body.style-spatial-vision #crown.droplet::after { display: none; }
+        body.style-bento-silk #crown.droplet::after { display: none; }
+        body.style-bento-silk .drop-dot { box-shadow: none; width: 6.5px; height: 6.5px; }
+
         body.style-linear-precision #crown.droplet {
-            border-radius: 0 0 9px 9px;
-            box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.72);
+            height: 22px;
+            border-radius: 0 0 6px 6px;
+            padding: 0 13px 0 15px;
+            border-left: 2.5px solid var(--accent-1);
+            box-shadow: 0 8px 18px -8px rgba(0, 0, 0, 0.72);
         }
-        body.style-linear-precision #crown.droplet::after {
-            height: 1.5px; opacity: 0.55;
-            background: var(--accent-1);
-        }
+        body.style-linear-precision #crown.droplet::after { display: none; }
+        body.style-linear-precision .drop-dot { width: 5px; height: 5px; border-radius: 1px; box-shadow: none; }
+
         body.style-mono-matrix #crown.droplet {
-            margin-top: 4px;
-            height: 25px;
-            border-top: 1px solid rgba(255,255,255,0.16);
+            margin-top: 6px;
+            height: 26px;
+            border-top: 1.5px solid rgba(255, 255, 255, 0.22);
             border-radius: 999px;
-            padding: 0 13px;
+            padding: 0 14px;
         }
         body.style-mono-matrix #crown.droplet::after { display: none; }
+        body.style-mono-matrix .drop-dot {
+            width: 7px; height: 7px;
+            box-shadow: 0 0 0 2px rgba(var(--a1-rgb), 0.28), 0 0 10px var(--accent-1);
+        }
+
+        body.style-spatial-vision #crown.droplet {
+            margin-top: 9px;
+            height: 29px;
+            border-top: 1.5px solid rgba(255, 255, 255, 0.34);
+            border-radius: 999px;
+            padding: 0 18px;
+        }
+        body.style-spatial-vision #crown.droplet::after { display: none; }
+
         body.style-cyber-prism #crown.droplet {
-            border-radius: 0 0 8px 8px;
+            height: 26px;
+            border-radius: 0;
+            padding: 0 23px;
+            border-top: none;
+            border-bottom: 2px solid var(--accent-1);
+            clip-path: polygon(0 0, 100% 0, calc(100% - 11px) 100%, 11px 100%);
             box-shadow:
-                0 10px 26px -6px rgba(0, 0, 0, 0.85),
-                0 0 16px -4px rgba(var(--a1-rgb), 0.35),
-                inset 0 -1.5px 0 var(--accent-1);
+                0 12px 28px -6px rgba(0, 0, 0, 0.88),
+                0 0 18px -4px rgba(var(--a1-rgb), 0.42);
         }
         body.style-cyber-prism #crown.droplet::after {
-            left: 6%; right: 6%; opacity: 0.92;
+            left: 12px; right: 12px; height: 2px; opacity: 0.96;
+            border-radius: 0;
+        }
+        body.style-cyber-prism .drop-dot { width: 6px; height: 6px; border-radius: 0; transform: rotate(45deg); }
+        body.style-cyber-prism #crown.pill {
+            border-radius: 3px;
+            clip-path: polygon(9px 0, calc(100% - 9px) 0, 100% 9px, 100% calc(100% - 9px), calc(100% - 9px) 100%, 9px 100%, 0 calc(100% - 9px), 0 9px);
+            padding: 0 14px;
         }
 
         /* LIVE HARDWARE OSD MORPH INSIDE LIQUID DROPLET */
@@ -382,42 +414,96 @@ public static partial class AuroraSurfaceTemplates
             box-shadow: 0 0 0 1px var(--accent-ring);
         }
         .theme-mini {
-            height: 28px;
-            border-radius: 7px;
+            height: 36px;
+            border-radius: 8px;
             position: relative;
             overflow: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
-            padding: 3px 6px;
-            border: 1px solid rgba(255,255,255,0.10);
+            padding: 0 6px 4px 6px;
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+        .theme-mini.tm-liquid-glass {
+            border-radius: 10px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.28);
+        }
+        .theme-mini.tm-bento-silk {
+            border-radius: 9px;
+            border-color: rgba(20,22,26,0.14);
+            padding-top: 3px;
+        }
+        .theme-mini.tm-linear-precision {
+            border-radius: 4px;
+            border-color: rgba(255,255,255,0.16);
         }
         .theme-mini.tm-mono-matrix {
-            background-image: radial-gradient(rgba(255,255,255,0.14) 1px, transparent 1px) !important;
-            background-size: 6px 6px !important;
+            border-radius: 8px;
+            padding-top: 3px;
+            border: 1px dashed rgba(255,255,255,0.24);
+        }
+        .theme-mini.tm-spatial-vision {
+            border-radius: 13px;
+            padding-top: 3px;
+            border: 1.5px solid rgba(255,255,255,0.28);
+            box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.34);
+        }
+        .theme-mini.tm-cyber-prism {
+            border-radius: 2px;
+            border-top: 1.5px solid;
         }
         .theme-mini-crown {
-            width: 26px; height: 4px;
-            border-radius: 0 0 4px 4px;
-            opacity: 0.92;
+            width: 30px; height: 5px;
+            border-radius: 0 0 6px 6px;
+            opacity: 0.96;
         }
-        .theme-mini.tm-bento-silk .theme-mini-crown,
-        .theme-mini.tm-spatial-vision .theme-mini-crown,
+        .theme-mini.tm-bento-silk .theme-mini-crown {
+            width: 28px; height: 5px; border-radius: 99px;
+            box-shadow: 0 2px 4px rgba(20,22,26,0.16);
+        }
+        .theme-mini.tm-linear-precision .theme-mini-crown {
+            width: 34px; height: 4px; border-radius: 0 0 2px 2px;
+        }
         .theme-mini.tm-mono-matrix .theme-mini-crown {
-            border-radius: 99px;
-            margin-top: 1px;
+            width: 28px; height: 5px; border-radius: 99px;
+            border: 1px solid rgba(255,255,255,0.24);
+        }
+        .theme-mini.tm-spatial-vision .theme-mini-crown {
+            width: 32px; height: 5px; border-radius: 99px;
+            border: 1px solid rgba(255,255,255,0.45);
+        }
+        .theme-mini.tm-cyber-prism .theme-mini-crown {
+            width: 36px; height: 5px; border-radius: 0;
+            clip-path: polygon(0 0, 100% 0, calc(100% - 4px) 100%, 4px 100%);
         }
         .theme-mini-dock {
-            width: 72%; height: 8px;
-            border-radius: 4px;
-            display: flex; align-items: center; justify-content: center; gap: 3px;
+            width: 76%; height: 11px;
+            border-radius: 5px;
+            display: flex; align-items: center; justify-content: center; gap: 4px;
             border: 1px solid rgba(255,255,255,0.16);
         }
-        .theme-mini.tm-spatial-vision .theme-mini-dock { border-radius: 99px; width: 78%; }
-        .theme-mini.tm-linear-precision .theme-mini-dock { border-radius: 2px; width: 88%; }
-        .theme-mini.tm-cyber-prism .theme-mini-dock { border-radius: 2px; width: 90%; border-top: 1.5px solid; }
-        .theme-mini-dot { width: 3.5px; height: 3.5px; border-radius: 50%; }
+        .theme-mini.tm-bento-silk .theme-mini-dock {
+            width: 76%; border-radius: 6px; border-color: rgba(20,22,26,0.12);
+            box-shadow: 0 2px 5px rgba(20,22,26,0.14);
+        }
+        .theme-mini.tm-linear-precision .theme-mini-dock {
+            border-radius: 2px; width: 88%; border-color: rgba(255,255,255,0.18);
+        }
+        .theme-mini.tm-mono-matrix .theme-mini-dock {
+            border-radius: 99px; width: 82%; border: 1px solid rgba(255,255,255,0.24);
+        }
+        .theme-mini.tm-spatial-vision .theme-mini-dock {
+            border-radius: 99px; width: 80%; border: 1px solid rgba(255,255,255,0.42);
+        }
+        .theme-mini.tm-cyber-prism .theme-mini-dock {
+            border-radius: 1px; width: 92%; border-top: 1.5px solid;
+        }
+        .theme-mini-dot { width: 4.5px; height: 4.5px; border-radius: 50%; }
+        .theme-mini.tm-linear-precision .theme-mini-dot { width: 6px; height: 3px; border-radius: 1px; }
+        .theme-mini.tm-cyber-prism .theme-mini-dot { width: 6px; height: 3px; border-radius: 0; }
+        .theme-mini.tm-mono-matrix .theme-mini-dot { width: 5px; height: 5px; border: 1px solid rgba(255,255,255,0.55); }
+        .theme-mini.tm-spatial-vision .theme-mini-dot { width: 5.5px; height: 5.5px; box-shadow: 0 0 0 1px rgba(255,255,255,0.45); }
         .theme-card-meta {
             display: flex; align-items: center; justify-content: space-between; gap: 4px; min-width: 0;
         }
@@ -970,6 +1056,323 @@ public static partial class AuroraSurfaceTemplates
             padding: 5px 8px; border-radius: 10px;
             background: var(--bg-inset); border: 1px solid var(--border-subtle);
             font-size: 11.5px;
+        }
+
+        /* ========== 2026 ARCHITECTURAL COMMAND DECK STYLES (Unmistakable Visual Paradigms) ========== */
+
+        /* 1. LIQUID GLASS 26 — Refractive optical glass lenses with luminous inner top highlights */
+        body.style-liquid-glass .card {
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.085) 0%, rgba(255,255,255,0.02) 45%, transparent 100%),
+                var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.14);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.22);
+        }
+        body.style-liquid-glass .tab.active {
+            box-shadow: 0 4px 16px -4px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.34);
+        }
+        body.style-liquid-glass .tile.on {
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), 0 6px 18px -8px var(--accent-glow);
+        }
+
+        /* 2. BENTO SILK — Tactile Elevated Porcelain Bento Cards, Recessed Track & White Paper Tabs (Zero Neon!) */
+        body.style-bento-silk.mode-light .card {
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid rgba(20, 22, 26, 0.09);
+            box-shadow: 0 3px 10px -3px rgba(20, 22, 26, 0.08), 0 1px 2px rgba(20, 22, 26, 0.05);
+        }
+        body.style-bento-silk.mode-light .tabs {
+            background: rgba(20, 22, 26, 0.065);
+            border: 1px solid rgba(20, 22, 26, 0.08);
+            border-radius: 13px;
+            padding: 3px;
+        }
+        body.style-bento-silk.mode-light .tab {
+            border-radius: 10px;
+        }
+        body.style-bento-silk.mode-light .tab.active {
+            background: #FFFFFF;
+            color: var(--text-1);
+            box-shadow: 0 2px 6px rgba(20, 22, 26, 0.12), 0 0 0 1px rgba(20, 22, 26, 0.06);
+        }
+        body.style-bento-silk.mode-light .tile {
+            background: rgba(247, 245, 240, 0.85);
+            border: 1px solid rgba(20, 22, 26, 0.09);
+            border-bottom-width: 2px;
+        }
+        body.style-bento-silk.mode-light .tile:hover {
+            background: #FFFFFF;
+            border-color: rgba(20, 22, 26, 0.16);
+        }
+        body.style-bento-silk.mode-light .tile.on {
+            background: rgba(var(--a1-rgb), 0.10);
+            border-color: var(--accent-1);
+        }
+        body.style-bento-silk.mode-light .tile.on .t-icon {
+            background: var(--accent-1);
+            color: var(--accent-ink);
+        }
+        body.style-bento-silk.mode-light .media-hero {
+            background: rgba(247, 245, 240, 0.90);
+            border: 1px solid rgba(20, 22, 26, 0.10);
+        }
+        body.style-bento-silk.mode-light .color-studio {
+            background: rgba(20, 22, 26, 0.038);
+            border-color: rgba(20, 22, 26, 0.08);
+        }
+        body.style-bento-silk.mode-light .omni-input-wrap {
+            background: #FFFFFF;
+            box-shadow: 0 2px 10px -4px rgba(20, 22, 26, 0.12);
+        }
+
+        /* 3. LINEAR SWISS — Bottom-Underline Tabs, Header-Ruled Flat Cards, Left-Rail Active Tiles (Zero Glow!) */
+        body.style-linear-precision .tabs {
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--border-subtle);
+            border-radius: 0;
+            padding: 0;
+            gap: 2px;
+        }
+        body.style-linear-precision .tab {
+            border-radius: 6px 6px 0 0;
+            padding: 7px 12px;
+        }
+        body.style-linear-precision .tab:hover {
+            background: rgba(255, 255, 255, 0.035);
+        }
+        body.style-linear-precision .tab.active {
+            background: rgba(var(--a1-rgb), 0.09);
+            color: var(--text-1);
+            box-shadow: inset 0 -2px 0 var(--accent-1);
+        }
+        body.style-linear-precision .card {
+            background: rgba(255, 255, 255, 0.022);
+            border: 1px solid var(--border-subtle);
+            border-radius: 7px;
+            padding: 11px 12px;
+        }
+        body.style-linear-precision .card-title {
+            padding-bottom: 7px;
+            margin-bottom: 9px;
+            border-bottom: 1px solid var(--border-subtle);
+            font-size: 10px;
+            letter-spacing: 0.09em;
+        }
+        body.style-linear-precision .tile {
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.02);
+        }
+        body.style-linear-precision .tile.on {
+            background: rgba(var(--a1-rgb), 0.09);
+            border-color: var(--border-rim);
+            border-left: 3px solid var(--accent-1);
+        }
+        body.style-linear-precision .tile .t-icon { border-radius: 5px; }
+        body.style-linear-precision .media-hero {
+            background: rgba(255, 255, 255, 0.025);
+            border: 1px solid var(--border-rim);
+            border-left: 3px solid var(--accent-1);
+            border-radius: 7px;
+        }
+        body.style-linear-precision .omni-input-wrap {
+            border-radius: 7px;
+            border-width: 1px;
+            box-shadow: none;
+        }
+        body.style-linear-precision .cal-day.today {
+            background: var(--accent-1);
+            border-radius: 6px;
+        }
+
+        /* 4. MONO MATRIX — Industrial Hardware Modules, Dashed Borders, Inverted Mono Tabs & Square Bullet Titles! */
+        body.style-mono-matrix .tabs {
+            background: transparent;
+            border: 1px dashed var(--border-rim);
+            border-radius: 999px;
+            padding: 3px;
+            gap: 4px;
+        }
+        body.style-mono-matrix .tab {
+            text-transform: uppercase;
+            font-size: 10.5px;
+            padding: 5px 11px;
+        }
+        body.style-mono-matrix .tab.active {
+            background: var(--text-1);
+            color: var(--bg-glass-1);
+            font-weight: 800;
+        }
+        body.style-mono-matrix .card {
+            background:
+                radial-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+                var(--bg-card);
+            background-size: 10px 10px, 100% 100%;
+            border: 1px dashed var(--border-rim);
+            border-radius: 12px;
+        }
+        body.style-mono-matrix .card-title .card-title-l::before {
+            content: '▪';
+            color: var(--accent-1);
+            font-size: 12px;
+            line-height: 1;
+            margin-right: 1px;
+        }
+        body.style-mono-matrix .studio-sec {
+            border-top-style: dashed;
+        }
+        body.style-mono-matrix .tile {
+            border-radius: 14px;
+            border: 1px solid var(--border-subtle);
+        }
+        body.style-mono-matrix .tile:hover {
+            border-style: dashed;
+            border-color: var(--accent-1);
+        }
+        body.style-mono-matrix .tile .t-icon {
+            border-radius: 50%;
+            border: 1px solid var(--border-rim);
+        }
+        body.style-mono-matrix .tile.on {
+            background: rgba(var(--a1-rgb), 0.14);
+            border: 1.5px solid var(--accent-1);
+        }
+        body.style-mono-matrix .tile.on .t-icon {
+            background: var(--accent-1);
+            color: var(--accent-ink);
+            border-color: var(--accent-1);
+        }
+        body.style-mono-matrix .media-hero {
+            border-style: dashed;
+            border-radius: 14px;
+        }
+        body.style-mono-matrix .omni-input-wrap {
+            border-radius: 999px;
+            padding: 9px 16px;
+        }
+        body.style-mono-matrix .cal-day { border-radius: 50%; }
+        body.style-mono-matrix .cal-day.today { background: var(--accent-1); }
+
+        /* 5. SPATIAL VISION — Plush visionOS Frosted Capsules, Luminous White-Glass Active Lens & Circular Pods! */
+        body.style-spatial-vision #crown.expanded {
+            border-radius: 30px;
+            padding: 16px 18px;
+        }
+        body.style-spatial-vision .tabs {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 999px;
+            padding: 4px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24);
+        }
+        body.style-spatial-vision .tab {
+            border-radius: 999px;
+            padding: 6px 14px;
+        }
+        body.style-spatial-vision .tab.active {
+            background: rgba(255, 255, 255, 0.24);
+            color: #FFFFFF;
+            border: 1px solid rgba(255, 255, 255, 0.44);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.56), 0 6px 18px -6px rgba(0, 0, 0, 0.40);
+        }
+        body.style-spatial-vision .card {
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.065);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.24);
+        }
+        body.style-spatial-vision .tile {
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        body.style-spatial-vision .tile:hover {
+            background: rgba(255, 255, 255, 0.14);
+            border-color: rgba(255, 255, 255, 0.36);
+        }
+        body.style-spatial-vision .tile .t-icon {
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.11);
+        }
+        body.style-spatial-vision .tile.on {
+            background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.22), rgba(var(--a1-rgb),0.22));
+            border-color: rgba(255, 255, 255, 0.46);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 8px 22px -8px var(--accent-glow);
+        }
+        body.style-spatial-vision .media-hero {
+            border-radius: 22px;
+            border-color: rgba(255, 255, 255, 0.26);
+        }
+        body.style-spatial-vision .omni-input-wrap {
+            border-radius: 999px;
+            padding: 10px 18px;
+            border-color: rgba(255, 255, 255, 0.40);
+        }
+
+        /* 6. CYBER HUD — Tactical Corner-Bracketed Panels, Top-Laser HUD Tabs & Monospace // Headers! */
+        body.style-cyber-prism .tabs {
+            background: rgba(0, 0, 0, 0.38);
+            border: 1px solid rgba(var(--a1-rgb), 0.28);
+            border-radius: 3px;
+            padding: 3px;
+            gap: 3px;
+        }
+        body.style-cyber-prism .tab {
+            border-radius: 2px;
+            text-transform: uppercase;
+            font-size: 10.5px;
+            padding: 6px 11px;
+            border: 1px solid transparent;
+        }
+        body.style-cyber-prism .tab.active {
+            background: rgba(var(--a1-rgb), 0.18);
+            color: var(--accent-1);
+            border-color: rgba(var(--a1-rgb), 0.55);
+            box-shadow: inset 0 2px 0 var(--accent-1), 0 0 14px -5px var(--accent-glow);
+        }
+        body.style-cyber-prism .card {
+            border-radius: 3px;
+            background:
+                linear-gradient(var(--accent-1), var(--accent-1)) 0 0 / 8px 1.5px no-repeat,
+                linear-gradient(var(--accent-1), var(--accent-1)) 0 0 / 1.5px 8px no-repeat,
+                linear-gradient(var(--accent-2), var(--accent-2)) 100% 100% / 8px 1.5px no-repeat,
+                linear-gradient(var(--accent-2), var(--accent-2)) 100% 100% / 1.5px 8px no-repeat,
+                rgba(var(--a1-rgb), 0.035);
+            border: 1px solid rgba(var(--a1-rgb), 0.22);
+        }
+        body.style-cyber-prism .card-title .card-title-l::before {
+            content: '//';
+            color: var(--accent-1);
+            font-family: var(--font-mono);
+            font-weight: 800;
+            margin-right: 2px;
+        }
+        body.style-cyber-prism .tile {
+            border-radius: 3px;
+            border: 1px solid rgba(var(--a1-rgb), 0.18);
+            background: rgba(var(--a1-rgb), 0.03);
+        }
+        body.style-cyber-prism .tile .t-icon { border-radius: 3px; }
+        body.style-cyber-prism .tile.on {
+            background: linear-gradient(90deg, rgba(var(--a1-rgb), 0.22), rgba(var(--a2-rgb), 0.08));
+            border-color: var(--accent-1);
+            border-left: 3px solid var(--accent-1);
+            box-shadow: inset 0 0 16px -6px var(--accent-glow);
+        }
+        body.style-cyber-prism .media-hero {
+            border-radius: 3px;
+            border-left: 3px solid var(--accent-1);
+        }
+        body.style-cyber-prism .omni-input-wrap {
+            border-radius: 3px;
+            border-left: 3px solid var(--accent-1);
+        }
+        body.style-cyber-prism .app-card,
+        body.style-cyber-prism .omni-row,
+        body.style-cyber-prism .tray-item,
+        body.style-cyber-prism .cal-day,
+        body.style-cyber-prism .clip-card {
+            border-radius: 3px;
         }
         """";
 }

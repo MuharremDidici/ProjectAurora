@@ -993,5 +993,325 @@ public static partial class AuroraSurfaceTemplates
         body.edge-right .dock-v-badge { display: inline-flex; }
         body.edge-left .radial-stem-pip,
         body.edge-right .radial-stem-pip { display: none; }
+
+        /* ========== 2026 ARCHITECTURAL DOCK STYLES (Distinct Silhouettes, Framing & Indicators) ========== */
+
+        /* 1. LIQUID GLASS 26 — Optical specular refraction bar + luminous droplet pill */
+        body.style-liquid-glass #dockBar:not(.pinned-bar):not(.tucked)::after {
+            content: '';
+            position: absolute;
+            top: 1px; left: 14%; right: 14%; height: 1.5px;
+            border-radius: 99px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.48), transparent);
+            pointer-events: none;
+        }
+        body.style-liquid-glass .dock-item:hover {
+            background: radial-gradient(circle at 50% 25%, rgba(255,255,255,0.18), rgba(255,255,255,0.04));
+            border-color: rgba(255,255,255,0.22);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.34);
+        }
+        body.style-liquid-glass .dock-item.active .dock-dot {
+            width: 16px; height: 3.5px;
+            box-shadow: 0 0 10px var(--accent-glow), 0 -3px 12px var(--accent-glow);
+        }
+
+        /* 2. BENTO SILK — Sculpted Porcelain Ceramic Tray, Elevated White Icon Wells & Matte Dieter Rams Dot */
+        body.style-bento-silk #dockBar:not(.pinned-bar):not(.tucked) {
+            border-radius: 22px;
+            padding: calc(7px * var(--ds)) calc(12px * var(--ds));
+        }
+        body.style-bento-silk.mode-light #dockBar.pinned-bar {
+            border-top: 1px solid rgba(20, 22, 26, 0.13) !important;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.96);
+        }
+        body.style-bento-silk .dock-item {
+            border-radius: 13px;
+        }
+        body.style-bento-silk.mode-light .dock-item:hover {
+            background: rgba(255, 255, 255, 0.92);
+            border-color: rgba(20, 22, 26, 0.12);
+            box-shadow: 0 4px 12px -4px rgba(20, 22, 26, 0.18), 0 1px 2px rgba(20, 22, 26, 0.08);
+        }
+        body.style-bento-silk.mode-light .dock-item.active {
+            background: #FFFFFF;
+            border-color: rgba(20, 22, 26, 0.14);
+            box-shadow: 0 5px 14px -5px rgba(20, 22, 26, 0.22), inset 0 -1px 0 rgba(20, 22, 26, 0.06);
+        }
+        body.style-bento-silk .dock-item.active .dock-dot {
+            width: 5px; height: 5px; border-radius: 50%;
+            background: var(--accent-1);
+            box-shadow: none !important;
+            bottom: -3px;
+        }
+        body.style-bento-silk .dock-item.running:not(.active) .dock-dot {
+            width: 4px; height: 4px; border-radius: 50%;
+            background: var(--text-2);
+            box-shadow: none !important;
+        }
+        body.style-bento-silk.edge-left .dock-item.active .dock-dot,
+        body.style-bento-silk.edge-right .dock-item.active .dock-dot {
+            width: 5px; height: 5px; border-radius: 50%;
+        }
+        body.style-bento-silk.mode-light .search-pill {
+            background: rgba(20, 22, 26, 0.055);
+            border-color: rgba(20, 22, 26, 0.10);
+            box-shadow: inset 0 1px 2px rgba(20, 22, 26, 0.07);
+            border-radius: 11px;
+        }
+        body.style-bento-silk .hover-label {
+            border-radius: 10px;
+            box-shadow: 0 10px 24px -6px rgba(20, 22, 26, 0.22);
+        }
+
+        /* 3. LINEAR SWISS — Flat Anodized Razor Bar, 7px Framed Tiles & Sharp 2px Underline (Zero Glow!) */
+        body.style-linear-precision #dockBar:not(.pinned-bar):not(.tucked) {
+            border-radius: 10px;
+            padding: calc(5px * var(--ds)) calc(9px * var(--ds));
+            gap: calc(4px * var(--ds));
+        }
+        body.style-linear-precision #dockBar.pinned-bar {
+            border-top: 1px solid var(--border-rim) !important;
+            box-shadow: none;
+        }
+        body.style-linear-precision .dock-item {
+            border-radius: 7px;
+            background: rgba(255, 255, 255, 0.022);
+            border: 1px solid rgba(255, 255, 255, 0.045);
+            transition: background 0.10s ease, border-color 0.10s ease;
+        }
+        body.style-linear-precision .dock-item:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-rim);
+        }
+        body.style-linear-precision .dock-item.active {
+            background: rgba(var(--a1-rgb), 0.10);
+            border-color: rgba(var(--a1-rgb), 0.34);
+        }
+        body.style-linear-precision .dock-item.active .dock-dot {
+            width: 22px; height: 2px; border-radius: 1px;
+            background: var(--accent-1);
+            box-shadow: none !important;
+            bottom: 0;
+        }
+        body.style-linear-precision .dock-item.running:not(.active) .dock-dot {
+            width: 8px; height: 2px; border-radius: 1px;
+            box-shadow: none !important;
+            bottom: 0;
+        }
+        body.style-linear-precision.edge-left .dock-item.active .dock-dot,
+        body.style-linear-precision.edge-right .dock-item.active .dock-dot {
+            width: 2px; height: 20px; border-radius: 1px;
+            background: var(--accent-1);
+        }
+        body.style-linear-precision .search-pill {
+            border-radius: 6px;
+            background: var(--bg-inset);
+            border: 1px solid var(--border-rim);
+            font-family: var(--font-mono);
+            font-size: calc(10.5px * var(--ds));
+        }
+        body.style-linear-precision .hover-label {
+            border-radius: 6px;
+            font-size: 10.5px;
+            box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.65);
+        }
+        body.style-linear-precision #dockBar.tucked {
+            border-radius: 2px;
+            height: 3px; min-height: 3px;
+            background: var(--accent-1);
+            box-shadow: none;
+        }
+
+        /* 4. MONO MATRIX — Full Stadium Dot-Matrix Chassis, 50% Machined Sockets & 3-Dot Hardware LEDs! */
+        body.style-mono-matrix #dockBar:not(.pinned-bar):not(.tucked) {
+            border-radius: 999px;
+            padding: calc(7px * var(--ds)) calc(15px * var(--ds));
+            gap: calc(7px * var(--ds));
+        }
+        body.style-mono-matrix #dockBar.pinned-bar {
+            border-top: 1.5px dashed rgba(255, 255, 255, 0.24) !important;
+            box-shadow: none;
+        }
+        body.style-mono-matrix.mode-light #dockBar.pinned-bar {
+            border-top-color: rgba(15, 23, 42, 0.24) !important;
+        }
+        body.style-mono-matrix .dock-item {
+            border-radius: 50% !important;
+            background: rgba(255, 255, 255, 0.045);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+        }
+        body.style-mono-matrix.mode-light .dock-item {
+            background: rgba(15, 23, 42, 0.05);
+            border-color: rgba(15, 23, 42, 0.16);
+        }
+        body.style-mono-matrix .dock-item:hover {
+            border-style: dashed;
+            border-color: var(--accent-1);
+            background: rgba(var(--a1-rgb), 0.10);
+        }
+        body.style-mono-matrix .dock-item.active {
+            border: 1.5px solid var(--accent-1);
+            background: rgba(var(--a1-rgb), 0.14);
+            box-shadow: inset 0 0 0 2px rgba(var(--a1-rgb), 0.12);
+        }
+        body.style-mono-matrix .dock-item.active .dock-dot {
+            width: 3.5px; height: 3.5px; border-radius: 50%;
+            background: var(--accent-1);
+            box-shadow: -6px 0 0 var(--accent-1), 6px 0 0 var(--accent-1), 0 0 8px var(--accent-1);
+            bottom: -4px;
+        }
+        body.style-mono-matrix .dock-item.running:not(.active) .dock-dot {
+            width: 3.5px; height: 3.5px; border-radius: 50%;
+            background: var(--text-2);
+            bottom: -4px;
+        }
+        body.style-mono-matrix.edge-left .dock-item.active .dock-dot,
+        body.style-mono-matrix.edge-right .dock-item.active .dock-dot {
+            width: 3.5px; height: 3.5px; border-radius: 50%;
+            background: var(--accent-1);
+            box-shadow: 0 -6px 0 var(--accent-1), 0 6px 0 var(--accent-1), 0 0 8px var(--accent-1);
+        }
+        body.style-mono-matrix .folder-chip,
+        body.style-mono-matrix .dock-pin-btn {
+            border-radius: 50% !important;
+            border: 1px solid var(--border-subtle);
+        }
+        body.style-mono-matrix .search-pill {
+            border-radius: 999px;
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-size: calc(10px * var(--ds));
+            border: 1px solid var(--border-rim);
+        }
+        body.style-mono-matrix .dock-sep {
+            width: 0;
+            border-left: 1px dashed var(--border-rim);
+            background: transparent;
+        }
+        body.style-mono-matrix .radial-disc {
+            background:
+                radial-gradient(rgba(255, 255, 255, 0.11) 1px, transparent 1px),
+                var(--radial-disc-bg);
+            background-size: 8px 8px, 100% 100%;
+            border-style: dashed;
+        }
+
+        /* 5. SPATIAL VISION — Floating Full-Stadium visionOS Capsule & Luminous Circular Gaze Halos! */
+        body.style-spatial-vision .dock-stage:not(.pinned-bar-stage):not(.tucked-stage) {
+            padding-bottom: 13px;
+        }
+        body.style-spatial-vision #dockBar:not(.pinned-bar):not(.tucked) {
+            border-radius: 999px;
+            padding: calc(8px * var(--ds)) calc(16px * var(--ds));
+            gap: calc(8px * var(--ds));
+        }
+        body.style-spatial-vision #dockBar.pinned-bar {
+            border-top: 1.5px solid rgba(255, 255, 255, 0.30) !important;
+            box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.36);
+        }
+        body.style-spatial-vision .dock-item {
+            border-radius: 50% !important;
+        }
+        body.style-spatial-vision .dock-item:hover {
+            background: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.09) 74%);
+            border: 1px solid rgba(255, 255, 255, 0.44);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.56), 0 8px 20px -4px rgba(0, 0, 0, 0.38);
+        }
+        body.style-spatial-vision .dock-item.active {
+            background: radial-gradient(circle at 50% 28%, rgba(255, 255, 255, 0.28), rgba(var(--a1-rgb), 0.22));
+            border: 1.5px solid rgba(255, 255, 255, 0.54);
+            box-shadow: 0 0 0 2.5px rgba(var(--a1-rgb), 0.26), 0 0 18px var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.62);
+        }
+        body.style-spatial-vision .dock-item.active .dock-dot {
+            width: 5px; height: 5px; border-radius: 50%;
+            background: #FFFFFF;
+            box-shadow: 0 0 10px #FFFFFF, 0 0 14px var(--accent-1);
+            bottom: -4px;
+        }
+        body.style-spatial-vision .search-pill {
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.11);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+        }
+        body.style-spatial-vision .folder-chip,
+        body.style-spatial-vision .dock-pin-btn {
+            border-radius: 50% !important;
+        }
+        body.style-spatial-vision .hover-label {
+            border-radius: 999px;
+            padding: 4px 12px;
+            border-color: rgba(255, 255, 255, 0.30);
+        }
+
+        /* 6. CYBER HUD — Angular Tactical Deck, Blueprint Grid, Laser Rail & Neon Bay Reticles! */
+        body.style-cyber-prism #dockBar:not(.pinned-bar):not(.tucked) {
+            border-radius: 3px;
+            padding: calc(6px * var(--ds)) calc(12px * var(--ds));
+            gap: calc(5px * var(--ds));
+        }
+        body.style-cyber-prism #dockBar.pinned-bar {
+            border-top: 2px solid var(--accent-1) !important;
+            box-shadow: inset 0 2px 18px -6px rgba(var(--a1-rgb), 0.38);
+        }
+        body.style-cyber-prism .dock-item {
+            border-radius: 3px;
+            background: rgba(var(--a1-rgb), 0.035);
+            border: 1px solid rgba(var(--a1-rgb), 0.16);
+        }
+        body.style-cyber-prism .dock-item:hover {
+            border-color: var(--accent-1);
+            background: rgba(var(--a1-rgb), 0.14);
+            box-shadow: inset 0 0 12px rgba(var(--a1-rgb), 0.24), 0 0 12px -4px var(--accent-glow);
+        }
+        body.style-cyber-prism .dock-item.active {
+            border-color: var(--accent-1);
+            background: linear-gradient(180deg, rgba(var(--a1-rgb), 0.20), rgba(var(--a2-rgb), 0.12));
+            box-shadow: inset 0 0 14px rgba(var(--a1-rgb), 0.22);
+        }
+        body.style-cyber-prism .dock-item.active .dock-dot {
+            width: 24px; height: 2.5px; border-radius: 0;
+            background: var(--accent-1);
+            box-shadow: 0 0 10px var(--accent-1), 0 -4px 12px var(--accent-glow);
+            bottom: 0;
+        }
+        body.style-cyber-prism .dock-item.running:not(.active) .dock-dot {
+            width: 10px; height: 2px; border-radius: 0;
+            background: var(--accent-2);
+            bottom: 0;
+        }
+        body.style-cyber-prism.edge-left .dock-item.active .dock-dot,
+        body.style-cyber-prism.edge-right .dock-item.active .dock-dot {
+            width: 2.5px; height: 22px; border-radius: 0;
+            background: var(--accent-1);
+        }
+        body.style-cyber-prism .search-pill {
+            border-radius: 3px;
+            border: 1px solid rgba(var(--a1-rgb), 0.34);
+            border-left: 3px solid var(--accent-1);
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+            font-size: calc(10px * var(--ds));
+            letter-spacing: 0.06em;
+        }
+        body.style-cyber-prism .hover-label {
+            border-radius: 2px;
+            border-color: var(--accent-1);
+            font-family: var(--font-mono);
+            font-size: 10.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        body.style-cyber-prism #dockBar.tucked {
+            border-radius: 0;
+            height: 3px; min-height: 3px;
+            background: linear-gradient(90deg, transparent, var(--accent-1) 15%, var(--accent-2) 85%, transparent);
+            box-shadow: 0 0 14px var(--accent-1);
+        }
+        body.style-cyber-prism .radial-disc {
+            border-color: var(--accent-1);
+            box-shadow: 0 0 28px -8px var(--accent-glow), inset 0 0 28px rgba(var(--a1-rgb), 0.12);
+        }
         """";
 }

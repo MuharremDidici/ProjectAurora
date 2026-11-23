@@ -187,7 +187,7 @@ public static class BuiltInThemes
     public static AuroraThemeTokens AuroraGlassDark { get; } = new(
         Id: "aurora-glass-dark",
         DisplayName: "Liquid Glass 26",
-        Description: "Optik katmanlı buzlu cam, üst kırılma kenarlığı ve akıcı kapsül formu.",
+        Description: "Kavisli optik cam, üst kırılma yansıması ve süzülen akıcı simge ışığı.",
         Family: AuroraThemeFamily.AuroraGlass,
         ColorMode: AuroraColorMode.Dark,
         Colors: new ColorTokens(
@@ -219,14 +219,14 @@ public static class BuiltInThemes
     public static AuroraThemeTokens AuroraGlassLight { get; } = AuroraGlassDark with
     {
         Id = "aurora-glass-light",
-        DisplayName = "Bento Silk (Açık)",
-        Description = "Sıcak porselen açık yüzeyler, yüzen üst ada ve İskandinav yumuşak derinlik.",
+        DisplayName = "Bento Silk",
+        Description = "Katmanlı beyaz porselen kartlar, doğal gün ışığı derinliği ve sıfır neon yalınlık.",
         ColorMode = AuroraColorMode.Light,
         Colors = new ColorTokens(
-            Canvas: "#F2F0EB",
-            Surface1: "#FAF9F6",
-            Surface2: "#F0EEE9",
-            Surface3: "#E5E2DB",
+            Canvas: "#ECE9E2",
+            Surface1: "#F7F5F0",
+            Surface2: "#ECE8E0",
+            Surface3: "#E2DDD3",
             SurfaceElevated: "#FFFFFF",
             TextPrimary: "#14161A",
             TextSecondary: "#4A515E",
@@ -240,22 +240,22 @@ public static class BuiltInThemes
             StateDanger: "#E11D48",
             StateInfo: "#2563EB",
             FocusRing: "#2563EB"),
-        Material = new MaterialTokens(AuroraBlurLevel.Standard, SurfaceOpacity: 0.94, ShadowIntensity: 0.22, AmbientGradientEnabled: false),
+        Material = new MaterialTokens(AuroraBlurLevel.Standard, SurfaceOpacity: 0.96, ShadowIntensity: 0.22, AmbientGradientEnabled: false),
         VisualStyle = "bento-silk"
     };
 
     public static AuroraThemeTokens ObsidianProDark { get; } = new(
         Id: "obsidian-pro-dark",
-        DisplayName: "Linear Precision",
-        Description: "Mat karbon yüzeyler, jilet keskinliğinde 1px çizgiler ve sıfır gürültülü profesyonel düzen.",
+        DisplayName: "Linear Swiss",
+        Description: "Mat karbon yüzey, altı çizgili sekmeler, 1px İsviçre çizgileri ve sıfır parlama.",
         Family: AuroraThemeFamily.ObsidianPro,
         ColorMode: AuroraColorMode.Dark,
         Colors: new ColorTokens(
             Canvas: "#090A0D",
             Surface1: "#101217",
-            Surface2: "#171A21",
-            Surface3: "#202530",
-            SurfaceElevated: "#1A1E27",
+            Surface2: "#161920",
+            Surface3: "#1E232D",
+            SurfaceElevated: "#181C24",
             TextPrimary: "#F4F6F9",
             TextSecondary: "#A3AEBE",
             TextDisabled: "#636D7E",
@@ -271,7 +271,7 @@ public static class BuiltInThemes
         Typography: new TypographyTokens(ScaleFactor: 0.96),
         Spacing: new SpacingTokens(0.92),
         Radius: new RadiusTokens(0.72),
-        Material: new MaterialTokens(AuroraBlurLevel.Subtle, SurfaceOpacity: 0.96, ShadowIntensity: 0.28, AmbientGradientEnabled: false),
+        Material: new MaterialTokens(AuroraBlurLevel.Subtle, SurfaceOpacity: 0.97, ShadowIntensity: 0.28, AmbientGradientEnabled: false),
         Motion: new MotionTokens(100, 150, 200, ReducedMotion: false, PauseWhenHidden: true),
         IconSizeDip: 20.0,
         VisualStyle: "linear-precision");
@@ -279,7 +279,7 @@ public static class BuiltInThemes
     public static AuroraThemeTokens MonoMatrixDark { get; } = new(
         Id: "mono-matrix-dark",
         DisplayName: "Mono Matrix",
-        Description: "Endüstriyel dot-matrix doku, monospace telemetri ve dairesel sinyal LED göstergeleri.",
+        Description: "Nokta matris doku, dairesel donanım soketleri, 3'lü LED göstergeler ve mono tipografi.",
         Family: AuroraThemeFamily.MonoMatrix,
         ColorMode: AuroraColorMode.Dark,
         Colors: new ColorTokens(
@@ -311,7 +311,7 @@ public static class BuiltInThemes
     public static AuroraThemeTokens AuroraFlowDark { get; } = new(
         Id: "aurora-flow-dark",
         DisplayName: "Spatial Vision",
-        Description: "Tam kapsül uzamsal cam, dairesel ikon haleleri ve havada süzülen dinamik üst ada.",
+        Description: "Tam kapsül uzamsal form, çift buzlu cam kenarlık ve dairesel odak haleleri.",
         Family: AuroraThemeFamily.AuroraFlow,
         ColorMode: AuroraColorMode.Dark,
         Colors: new ColorTokens(
@@ -342,8 +342,8 @@ public static class BuiltInThemes
 
     public static AuroraThemeTokens NebulaDark { get; } = new(
         Id: "nebula-dark",
-        DisplayName: "Cyber Prism",
-        Description: "Derin OLED siyah yüzey, kenar aydınlatmalı ince ışık şeridi ve keskin teknik HUD hatları.",
+        DisplayName: "Cyber HUD",
+        Description: "Açılı trapez üst çentik, köşe nişangah çerçeveleri, teknik ızgara ve lazer izi.",
         Family: AuroraThemeFamily.Nebula,
         ColorMode: AuroraColorMode.Dark,
         Colors: new ColorTokens(
@@ -367,7 +367,7 @@ public static class BuiltInThemes
         Typography: new TypographyTokens(),
         Spacing: new SpacingTokens(1.0),
         Radius: new RadiusTokens(0.70),
-        Material: new MaterialTokens(AuroraBlurLevel.Standard, SurfaceOpacity: 0.93, ShadowIntensity: 0.52, AmbientGradientEnabled: true),
+        Material: new MaterialTokens(AuroraBlurLevel.Standard, SurfaceOpacity: 0.94, ShadowIntensity: 0.52, AmbientGradientEnabled: true),
         Motion: new MotionTokens(110, 175, 240, ReducedMotion: false, PauseWhenHidden: true),
         IconSizeDip: 22.0,
         VisualStyle: "cyber-prism");

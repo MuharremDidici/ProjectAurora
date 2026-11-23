@@ -156,21 +156,63 @@ internal sealed partial class AuroraDesktopCoordinator
         return (new Rectangle(crownX, crownY, crownW, crownH), dockRect);
     }
 
-    private void SyncDockWorkAreaReservation()
+    private void SyncDockWorkAreaReservation(bool forceReapply = false)
     {
         if (!_appBarService.IsNativeTaskbarSuppressed)
             return;
 
-        _appBarService.ApplyDockWorkAreaReservation(
+        bool changed = _appBarService.ApplyDockWorkAreaReservation(
             _shellPrefs.EffectiveDockEdge,
             _shellPrefs.EffectiveDockScalePercent,
             _shellPrefs.EffectiveReserveDockWorkArea,
-            _shellPrefs.EffectiveDockDensity);
+            _shellPrefs.EffectiveDockDensity,
+            forceReapply: forceReapply);
+
+        if (changed)
+        {
+            ScheduleOneShotMaximizedWindowRefit();
+        }
     }
 
     /// <summary>
-    /// Re-enforces Dock WorkArea reservation after Windows Explorer asynchronously processes
-    /// SHAppBarMessage(ABM_SETSTATE, ABS_AUTOHIDE) or a display topology change (~150–900 ms).
+    /// Single one-shot post-transition check (~160ms after an explicit Pin/Mode/Edge/Scale change,
+    /// NEVER repeating) so any lagging Chromium/Electron/WhatsApp window snaps cleanly to the new
+    /// WorkArea while windows already resized by Windows Explorer are left completely untouched.
+    /// </summary>
+    private void ScheduleOneShotMaximizedWindowRefit()
+    {
+        int seq = Interlocked.Increment(ref _workAreaRefitSeq);
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(160);
+                if (seq != Volatile.Read(ref _workAreaRefitSeq))
+                    return;
+
+                var prim = GetPrimaryMonitorHost();
+                if (prim is not null && !prim.CrownForm.IsDisposed && prim.CrownForm.IsHandleCreated)
+                {
+                    prim.CrownForm.BeginInvoke(() =>
+                    {
+                        if (seq != Volatile.Read(ref _workAreaRefitSeq))
+                            return;
+                        _appBarService.RefitMismatchedMaximizedWindowsOnce();
+                        EvaluateFullscreenYieldPerMonitor();
+                    });
+                }
+                else
+                {
+                    _appBarService.RefitMismatchedMaximizedWindowsOnce();
+                }
+            }
+            catch { }
+        });
+    }
+
+    /// <summary>
+    /// Single delayed reapply after Windows Explorer asynchronously settles
+    /// SHAppBarMessage(ABM_SETSTATE, ABS_AUTOHIDE) or a display topology change (~550ms).
     /// </summary>
     private void ScheduleDockWorkAreaReapply()
     {
@@ -179,23 +221,20 @@ internal sealed partial class AuroraDesktopCoordinator
 
         _ = Task.Run(async () =>
         {
-            foreach (int delayMs in new[] { 450, 1250 })
+            try
             {
-                try
+                await Task.Delay(550);
+                var prim = GetPrimaryMonitorHost();
+                if (prim is not null && !prim.CrownForm.IsDisposed && prim.CrownForm.IsHandleCreated)
                 {
-                    await Task.Delay(delayMs);
-                    var prim = GetPrimaryMonitorHost();
-                    if (prim is not null && !prim.CrownForm.IsDisposed && prim.CrownForm.IsHandleCreated)
-                    {
-                        prim.CrownForm.BeginInvoke(() => SyncDockWorkAreaReservation());
-                    }
-                    else
-                    {
-                        SyncDockWorkAreaReservation();
-                    }
+                    prim.CrownForm.BeginInvoke(() => SyncDockWorkAreaReservation(forceReapply: true));
                 }
-                catch { }
+                else
+                {
+                    SyncDockWorkAreaReservation(forceReapply: true);
+                }
             }
+            catch { }
         });
     }
 

@@ -69,14 +69,14 @@ internal sealed partial class AuroraDesktopCoordinator
 
     private static string GetThemeStyleTag(string visualStyle) => visualStyle switch
     {
-        "liquid-glass" => "Optik Cam",
-        "bento-silk" => "Porselen Açık",
-        "linear-precision" => "Mat Karbon",
-        "mono-matrix" => "Dot-Matrix",
-        "spatial-vision" => "Uzamsal Kapsül",
-        "cyber-prism" => "OLED HUD",
+        "liquid-glass" => "Refraktif Cam",
+        "bento-silk" => "Porselen",
+        "linear-precision" => "İsviçre Pro",
+        "mono-matrix" => "Donanım",
+        "spatial-vision" => "Uzamsal",
+        "cyber-prism" => "Taktik HUD",
         "high-contrast" => "WCAG AAA",
-        _ => "Modern Cam"
+        _ => "Modern Stil"
     };
 
     private (AuroraThemeTokens Effective, AuroraThemeTokens Base, bool HasCustomColors) ResolveEffectiveCustomizedTheme()

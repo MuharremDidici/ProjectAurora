@@ -86,7 +86,9 @@ public static partial class AuroraSurfaceTemplates
                 if (r.width > 0 && r.height > 0) {
                     const padX = (id === 'crown' && !expanded && !crownHovered) ? 18 : 4;
                     const padB = (id === 'crown' && !expanded && !crownHovered) ? 10 : 4;
-                    rects.push({ x: r.left - padX, y: Math.max(0, r.top - 4), w: r.width + padX * 2, h: r.height + padB + 4 });
+                    const yTop = (id === 'crown' && !expanded) ? 0 : Math.max(0, r.top - 4);
+                    const extraTop = Math.max(0, r.top - yTop);
+                    rects.push({ x: r.left - padX, y: yTop, w: r.width + padX * 2, h: r.height + extraTop + padB });
                 }
             }
             window.chrome.webview.postMessage({
@@ -1091,14 +1093,24 @@ public static partial class AuroraSurfaceTemplates
                                     const s2 = active ? (c.surface2 || t.surface2) : (t.surface2 || '#162038');
                                     const ac1 = active ? (c.accentPrimary || t.accent) : (t.accent || '#38BDF8');
                                     const ac2 = active ? (c.accentSecondary || t.accent2) : (t.accent2 || ac1);
+                                    let miniBg = `background:linear-gradient(145deg,${s1},${s2});`;
+                                    if (vs === 'mono-matrix') {
+                                        miniBg = `background:radial-gradient(rgba(255,255,255,0.22) 1px, transparent 1px) 0 0 / 6px 6px, linear-gradient(145deg,${s1},${s2});`;
+                                    } else if (vs === 'cyber-prism') {
+                                        miniBg = `background:linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px) 0 0 / 8px 8px, linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px) 0 0 / 8px 8px, linear-gradient(145deg,${s1},${s2});border-top-color:${ac1};`;
+                                    } else if (vs === 'bento-silk') {
+                                        miniBg = `background:linear-gradient(180deg,${s2},${s1});`;
+                                    }
+                                    const miniDockBg = vs === 'bento-silk' ? '#FFFFFF' : s2;
+                                    const miniCrownBg = vs === 'bento-silk' ? '#FFFFFF' : ac1;
                                     return `
                                     <div class="theme-card ${active ? 'active' : ''}" onclick="send('applyTheme',{id:'${t.id}'})" title="${escHtml(t.desc || t.name)}">
-                                        <div class="theme-mini tm-${escHtml(vs)}" style="background:linear-gradient(145deg,${s1},${s2});">
-                                            <div class="theme-mini-crown" style="background:${ac1};"></div>
-                                            <div class="theme-mini-dock" style="background:${s2};border-color:${vs==='cyber-prism'?ac1:'rgba(255,255,255,0.18)'};">
+                                        <div class="theme-mini tm-${escHtml(vs)}" style="${miniBg}">
+                                            <div class="theme-mini-crown" style="background:${miniCrownBg};"></div>
+                                            <div class="theme-mini-dock" style="background:${miniDockBg};border-color:${vs==='cyber-prism'?ac1:(vs==='bento-silk'?'rgba(20,22,26,0.14)':'rgba(255,255,255,0.22)')};">
                                                 <span class="theme-mini-dot" style="background:${ac1};"></span>
                                                 <span class="theme-mini-dot" style="background:${ac2};"></span>
-                                                <span class="theme-mini-dot" style="background:${t.isLight ? '#14161A' : '#E2E8F0'};opacity:0.65;"></span>
+                                                <span class="theme-mini-dot" style="background:${t.isLight ? '#14161A' : '#E2E8F0'};opacity:0.75;"></span>
                                             </div>
                                         </div>
                                         <div class="theme-card-meta">
@@ -1640,12 +1652,12 @@ public static partial class AuroraSurfaceTemplates
                     { badge: 'Sistem', title: 'Ekranı Kilitle', sub: 'Lock PC', kw: 'kilit lock oturum', run: () => send('lockPc') },
                     { badge: 'Görünüm', title: 'Sabit Bar ↔ Akıllı Kaçınma (Yüzen Dock) Değiştir', sub: 'Sabit ince görev çubuğu ile yüzen Intellihide arası geçiş', kw: 'sabit bar dock pin intellihide akilli kacinma yuzen', run: () => send('toggleDockPinMode') },
                     { badge: 'Görünüm', title: 'Sabit Bar Düzeni: Merkez / 3 Bölgeli Değiştir', sub: 'Sabit bar ikon hizalamasını değiştir', kw: 'bar duzen merkez 3 bolgeli split layout', run: () => send('toggleDockBarLayout') },
-                    { badge: 'Tema', title: 'Liquid Glass 26 Teması', sub: 'Optik katmanlı buzlu cam (Koyu)', kw: 'liquid glass 26 cam koyu tema aurora', run: () => send('applyTheme', { id: 'aurora-glass-dark' }) },
-                    { badge: 'Tema', title: 'Bento Silk (Açık) Teması', sub: 'Sıcak porselen açık yüzeyler ve yüzen üst ada', kw: 'acik tema light bento silk porselen', run: () => send('applyTheme', { id: 'aurora-glass-light' }) },
-                    { badge: 'Tema', title: 'Linear Precision Teması', sub: 'Mat karbon yüzey ve jilet 1px çizgiler', kw: 'linear precision obsidian koyu karbon tema', run: () => send('applyTheme', { id: 'obsidian-pro-dark' }) },
-                    { badge: 'Tema', title: 'Mono Matrix Teması', sub: 'Endüstriyel dot-matrix doku ve sinyal LED', kw: 'mono matrix nothing endustriyel dot tema', run: () => send('applyTheme', { id: 'mono-matrix-dark' }) },
-                    { badge: 'Tema', title: 'Spatial Vision Teması', sub: 'Tam kapsül uzamsal cam ve dairesel ikon haleleri', kw: 'spatial vision kapsul uzamsal tema flow', run: () => send('applyTheme', { id: 'aurora-flow-dark' }) },
-                    { badge: 'Tema', title: 'Cyber Prism Teması', sub: 'Derin OLED kenar aydınlatmalı teknik HUD', kw: 'cyber prism nebula oled siber tema', run: () => send('applyTheme', { id: 'nebula-dark' }) }
+                    { badge: 'Tema', title: 'Liquid Glass 26 Teması', sub: 'Kavisli optik cam ve üst kırılma yansıması', kw: 'liquid glass 26 cam koyu tema aurora', run: () => send('applyTheme', { id: 'aurora-glass-dark' }) },
+                    { badge: 'Tema', title: 'Bento Silk Teması', sub: 'Katmanlı beyaz porselen kartlar ve doğal derinlik', kw: 'acik tema light bento silk porselen', run: () => send('applyTheme', { id: 'aurora-glass-light' }) },
+                    { badge: 'Tema', title: 'Linear Swiss Teması', sub: 'Mat karbon yüzey, altı çizgili sekmeler ve 1px çizgiler', kw: 'linear swiss precision obsidian koyu karbon tema', run: () => send('applyTheme', { id: 'obsidian-pro-dark' }) },
+                    { badge: 'Tema', title: 'Mono Matrix Teması', sub: 'Nokta matris doku, dairesel soketler ve 3lü LED', kw: 'mono matrix nothing endustriyel dot tema', run: () => send('applyTheme', { id: 'mono-matrix-dark' }) },
+                    { badge: 'Tema', title: 'Spatial Vision Teması', sub: 'Tam kapsül uzamsal cam ve dairesel odak haleleri', kw: 'spatial vision kapsul uzamsal tema flow', run: () => send('applyTheme', { id: 'aurora-flow-dark' }) },
+                    { badge: 'Tema', title: 'Cyber HUD Teması', sub: 'Açılı trapez üst çentik, köşe çerçeveleri ve lazer izi', kw: 'cyber hud prism nebula oled siber tema', run: () => send('applyTheme', { id: 'nebula-dark' }) }
                 ];
                 for (const c of quickCmds) {
                     if (!qNorm) continue;
@@ -2148,11 +2160,11 @@ public static partial class AuroraSurfaceTemplates
                             <span class="tour-setup-lbl">2026 Tema Mimarisi</span>
                             <div style="display:flex;gap:5px;flex-wrap:wrap;flex:1;">
                                 <button class="pill-btn ${curTheme==='aurora-glass-dark'?'accent':''}" onclick="send('applyTheme',{id:'aurora-glass-dark'})">Liquid Glass 26</button>
-                                <button class="pill-btn ${curTheme==='aurora-glass-light'?'accent':''}" onclick="send('applyTheme',{id:'aurora-glass-light'})">Bento Silk (Açık)</button>
-                                <button class="pill-btn ${curTheme==='obsidian-pro-dark'?'accent':''}" onclick="send('applyTheme',{id:'obsidian-pro-dark'})">Linear Precision</button>
+                                <button class="pill-btn ${curTheme==='aurora-glass-light'?'accent':''}" onclick="send('applyTheme',{id:'aurora-glass-light'})">Bento Silk</button>
+                                <button class="pill-btn ${curTheme==='obsidian-pro-dark'?'accent':''}" onclick="send('applyTheme',{id:'obsidian-pro-dark'})">Linear Swiss</button>
                                 <button class="pill-btn ${curTheme==='mono-matrix-dark'?'accent':''}" onclick="send('applyTheme',{id:'mono-matrix-dark'})">Mono Matrix</button>
                                 <button class="pill-btn ${curTheme==='aurora-flow-dark'?'accent':''}" onclick="send('applyTheme',{id:'aurora-flow-dark'})">Spatial Vision</button>
-                                <button class="pill-btn ${curTheme==='nebula-dark'?'accent':''}" onclick="send('applyTheme',{id:'nebula-dark'})">Cyber Prism</button>
+                                <button class="pill-btn ${curTheme==='nebula-dark'?'accent':''}" onclick="send('applyTheme',{id:'nebula-dark'})">Cyber HUD</button>
                                 <button class="pill-btn ${curTheme==='aurora-high-contrast'?'accent':''}" onclick="send('applyTheme',{id:'aurora-high-contrast'})">Yüksek Kontrast</button>
                             </div>
                         </div>

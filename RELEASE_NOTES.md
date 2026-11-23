@@ -1,5 +1,19 @@
 # Project Aurora — Sürüm Notları
 
+## v2.5.1
+> Summary: Sabit Bar ↔ Akıllı Kaçınma geçişinde pencerelerin periyodik büyüyüp küçülmesini tamamen bitiren gerçek Win32 AppBar (`SHAppBarMessage`) altyapısı + sadece renk değil silüet, kart, sekme, simge çerçevesi ve gösterge mimarisiyle tamamen ayrışan 6 modern 2026 görsel stili.
+
+### Öne Çıkan Yenilikler
+- **Sıfır Titreme / Sıfır Yeniden Boyutlandırma Döngüsü (Native Win32 AppBar):** Sabit Bar modunda Windows Explorer ile çakışan periyodik `SPI_SETWORKAREA` zamanlayıcısı tamamen kaldırıldı; yerine her monitör için görünmez, tıklamayı geçiren gerçek Win32 AppBar (`SHAppBarMessage ABM_NEW / ABM_QUERYPOS / ABM_SETPOS / ABM_REMOVE`) kaydı eklendi. Sabit açıldığında tüm açık pencereler tek seferde barın hemen üstüne kusursuz hizalanır; sabit kapatıldığında ise tek seferde %100 tam ekrana açılır ve bir daha asla büyüyüp küçülmez (`DWMWA_EXTENDED_FRAME_BOUNDS` ile Electron/Chromium/WhatsApp pencereleri dahil). `explorer.exe` yeniden başlarsa `TaskbarCreated` mesajıyla otomatik toparlar.
+- **Gerçekten Farklı 6 Modern Görsel Stil (Renk Değişimi Değil, Tam Mimari Fark):**
+  - **Liquid Glass 26:** Kavisli optik cam üst kırılma yansıması, akıcı üst damla ve parlak kapsül gösterge.
+  - **Bento Silk:** Sıfır neon parlamalı, sıcak taş tepsi üzerinde yükseltilmiş mat beyaz porselen bento kartlar, porselen sekme çubuğu ve net nokta göstergesi.
+  - **Linear Swiss:** Mat karbon yüzey, alt çizgili İsviçre sekme çubuğu (`border-bottom`), başlık ayraçlı düz kartlar, sol şeritli aktif anahtarlar ve jilet 2px simge alt çizgisi.
+  - **Mono Matrix:** Görünür nokta matris doku, kesikli donanım çerçeveleri, %50 tam dairesel simge soketleri, 3'lü LED matris aktif göstergesi ve büyük harfli mono tipografi.
+  - **Spatial Vision:** Havada süzülen çift cam kenarlıklı tam kapsül üst ada ve Dock, %50 dairesel ışık halkalı simge baloncukları ve buzlu beyaz uzamsal odak sekmeleri.
+  - **Cyber HUD:** Açılı trapez (`clip-path`) üst çentik, köşe nişangah çerçeveleri, teknik blueprint ızgarası, üst lazer rayı ve köşeli taktik simge bölmeleri.
+- **Tema Bazlı Renk Özelleştirme Korundu:** Tüm 6 görsel stilin kendi renkleri (Vurgu 1/2, Yüzey 1/2, Metin, Opaklık) Stüdyo içinden canlı olarak özelleştirilmeye devam eder.
+
 ## v2.5.0
 > Summary: Tek tıkla Sabit Bar (52 px uçtan uca ince görev çubuğu, 0 px duvar kağıdı sızıntısı) ↔ Yüzen Intellihide geçişi + 6 farklı 2026 mimari tema (Liquid Glass 26, Bento Silk, Linear Precision, Mono Matrix, Spatial Vision, Cyber Prism) ve her tema için ayrı kaydedilen canlı renk özelleştirici.
 

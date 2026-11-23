@@ -290,5 +290,23 @@ public sealed class V22ProSuiteTests
 
         var waFull = Win32AppBarService.ComputeDockReservedWorkArea(mon, 1.0, "Bottom", 100, reserve: false);
         Assert.Equal(mon, waFull);
+
+        // Native AppBar reservation strip must match (monitor - workArea) pixel-for-pixel
+        var stripBottom = Win32AppBarService.ComputeAppBarReservationRect(mon, 1.0, "Bottom", 100, "Standard");
+        Assert.Equal(0, stripBottom.X);
+        Assert.Equal(waBottom.Bottom, stripBottom.Y);
+        Assert.Equal(2560, stripBottom.Width);
+        Assert.Equal(52, stripBottom.Height);
+
+        var stripLeft = Win32AppBarService.ComputeAppBarReservationRect(mon, 1.0, "Left", 100, "Standard");
+        Assert.Equal(0, stripLeft.X);
+        Assert.Equal(0, stripLeft.Y);
+        Assert.Equal(58, stripLeft.Width);
+        Assert.Equal(1440, stripLeft.Height);
+
+        var stripRight = Win32AppBarService.ComputeAppBarReservationRect(mon, 1.0, "Right", 100, "Compact");
+        Assert.Equal(2560 - 50, stripRight.X);
+        Assert.Equal(50, stripRight.Width);
+        Assert.Equal(1440, stripRight.Height);
     }
 }

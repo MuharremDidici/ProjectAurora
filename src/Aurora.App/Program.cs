@@ -258,6 +258,7 @@ internal sealed partial class AuroraDesktopCoordinator : ApplicationContext
     private bool _refreshInFlight;
     private bool _allMonitorsFullscreen;
     private bool _metricsTabActive;
+    private int _workAreaRefitSeq;
 
     private readonly List<nint> _minimizedForDesktop = [];
     private readonly Dictionary<string, string> _agendaNotes = new(StringComparer.OrdinalIgnoreCase);
@@ -445,6 +446,14 @@ internal sealed partial class AuroraDesktopCoordinator : ApplicationContext
             {
                 SampleClipboardSafely();
                 _ = RefreshAndBroadcastStateAsync(windowTopologyOnly: true);
+            }, () =>
+            {
+                if (_appBarService.IsNativeTaskbarSuppressed)
+                {
+                    _appBarService.HideNativeWindowsTaskbar();
+                    SyncDockWorkAreaReservation(forceReapply: true);
+                    ScheduleDockWorkAreaReapply();
+                }
             });
             _hotkeyWindow.RegisterHotkeys(_shellPrefs.OmniHotkeyPreset);
 
@@ -710,6 +719,7 @@ internal sealed partial class AuroraDesktopCoordinator : ApplicationContext
             _windowEventHook.Start();
 
             // Relaxed 4500ms passive heartbeat (window/audio/clipboard events are instant via native Win32 hooks); yields during fullscreen gaming
+            // WorkArea / AppBar reservations are strictly event-driven (never re-applied on a polling timer!).
             _syncTimer = new System.Windows.Forms.Timer { Interval = 4500 };
             _syncTimer.Tick += async (_, _) =>
             {
@@ -719,7 +729,6 @@ internal sealed partial class AuroraDesktopCoordinator : ApplicationContext
                 }
                 if (!_allMonitorsFullscreen)
                 {
-                    SyncDockWorkAreaReservation();
                     await RefreshAndBroadcastStateAsync(windowTopologyOnly: false);
                 }
             };
@@ -860,7 +869,7 @@ internal sealed partial class AuroraDesktopCoordinator : ApplicationContext
             {
                 await Task.Delay(350);
                 _appBarService.EnforceNativeTaskbarSuppressed();
-                SyncDockWorkAreaReservation();
+                SyncDockWorkAreaReservation(forceReapply: true);
                 ScheduleDockWorkAreaReapply();
                 await ReconcileMonitorHostsAsync();
                 _ = Task.Run(() => { try { _ddcBrightnessService.DiscoverMonitors(); } catch { } });
@@ -932,6 +941,8 @@ internal sealed partial class AuroraDesktopCoordinator : ApplicationContext
         private const int WmClipboardUpdate = 0x031D;
         private readonly Action<int> _onHotkey;
         private readonly Action? _onClipboardUpdated;
+        private readonly Action? _onTaskbarCreated;
+        private readonly int _wmTaskbarCreated;
         private bool _clipboardListenerAdded;
 
         [DllImport("user32.dll", SetLastError = true)]
@@ -939,6 +950,9 @@ internal sealed partial class AuroraDesktopCoordinator : ApplicationContext
 
         [DllImport("user32.dll", SetLastError = true)]
         private static extern bool UnregisterHotKey(nint hWnd, int id);
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern uint RegisterWindowMessageW(string lpString);
 
         [DllImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
@@ -948,10 +962,12 @@ internal sealed partial class AuroraDesktopCoordinator : ApplicationContext
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool RemoveClipboardFormatListener(nint hwnd);
 
-        public HotkeyWindow(Action<int> onHotkey, Action? onClipboardUpdated = null)
+        public HotkeyWindow(Action<int> onHotkey, Action? onClipboardUpdated = null, Action? onTaskbarCreated = null)
         {
             _onHotkey = onHotkey;
             _onClipboardUpdated = onClipboardUpdated;
+            _onTaskbarCreated = onTaskbarCreated;
+            _wmTaskbarCreated = (int)RegisterWindowMessageW("TaskbarCreated");
             CreateHandle(new CreateParams());
             if (Handle != 0 && _onClipboardUpdated is not null)
             {
@@ -987,6 +1003,11 @@ internal sealed partial class AuroraDesktopCoordinator : ApplicationContext
             if (m.Msg == WmClipboardUpdate)
             {
                 _onClipboardUpdated?.Invoke();
+                return;
+            }
+            if (_wmTaskbarCreated != 0 && m.Msg == _wmTaskbarCreated)
+            {
+                _onTaskbarCreated?.Invoke();
                 return;
             }
             base.WndProc(ref m);
