@@ -155,7 +155,13 @@ public static class AuroraSurfaceTemplates
             grid: '<svg class="svg-ic sm" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>',
             refresh: '<svg class="svg-ic sm" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>',
             capsLock: '<svg class="svg-ic sm" viewBox="0 0 24 24"><path d="M12 4 5 12h4v4h6v-4h4L12 4Z"/><line x1="6" y1="20" x2="18" y2="20"/></svg>',
-            moveWin: '<svg class="svg-ic sm" viewBox="0 0 24 24"><polyline points="5 9 2 12 5 15"/><polyline points="9 5 12 2 15 5"/><polyline points="15 19 12 22 9 19"/><polyline points="19 9 22 12 19 15"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/></svg>'
+            moveWin: '<svg class="svg-ic sm" viewBox="0 0 24 24"><polyline points="5 9 2 12 5 15"/><polyline points="9 5 12 2 15 5"/><polyline points="15 19 12 22 9 19"/><polyline points="19 9 22 12 19 15"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/></svg>',
+            qr: '<svg class="svg-ic sm" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v3h-1M14 20h3M20 20h1"/></svg>',
+            record: '<svg class="svg-ic sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5" fill="currentColor"/></svg>',
+            camera: '<svg class="svg-ic sm" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>',
+            battery: '<svg class="svg-ic sm" viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 11v2"/></svg>',
+            zip: '<svg class="svg-ic sm" viewBox="0 0 24 24"><path d="M21 8v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8"/><path d="M23 4H1v4h22V4z"/><path d="M10 12h4"/></svg>',
+            extLink: '<svg class="svg-ic sm" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>'
         };
         """;
 
@@ -605,8 +611,11 @@ public static class AuroraSurfaceTemplates
         }
         .shelf-file-row img { width: 22px; height: 22px; border-radius: 5px; flex-shrink: 0; }
         .power-strip {
-            display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;
+            display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap;
             padding-top: 9px; border-top: 1px solid var(--border-subtle);
+        }
+        .power-strip .pill-btn {
+            height: 26px; padding: 0 8px; font-size: 11px; gap: 4px;
         }
 
         /* Toast */
@@ -748,6 +757,90 @@ public static class AuroraSurfaceTemplates
         .clip-meta { font-size: 10px; color: var(--text-2); display: flex; gap: 5px; align-items: center; margin-top: 2px; }
         .clip-actions { display: inline-flex; gap: 4px; flex-shrink: 0; }
         .clip-actions .micro-btn { width: 25px; height: 25px; border-radius: 7px; }
+        .clip-color-swatch {
+            width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+            border: 1.5px solid rgba(255,255,255,0.28);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), 0 3px 10px rgba(0,0,0,0.35);
+        }
+
+        /* v2.2 Hardware & Productivity Visual Polish */
+        .priv-dot {
+            width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+            display: inline-block;
+        }
+        .priv-dot.cam { background: #22C55E; box-shadow: 0 0 8px #22C55E; }
+        .priv-dot.mic { background: #F97316; box-shadow: 0 0 8px #F97316; }
+        .rec-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: #FB7185; box-shadow: 0 0 10px #FB7185;
+            animation: recBlink 1s ease-in-out infinite alternate;
+        }
+        @keyframes recBlink { from { opacity: 1; } to { opacity: 0.35; } }
+        #crown.droplet.rec-live {
+            height: 33px; padding: 0 12px; gap: 8px;
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 12px 32px -6px rgba(251,113,133,0.42), inset 0 -1px 0 rgba(251,113,133,0.70);
+        }
+        .drop-targets-row {
+            display: flex; align-items: center; gap: 8px; width: 100%;
+        }
+        .drop-target-slot {
+            display: inline-flex; align-items: center; gap: 7px;
+            height: 36px; padding: 0 14px; border-radius: 999px;
+            background: var(--bg-card); border: 1px dashed var(--border-rim);
+            color: var(--text-1); font-size: 11.5px; font-weight: 700;
+            transition: all 0.14s var(--ease);
+        }
+        .drop-target-slot.active-zone {
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+            color: var(--accent-ink); border-style: solid; border-color: transparent;
+            transform: scale(1.04);
+            box-shadow: 0 8px 20px -4px rgba(56,189,248,0.50);
+        }
+        #qrShareCard {
+            pointer-events: auto;
+            margin-top: 8px; width: min(360px, calc(100vw - 24px));
+            border-radius: 22px; padding: 14px;
+            display: none; flex-direction: column; gap: 10px;
+            animation: flyIn 0.20s var(--spring);
+        }
+        #qrShareCard.open { display: flex; }
+        .qr-svg-wrap {
+            width: 148px; height: 148px; border-radius: 14px;
+            overflow: hidden; background: #FFFFFF; padding: 4px;
+            flex-shrink: 0; box-shadow: 0 10px 24px -8px rgba(0,0,0,0.55);
+        }
+        .qr-svg-wrap svg { width: 100%; height: 100%; display: block; }
+        .bt-batt-strip {
+            display: flex; flex-wrap: wrap; gap: 5px;
+            margin-top: 7px; padding-top: 7px; border-top: 1px solid var(--border-subtle);
+        }
+        .bt-batt-chip {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 4px 8px; border-radius: 10px;
+            background: var(--bg-inset); border: 1px solid var(--border-subtle);
+            font-size: 10.5px; font-weight: 700; max-width: 192px;
+        }
+        .bt-batt-bar {
+            width: 26px; height: 5px; border-radius: 99px;
+            background: rgba(148,163,184,0.22); overflow: hidden; flex-shrink: 0;
+        }
+        .bt-batt-fill { height: 100%; border-radius: 99px; }
+        .spark-tile {
+            padding: 9px 11px; border-radius: 13px; border: 1px solid var(--border-subtle);
+            background: var(--bg-card); display: flex; flex-direction: column; gap: 5px;
+        }
+        .spark-tile.accent-tile {
+            background: linear-gradient(145deg, rgba(56,189,248,0.12), rgba(129,140,248,0.08));
+            border-color: rgba(56,189,248,0.34);
+        }
+        .spark-svg { width: 100%; height: 28px; display: block; overflow: visible; }
+        .proc-row {
+            display: flex; align-items: center; justify-content: space-between; gap: 8px;
+            padding: 5px 8px; border-radius: 10px;
+            background: var(--bg-inset); border: 1px solid var(--border-subtle);
+            font-size: 11.5px;
+        }
         </style>
         </head>
         <body>
@@ -756,6 +849,7 @@ public static class AuroraSurfaceTemplates
                 <div id="crown" class="glass-shell droplet"></div>
             </div>
             <div id="osdFloat" class="glass-shell"></div>
+            <div id="qrShareCard" class="glass-shell"></div>
             <div id="trayPopup" class="glass-shell flyout-panel"></div>
             <div id="calendarPopup" class="glass-shell flyout-panel"></div>
             <div id="dropPopup" class="glass-shell flyout-panel"></div>
@@ -785,6 +879,7 @@ public static class AuroraSurfaceTemplates
                         <button class="pill-btn" onclick="send('showDesktop');closeOmni();" id="pwDesktop"></button>
                         <button class="pill-btn" onclick="closeOmni();send('startScreenOcr');" id="pwOcr" title="Ekrandaki herhangi bir görsel veya videodan metin kopyala (Çevrimdışı OCR)"></button>
                         <button class="pill-btn" onclick="closeOmni();send('startColorPicker');" id="pwColor" title="Ekrandan piksel rengi al (HEX / RGB / HSL)"></button>
+                        <button class="pill-btn" onclick="closeOmni();send('startGifRecording');" id="pwGif" title="Seçili ekran bölgesini animasyonlu GIF olarak kaydet (10 FPS)"></button>
                         <button class="pill-btn" onclick="send('launchPath',{path:'ms-screenclip:'});closeOmni();" id="pwSnip"></button>
                         <button class="pill-btn" onclick="send('launchPath',{path:'taskmgr.exe'});closeOmni();" id="pwTask"></button>
                         <button class="pill-btn" onclick="send('openRecycleBin');closeOmni();" id="pwTrash"></button>
@@ -834,6 +929,8 @@ public static class AuroraSurfaceTemplates
         let calMonthOffset = 0;
         let selectedDateKey = '';
         let isDraggingFile = false;
+        let dragDropZone = 'shelf';
+        let liveGifRec = null;
         let omniIdx = 0;
         let currentOmniItems = [];
         let scratchText = '';
@@ -864,7 +961,7 @@ public static class AuroraSurfaceTemplates
         }
 
         function isAnyPopupOpen() {
-            return expanded || omniOpen || trayOpen || calOpen || dropOpen || notifOpen || isOnboardingVisible();
+            return expanded || omniOpen || trayOpen || calOpen || dropOpen || notifOpen || isOnboardingVisible() || Boolean(state?.qrShare);
         }
 
         function syncFocusDemand() {
@@ -874,7 +971,7 @@ public static class AuroraSurfaceTemplates
 
         function reportHitRects() {
             const rects = [];
-            for (const id of ['crown', 'trayPopup', 'calendarPopup', 'dropPopup', 'notifPopup', 'onboardingCard', 'omnibar', 'toast']) {
+            for (const id of ['crown', 'qrShareCard', 'trayPopup', 'calendarPopup', 'dropPopup', 'notifPopup', 'onboardingCard', 'omnibar', 'toast']) {
                 const el = document.getElementById(id);
                 if (!el || getComputedStyle(el).display === 'none') continue;
                 const r = el.getBoundingClientRect();
@@ -1013,6 +1110,7 @@ public static class AuroraSurfaceTemplates
             if (activeTab === 'shelf') {
                 core.clipFilter = clipFilter;
                 core.clipCount = state.clipboardCount;
+                core.clipAuto = Boolean(state.clipboardAutoPaste);
                 core.clips = (state.clipboard || []).map(c => `${c.id}:${c.pinned ? 1 : 0}:${c.time}`);
                 core.shelf = (state.dropShelf || []).map(f => f.path);
                 core.vd = state.virtualDesktop?.list?.map(d => `${d.index}:${d.current ? 1 : 0}:${d.name}`);
@@ -1020,6 +1118,9 @@ public static class AuroraSurfaceTemplates
             } else if (activeTab === 'control') {
                 core.wifi = state.wifi;
                 core.bt = state.bluetooth;
+                core.btDevs = (state.btDevices || []).map(d => `${d.id}:${d.percent}`);
+                core.monBr = (state.monitorBrightness || []).map(b => `${b.id}:${b.percent}`);
+                core.gifRec = liveGifRec || state.gifRec;
                 core.quiet = state.quietHours;
                 core.awake = state.awake;
                 core.audio = state.audio;
@@ -1031,6 +1132,7 @@ public static class AuroraSurfaceTemplates
                 core.media = state.media ? `${state.media.title}|${state.media.isPlaying}` : null;
             } else if (activeTab === 'metrics') {
                 core.metrics = state.metrics;
+                core.topProcs = (state.topProcesses || []).map(p => `${p.name}:${p.memoryMb}`);
                 core.weather = state.weather;
                 core.notifs = (state.notifications || []).map(n => n.id);
             } else {
@@ -1056,7 +1158,50 @@ public static class AuroraSurfaceTemplates
             if (osd.kind === 'brightness') return SVG.sun;
             if (osd.kind === 'mic') return osd.active ? SVG.mic : SVG.micOff;
             if (osd.kind === 'capslock' || osd.kind === 'numlock') return SVG.capsLock;
+            if (osd.kind === 'bluetooth' || osd.kind === 'bluetoothLow') return SVG.bluetooth;
             return SVG.vol;
+        }
+
+        function formatRecTime(sec) {
+            const s = Math.max(0, Number(sec) || 0);
+            return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+        }
+
+        function getBattColor(pct) {
+            if (pct <= 15) return 'var(--danger)';
+            if (pct <= 35) return 'var(--warning)';
+            return 'var(--success)';
+        }
+
+        function renderQrShareCard() {
+            const el = document.getElementById('qrShareCard');
+            const qr = state?.qrShare;
+            if (!el || !qr || expanded || omniOpen) {
+                if (el) { el.className = 'glass-shell'; el.innerHTML = ''; }
+                return;
+            }
+            el.className = 'glass-shell open';
+            el.innerHTML = `
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                    <span class="card-title-l" style="font-size:11px;font-weight:800;color:var(--accent-1);text-transform:uppercase;letter-spacing:0.05em;">
+                        ${SVG.qr}<span>Yerel Wi-Fi QR Paylaşım</span>
+                    </span>
+                    <button class="micro-btn" onclick="send('stopQrShare')" title="Paylaşımı Kapat">${SVG.close}</button>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div class="qr-svg-wrap">${qr.svg}</div>
+                    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;">
+                        <div style="font-size:13px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escHtml(qr.name)}">${escHtml(qr.name)}</div>
+                        <div style="font-size:11px;color:var(--text-2);" class="num">${escHtml(qr.size)} · Aynı Wi-Fi</div>
+                        <div style="font-size:10px;color:var(--accent-1);word-break:break-all;font-family:monospace;background:var(--bg-inset);padding:4px 6px;border-radius:7px;">${escHtml(qr.url)}</div>
+                        ${qr.downloads > 0 ? `<div style="font-size:10.5px;font-weight:700;color:var(--success);">✓ ${qr.downloads} kez indirildi</div>` : `<div style="font-size:10.5px;color:var(--text-2);">Telefon kamerasıyla okutun</div>`}
+                    </div>
+                </div>
+                <div style="display:flex;gap:6px;justify-content:flex-end;">
+                    <button class="pill-btn" style="height:26px;font-size:11px;" onclick="send('copyQrUrl')">${SVG.copy}<span>Linki Kopyala</span></button>
+                    <button class="pill-btn accent" style="height:26px;font-size:11px;" onclick="send('stopQrShare')">Tamam</button>
+                </div>
+            `;
         }
 
         function buildOsdInnerHtml(osd) {
@@ -1088,6 +1233,7 @@ public static class AuroraSurfaceTemplates
             renderDropPopup();
             renderNotifPopup();
             renderOnboardingCard();
+            renderQrShareCard();
 
             const osdFloat = document.getElementById('osdFloat');
             const restingDroplet = !expanded && !isDraggingFile && !crownHovered && !crownPinned && !isAnyPopupOpen();
@@ -1133,15 +1279,31 @@ public static class AuroraSurfaceTemplates
                 }
             } else {
                 lastExpandedSig = '';
+                const recState = liveGifRec || state.gifRec || { recording: false, elapsed: 0 };
                 if (isDraggingFile) {
                 lastDropletSig = '';
                 crown.className = 'glass-shell pill drag-over';
                 crown.innerHTML = `
-                    <div style="font-size:12.5px;font-weight:700;color:var(--accent-1);display:flex;align-items:center;gap:8px;">
-                        ${SVG.inbox}
-                        <span>Dosyaları Buraya Bırakın — Aurora Süper Rafına Sabitlensin</span>
+                    <div class="drop-targets-row">
+                        <div class="drop-target-slot ${dragDropZone==='shelf'?'active-zone':''}" data-drop-zone="shelf">
+                            ${SVG.inbox}<span>Süper Rafa Ekle</span>
+                        </div>
+                        <div class="drop-target-slot ${dragDropZone==='qr'?'active-zone':''}" data-drop-zone="qr">
+                            ${SVG.qr}<span>QR ile Telefona Gönder</span>
+                        </div>
+                        <div class="drop-target-slot ${dragDropZone==='convert'?'active-zone':''}" data-drop-zone="convert">
+                            ${SVG.zip}<span>Hızlı Dönüştür / ZIP</span>
+                        </div>
                     </div>
                 `;
+                } else if (recState.recording && !crownHovered && !crownPinned && !isAnyPopupOpen()) {
+                    lastDropletSig = '';
+                    crown.className = 'glass-shell droplet rec-live';
+                    crown.innerHTML = `
+                        <span class="rec-dot"></span>
+                        <span class="num" style="font-size:11.5px;font-weight:800;color:#FB7185;">REC ${formatRecTime(recState.elapsed)}</span>
+                        <button class="pill-btn" style="height:21px;padding:0 9px;font-size:10px;border-color:rgba(251,113,133,0.65);color:#FB7185;" onclick="event.stopPropagation();send('stopGifRecording')">Durdur</button>
+                    `;
                 } else if (!crownHovered && !crownPinned && !isAnyPopupOpen()) {
                     // LIVE HARDWARE OSD MORPH INSIDE QUIET LIQUID DROPLET ("Damla")
                     if (activeOsd) {
@@ -1155,8 +1317,10 @@ public static class AuroraSurfaceTemplates
                         const unread = state.unreadNotifCount || 0;
                         const micMuted = Boolean(state.mic?.supported && state.mic?.muted);
                         const awakeOn = Boolean(state.awake?.active);
-                        const dSig = `${Boolean(media && media.isPlaying)}|${state.focus.running ? state.focus.label : ''}|${awakeOn ? state.awake.shortLabel : ''}|${micMuted}|${unread}|${shelfCount}`;
-                        if (crown.classList.contains('droplet') && !crown.classList.contains('osd-active') && dSig === lastDropletSig) {
+                        const camLive = Boolean(state.privacy?.camera);
+                        const micLive = Boolean(state.privacy?.mic);
+                        const dSig = `${Boolean(media && media.isPlaying)}|${state.focus.running ? state.focus.label : ''}|${awakeOn ? state.awake.shortLabel : ''}|${micMuted}|${unread}|${shelfCount}|${camLive}|${micLive}`;
+                        if (crown.classList.contains('droplet') && !crown.classList.contains('osd-active') && !crown.classList.contains('rec-live') && dSig === lastDropletSig) {
                             const tEl = crown.querySelector('.drop-time');
                             if (tEl && tEl.textContent !== state.clock) tEl.textContent = state.clock;
                             return;
@@ -1166,6 +1330,8 @@ public static class AuroraSurfaceTemplates
                         crown.innerHTML = `
                             <span class="drop-dot"></span>
                             <span class="drop-time num">${escHtml(state.clock)}</span>
+                            ${camLive ? `<span class="priv-dot cam" title="Kamera aktif: ${escHtml((state.privacy.cameraApps||[]).join(', '))}"></span>` : ''}
+                            ${micLive ? `<span class="priv-dot mic" title="Mikrofon aktif: ${escHtml((state.privacy.micApps||[]).join(', '))}"></span>` : ''}
                             ${media && media.isPlaying ? `<div class="eq"><span></span><span></span><span></span></div>` : ''}
                             ${state.focus.running ? `<span class="drop-pill-tag num">${escHtml(state.focus.label)}</span>` : ''}
                             ${awakeOn ? `<span class="drop-pill-tag num" style="color:#F59E0B;background:rgba(245,158,11,0.18);display:inline-flex;align-items:center;gap:3px;">${SVG.coffee}${escHtml(state.awake.shortLabel)}</span>` : ''}
@@ -1224,6 +1390,27 @@ public static class AuroraSurfaceTemplates
                     ${state.awake?.active ? `
                         <button class="pill-btn awake-on num" onclick="send('cycleAwake')" title="${escHtml(state.awake.fullLabel)} • Değiştirmek için tıklayın">${SVG.coffee}<span>${escHtml(state.awake.shortLabel)}</span></button>
                     ` : ''}
+                    ${recState.recording ? `
+                        <button class="pill-btn num" style="border-color:rgba(251,113,133,0.65);color:#FB7185;background:rgba(251,113,133,0.14);" onclick="send('stopGifRecording')" title="GIF Ekran Kaydını Durdur ve Kaydet">
+                            <span class="rec-dot"></span><span>${formatRecTime(recState.elapsed)}</span>
+                        </button>
+                    ` : ''}
+                    ${state.privacy?.camera ? `
+                        <button class="pill-btn" style="border-color:rgba(34,197,94,0.55);color:#4ADE80;background:rgba(34,197,94,0.12);" onclick="send('openUri',{uri:'ms-settings:privacy-webcam'})" title="Kamera aktif: ${escHtml((state.privacy.cameraApps||[]).join(', '))}">
+                            <span class="priv-dot cam"></span><span>${escHtml((state.privacy.cameraApps||['Kamera'])[0])}</span>
+                        </button>
+                    ` : ''}
+                    ${state.privacy?.mic ? `
+                        <button class="pill-btn" style="border-color:rgba(249,115,22,0.55);color:#FB923C;background:rgba(249,115,22,0.12);" onclick="send('toggleMicMute')" title="Mikrofon aktif: ${escHtml((state.privacy.micApps||[]).join(', '))} (Susturmak için tıklayın)">
+                            <span class="priv-dot mic"></span><span>${escHtml((state.privacy.micApps||['Mikrofon'])[0])}</span>
+                        </button>
+                    ` : ''}
+                    ${(state.btDevices || []).length > 0 ? (() => {
+                        const bt = state.btDevices[0];
+                        return `<button class="pill-btn num" style="${bt.percent<=15?'border-color:var(--danger);color:var(--danger);':''}" onclick="activeTab='control';toggleCrown(true)" title="${escHtml(state.btDevices.map(d=>`${d.name}: %${d.percent}`).join(' · '))}">
+                            ${SVG.bluetooth}<span>%${bt.percent}</span>
+                        </button>`;
+                    })() : ''}
                     <div class="sep"></div>
                     <button class="pill-btn ${dropOpen || shelfCount > 0 ? 'accent' : ''}" onclick="toggleDropPopup()" title="Sürükle-Bırak Dosya Rafı (${shelfCount})">
                         ${SVG.inbox}${shelfCount > 0 ? `<span class="num">${shelfCount}</span>` : ''}
@@ -1306,9 +1493,12 @@ public static class AuroraSurfaceTemplates
         function buildControlTab() {
             const m = state.media;
             const sessions = state.audioSessions || [];
+            const monBrights = state.monitorBrightness || [];
+            const btDevs = state.btDevices || [];
+            const recState = liveGifRec || state.gifRec || { recording: false, elapsed: 0 };
             return `
                 <div class="bento-grid">
-                    <div style="display:flex;flex-direction:column;gap:10px;">
+                    <div style="display:flex;flex-direction:column;gap:9px;">
                         <div class="toggle-grid">
                             <div class="tile ${state.wifi.on?'on':''}" onclick="send('toggleWifi')">
                                 <div class="t-row">
@@ -1320,9 +1510,9 @@ public static class AuroraSurfaceTemplates
                             <div class="tile ${state.bluetooth.on?'on':''}" onclick="send('toggleBluetooth')">
                                 <div class="t-row">
                                     <div class="t-icon">${SVG.bluetooth}</div>
-                                    <div style="min-width:0;"><div class="t-name">Bluetooth</div><div class="t-sub">${escHtml(state.bluetooth.status)}</div></div>
+                                    <div style="min-width:0;"><div class="t-name">Bluetooth</div><div class="t-sub">${btDevs.length ? `${btDevs.length} Pil Bağlı` : escHtml(state.bluetooth.status)}</div></div>
                                 </div>
-                                <span class="micro-btn" onclick="event.stopPropagation();send('openUri',{uri:'ms-settings:bluetooth'})">${SVG.settings}</span>
+                                <span class="micro-btn" onclick="event.stopPropagation();send('refreshBluetoothBatteries')" title="Bluetooth cihaz pillerini tara">${SVG.refresh}</span>
                             </div>
                             <div class="tile ${state.quietHours?'on':''}" onclick="send('toggleQuietHours')">
                                 <div class="t-row">
@@ -1339,40 +1529,59 @@ public static class AuroraSurfaceTemplates
                             </div>
                         </div>
 
-                        <div class="card">
-                            <div class="card-title">
-                                <span class="card-title-l">${SVG.vol}<span>Ses, Mikrofon & Parlaklık</span></span>
-                                <div style="display:flex;align-items:center;gap:6px;">
+                        <div class="card" style="padding:11px 12px;flex:1;overflow-y:auto;">
+                            <div class="card-title" style="margin-bottom:7px;">
+                                <span class="card-title-l">${SVG.vol}<span>Ses, DDC/CI Parlaklık & Pil</span></span>
+                                <div style="display:flex;align-items:center;gap:5px;">
                                     ${state.mic?.supported ? `
-                                        <button class="pill-btn ${state.mic.muted ? 'danger-arm' : ''}" style="height:22px;padding:0 8px;font-size:10.5px;" onclick="send('toggleMicMute')" title="${escHtml(state.mic.name)}">
-                                            ${state.mic.muted ? SVG.micOff : SVG.mic}<span>${state.mic.muted ? 'Mikrofon Kapalı' : 'Mikrofon Açık'}</span>
+                                        <button class="pill-btn ${state.mic.muted ? 'danger-arm' : ''}" style="height:21px;padding:0 7px;font-size:10px;" onclick="send('toggleMicMute')" title="${escHtml(state.mic.name)}">
+                                            ${state.mic.muted ? SVG.micOff : SVG.mic}<span>${state.mic.muted ? 'Mik Kapalı' : 'Mik Açık'}</span>
                                         </button>` : ''}
-                                    <span style="cursor:pointer;color:var(--accent-1);" onclick="send('openUri',{uri:'ms-settings:sound'})">Ayarlar</span>
+                                    <button class="micro-btn" style="width:21px;height:21px;" onclick="send('refreshMonitorsBrightness')" title="DDC/CI harici monitör parlaklığını yeniden tara">${SVG.refresh}</button>
                                 </div>
                             </div>
-                            <div class="slider-row">
+                            <div class="slider-row" style="margin-bottom:6px;">
                                 <button class="micro-btn" onclick="send('toggleMute')">${state.audio.muted ? SVG.mute : SVG.vol}</button>
                                 <input type="range" min="0" max="100" value="${state.audio.volume}" oninput="send('setVolume',{value:+this.value})" />
-                                <span class="num" style="width:38px;text-align:right;font-size:12px;font-weight:700;">%${state.audio.volume}</span>
+                                <span class="num" style="width:36px;text-align:right;font-size:11.5px;font-weight:700;">%${state.audio.volume}</span>
                             </div>
-                            ${state.brightness.supported ? `
-                            <div class="slider-row" style="margin-bottom:0;">
+                            ${monBrights.length > 0 ? monBrights.slice(0, 3).map(mb => `
+                            <div class="slider-row" style="margin-bottom:5px;gap:7px;">
+                                <span class="micro-btn" title="${escHtml(mb.name)} (${mb.isInternal ? 'Dahili WMI' : 'Harici DDC/CI'})">${SVG.sun}</span>
+                                <span style="width:76px;font-size:10.5px;font-weight:600;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escHtml(mb.name)}">${escHtml(mb.name)}</span>
+                                <input type="range" min="${mb.isInternal ? 5 : 0}" max="100" value="${mb.percent}" oninput="send('setMonitorBrightness',{id:'${escHtml(mb.id)}',name:'${escHtml(mb.name)}',value:+this.value});this.nextElementSibling.textContent='%'+this.value;" />
+                                <span class="num" style="width:34px;text-align:right;font-size:11px;font-weight:700;">%${mb.percent}</span>
+                            </div>`).join('') : (state.brightness.supported ? `
+                            <div class="slider-row" style="margin-bottom:5px;">
                                 <span class="micro-btn">${SVG.sun}</span>
                                 <input type="range" min="5" max="100" value="${state.brightness.value}" oninput="send('setBrightness',{value:+this.value})" />
-                                <span class="num" style="width:38px;text-align:right;font-size:12px;font-weight:700;">%${state.brightness.value}</span>
-                            </div>` : `<div style="font-size:11px;color:var(--text-2);">Harici monitör parlaklığı için <a style="color:var(--accent-1);cursor:pointer;" onclick="send('openUri',{uri:'ms-settings:display'})">Ekran Ayarları</a></div>`}
+                                <span class="num" style="width:36px;text-align:right;font-size:11.5px;font-weight:700;">%${state.brightness.value}</span>
+                            </div>` : '')}
                             ${(state.audioOutputs || []).length > 1 ? `
                             <div class="audio-out-strip">
                                 ${(state.audioOutputs || []).slice(0, 4).map((ep, idx) => `
-                                    <button class="pill-btn ${ep.isDefault ? 'accent' : ''}" style="height:24px;padding:0 9px;font-size:10.5px;max-width:170px;" onclick="selectAudioOutputIdx(${idx})" title="${escHtml(ep.fullName || ep.name)}">
+                                    <button class="pill-btn ${ep.isDefault ? 'accent' : ''}" style="height:23px;padding:0 8px;font-size:10px;max-width:165px;" onclick="selectAudioOutputIdx(${idx})" title="${escHtml(ep.fullName || ep.name)}">
                                         ${SVG.headphones}<span style="overflow:hidden;text-overflow:ellipsis;">${escHtml(ep.name)}</span>
                                     </button>
                                 `).join('')}
                             </div>` : ''}
+                            ${btDevs.length > 0 ? `
+                            <div class="bt-batt-strip">
+                                ${btDevs.slice(0, 4).map(d => {
+                                    const col = getBattColor(d.percent);
+                                    return `
+                                    <div class="bt-batt-chip" title="${escHtml(d.name)} · %${d.percent} (${escHtml(d.source)})">
+                                        <span style="color:${col};display:inline-flex;">${SVG.bluetooth}</span>
+                                        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(d.name)}</span>
+                                        <div class="bt-batt-bar"><div class="bt-batt-fill" style="width:${d.percent}%;background:${col};"></div></div>
+                                        <span class="num" style="color:${col};">%${d.percent}</span>
+                                    </div>`;
+                                }).join('')}
+                            </div>` : ''}
                         </div>
                     </div>
 
-                    <div style="display:flex;flex-direction:column;gap:10px;">
+                    <div style="display:flex;flex-direction:column;gap:9px;">
                         <div class="media-hero">
                             ${m && m.artwork ? `<img class="media-art" src="data:image/png;base64,${m.artwork}"/>` : `<div class="media-art">${SVG.music}</div>`}
                             <div style="flex:1;min-width:0;">
@@ -1388,13 +1597,14 @@ public static class AuroraSurfaceTemplates
                             </div>
                         </div>
 
-                        <div class="card" style="flex:1;">
+                        <div class="card" style="flex:1;padding:11px 12px;">
                             <div class="card-title">
                                 <span class="card-title-l">${SVG.sliders}<span>Uygulama Ses Mikseri</span></span>
-                                <div style="display:flex;align-items:center;gap:5px;">
+                                <div style="display:flex;align-items:center;gap:4px;">
                                     <button class="pill-btn" style="height:21px;padding:0 7px;font-size:10px;" onclick="expanded=false;renderAll();send('startScreenOcr');" title="Ekrandan Metin Yakala (OCR)">${SVG.scanText}<span>OCR</span></button>
                                     <button class="pill-btn" style="height:21px;padding:0 7px;font-size:10px;" onclick="expanded=false;renderAll();send('startColorPicker');" title="Ekrandan Renk Seç (HEX/RGB)">${SVG.pipette}<span>Renk</span></button>
-                                    <span class="num">Pil %${state.battery.percent}</span>
+                                    <button class="pill-btn ${recState.recording?'danger-arm':''}" style="height:21px;padding:0 7px;font-size:10px;" onclick="expanded=false;renderAll();send('${recState.recording?'stopGifRecording':'startGifRecording'}');" title="Seçili ekran bölgesini animasyonlu GIF kaydet (10 FPS)">${SVG.record}<span>${recState.recording ? formatRecTime(recState.elapsed) : 'GIF'}</span></button>
+                                    <span class="num" style="margin-left:2px;">Pil %${state.battery.percent}</span>
                                 </div>
                             </div>
                             ${sessions.length === 0 ? `<div style="font-size:11.5px;color:var(--text-2);">Şu an ses çalan aktif uygulama oturumu yok.</div>` :
@@ -1451,12 +1661,15 @@ public static class AuroraSurfaceTemplates
                         <div class="card" style="padding:10px 12px;">
                             <div class="card-title" style="margin-bottom:6px;">
                                 <span class="card-title-l">${SVG.inbox}<span>Dosya Rafı (${shelfFiles.length})</span></span>
-                                <span style="cursor:pointer;color:var(--accent-1);" onclick="send('pickShelfFile')">+ Dosya Seç</span>
+                                <div style="display:flex;gap:8px;align-items:center;">
+                                    <span style="cursor:pointer;color:var(--accent-2);" onclick="expanded=false;renderAll();send('pickAndShareQr');" title="Dosya seç ve telefonuna QR ile aktar">QR Gönder</span>
+                                    <span style="cursor:pointer;color:var(--accent-1);" onclick="send('pickShelfFile')">+ Seç</span>
+                                </div>
                             </div>
                             ${shelfFiles.length === 0 ? `
                                 <div class="drop-zone-box" style="padding:9px 10px;" onclick="send('pickShelfFile')">
                                     <div style="font-size:11.5px;font-weight:700;color:var(--accent-1);">Dosyaları Üst Adaya Sürükle-Bırak</div>
-                                    <div style="font-size:10.5px;color:var(--text-2);margin-top:2px;">Geçici çalışma dosyaların elinin altında bekler</div>
+                                    <div style="font-size:10.5px;color:var(--text-2);margin-top:2px;">Raf · QR Telefona Gönder · Hızlı Dönüştür/ZIP</div>
                                 </div>
                             ` : `
                                 <div style="max-height:76px;overflow-y:auto;">
@@ -1466,6 +1679,8 @@ public static class AuroraSurfaceTemplates
                                             <div style="flex:1;min-width:0;cursor:pointer;" onclick="send('openShelfFile',{index:${idx}})" title="${escHtml(f.path)}">
                                                 <div style="font-size:11.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(f.name)}</div>
                                             </div>
+                                            <button class="micro-btn" style="width:22px;height:22px;" onclick="expanded=false;renderAll();send('shareShelfFileQr',{index:${idx}})" title="QR ile Telefona Gönder">${SVG.qr}</button>
+                                            <button class="micro-btn" style="width:22px;height:22px;" onclick="send('convertShelfFile',{index:${idx}})" title="Hızlı Dönüştür / ZIP Sıkıştır">${SVG.zip}</button>
                                             <button class="micro-btn" style="width:22px;height:22px;" onclick="send('revealShelfFile',{index:${idx}})" title="Klasörde Göster">${SVG.folder}</button>
                                             <button class="micro-btn danger" style="width:22px;height:22px;" onclick="send('removeShelfFile',{index:${idx}})" title="Kaldır">${SVG.close}</button>
                                         </div>
@@ -1481,36 +1696,97 @@ public static class AuroraSurfaceTemplates
                     </div>
 
                     <div class="card" style="display:flex;flex-direction:column;min-height:0;overflow:hidden;">
-                        <div class="card-title" style="margin-bottom:8px;flex-wrap:wrap;">
-                            <span class="card-title-l">${SVG.clip}<span>Kalıcı Pano Kasası (${state.clipboardCount ?? clips.length})</span></span>
-                            <div style="display:flex;gap:4px;align-items:center;">
-                                <button class="omni-chip ${clipFilter==='all'?'active':''}" style="height:21px;padding:0 8px;font-size:10.5px;" onclick="setClipFilter('all')">Tümü</button>
-                                <button class="omni-chip ${clipFilter==='pinned'?'active':''}" style="height:21px;padding:0 8px;font-size:10.5px;" onclick="setClipFilter('pinned')">Sabit</button>
-                                <button class="omni-chip ${clipFilter==='text'?'active':''}" style="height:21px;padding:0 8px;font-size:10.5px;" onclick="setClipFilter('text')">Metin</button>
-                                <button class="omni-chip ${clipFilter==='image'?'active':''}" style="height:21px;padding:0 8px;font-size:10.5px;" onclick="setClipFilter('image')">Görsel</button>
-                                <button class="pill-btn" style="height:21px;padding:0 7px;font-size:10px;margin-left:2px;" onclick="send('clearUnpinnedClips')" title="Sabitlenmemiş tüm öğeleri temizle">Temizle</button>
+                        <div class="card-title" style="margin-bottom:7px;flex-wrap:wrap;">
+                            <span class="card-title-l">${SVG.clip}<span>Pano Kasası (${state.clipboardCount ?? clips.length})</span></span>
+                            <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
+                                <button class="pill-btn ${state.clipboardAutoPaste?'accent':''}" style="height:21px;padding:0 7px;font-size:10px;" onclick="send('toggleClipboardAutoPaste')" title="Açıkken öğeye tıklamak önceki pencereye doğrudan Ctrl+V yapar">
+                                    ${SVG.bolt}<span>Oto-Yapıştır</span>
+                                </button>
+                                <button class="omni-chip ${clipFilter==='all'?'active':''}" style="height:21px;padding:0 7px;font-size:10px;" onclick="setClipFilter('all')">Tümü</button>
+                                <button class="omni-chip ${clipFilter==='pinned'?'active':''}" style="height:21px;padding:0 7px;font-size:10px;" onclick="setClipFilter('pinned')">Sabit</button>
+                                <button class="omni-chip ${clipFilter==='text'?'active':''}" style="height:21px;padding:0 7px;font-size:10px;" onclick="setClipFilter('text')">Metin</button>
+                                <button class="omni-chip ${clipFilter==='image'?'active':''}" style="height:21px;padding:0 7px;font-size:10px;" onclick="setClipFilter('image')">Görsel</button>
+                                <button class="pill-btn" style="height:21px;padding:0 6px;font-size:10px;" onclick="send('clearUnpinnedClips')" title="Sabitlenmemiş tüm öğeleri temizle">Temizle</button>
                             </div>
                         </div>
-                        <input id="clipSearchInput" class="clip-search" type="text" value="${escHtml(clipQuery)}" placeholder="Pano geçmişinde ara (metin, renk, kaynak)..." />
+                        <input id="clipSearchInput" class="clip-search" type="text" value="${escHtml(clipQuery)}" placeholder="Pano geçmişinde ara (metin, renk, link, kaynak)..." />
                         <div id="clipVaultList" class="clip-vault-list">${buildClipboardListHtml(clips)}</div>
                     </div>
                 </div>
             `;
         }
 
+        function buildSparklineSvg(values, color, gradId, fixedMax) {
+            const arr = (Array.isArray(values) && values.length >= 2) ? values : [0, 0];
+            const maxV = fixedMax || Math.max(10, ...arr);
+            const w = 160, h = 28, pad = 2;
+            const pts = arr.map((v, i) => {
+                const x = (i / Math.max(1, arr.length - 1)) * w;
+                const y = h - pad - ((Math.max(0, Math.min(maxV, v)) / maxV) * (h - pad * 2));
+                return `${x.toFixed(1)},${y.toFixed(1)}`;
+            });
+            const area = `0,${h} ${pts.join(' ')} ${w},${h}`;
+            return `<svg class="spark-svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+                <defs><linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${color}" stop-opacity="0.34"/><stop offset="100%" stop-color="${color}" stop-opacity="0.02"/></linearGradient></defs>
+                <polygon points="${area}" fill="url(#${gradId})"/>
+                <polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>`;
+        }
+
         function buildMetricsTab() {
             const m = state.metrics;
+            const topProcs = state.topProcesses || [];
+            const cpuSpark = buildSparklineSvg(m.cpuHist, 'var(--accent-1)', 'gCpu', 100);
+            const ramSpark = buildSparklineSvg(m.ramHist, 'var(--accent-2)', 'gRam', 100);
+            const netSpark = buildSparklineSvg(m.netHist, 'var(--success)', 'gNet', 0);
             return `
                 <div class="bento-grid">
-                    <div class="card">
-                        <div class="card-title"><span class="card-title-l">${SVG.activity}<span>Canlı Donanım Telemetrisi</span></span><span>Düşük Yük</span></div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">
-                            <div class="tile on"><div><div class="t-name">CPU</div><div class="t-sub">Gerçek Zamanlı</div></div><div class="num" style="font-size:18px;font-weight:800;">%${m.cpu}</div></div>
-                            <div class="tile on"><div><div class="t-name">RAM</div><div class="t-sub num">${m.ramUsed} / ${m.ramTotal} GB</div></div><div class="num" style="font-size:18px;font-weight:800;">%${m.ramPct}</div></div>
-                            <div class="tile"><div><div class="t-name">İndirme</div><div class="t-sub">Ağ Akışı</div></div><div class="num" style="font-size:13.5px;font-weight:700;">${m.rxKbps} KB/s</div></div>
-                            <div class="tile"><div><div class="t-name">Yükleme</div><div class="t-sub">Ağ Akışı</div></div><div class="num" style="font-size:13.5px;font-weight:700;">${m.txKbps} KB/s</div></div>
+                    <div style="display:flex;flex-direction:column;gap:9px;">
+                        <div class="card" style="padding:11px 12px;">
+                            <div class="card-title" style="margin-bottom:7px;"><span class="card-title-l">${SVG.activity}<span>Canlı Telemetri & Eğriler</span></span><span class="num" style="font-size:10px;color:var(--accent-1);">Canlı 1.5s</span></div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                                <div class="spark-tile accent-tile">
+                                    <div style="display:flex;justify-content:space-between;align-items:baseline;">
+                                        <span class="t-name">CPU</span>
+                                        <span class="num" style="font-size:16px;font-weight:800;">%${m.cpu}</span>
+                                    </div>
+                                    ${cpuSpark}
+                                </div>
+                                <div class="spark-tile accent-tile">
+                                    <div style="display:flex;justify-content:space-between;align-items:baseline;">
+                                        <span class="t-name">RAM</span>
+                                        <span class="num" style="font-size:16px;font-weight:800;">%${m.ramPct}</span>
+                                    </div>
+                                    ${ramSpark}
+                                    <div class="t-sub num" style="margin-top:-2px;">${m.ramUsed} / ${m.ramTotal} GB</div>
+                                </div>
+                                <div class="spark-tile" style="grid-column:span 2;">
+                                    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                                        <span class="t-name">Ağ Akışı</span>
+                                        <span class="num" style="font-size:11.5px;font-weight:700;color:var(--success);">↓ ${m.rxKbps} KB/s · ↑ ${m.txKbps} KB/s</span>
+                                    </div>
+                                    ${netSpark}
+                                </div>
+                            </div>
+                            <div style="margin-top:7px;font-size:10.5px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">GPU: <strong style="color:var(--text-1);">${escHtml(m.gpuName)}</strong></div>
                         </div>
-                        <div style="margin-top:10px;font-size:11.5px;color:var(--text-2);">GPU: <strong style="color:var(--text-1);">${escHtml(m.gpuName)}</strong></div>
+
+                        <div class="card" style="padding:10px 12px;flex:1;">
+                            <div class="card-title" style="margin-bottom:6px;"><span class="card-title-l">${SVG.layers}<span>En Çok RAM Kullananlar (Top 3)</span></span><span>Tek Tık Kapat</span></div>
+                            <div style="display:flex;flex-direction:column;gap:5px;">
+                                ${topProcs.length === 0 ? `<div style="font-size:11px;color:var(--text-2);">Süreç listesi hazırlanıyor...</div>` :
+                                  topProcs.map(p => `
+                                    <div class="proc-row">
+                                        <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                            <strong style="font-weight:700;">${escHtml(p.displayName)}</strong>
+                                            ${p.instances > 1 ? `<span style="font-size:10px;color:var(--text-2);"> (${p.instances})</span>` : ''}
+                                        </div>
+                                        <span class="num" style="font-weight:700;color:var(--accent-1);flex-shrink:0;">${p.memoryMb} MB</span>
+                                        <button class="micro-btn danger" style="width:22px;height:22px;" onclick="send('killTopProcess',{name:'${escHtml(p.name)}',pid:${p.pid}})" title="${escHtml(p.displayName)} uygulamasını güvenli kapat">${SVG.close}</button>
+                                    </div>
+                                  `).join('')}
+                            </div>
+                        </div>
                     </div>
 
                     <div style="display:flex;flex-direction:column;gap:10px;">
@@ -2271,14 +2547,15 @@ public static class AuroraSurfaceTemplates
                 <div class="card-title" style="margin-bottom:0;">
                     <span class="card-title-l">${SVG.inbox}<span>Sürükle-Bırak Dosya Rafı (${files.length})</span></span>
                     <div style="display:flex;gap:5px;">
+                        <button class="pill-btn" style="height:26px;" onclick="toggleDropPopup();send('pickAndShareQr');">${SVG.qr}<span>QR Gönder</span></button>
                         <button class="pill-btn" style="height:26px;" onclick="send('pickShelfFile')">${SVG.plus}<span>Dosya Ekle</span></button>
                         ${files.length > 0 ? `<button class="pill-btn" style="height:26px;" onclick="send('clearShelfFiles')">Temizle</button>` : ''}
                         <button class="micro-btn" onclick="toggleDropPopup()">${SVG.close}</button>
                     </div>
                 </div>
                 <div class="drop-zone-box ${isDraggingFile?'drag-active':''}" onclick="send('pickShelfFile')">
-                    <div style="font-size:12px;font-weight:700;color:var(--accent-1);">Masaüstünden veya Klasörden Dosyayı Üst Damla Adaya Sürükleyin</div>
-                    <div style="font-size:11px;color:var(--text-2);margin-top:3px;">Dosyalar taşınmaz; yalnızca hızlı erişim için burada bekler</div>
+                    <div style="font-size:12px;font-weight:700;color:var(--accent-1);">Dosyayı Üst Damla Adaya Sürükleyin — 3 Akıllı Yuva Açılır</div>
+                    <div style="font-size:11px;color:var(--text-2);margin-top:3px;">Süper Raf · QR ile Telefona Gönder · Hızlı Dönüştür / ZIP</div>
                 </div>
                 ${files.length > 0 ? `
                     <div style="max-height:200px;overflow-y:auto;">
@@ -2289,6 +2566,8 @@ public static class AuroraSurfaceTemplates
                                     <div style="font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(f.name)}</div>
                                     <div style="font-size:10.5px;color:var(--text-2);">${escHtml(f.sizeLabel)}</div>
                                 </div>
+                                <button class="micro-btn" onclick="toggleDropPopup();send('shareShelfFileQr',{index:${idx}})" title="QR ile Telefona Gönder">${SVG.qr}</button>
+                                <button class="micro-btn" onclick="send('convertShelfFile',{index:${idx}})" title="Hızlı Dönüştür / ZIP">${SVG.zip}</button>
                                 <button class="micro-btn" onclick="send('copyText',{text:state.dropShelf[${idx}].path})" title="Yolu Kopyala">${SVG.copy}</button>
                                 <button class="micro-btn" onclick="send('revealShelfFile',{index:${idx}})" title="Klasörde Göster">${SVG.folder}</button>
                                 <button class="micro-btn danger" onclick="send('removeShelfFile',{index:${idx}})" title="Kaldır">${SVG.close}</button>
@@ -2472,26 +2751,36 @@ public static class AuroraSurfaceTemplates
             if (filtered.length === 0) {
                 return `<div style="font-size:11.5px;color:var(--text-2);padding:12px 4px;text-align:center;">${q ? 'Aramanızla eşleşen pano öğesi yok.' : 'Metin veya ekran görüntüsü kopyaladığınızda (Ctrl+C) burada kalıcı olarak saklanır.'}</div>`;
             }
-            return filtered.slice(0, 40).map(c => `
-                <div class="clip-card ${c.pinned ? 'pinned' : ''}" onclick="send('copyClipById',{id:${c.id}})" title="Panoya kopyalamak için tıklayın">
-                    ${c.kind === 'image' && c.thumb
-                        ? `<img class="clip-thumb" src="data:image/png;base64,${c.thumb}"/>`
-                        : `<span style="width:28px;height:28px;border-radius:8px;background:rgba(56,189,248,0.12);color:var(--accent-1);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;">${SVG.copy}</span>`}
+            return filtered.slice(0, 40).map(c => {
+                const rawTxt = (c.text || c.preview || '').trim();
+                const isColor = c.kind === 'text' && (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(rawTxt) || /^rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+/i.test(rawTxt));
+                const isUrl = c.kind === 'text' && /^https?:\/\/\S+$/i.test(rawTxt);
+                const leftVisual = c.kind === 'image' && c.thumb
+                    ? `<img class="clip-thumb" src="data:image/png;base64,${c.thumb}"/>`
+                    : (isColor
+                        ? `<span class="clip-color-swatch" style="background:${escHtml(rawTxt)};" title="Renk Önizleme: ${escHtml(rawTxt)}"></span>`
+                        : `<span style="width:28px;height:28px;border-radius:8px;background:rgba(56,189,248,0.12);color:var(--accent-1);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;">${isUrl ? SVG.globe : SVG.copy}</span>`);
+                return `
+                <div class="clip-card ${c.pinned ? 'pinned' : ''}" onclick="send('copyClipById',{id:${c.id}})" title="${state?.clipboardAutoPaste ? 'Tıklayınca önceki pencereye doğrudan yapıştırır' : 'Panoya kopyalamak için tıklayın'}">
+                    ${leftVisual}
                     <div style="flex:1;min-width:0;">
                         <div class="clip-text-preview">${escHtml(c.preview)}</div>
                         <div class="clip-meta">
                             <span>${escHtml(c.sourceApp || 'Pano')}</span>
                             <span>·</span>
                             <span class="num">${escHtml(c.time || '')}</span>
+                            ${isColor ? `<span style="color:var(--accent-1);font-weight:700;">· Renk</span>` : ''}
+                            ${isUrl ? `<span style="color:var(--accent-2);font-weight:700;">· Bağlantı</span>` : ''}
                             ${c.pinned ? `<span style="color:var(--accent-1);font-weight:700;">· Sabitli</span>` : ''}
                         </div>
                     </div>
                     <div class="clip-actions">
+                        ${isUrl ? `<button class="micro-btn" onclick="event.stopPropagation();send('openUri',{uri:'${escHtml(rawTxt)}'})" title="Tarayıcıda Aç">${SVG.extLink}</button>` : ''}
                         <button class="micro-btn ${c.pinned ? 'active' : ''}" onclick="event.stopPropagation();send('togglePinClip',{id:${c.id}})" title="${c.pinned ? 'Sabitlemeyi Kaldır' : 'Sabitle (Silinmez)'}">${SVG.pin}</button>
                         <button class="micro-btn danger" onclick="event.stopPropagation();send('deleteClip',{id:${c.id}})" title="Sil">${SVG.close}</button>
                     </div>
-                </div>
-            `).join('');
+                </div>`;
+            }).join('');
         }
 
         function cycleDockDensity() {
@@ -2524,6 +2813,7 @@ public static class AuroraSurfaceTemplates
             document.getElementById('pwDesktop').innerHTML = SVG.desktop + '<span>Masaüstü</span>';
             document.getElementById('pwOcr').innerHTML = SVG.scanText + '<span>Metin OCR</span>';
             document.getElementById('pwColor').innerHTML = SVG.pipette + '<span>Renk Seç</span>';
+            document.getElementById('pwGif').innerHTML = SVG.record + '<span>GIF Kaydet</span>';
             document.getElementById('pwSnip').innerHTML = SVG.scissors + '<span>Alıntı</span>';
             document.getElementById('pwTask').innerHTML = SVG.activity + '<span>Görev Yön.</span>';
             document.getElementById('pwTrash').innerHTML = SVG.trash + '<span>Çöp</span>';
@@ -2573,24 +2863,36 @@ public static class AuroraSurfaceTemplates
 
             window.addEventListener('dragover', e => {
                 e.preventDefault();
+                const slot = e.target?.closest?.('[data-drop-zone]');
+                const nextZone = slot ? slot.getAttribute('data-drop-zone') : dragDropZone;
+                const zoneChanged = nextZone && nextZone !== dragDropZone;
+                if (zoneChanged) dragDropZone = nextZone;
                 if (!isDraggingFile) {
                     isDraggingFile = true;
+                    dragDropZone = nextZone || 'shelf';
                     crownHovered = true;
                     renderAll();
+                } else if (zoneChanged) {
+                    document.querySelectorAll('.drop-target-slot').forEach(el => {
+                        el.classList.toggle('active-zone', el.getAttribute('data-drop-zone') === dragDropZone);
+                    });
                 }
             });
             window.addEventListener('dragleave', e => {
                 if (e.relatedTarget === null) {
                     isDraggingFile = false;
+                    dragDropZone = 'shelf';
                     renderAll();
                 }
             });
             window.addEventListener('drop', e => {
                 e.preventDefault();
+                const chosenZone = e.target?.closest?.('[data-drop-zone]')?.getAttribute('data-drop-zone') || dragDropZone || 'shelf';
                 isDraggingFile = false;
+                dragDropZone = 'shelf';
                 if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0 && window.chrome.webview.postMessageWithAdditionalObjects) {
-                    window.chrome.webview.postMessageWithAdditionalObjects({ action: 'filesDropped' }, Array.from(e.dataTransfer.files));
-                    dropOpen = true;
+                    window.chrome.webview.postMessageWithAdditionalObjects({ action: 'filesDropped', zone: chosenZone }, Array.from(e.dataTransfer.files));
+                    if (chosenZone === 'shelf') dropOpen = true;
                     crownHovered = true;
                 }
                 renderAll();
@@ -2600,7 +2902,17 @@ public static class AuroraSurfaceTemplates
 
         window.chrome.webview.addEventListener('message', e => {
             const msg = e.data;
-            if (msg.type === 'catalog') {
+            if (msg.type === 'gifRecState') {
+                liveGifRec = { recording: Boolean(msg.recording), elapsed: Number(msg.elapsed || 0) };
+                renderAll();
+            } else if (msg.type === 'collapseDeckForPaste') {
+                expanded = false;
+                closeAllSubPopups();
+                notifyMetricsVisible();
+                if (!crownPinned) crownHovered = false;
+                renderAll();
+                syncFocusDemand();
+            } else if (msg.type === 'catalog') {
                 if (Array.isArray(msg.installedApps)) appCatalog = msg.installedApps;
                 if (Array.isArray(msg.themes)) themesCatalog = msg.themes;
                 if (msg.frecency && typeof msg.frecency === 'object') searchFrecency = msg.frecency;

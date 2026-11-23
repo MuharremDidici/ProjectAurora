@@ -173,6 +173,21 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
     private readonly VirtualDesktopService _virtualDesktops = new();
     private readonly WinKeyLowLevelHook _winKeyHook = new();
     private readonly HardwareOsdMonitorService _osdMonitor = new();
+    private readonly BluetoothBatteryService _btBatteryService = new();
+    private readonly DdcCiMonitorBrightnessService _ddcBrightnessService = new();
+    private readonly PrivacyIndicatorService _privacyService = new();
+    private readonly LanQrFileShareService _lanQrShareService = new();
+    private readonly AnimatedGifRecorderService _gifRecorder = new();
+    private System.Windows.Forms.Timer? _btBatteryTimer;
+    private System.Windows.Forms.Timer? _metricsLiveTimer;
+    private IReadOnlyList<BluetoothBatteryDevice> _cachedBtDevices = [];
+    private PrivacyIndicatorSnapshot _cachedPrivacy = new(false, false, [], []);
+    private readonly List<double> _cpuHistory = [];
+    private readonly List<double> _ramHistory = [];
+    private readonly List<double> _netHistory = [];
+    private TopProcessSnapshot[] _topProcesses = [];
+    private bool _btPollInFlight;
+    private string? _gifRecSourceMonitorId;
     private AltDragWindowService? _altDragService;
     private System.Windows.Forms.Timer? _osdTimer;
     private int _osdBrightnessCounter;
@@ -682,6 +697,89 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
             _focusTimer = new System.Windows.Forms.Timer { Interval = 1000 };
             _focusTimer.Tick += async (_, _) => await TickFocusAsync();
 
+            // Live 1500ms sparkline & Top-3 process sampler — runs ONLY while Telemetry tab is open (0% idle overhead!)
+            _metricsLiveTimer = new System.Windows.Forms.Timer { Interval = 1500 };
+            _metricsLiveTimer.Tick += async (_, _) =>
+            {
+                if (_metricsTabActive && !_allMonitorsFullscreen)
+                {
+                    await _widgetVm.RefreshTelemetryIfVisibleAsync();
+                    RecordTelemetrySparklineSample();
+                    await RefreshAndBroadcastStateAsync(windowTopologyOnly: true);
+                }
+            };
+
+            // Bluetooth Battery background poller (every 18s on threadpool, 0ms UI stall!) + initial DDC/CI monitor discovery
+            _btBatteryTimer = new System.Windows.Forms.Timer { Interval = 18000 };
+            _btBatteryTimer.Tick += (_, _) => _ = PollBluetoothBatteriesBackgroundAsync();
+            if (notSmoke)
+            {
+                _btBatteryTimer.Start();
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        var foundMons = _ddcBrightnessService.DiscoverMonitors();
+                        if (foundMons.Count > 0)
+                        {
+                            var prim = GetPrimaryMonitorHost();
+                            if (prim is not null && !prim.CrownForm.IsDisposed && prim.CrownForm.IsHandleCreated)
+                                prim.CrownForm.BeginInvoke(async () => await RefreshAndBroadcastStateAsync(forceFull: true));
+                        }
+                        await Task.Delay(2400);
+                        await PollBluetoothBatteriesBackgroundAsync(forceBroadcast: true);
+                    }
+                    catch { }
+                });
+            }
+
+            // Local LAN QR AirDrop session updates -> live Crown card refresh
+            _lanQrShareService.SessionChanged += () =>
+            {
+                var primaryForQr = GetPrimaryMonitorHost();
+                if (primaryForQr is not null && !primaryForQr.CrownForm.IsDisposed && primaryForQr.CrownForm.IsHandleCreated)
+                {
+                    primaryForQr.CrownForm.BeginInvoke(async () => await RefreshAndBroadcastStateAsync(forceFull: true));
+                }
+            };
+
+            // Screen GIF Recorder live elapsed ticker + completion callback
+            _gifRecorder.ElapsedChanged += elapsedSec =>
+            {
+                var primaryForRec = GetPrimaryMonitorHost();
+                if (primaryForRec is not null && !primaryForRec.CrownForm.IsDisposed && primaryForRec.CrownForm.IsHandleCreated)
+                {
+                    primaryForRec.CrownForm.BeginInvoke(() => BroadcastGifRecordingState(true, elapsedSec));
+                }
+            };
+            _gifRecorder.RecordingFinished += outcome =>
+            {
+                var primaryForRec = GetPrimaryMonitorHost();
+                if (primaryForRec is not null && !primaryForRec.CrownForm.IsDisposed && primaryForRec.CrownForm.IsHandleCreated)
+                {
+                    primaryForRec.CrownForm.BeginInvoke(async () =>
+                    {
+                        BroadcastGifRecordingState(false, 0);
+                        string? srcMon = _gifRecSourceMonitorId;
+                        _gifRecSourceMonitorId = null;
+                        if (outcome.Success && File.Exists(outcome.FilePath))
+                        {
+                            await HandleDroppedFilesAsync(srcMon ?? string.Empty, [outcome.FilePath]);
+                            _suppressNextClipboardCapture = true;
+                            try { Clipboard.SetText(outcome.FilePath); } catch { }
+                            SendToast(srcMon,
+                                $"GIF Kaydedildi ({outcome.DurationSeconds:0.#} sn · {LanQrFileShareService.FormatSize(outcome.SizeBytes)})",
+                                $"{Path.GetFileName(outcome.FilePath)} — Süper Rafa eklendi; QR ile telefona gönderebilirsiniz.");
+                        }
+                        else
+                        {
+                            SendToast(srcMon, "GIF Kaydı Tamamlanamadı", outcome.ErrorMessage ?? "Kayıt iptal edildi.");
+                        }
+                        await RefreshAndBroadcastStateAsync(forceFull: true);
+                    });
+                }
+            };
+
             // 400ms lightweight per-monitor fullscreen detector + native taskbar zero-peek guard
             _fullscreenTimer = new System.Windows.Forms.Timer { Interval = 400 };
             _fullscreenTimer.Tick += (_, _) =>
@@ -715,6 +813,7 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
                 await Task.Delay(350);
                 _appBarService.EnforceNativeTaskbarSuppressed();
                 await ReconcileMonitorHostsAsync();
+                _ = Task.Run(() => { try { _ddcBrightnessService.DiscoverMonitors(); } catch { } });
                 await Task.Delay(300);
                 PostStaticCatalogToAllCrowns();
                 _lastCrownJsonByMonitor.Clear();
@@ -766,6 +865,7 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
                     crown.MessageReceived += HandleSurfaceCommandAsync;
                     dock.MessageReceived += HandleSurfaceCommandAsync;
                     crown.FilesDropped += HandleDroppedFilesAsync;
+                    crown.FilesDroppedWithContext += HandleCrownFilesDroppedWithContextAsync;
                     dock.FilesDroppedWithContext += HandleDockFilesDroppedAsync;
 
                     crown.Show();
@@ -1060,8 +1160,10 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
                 {
                     _widgetVm.IsSurfaceVisible = true;
                     await _widgetVm.RefreshTelemetryIfVisibleAsync();
+                    RecordTelemetrySparklineSample();
                     _widgetVm.IsSurfaceVisible = _metricsTabActive;
                 }
+                _cachedPrivacy = _privacyService.GetCurrentSnapshot();
             }
 
             var activeWin = _taskbarVm.OpenWindows.FirstOrDefault(w => w.IsActive)
@@ -1193,6 +1295,39 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
             }).ToArray();
             int clipboardTotalCount = _clipboardVaultStore.GetTotalCount();
             var micState = _audioService.GetDefaultCaptureMuteState();
+            var btDevicesDto = _cachedBtDevices.Take(6).Select(d => new
+            {
+                id = d.Id,
+                name = d.Name,
+                percent = d.BatteryPercent,
+                category = d.Category,
+                source = d.Source
+            }).ToArray();
+            var monBrightDto = _ddcBrightnessService.GetCachedMonitors().Take(5).Select(mb => new
+            {
+                id = mb.Id,
+                name = mb.Name,
+                percent = mb.BrightnessPercent,
+                isInternal = mb.IsInternal,
+                isPrimary = mb.IsPrimary
+            }).ToArray();
+            var qrActive = _lanQrShareService.GetActiveSession();
+            var qrShareDto = qrActive is null ? null : new
+            {
+                url = qrActive.Url,
+                name = qrActive.DisplayName,
+                size = qrActive.SizeLabel,
+                svg = qrActive.QrSvg,
+                downloads = qrActive.DownloadCount
+            };
+            var topProcsDto = _topProcesses.Select(tp => new
+            {
+                pid = tp.Pid,
+                name = tp.Name,
+                displayName = tp.DisplayName,
+                memoryMb = tp.MemoryMb,
+                instances = tp.Instances
+            }).ToArray();
             var audioOutputsDto = _ccVm.AudioEndpoints
                 .Where(e => !e.IsCapture)
                 .Take(6)
@@ -1298,6 +1433,23 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
                     scratchpad = _scratchpadText,
                     clipboard = clipboardDto,
                     clipboardCount = clipboardTotalCount,
+                    clipboardAutoPaste = _shellPrefs.ClipboardAutoPasteEnabled,
+                    btDevices = btDevicesDto,
+                    monitorBrightness = monBrightDto,
+                    privacy = new
+                    {
+                        camera = _cachedPrivacy.CameraActive,
+                        mic = _cachedPrivacy.MicActive,
+                        cameraApps = _cachedPrivacy.CameraApps,
+                        micApps = _cachedPrivacy.MicApps
+                    },
+                    qrShare = qrShareDto,
+                    gifRec = new
+                    {
+                        recording = _gifRecorder.IsRecording,
+                        elapsed = _gifRecorder.ElapsedSeconds
+                    },
+                    topProcesses = topProcsDto,
                     agendaNotes = _agendaNotes,
                     dropShelf = dropShelfDto,
                     trayApps = trayDtos,
@@ -1374,7 +1526,10 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
                         ramTotal = m.RamTotalGb,
                         gpuName = m.GpuAdapterName,
                         rxKbps = m.NetworkDownloadKbps,
-                        txKbps = m.NetworkUploadKbps
+                        txKbps = m.NetworkUploadKbps,
+                        cpuHist = _cpuHistory.ToArray(),
+                        ramHist = _ramHistory.ToArray(),
+                        netHist = _netHistory.ToArray()
                     },
                     weather = new
                     {
@@ -2165,10 +2320,16 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
                     bool active = msg.GetProperty("active").GetBoolean();
                     _metricsTabActive = active;
                     _widgetVm.IsSurfaceVisible = active;
+                    if (_metricsLiveTimer is not null)
+                    {
+                        if (active) _metricsLiveTimer.Start();
+                        else _metricsLiveTimer.Stop();
+                    }
                     if (active)
                     {
                         await _widgetVm.RefreshTelemetryIfVisibleAsync();
-                        await RefreshAndBroadcastStateAsync();
+                        RecordTelemetrySparklineSample();
+                        await RefreshAndBroadcastStateAsync(forceFull: true);
                     }
                     break;
                 }
@@ -2195,6 +2356,147 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
             case "setBrightness":
                 _ccVm.SetBrightnessPercent(msg.GetProperty("value").GetInt32());
                 break;
+
+            case "setMonitorBrightness":
+                {
+                    string id = msg.GetProperty("id").GetString() ?? string.Empty;
+                    int val = Math.Clamp(msg.GetProperty("value").GetInt32(), 0, 100);
+                    string label = msg.TryGetProperty("name", out var nm) ? (nm.GetString() ?? "Parlaklık") : "Parlaklık";
+                    _ = Task.Run(() => _ddcBrightnessService.TrySetMonitorBrightness(id, val));
+                    if (_shellPrefs.HardwareOsdEnabled)
+                    {
+                        SendOsdHud(sourceMonitorId, new HardwareOsdEvent("brightness", label, $"%{val}", val, true));
+                    }
+                    break;
+                }
+
+            case "refreshMonitorsBrightness":
+                {
+                    await Task.Run(() => _ddcBrightnessService.DiscoverMonitors());
+                    await RefreshAndBroadcastStateAsync(forceFull: true);
+                    break;
+                }
+
+            case "refreshBluetoothBatteries":
+                {
+                    await PollBluetoothBatteriesBackgroundAsync(forceBroadcast: true);
+                    break;
+                }
+
+            case "toggleClipboardAutoPaste":
+                {
+                    _shellPrefs = _shellPrefs with { ClipboardAutoPasteEnabled = !_shellPrefs.ClipboardAutoPasteEnabled };
+                    _shellPrefsStore.Save(_shellPrefs);
+                    SendToast(sourceMonitorId,
+                        _shellPrefs.ClipboardAutoPasteEnabled ? "Pano Tek Tık Yapıştırma Açık" : "Pano Yalnızca Kopyalama Modu",
+                        _shellPrefs.ClipboardAutoPasteEnabled
+                            ? "Pano öğesine tıklayınca aktif pencereye doğrudan Ctrl+V yapılır."
+                            : "Pano öğesine tıklayınca panoya kopyalanır.");
+                    await RefreshAndBroadcastStateAsync(forceFull: true);
+                    break;
+                }
+
+            case "killTopProcess":
+                {
+                    string procName = msg.TryGetProperty("name", out var pn) ? (pn.GetString() ?? string.Empty) : string.Empty;
+                    int pid = msg.TryGetProperty("pid", out var pidEl) ? pidEl.GetInt32() : 0;
+                    if (WindowsSystemMetricsService.TryTerminateUserProcessSafe(procName, pid))
+                    {
+                        SendToast(sourceMonitorId, "Uygulama Kapatıldı", FormatName(procName));
+                        await Task.Delay(250);
+                        RecordTelemetrySparklineSample();
+                        await RefreshAndBroadcastStateAsync(forceFull: true);
+                    }
+                    break;
+                }
+
+            case "shareShelfFileQr":
+                {
+                    int idx = msg.GetProperty("index").GetInt32();
+                    if (idx >= 0 && idx < _dropShelfPaths.Count)
+                    {
+                        StartQrShareAndToast(sourceMonitorId, [_dropShelfPaths[idx]]);
+                        await RefreshAndBroadcastStateAsync(forceFull: true);
+                    }
+                    break;
+                }
+
+            case "pickAndShareQr":
+                {
+                    using var ofd = new OpenFileDialog { Multiselect = true, Title = "QR ile Telefona Gönderilecek Dosyaları Seçin" };
+                    if (ofd.ShowDialog() == DialogResult.OK && ofd.FileNames.Length > 0)
+                    {
+                        StartQrShareAndToast(sourceMonitorId, ofd.FileNames);
+                        await RefreshAndBroadcastStateAsync(forceFull: true);
+                    }
+                    break;
+                }
+
+            case "stopQrShare":
+                {
+                    _lanQrShareService.StopSharing();
+                    await RefreshAndBroadcastStateAsync(forceFull: true);
+                    break;
+                }
+
+            case "copyQrUrl":
+                {
+                    var activeQr = _lanQrShareService.GetActiveSession();
+                    if (activeQr is not null && !string.IsNullOrWhiteSpace(activeQr.Url))
+                    {
+                        _suppressNextClipboardCapture = true;
+                        try { Clipboard.SetText(activeQr.Url); } catch { }
+                        SendToast(sourceMonitorId, "Paylaşım Bağlantısı Kopyalandı", activeQr.Url);
+                    }
+                    break;
+                }
+
+            case "convertShelfFile":
+                {
+                    int idx = msg.GetProperty("index").GetInt32();
+                    if (idx >= 0 && idx < _dropShelfPaths.Count)
+                    {
+                        string path = _dropShelfPaths[idx];
+                        var res = await Task.Run(() => LanQrFileShareService.ExecuteQuickConvertOrZip([path]));
+                        if (res.Success && File.Exists(res.OutputPath))
+                        {
+                            await HandleDroppedFilesAsync(sourceMonitorId, [res.OutputPath]);
+                            SendToast(sourceMonitorId, res.SummaryTitle, res.SummaryDetail);
+                        }
+                        else
+                        {
+                            SendToast(sourceMonitorId, res.SummaryTitle, res.SummaryDetail);
+                        }
+                    }
+                    break;
+                }
+
+            case "startGifRecording":
+                {
+                    if (_gifRecorder.IsRecording)
+                    {
+                        _gifRecorder.RequestStop();
+                        break;
+                    }
+                    await Task.Delay(140);
+                    var region = ScreenRegionOverlayForm.SelectGifRecordRegion();
+                    if (region is { Width: >= 16, Height: >= 16 } r)
+                    {
+                        _gifRecSourceMonitorId = sourceMonitorId;
+                        if (_gifRecorder.StartRecording(r))
+                        {
+                            BroadcastGifRecordingState(true, 0);
+                            await RefreshAndBroadcastStateAsync(forceFull: true);
+                        }
+                    }
+                    break;
+                }
+
+            case "stopGifRecording":
+                {
+                    _gifRecorder.RequestStop();
+                    break;
+                }
 
             case "toggleWifi":
                 {
@@ -2863,6 +3165,109 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
         await HandleDroppedFilesAsync(sourceMonitorId, paths);
     }
 
+    private async Task HandleCrownFilesDroppedWithContextAsync(string sourceMonitorId, JsonElement ctx, IReadOnlyList<string> paths)
+    {
+        string zone = ctx.TryGetProperty("zone", out var z) ? (z.GetString() ?? "shelf") : "shelf";
+        if (string.Equals(zone, "qr", StringComparison.OrdinalIgnoreCase))
+        {
+            StartQrShareAndToast(sourceMonitorId, paths);
+            await RefreshAndBroadcastStateAsync(forceFull: true);
+            return;
+        }
+
+        if (string.Equals(zone, "convert", StringComparison.OrdinalIgnoreCase))
+        {
+            var outcome = await Task.Run(() => LanQrFileShareService.ExecuteQuickConvertOrZip(paths));
+            if (outcome.Success && File.Exists(outcome.OutputPath))
+            {
+                await HandleDroppedFilesAsync(sourceMonitorId, [outcome.OutputPath]);
+                SendToast(sourceMonitorId, outcome.SummaryTitle, outcome.SummaryDetail);
+            }
+            else
+            {
+                SendToast(sourceMonitorId, outcome.SummaryTitle, outcome.SummaryDetail);
+            }
+            return;
+        }
+
+        await HandleDroppedFilesAsync(sourceMonitorId, paths);
+    }
+
+    private void StartQrShareAndToast(string sourceMonitorId, IReadOnlyList<string> paths)
+    {
+        try
+        {
+            var session = _lanQrShareService.StartSharing(paths);
+            SendToast(sourceMonitorId, "QR Yerel Paylaşım Hazır", $"{session.DisplayName} ({session.SizeLabel}) — Telefonunuzla QR kodu okutun.");
+        }
+        catch (Exception ex)
+        {
+            SendToast(sourceMonitorId, "QR Paylaşım Başlatılamadı", ex.Message);
+        }
+    }
+
+    private async Task PollBluetoothBatteriesBackgroundAsync(bool forceBroadcast = false)
+    {
+        if (_btPollInFlight) return;
+        _btPollInFlight = true;
+        try
+        {
+            var devices = await Task.Run(() => _btBatteryService.QueryConnectedDevicesAsync(includeBleGattFallback: true));
+            bool changed = devices.Count != _cachedBtDevices.Count ||
+                           !devices.SequenceEqual(_cachedBtDevices);
+            _cachedBtDevices = devices;
+
+            var alerts = _btBatteryService.EvaluateAlerts(devices);
+            var primary = GetPrimaryMonitorHost();
+            if (primary is not null && !primary.CrownForm.IsDisposed && primary.CrownForm.IsHandleCreated)
+            {
+                primary.CrownForm.BeginInvoke(async () =>
+                {
+                    foreach (var al in alerts)
+                    {
+                        if (_shellPrefs.HardwareOsdEnabled)
+                        {
+                            string kind = al.Kind == "lowBattery" ? "bluetoothLow" : "bluetooth";
+                            string lbl = al.Kind == "lowBattery" ? $"{al.Device.Name} Pil Düşük" : $"{al.Device.Name} Bağlandı";
+                            var host = GetMonitorHostUnderCursor();
+                            if (host is not null && !host.CrownForm.IsSuppressedForFullscreen)
+                            {
+                                SendOsdHud(host.Monitor.DeviceId, new HardwareOsdEvent(kind, lbl, $"%{al.Device.BatteryPercent}", al.Device.BatteryPercent, al.Kind != "lowBattery", 2800));
+                            }
+                        }
+                    }
+
+                    if (changed || forceBroadcast || alerts.Count > 0)
+                        await RefreshAndBroadcastStateAsync(windowTopologyOnly: true);
+                });
+            }
+        }
+        catch { }
+        finally
+        {
+            _btPollInFlight = false;
+        }
+    }
+
+    private void RecordTelemetrySparklineSample()
+    {
+        var m = _widgetVm.Metrics;
+        _cpuHistory.Add(Math.Round(m.CpuUsagePercent, 1));
+        _ramHistory.Add(Math.Round(m.RamUsagePercent, 1));
+        _netHistory.Add(Math.Round(m.NetworkDownloadKbps + m.NetworkUploadKbps, 1));
+        if (_cpuHistory.Count > 28) _cpuHistory.RemoveAt(0);
+        if (_ramHistory.Count > 28) _ramHistory.RemoveAt(0);
+        if (_netHistory.Count > 28) _netHistory.RemoveAt(0);
+        _topProcesses = WindowsSystemMetricsService.GetTopMemoryProcesses(3);
+    }
+
+    private void BroadcastGifRecordingState(bool recording, int elapsedSec)
+    {
+        string json = JsonSerializer.Serialize(new { type = "gifRecState", recording, elapsed = elapsedSec }, JsonOpts);
+        foreach (var h in _monitorHosts.Values)
+            h.CrownForm.PostJsonState(json);
+    }
+
     private async Task HandleDroppedFilesAsync(string sourceMonitorId, IReadOnlyList<string> paths)
     {
         int added = 0;
@@ -2958,16 +3363,35 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
         try
         {
             _suppressNextClipboardCapture = true;
+            bool copied = false;
             if (item.Kind == "image" && !string.IsNullOrWhiteSpace(item.ImagePath) && File.Exists(item.ImagePath))
             {
                 using var img = Image.FromFile(item.ImagePath);
                 Clipboard.SetImage(img);
-                SendToast(sourceMonitorId, "Görsel Panoya Kopyalandı", item.PreviewText);
+                copied = true;
+                if (!_shellPrefs.ClipboardAutoPasteEnabled)
+                    SendToast(sourceMonitorId, "Görsel Panoya Kopyalandı", item.PreviewText);
             }
             else if (!string.IsNullOrWhiteSpace(item.TextContent))
             {
                 Clipboard.SetText(item.TextContent);
-                SendToast(sourceMonitorId, "Panoya Kopyalandı", item.PreviewText);
+                copied = true;
+                if (!_shellPrefs.ClipboardAutoPasteEnabled)
+                    SendToast(sourceMonitorId, "Panoya Kopyalandı", item.PreviewText);
+            }
+
+            if (copied && _shellPrefs.ClipboardAutoPasteEnabled && _lastExternalActiveHwnd != 0)
+            {
+                var srcHost = GetMonitorHostById(sourceMonitorId);
+                srcHost?.CrownForm.PostJsonState("""{"type":"collapseDeckForPaste"}""");
+                nint targetHwnd = _lastExternalActiveHwnd;
+                _ = Task.Run(async () =>
+                {
+                    await Task.Delay(95);
+                    _windowActivation.FocusWindow(targetHwnd);
+                    await Task.Delay(75);
+                    ScreenOcrService.SendCtrlVPaste();
+                });
             }
         }
         catch
@@ -3707,6 +4131,21 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
             await Task.Delay(450);
             await primary.CrownForm.CapturePngAsync(Path.Combine(dir, "crown_shelf.png"));
 
+            // Populate sparkline history + Top-3 processes for Telemetry visual verification
+            for (int si = 0; si < 6; si++)
+            {
+                _widgetVm.IsSurfaceVisible = true;
+                await _widgetVm.RefreshTelemetryIfVisibleAsync();
+                RecordTelemetrySparklineSample();
+            }
+            _widgetVm.IsSurfaceVisible = false;
+            await RefreshAndBroadcastStateAsync(forceFull: true);
+            primary.CrownForm.PostJsonState("""{"type":"toggleDeck","tab":"metrics"}""");
+            await Task.Delay(120);
+            primary.CrownForm.PostJsonState("""{"type":"toggleDeck","tab":"metrics"}""");
+            await Task.Delay(450);
+            await primary.CrownForm.CapturePngAsync(Path.Combine(dir, "crown_metrics.png"));
+
             primary.CrownForm.PostJsonState("""{"type":"toggleDeck","tab":"studio"}""");
             await Task.Delay(120);
             primary.CrownForm.PostJsonState("""{"type":"toggleDeck","tab":"studio"}""");
@@ -3834,6 +4273,12 @@ internal sealed class AuroraDesktopCoordinator : ApplicationContext
             SystemEvents.SessionEnding -= OnSessionEnding;
             _awakeService.Dispose();
             _osdMonitor.Dispose();
+            _lanQrShareService.Dispose();
+            _gifRecorder.Dispose();
+            _btBatteryTimer?.Stop();
+            _btBatteryTimer?.Dispose();
+            _metricsLiveTimer?.Stop();
+            _metricsLiveTimer?.Dispose();
             _altDragService?.Dispose();
             _osdTimer?.Stop();
             _autoUpdateTimer?.Stop();

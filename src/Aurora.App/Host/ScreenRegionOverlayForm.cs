@@ -15,7 +15,7 @@ public sealed record ColorPickOutcome(PickedColorInfo ColorInfo, bool CopyRgb);
 /// </summary>
 public sealed class ScreenRegionOverlayForm : Form
 {
-    private enum ToolMode { OcrRegion, ColorPicker }
+    private enum ToolMode { OcrRegion, ColorPicker, GifRegion }
 
     private readonly ToolMode _mode;
     private readonly Rectangle _virtualBounds;
@@ -28,6 +28,7 @@ public sealed class ScreenRegionOverlayForm : Form
 
     public Bitmap? CapturedCrop { get; private set; }
     public ColorPickOutcome? PickedColor { get; private set; }
+    public Rectangle? SelectedScreenRegion { get; private set; }
 
     private ScreenRegionOverlayForm(ToolMode mode, Rectangle virtualBounds, Bitmap frozenDesktop)
     {
@@ -66,6 +67,16 @@ public sealed class ScreenRegionOverlayForm : Form
 
         using var overlay = new ScreenRegionOverlayForm(ToolMode.ColorPicker, bounds, snap);
         return overlay.ShowDialog() == DialogResult.OK ? overlay.PickedColor : null;
+    }
+
+    public static Rectangle? SelectGifRecordRegion()
+    {
+        var bounds = SystemInformation.VirtualScreen;
+        using var snap = CaptureVirtualDesktop(bounds);
+        if (snap is null) return null;
+
+        using var overlay = new ScreenRegionOverlayForm(ToolMode.GifRegion, bounds, snap);
+        return overlay.ShowDialog() == DialogResult.OK ? overlay.SelectedScreenRegion : null;
     }
 
     private static Bitmap? CaptureVirtualDesktop(Rectangle bounds)
@@ -129,7 +140,7 @@ public sealed class ScreenRegionOverlayForm : Form
     protected override void OnMouseMove(MouseEventArgs e)
     {
         _cursorLocal = e.Location;
-        if (_mode == ToolMode.OcrRegion && _isDragging)
+        if (_mode is ToolMode.OcrRegion or ToolMode.GifRegion && _isDragging)
         {
             int x = Math.Min(_dragStartLocal.X, e.X);
             int y = Math.Min(_dragStartLocal.Y, e.Y);
@@ -143,18 +154,29 @@ public sealed class ScreenRegionOverlayForm : Form
 
     protected override void OnMouseUp(MouseEventArgs e)
     {
-        if (_mode == ToolMode.OcrRegion && _isDragging && e.Button == MouseButtons.Left)
+        if (_mode is ToolMode.OcrRegion or ToolMode.GifRegion && _isDragging && e.Button == MouseButtons.Left)
         {
             _isDragging = false;
             var rect = Rectangle.Intersect(_selectionLocal, new Rectangle(0, 0, _frozenDesktop.Width, _frozenDesktop.Height));
-            if (rect.Width >= 8 && rect.Height >= 8)
+            if (rect.Width >= 16 && rect.Height >= 16)
             {
-                var crop = new Bitmap(rect.Width, rect.Height, PixelFormat.Format32bppArgb);
-                using (var g = Graphics.FromImage(crop))
+                if (_mode == ToolMode.GifRegion)
                 {
-                    g.DrawImage(_frozenDesktop, new Rectangle(0, 0, rect.Width, rect.Height), rect, GraphicsUnit.Pixel);
+                    SelectedScreenRegion = new Rectangle(
+                        rect.X + _virtualBounds.X,
+                        rect.Y + _virtualBounds.Y,
+                        rect.Width,
+                        rect.Height);
                 }
-                CapturedCrop = crop;
+                else
+                {
+                    var crop = new Bitmap(rect.Width, rect.Height, PixelFormat.Format32bppArgb);
+                    using (var g = Graphics.FromImage(crop))
+                    {
+                        g.DrawImage(_frozenDesktop, new Rectangle(0, 0, rect.Width, rect.Height), rect, GraphicsUnit.Pixel);
+                    }
+                    CapturedCrop = crop;
+                }
                 DialogResult = DialogResult.OK;
             }
             else
@@ -182,7 +204,7 @@ public sealed class ScreenRegionOverlayForm : Form
         // 1. Paint frozen desktop 1:1
         g.DrawImageUnscaled(_frozenDesktop, 0, 0);
 
-        if (_mode == ToolMode.OcrRegion)
+        if (_mode is ToolMode.OcrRegion or ToolMode.GifRegion)
         {
             PaintOcrHud(g);
         }
@@ -194,20 +216,24 @@ public sealed class ScreenRegionOverlayForm : Form
 
     private void PaintOcrHud(Graphics g)
     {
+        bool isGif = _mode == ToolMode.GifRegion;
+        Color accent = isGif ? Color.FromArgb(251, 113, 133) : Color.FromArgb(56, 189, 248);
         using var dimBrush = new SolidBrush(Color.FromArgb(118, 6, 10, 20));
         if (_selectionLocal.Width > 2 && _selectionLocal.Height > 2)
         {
-            // Dim everything OUTSIDE the selection rectangle so selected text stays razor-sharp
+            // Dim everything OUTSIDE the selection rectangle so selected region stays razor-sharp
             using var region = new Region(new Rectangle(0, 0, Width, Height));
             region.Exclude(_selectionLocal);
             g.FillRegion(dimBrush, region);
 
-            using var glowPen = new Pen(Color.FromArgb(95, 56, 189, 248), 5f);
-            using var borderPen = new Pen(Color.FromArgb(255, 56, 189, 248), 2f);
+            using var glowPen = new Pen(Color.FromArgb(95, accent), 5f);
+            using var borderPen = new Pen(Color.FromArgb(255, accent), 2f);
             g.DrawRectangle(glowPen, _selectionLocal);
             g.DrawRectangle(borderPen, _selectionLocal);
 
-            string dimText = $"{_selectionLocal.Width} × {_selectionLocal.Height} px  •  Bırakınca OCR okur";
+            string dimText = isGif
+                ? $"{_selectionLocal.Width} × {_selectionLocal.Height} px  •  Bırakınca GIF kaydı başlar (10 FPS)"
+                : $"{_selectionLocal.Width} × {_selectionLocal.Height} px  •  Bırakınca OCR okur";
             DrawPillBadge(g, dimText, _selectionLocal.Left, Math.Max(14, _selectionLocal.Top - 34));
         }
         else
@@ -219,7 +245,10 @@ public sealed class ScreenRegionOverlayForm : Form
         var activeScreen = Screen.FromPoint(new Point(_cursorLocal.X + _virtualBounds.X, _cursorLocal.Y + _virtualBounds.Y));
         int bannerCenterX = activeScreen.Bounds.Left - _virtualBounds.X + (activeScreen.Bounds.Width / 2);
         int bannerY = activeScreen.Bounds.Top - _virtualBounds.Y + 26;
-        DrawCenteredBanner(g, "✦ Aurora OCR Metin Yakalayıcı — Okumak istediğiniz alanı sürükleyip seçin  •  ESC iptal", bannerCenterX, bannerY);
+        string bannerText = isGif
+            ? "● Aurora GIF Ekran Kaydedici — Kaydedilecek alanı sürükleyip seçin  •  ESC iptal"
+            : "✦ Aurora OCR Metin Yakalayıcı — Okumak istediğiniz alanı sürükleyip seçin  •  ESC iptal";
+        DrawCenteredBanner(g, bannerText, bannerCenterX, bannerY);
     }
 
     private void PaintColorLoupeHud(Graphics g)

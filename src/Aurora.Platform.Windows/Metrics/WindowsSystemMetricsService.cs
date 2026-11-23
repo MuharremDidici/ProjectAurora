@@ -251,4 +251,134 @@ public sealed class WindowsSystemMetricsService : ISystemMetricsService
         95 or 96 or 99 => "Gök Gürültülü Fırtına",
         _ => "Çok Bulutlu"
     };
+
+    private static readonly HashSet<string> ProtectedSystemProcesses = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "idle", "system", "registry", "smss", "csrss", "wininit", "services", "lsass", "svchost",
+        "dwm", "explorer", "fontdrvhost", "winlogon", "sihost", "taskhostw", "ctfmon", "audiodg",
+        "memory compression", "aurora.app", "msedgewebview2", "securityhealthservice", "msmpeng"
+    };
+
+    public static TopProcessSnapshot[] GetTopMemoryProcesses(int count = 3)
+    {
+        var grouped = new Dictionary<string, (int LeadPid, long TotalBytes, int InstanceCount)>(StringComparer.OrdinalIgnoreCase);
+        int selfPid = Environment.ProcessId;
+
+        try
+        {
+            foreach (var p in System.Diagnostics.Process.GetProcesses())
+            {
+                using (p)
+                {
+                    try
+                    {
+                        if (p.Id <= 4 || p.Id == selfPid) continue;
+                        string name = p.ProcessName;
+                        if (string.IsNullOrWhiteSpace(name) || ProtectedSystemProcesses.Contains(name))
+                            continue;
+
+                        long ws = p.WorkingSet64;
+                        if (ws < 20L * 1024 * 1024) continue;
+
+                        if (grouped.TryGetValue(name, out var existing))
+                        {
+                            int lead = ws > existing.TotalBytes ? p.Id : existing.LeadPid;
+                            grouped[name] = (lead, existing.TotalBytes + ws, existing.InstanceCount + 1);
+                        }
+                        else
+                        {
+                            grouped[name] = (p.Id, ws, 1);
+                        }
+                    }
+                    catch { }
+                }
+            }
+        }
+        catch { }
+
+        return grouped
+            .OrderByDescending(kv => kv.Value.TotalBytes)
+            .Take(Math.Clamp(count, 1, 6))
+            .Select(kv => new TopProcessSnapshot(
+                Pid: kv.Value.LeadPid,
+                Name: kv.Key,
+                DisplayName: FormatProcessLabel(kv.Key),
+                MemoryMb: Math.Round(kv.Value.TotalBytes / (1024.0 * 1024.0), 0),
+                Instances: kv.Value.InstanceCount))
+            .ToArray();
+    }
+
+    public static bool TryTerminateUserProcessSafe(string processName, int fallbackPid)
+    {
+        if (string.IsNullOrWhiteSpace(processName) || ProtectedSystemProcesses.Contains(processName))
+            return false;
+
+        int selfPid = Environment.ProcessId;
+        bool killedAny = false;
+        try
+        {
+            var targets = System.Diagnostics.Process.GetProcessesByName(processName);
+            if (targets.Length > 0)
+            {
+                foreach (var proc in targets)
+                {
+                    using (proc)
+                    {
+                        if (proc.Id == selfPid || proc.Id <= 4) continue;
+                        try
+                        {
+                            if (!proc.CloseMainWindow())
+                                proc.Kill(entireProcessTree: false);
+                            killedAny = true;
+                        }
+                        catch
+                        {
+                            try { proc.Kill(entireProcessTree: false); killedAny = true; } catch { }
+                        }
+                    }
+                }
+            }
+            else if (fallbackPid > 4 && fallbackPid != selfPid)
+            {
+                using var p = System.Diagnostics.Process.GetProcessById(fallbackPid);
+                if (!ProtectedSystemProcesses.Contains(p.ProcessName))
+                {
+                    p.Kill(entireProcessTree: false);
+                    killedAny = true;
+                }
+            }
+        }
+        catch { }
+
+        return killedAny;
+    }
+
+    private static string FormatProcessLabel(string raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return "Uygulama";
+        return raw.ToLowerInvariant() switch
+        {
+            "chrome" => "Google Chrome",
+            "msedge" => "Microsoft Edge",
+            "opera" => "Opera",
+            "brave" => "Brave",
+            "firefox" => "Firefox",
+            "code" => "VS Code",
+            "devenv" => "Visual Studio",
+            "spotify" => "Spotify",
+            "discord" => "Discord",
+            "ms-teams" => "Microsoft Teams",
+            "whatsapp" => "WhatsApp",
+            "obs64" => "OBS Studio",
+            "windowsterminal" => "Terminal",
+            _ => char.ToUpperInvariant(raw[0]) + raw[1..]
+        };
+    }
 }
+
+public sealed record TopProcessSnapshot(
+    int Pid,
+    string Name,
+    string DisplayName,
+    double MemoryMb,
+    int Instances);

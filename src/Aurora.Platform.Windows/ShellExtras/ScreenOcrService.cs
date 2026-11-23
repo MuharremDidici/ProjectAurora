@@ -253,4 +253,69 @@ public static class ScreenOcrService
             return null;
         }
     }
+
+    private const uint InputKeyboard = 1;
+    private const uint KeyEventFKeyUp = 0x0002;
+    private const ushort VkControl = 0x11;
+    private const ushort VkV = 0x56;
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct INPUT
+    {
+        public uint type;
+        public InputUnion u;
+    }
+
+    [StructLayout(LayoutKind.Explicit)]
+    private struct InputUnion
+    {
+        [FieldOffset(0)] public KEYBDINPUT ki;
+        [FieldOffset(0)] public MOUSEINPUT mi;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct KEYBDINPUT
+    {
+        public ushort wVk;
+        public ushort wScan;
+        public uint dwFlags;
+        public uint time;
+        public nuint dwExtraInfo;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MOUSEINPUT
+    {
+        public int dx;
+        public int dy;
+        public uint mouseData;
+        public uint dwFlags;
+        public uint time;
+        public nuint dwExtraInfo;
+    }
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
+
+    /// <summary>
+    /// Synthesizes a clean Ctrl+V keystroke via native Win32 SendInput for 1-click Clipboard Vault direct paste.
+    /// </summary>
+    public static bool SendCtrlVPaste()
+    {
+        try
+        {
+            var inputs = new INPUT[]
+            {
+                new() { type = InputKeyboard, u = new InputUnion { ki = new KEYBDINPUT { wVk = VkControl } } },
+                new() { type = InputKeyboard, u = new InputUnion { ki = new KEYBDINPUT { wVk = VkV } } },
+                new() { type = InputKeyboard, u = new InputUnion { ki = new KEYBDINPUT { wVk = VkV, dwFlags = KeyEventFKeyUp } } },
+                new() { type = InputKeyboard, u = new InputUnion { ki = new KEYBDINPUT { wVk = VkControl, dwFlags = KeyEventFKeyUp } } }
+            };
+            return SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<INPUT>()) == inputs.Length;
+        }
+        catch
+        {
+            return false;
+        }
+    }
 }

@@ -26,7 +26,8 @@ public sealed record ShellRuntimePreferences(
     bool HardwareOsdEnabled = true,
     bool AltDragEnabled = true,
     int DockScalePercent = 100,
-    int DockOffsetPercent = 0)
+    int DockOffsetPercent = 0,
+    bool ClipboardAutoPasteEnabled = false)
 {
     public string EffectiveDockMode =>
         DockVisibilityMode is "AlwaysVisible" or "SmartDodge" or "AutoHide"
