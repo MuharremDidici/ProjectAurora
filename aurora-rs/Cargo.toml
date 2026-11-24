@@ -1,0 +1,123 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/aurora-core",
+    "crates/aurora-storage",
+    "crates/aurora-win32",
+    "crates/aurora-render",
+    "crates/aurora-ui",
+    "crates/aurora-surfaces",
+    "crates/aurora-app",
+    "crates/aurora-setup",
+]
+
+[workspace.package]
+version = "3.0.0"
+edition = "2021"
+authors = ["Muharrem Didici • Project Aurora"]
+license = "MIT"
+
+[workspace.dependencies]
+aurora-core = { path = "crates/aurora-core" }
+aurora-storage = { path = "crates/aurora-storage" }
+aurora-win32 = { path = "crates/aurora-win32" }
+aurora-render = { path = "crates/aurora-render" }
+aurora-ui = { path = "crates/aurora-ui" }
+aurora-surfaces = { path = "crates/aurora-surfaces" }
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1"
+chrono = { version = "0.4", features = ["serde", "clock"] }
+sha2 = "0.10"
+hex = "0.4"
+rusqlite = { version = "0.32", features = ["bundled"] }
+taffy = "0.7"
+parking_lot = "0.12"
+crossbeam-channel = "0.5"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "bmp"] }
+gif = "0.13"
+qrcode = { version = "0.14", default-features = false }
+tiny_http = "0.12"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+ureq = { version = "2", default-features = false, features = ["tls", "json"] }
+zstd = "0.13"
+winresource = "0.1"
+webview2-com = "0.34"
+base64 = "0.22"
+
+[workspace.dependencies.windows]
+version = "0.58"
+features = [
+    "implement",
+    "Foundation",
+    "Foundation_Collections",
+    "Foundation_Numerics",
+    "Storage_Streams",
+    "Security_Cryptography",
+    "Graphics_Imaging",
+    "Media_Control",
+    "Media_Ocr",
+    "Globalization",
+    "Devices_Radios",
+    "Devices_Bluetooth",
+    "Devices_Bluetooth_GenericAttributeProfile",
+    "Devices_Enumeration",
+    "Win32_Foundation",
+    "Win32_System_Com",
+    "Win32_System_Com_StructuredStorage",
+    "Win32_System_LibraryLoader",
+    "Win32_System_Threading",
+    "Win32_System_ProcessStatus",
+    "Win32_System_Diagnostics_ToolHelp",
+    "Win32_System_SystemInformation",
+    "Win32_System_Power",
+    "Win32_System_Shutdown",
+    "Win32_System_Registry",
+    "Win32_System_DataExchange",
+    "Win32_System_Memory",
+    "Win32_System_Ole",
+    "Win32_System_Performance",
+    "Win32_System_Variant",
+    "Win32_System_WinRT",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_UI_Controls",
+    "Win32_UI_Shell",
+    "Win32_UI_Shell_Common",
+    "Win32_UI_Shell_PropertiesSystem",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_UI_TextServices",
+    "Win32_UI_HiDpi",
+    "Win32_UI_Accessibility",
+    "Win32_Graphics_Gdi",
+    "Win32_Graphics_Dwm",
+    "Win32_Graphics_Dxgi",
+    "Win32_Graphics_Dxgi_Common",
+    "Win32_Graphics_Direct3D",
+    "Win32_Graphics_Direct3D11",
+    "Win32_Graphics_Direct2D",
+    "Win32_Graphics_Direct2D_Common",
+    "Win32_Graphics_DirectWrite",
+    "Win32_Graphics_DirectComposition",
+    "Win32_Graphics_Imaging",
+    "Win32_Devices_Display",
+    "Win32_Devices_FunctionDiscovery",
+    "Win32_Devices_DeviceAndDriverInstallation",
+    "Win32_Devices_Properties",
+    "Win32_Media_Audio",
+    "Win32_Media_Audio_Endpoints",
+    "Win32_Storage_FileSystem",
+    "Win32_Security",
+    "Win32_Networking_WinSock",
+    "Win32_NetworkManagement_IpHelper",
+]
+
+[workspace.dependencies.windows-core]
+version = "0.58"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
+panic = "abort"

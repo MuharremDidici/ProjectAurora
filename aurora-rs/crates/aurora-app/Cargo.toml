@@ -1,0 +1,32 @@
+[package]
+name = "aurora-app"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "aurora"
+path = "src/main.rs"
+
+[dependencies]
+aurora-core.workspace = true
+aurora-storage.workspace = true
+aurora-win32.workspace = true
+aurora-render.workspace = true
+aurora-ui.workspace = true
+aurora-surfaces.workspace = true
+windows.workspace = true
+windows-core.workspace = true
+webview2-com.workspace = true
+crossbeam-channel.workspace = true
+parking_lot.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+base64.workspace = true
+chrono.workspace = true
+image.workspace = true
+anyhow.workspace = true
+
+[build-dependencies]
+winresource.workspace = true

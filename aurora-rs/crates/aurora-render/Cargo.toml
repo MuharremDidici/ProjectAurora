@@ -1,0 +1,14 @@
+[package]
+name = "aurora-render"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+aurora-core.workspace = true
+windows.workspace = true
+windows-core.workspace = true
+parking_lot.workspace = true
+anyhow.workspace = true
+image.workspace = true

@@ -1,5 +1,22 @@
 # Project Aurora — Sürüm Notları
 
+## v3.0.0
+> Summary: Saf Rust Win32 çekirdek motoru + tek paylaşımlı ultra-hafif WebView2 renderer (sıfır .NET 10, sıfır harici DLL, 3.39 MB tek dosya kurulum), Dairesel Dallanan Pencere Küresi, canlı laptop + bağlı Bluetooth pil göstergesi, olay-tabanlı sıfır-sorgulu pano, endüstriyel kilitlenmez girdi/odak mimarisi ve boşta 53 MB WorkingSet / %0.05 CPU yükü.
+
+### Öne Çıkan Yenilikler
+- **Saf Rust Win32 Motoru + Tek Paylaşımlı WebView2 (`--process-per-site`):**
+  - `.NET 10` çalışma zamanı ve 220+ harici DLL tamamen kaldırıldı; tek statik `aurora.exe` + `0.7 MB` Watchdog.
+  - Tüm monitörlerde yalnızca **1 paylaşımlı Chromium renderer**, `COREWEBVIEW2_MEMORY_USAGE_TARGET_LEVEL_LOW` ve kontrollü bellek kırpma ile gerçek ölçülen boşta yük: **53.0 MB toplam WorkingSet RAM** (`aurora.exe` `8.0 MB`), **%0.052 CPU**, **40 ms Crown / 72 ms Dock soğuk başlatma**.
+  - **Sıfır Pil/SSD İsrafı:** Pano izleme Windows `WM_CLIPBOARDUPDATE` olayına taşındı (sıfır periyodik `OpenClipboard` çakışması); Windows bildirim veritabanı (`wpndatabase.db`) yalnızca dosya değişiklik damgası değiştiğinde okunuyor.
+- **Endüstriyel Kilitlenmez Girdi, Odak ve Tıklama Geçirgenliği:**
+  - `AttachThreadInput` tamamen kaldırıldı; bloklamasız `WH_KEYBOARD_LL` / `WH_MOUSE_LL`, Türkçe Q `AltGr` ve `Alt+Tab` korumalı `Alt+Sürükle`, `WS_EX_TRANSPARENT` + fiziksel tuş emniyetli Snap Zones, `ResizeObserver` senkronlu piksel-kesin `SetWindowRgn`, Windows Foreground Lock'a dayanıklı tek-tık dış-kapanma ve kademeli kendi kendini onaran soğuk başlatma bekçisi.
+- **Yeni Dairesel Dallanan Pencere Küresi & Canlı Pil/Bluetooth:**
+  - Çoklu pencere grupları için sıfır-kaymalı, organik kavisli dallı dairesel cam küreler + DWM canlı önizlemenin hemen altında tek ince kontrol şeridi (`Sol · Sağ · 50/50 · Üstte · + · ×`).
+  - Üst Damla, Üst Çubuk ve Kontrol Güvertesinde anlık (`WM_POWERBROADCAST`) dinamik doluluklu laptop pil göstergesi; Bluetooth tarafında `DEVPKEY_Device_ContainerId` + `DEVPKEY_Device_IsConnected` filtresiyle yalnızca o an aktif bağlı cihazlar ve gerçek pil yüzdeleri.
+- **3.39 MB Saf Rust Atomik Kurulum Paketi (`aurora-setup`):**
+  - `92.4 MB` .NET kurulumu yerine zstd-19 sıkıştırmalı **`3.39 MB`** sıfır-UAC kurulum sihirbazı; çalışan eski sürümün üzerine dosya kilidine takılmadan 12 denemeli atomik yükseltme yapar ve `%LOCALAPPDATA%\ProjectAurora\data\` içindeki tüm v2.x verilerini %100 korur.
+  - `Alt+Shift+R` başka bir sürücü tarafından tutuluyorsa GIF kaydedici için otomatik `Ctrl+Alt+Shift+R` yedek kısayolu kaydedilir (`5/5` kısayol aktif).
+
 ## v2.5.1
 > Summary: Sabit Bar ↔ Akıllı Kaçınma geçişinde pencerelerin periyodik büyüyüp küçülmesini tamamen bitiren gerçek Win32 AppBar (`SHAppBarMessage`) altyapısı + sadece renk değil silüet, kart, sekme, simge çerçevesi ve gösterge mimarisiyle tamamen ayrışan 6 modern 2026 görsel stili.
 

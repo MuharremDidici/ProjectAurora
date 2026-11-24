@@ -14,6 +14,10 @@ obj/
 TestResults/
 BenchmarkDotNet.Artifacts/
 
+## Rust / Cargo build outputs
+aurora-rs/target/
+target/
+
 ## Project Aurora build & installer outputs (distributed via GitHub Releases)
 dist/
 installer/stage/

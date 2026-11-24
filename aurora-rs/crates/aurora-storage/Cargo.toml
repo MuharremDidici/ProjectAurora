@@ -1,0 +1,18 @@
+[package]
+name = "aurora-storage"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+aurora-core.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+chrono.workspace = true
+rusqlite.workspace = true
+sha2.workspace = true
+hex.workspace = true
+ureq.workspace = true
+parking_lot.workspace = true
+anyhow.workspace = true

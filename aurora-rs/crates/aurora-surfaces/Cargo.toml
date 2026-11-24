@@ -1,0 +1,13 @@
+[package]
+name = "aurora-surfaces"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+aurora-core.workspace = true
+aurora-win32.workspace = true
+aurora-render.workspace = true
+aurora-ui.workspace = true
+chrono.workspace = true

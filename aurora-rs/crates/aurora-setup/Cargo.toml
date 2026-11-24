@@ -1,0 +1,23 @@
+[package]
+name = "aurora-setup"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "aurora-setup"
+path = "src/main.rs"
+
+[dependencies]
+aurora-core.workspace = true
+aurora-render.workspace = true
+aurora-win32.workspace = true
+windows.workspace = true
+parking_lot.workspace = true
+zstd.workspace = true
+anyhow.workspace = true
+
+[build-dependencies]
+winresource.workspace = true
+zstd.workspace = true
