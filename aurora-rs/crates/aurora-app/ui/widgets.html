@@ -586,13 +586,24 @@ body.mode-light .widget-card:not(.skin-frameless) .dm-box {
 
 /* World Horizon */
 .world-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+.w-sz-S .world-list { grid-template-columns: 1fr; gap: 5px; }
 .world-cell {
     padding: 8px 10px; border-radius: 11px;
     background: var(--bg-card); border: 1px solid var(--border-subtle);
+    display: flex; flex-direction: column; justify-content: space-between; gap: 5px; min-width: 0;
+}
+.world-cell-top, .world-cell-bot {
     display: flex; align-items: center; justify-content: space-between; gap: 6px; min-width: 0;
 }
+.world-city-name {
+    font-size: 11px; color: var(--text-1); font-weight: 700;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.world-utc-lbl {
+    font-size: 9.5px; color: var(--text-2); font-weight: 600; opacity: 0.85; white-space: nowrap;
+}
 .world-day-pill {
-    display: inline-flex; align-items: center; gap: 3px;
+    display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0;
     font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 999px;
     border: 1px solid transparent; white-space: nowrap;
 }
@@ -1397,8 +1408,8 @@ function buildChronographSvg(now) {
         <circle cx="50" cy="72" r="11.5" class="chrono-subface" stroke="var(--border-subtle)" stroke-width="0.7"/>
         ${subTicks}
         <line data-chrono-sub-s x1="50" y1="74" x2="50" y2="62.5" stroke="var(--accent-1)" stroke-width="1.1" stroke-linecap="round" transform="rotate(${sDeg.toFixed(1)} 50 72)"/>
-        <rect x="64" y="44.5" width="14" height="11" rx="2.5" fill="var(--bg-card)" stroke="var(--border-rim)" stroke-width="0.8"/>
-        <text x="71" y="52.4" text-anchor="middle" font-size="6.8" font-weight="800" fill="currentColor" class="num">${now.getDate()}</text>
+        <rect x="61" y="44.5" width="13" height="11" rx="2.5" fill="var(--bg-card)" stroke="var(--border-rim)" stroke-width="0.8"/>
+        <text x="67.5" y="52.4" text-anchor="middle" font-size="6.5" font-weight="800" fill="currentColor" class="num">${now.getDate()}</text>
         <line data-chrono-h x1="50" y1="54" x2="50" y2="26" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" transform="rotate(${hDeg.toFixed(1)} 50 50)"/>
         <line data-chrono-m x1="50" y1="56" x2="50" y2="16.5" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" transform="rotate(${mDeg.toFixed(1)} 50 50)"/>
         <line data-chrono-s x1="50" y1="62" x2="50" y2="12" stroke="var(--braun-accent, var(--accent-1))" stroke-width="1.25" stroke-linecap="round" transform="rotate(${sDeg.toFixed(1)} 50 50)"/>
@@ -1496,14 +1507,17 @@ function renderWorldClockHtml(now, compact) {
                 const isDay = hr >= 6 && hr < 19;
                 const utcLbl = getTzUtcOffsetLabel(z.tz, now);
                 return `<div class="world-cell" style="${compact ? 'padding:6px 10px;' : ''}">
-                    <div style="min-width:0;">
-                        <div style="font-size:10.5px;color:var(--text-2);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${z.city} <span class="mono" style="opacity:0.75;font-size:9px;">${escHtml(utcLbl)}</span></div>
-                        <div style="font-size:${compact ? '14px' : '16px'};font-weight:800;margin-top:2px;" class="num" data-world-tz="${z.tz}">${tStr}</div>
+                    <div class="world-cell-top">
+                        <span class="world-city-name">${z.city}</span>
+                        <span class="world-day-pill ${isDay ? 'day' : 'night'}">
+                            <span style="width:10px;height:10px;display:inline-flex;">${isDay ? IC.sun : IC.moon}</span>
+                            <span>${isDay ? 'Gündüz' : 'Gece'}</span>
+                        </span>
                     </div>
-                    <span class="world-day-pill ${isDay ? 'day' : 'night'}">
-                        <span style="width:11px;height:11px;display:inline-flex;">${isDay ? IC.sun : IC.moon}</span>
-                        <span>${isDay ? 'Gündüz' : 'Gece'}</span>
-                    </span>
+                    <div class="world-cell-bot">
+                        <span style="font-size:${compact ? '14px' : '16.5px'};font-weight:800;line-height:1;" class="num" data-world-tz="${z.tz}">${tStr}</span>
+                        <span class="world-utc-lbl mono">${escHtml(utcLbl)}</span>
+                    </div>
                 </div>`;
             }).join('')}
         </div>
@@ -2269,7 +2283,7 @@ function buildWidgetInner(w) {
                             const pct = Math.round(d.usedPercent || 0);
                             return `<div>
                                 <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:2px;">
-                                    <span style="font-weight:700;">${escHtml(d.drive)}</span>
+                                    <span style="font-weight:700;">${escHtml(d.drive || d.letter || d.name || 'Disk')}</span>
                                     <span class="num w-sub">${(d.freeGb || 0).toFixed(0)} GB boş · ${pct}%</span>
                                 </div>
                                 <div class="bar-track" style="height:4px;"><div class="bar-fill" style="width:${pct}%;${pct > 88 ? 'background:#FB7185;' : ''}"></div></div>
