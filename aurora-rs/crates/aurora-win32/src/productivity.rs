@@ -145,15 +145,16 @@ pub fn capture_screen_region_bgra(rect: PhysicalRect) -> Option<Vec<u8>> {
     if rect.width <= 0 || rect.height <= 0 {
         return None;
     }
-    let w = rect.width;
-    let h = rect.height;
+    let w = rect.width.min(8192);
+    let h = rect.height.min(8192);
+    let byte_len = (w as usize).checked_mul(h as usize)?.checked_mul(4)?;
     unsafe {
         let h_screen = GetDC(None);
         let h_mem = CreateCompatibleDC(h_screen);
         let h_bmp = CreateCompatibleBitmap(h_screen, w, h);
         let old = SelectObject(h_mem, h_bmp);
         let ok = BitBlt(h_mem, 0, 0, w, h, h_screen, rect.x, rect.y, SRCCOPY).is_ok();
-        let mut bgra = vec![0u8; (w * h * 4) as usize];
+        let mut bgra = vec![0u8; byte_len];
         if ok {
             let mut bmi = BITMAPINFO {
                 bmiHeader: BITMAPINFOHEADER {
@@ -207,8 +208,11 @@ pub fn recognize_screen_region_ocr(rect: PhysicalRect) -> Option<String> {
 
 /// Native 10 FPS Bayer Animated GIF Recorder (zero external ffmpeg/deps!).
 pub fn record_gif_region(rect: PhysicalRect, max_seconds: u32, out_path: &Path, stop_flag: Arc<AtomicBool>) -> anyhow::Result<(u32, u64)> {
-    let w = (rect.width as u16).min(1920);
-    let h = (rect.height as u16).min(1080);
+    if rect.width <= 0 || rect.height <= 0 {
+        anyhow::bail!("Geçersiz kayıt alanı.");
+    }
+    let w = (rect.width as u16).clamp(1, 1920);
+    let h = (rect.height as u16).clamp(1, 1080);
     let mut file = std::fs::File::create(out_path)?;
     let mut encoder = gif::Encoder::new(&mut file, w, h, &[])?;
     encoder.set_repeat(gif::Repeat::Infinite)?;
@@ -299,12 +303,23 @@ impl LanQrShareServer {
                     if let Ok(Some(req)) = server.recv_timeout(std::time::Duration::from_millis(250)) {
                         if req.url() == token_path {
                             if let Ok(data) = std::fs::read(&path_owned) {
-                                let hdr = tiny_http::Header::from_bytes(
+                                let safe_name: String = fname_clone
+                                    .chars()
+                                    .map(|c| {
+                                        if c.is_ascii_graphic() && c != '"' && c != '\\' {
+                                            c
+                                        } else {
+                                            '_'
+                                        }
+                                    })
+                                    .collect();
+                                let mut resp = tiny_http::Response::from_data(data);
+                                if let Ok(hdr) = tiny_http::Header::from_bytes(
                                     b"Content-Disposition",
-                                    format!("attachment; filename=\"{fname_clone}\""),
-                                )
-                                .unwrap();
-                                let resp = tiny_http::Response::from_data(data).with_header(hdr);
+                                    format!("attachment; filename=\"{safe_name}\""),
+                                ) {
+                                    resp = resp.with_header(hdr);
+                                }
                                 let _ = req.respond(resp);
                             }
                         } else {

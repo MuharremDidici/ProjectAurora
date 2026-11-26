@@ -225,4 +225,56 @@ mod tests {
 
         let _ = std::fs::remove_dir_all(&tmp);
     }
+
+    #[test]
+    fn zero_panic_storage_parsing_handles_corrupt_and_adversarial_inputs() {
+        use crate::{AuroraBackupBundle, AuroraDb, AuxiliaryStateStore, ShellPreferencesStore};
+
+        let pid = std::process::id();
+        let dir = std::env::temp_dir().join(format!("aurora_zero_panic_storage_{pid}"));
+        let _ = std::fs::remove_dir_all(&dir);
+        assert!(std::fs::create_dir_all(&dir).is_ok());
+
+        // 1. Corrupt/truncated/type-mismatched JSON in WidgetsLayoutStore
+        for bogus in [
+            "{not valid json",
+            "null",
+            "[]",
+            r#"{"widgets":"bad","dockWidgets":123,"todos":null}"#,
+            "",
+        ] {
+            let _ = std::fs::write(dir.join("widgets_layout.json"), bogus);
+            let doc = WidgetsLayoutStore::new(Some(dir.clone())).load();
+            assert_eq!(doc.ai_configs.len(), 3);
+            assert!(doc.dock_widgets.len() >= 14);
+        }
+
+        // 2. Corrupt JSON in ShellPreferencesStore
+        let prefs_path = dir.join("shell_settings.json");
+        for bogus in ["{bad", "null", r#"{"dockScalePercent":"nan","dockEdge":999}"#] {
+            let _ = std::fs::write(&prefs_path, bogus);
+            let prefs = ShellPreferencesStore::new(Some(prefs_path.clone())).load();
+            assert_eq!(prefs.effective_dock_edge(), "Bottom");
+        }
+
+        // 3. Corrupt JSON in AuxiliaryStateStore & AuroraBackupBundle
+        let _ = std::fs::write(dir.join("agenda_notes.json"), "{corrupt");
+        let _ = std::fs::write(dir.join("drop_shelf.json"), "12345");
+        let _ = std::fs::write(dir.join("search_frecency.json"), "[broken");
+        let _ = std::fs::write(dir.join("scratchpad.txt"), [0xFFu8, 0xFE, 0x00]);
+        let aux = AuxiliaryStateStore::new(Some(dir.clone())).load();
+        assert!(aux.agenda_notes.is_empty());
+        assert!(aux.drop_shelf_paths.is_empty());
+        assert!(aux.search_frecency.is_empty());
+        assert!(AuroraBackupBundle::import_from_file(&dir.join("agenda_notes.json")).is_none());
+
+        // 4. Corrupt SQLite DB triggers automatic recovery without panic
+        let corrupt_db = dir.join("corrupt.db");
+        let _ = std::fs::write(&corrupt_db, b"NOT A SQLITE DATABASE AT ALL");
+        let db = AuroraDb::open(Some(corrupt_db));
+        assert!(db.entered_recovery);
+        assert!(!db.load_pinned_shortcuts().is_empty());
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
 }

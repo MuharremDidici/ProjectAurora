@@ -12,8 +12,8 @@ use windows::Win32::Graphics::Gdi::{
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
 use windows::Win32::UI::Input::KeyboardAndMouse::{EnableWindow, GetAsyncKeyState, VK_MENU};
 use windows::Win32::UI::Shell::{
-    SHAppBarMessage, ABE_BOTTOM, ABE_LEFT, ABE_RIGHT, ABM_NEW, ABM_QUERYPOS, ABM_REMOVE,
-    ABM_SETPOS, ABM_SETSTATE, ABS_AUTOHIDE, APPBARDATA,
+    SHAppBarMessage, ABE_BOTTOM, ABE_LEFT, ABE_RIGHT, ABM_GETSTATE, ABM_NEW, ABM_QUERYPOS,
+    ABM_REMOVE, ABM_SETPOS, ABM_SETSTATE, ABS_AUTOHIDE, APPBARDATA,
 };
 use windows::Win32::UI::WindowsAndMessaging::{
     CreateWindowExW, DefWindowProcW, DestroyWindow, EnumWindows, FindWindowExW, FindWindowW,
@@ -75,6 +75,14 @@ impl NativeAppBarManager {
         unsafe {
             let primary = FindWindowW(w!("Shell_TrayWnd"), None).unwrap_or_default();
             if !primary.0.is_null() {
+                if !self.native_suppressed {
+                    let mut get_abd = APPBARDATA {
+                        cbSize: std::mem::size_of::<APPBARDATA>() as u32,
+                        hWnd: primary,
+                        ..Default::default()
+                    };
+                    self.original_state = SHAppBarMessage(ABM_GETSTATE, &mut get_abd) as i32;
+                }
                 let _ = EnableWindow(primary, true);
                 let mut abd = APPBARDATA {
                     cbSize: std::mem::size_of::<APPBARDATA>() as u32,
@@ -555,10 +563,10 @@ unsafe extern "system" fn refit_enum_proc(hwnd: HWND, lparam: LPARAM) -> BOOL {
         return BOOL(1);
     }
 
-    let pad_l = if has_dwm { (vis.left - win_rc.left).clamp(0, 20) } else { 0 };
-    let pad_t = if has_dwm { (vis.top - win_rc.top).clamp(0, 20) } else { 0 };
-    let pad_r = if has_dwm { (win_rc.right - vis.right).clamp(0, 20) } else { 0 };
-    let pad_b = if has_dwm { (win_rc.bottom - vis.bottom).clamp(0, 20) } else { 0 };
+    let pad_l = if has_dwm { (vis.left - win_rc.left).clamp(0, 32) } else { 0 };
+    let pad_t = if has_dwm { (vis.top - win_rc.top).clamp(0, 32) } else { 0 };
+    let pad_r = if has_dwm { (win_rc.right - vis.right).clamp(0, 32) } else { 0 };
+    let pad_b = if has_dwm { (win_rc.bottom - vis.bottom).clamp(0, 32) } else { 0 };
 
     let _ = SendNotifyMessageW(hwnd, WM_SETTINGCHANGE, WPARAM(SPI_SETWORKAREA.0 as usize), LPARAM(0));
     let _ = SetWindowPos(
@@ -658,8 +666,13 @@ unsafe fn hide_tray_window(hwnd: HWND) {
 }
 
 unsafe fn suppress_all_tray_windows() {
+    if (GetAsyncKeyState(VK_MENU.0 as i32) as u16 & 0x8000) != 0 {
+        return;
+    }
     for h in enumerate_all_tray_windows() {
-        hide_tray_window(h);
+        if IsWindowVisible(h).as_bool() {
+            hide_tray_window(h);
+        }
     }
 }
 

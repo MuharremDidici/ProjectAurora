@@ -339,6 +339,8 @@ pub fn try_suppress_win11_shell_overlay(
             || tl.contains("multitask")
             || tl.contains("switcher")
             || tl.contains("alt")
+            || tl.contains("overflow")
+            || tl.contains("taşma")
         {
             return None;
         }
@@ -386,13 +388,25 @@ pub fn is_compact_osd_geometry(r: PhysicalRect, monitors: &[PhysicalRect]) -> bo
 
 pub fn is_native_toast_banner_match(title: &str, r: PhysicalRect, monitors: &[PhysicalRect]) -> bool {
     let t = title.trim().to_ascii_lowercase();
-    // Strictly protect Action Center, Quick Settings, Start Menu!
+    // Strictly protect Action Center, Quick Settings, Start Menu, Tray Overflow, Search, Emoji, Clipboard!
     if t.contains("merkezi")
         || t.contains("notification center")
+        || t.contains("control center")
+        || t.contains("action center")
         || t.contains("hızlı ayar")
         || t.contains("quick setting")
         || t.contains("başlat")
         || t.contains("start")
+        || t.contains("overflow")
+        || t.contains("taşma")
+        || t.contains("tray")
+        || t.contains("sistem")
+        || t.contains("system")
+        || t.contains("search")
+        || t.contains("arama")
+        || t.contains("emoji")
+        || t.contains("pano")
+        || t.contains("clipboard")
     {
         return false;
     }

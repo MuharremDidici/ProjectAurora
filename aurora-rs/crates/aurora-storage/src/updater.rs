@@ -173,7 +173,7 @@ where
         std::io::Write::write_all(&mut file, &buf[..n])?;
         hasher.update(&buf[..n]);
         downloaded += n as u64;
-        if let Some(pct) = (downloaded * 100).checked_div(total_len) {
+        if let Some(pct) = downloaded.saturating_mul(100).checked_div(total_len) {
             on_progress(pct.min(99) as u8);
         }
     }
@@ -269,5 +269,15 @@ mod tests {
         assert_eq!(vault.total_count(), 1);
 
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn zero_panic_manifest_and_semver_parsing_handles_malformed_inputs() {
+        for bad in ["", "   ", "{bad", "null", "[]", r#"{"tag_name":"","assets":"oops"}"#] {
+            assert!(parse_manifest_or_github_api(bad).is_none());
+        }
+        assert_eq!(compare_semver("v7.3.0-beta.1", "7.3.0"), std::cmp::Ordering::Equal);
+        assert_eq!(compare_semver("invalid", "0.0.0"), std::cmp::Ordering::Equal);
+        assert!(compare_semver("99999999999999999999.0.0", "1.0.0").is_lt());
     }
 }

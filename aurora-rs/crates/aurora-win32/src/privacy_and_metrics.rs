@@ -1,19 +1,20 @@
 use std::collections::{HashMap, HashSet};
 use aurora_core::{BackgroundTrayApp, PrivacySnapshot, SystemMetricsSnapshot, TopProcessInfo};
 use windows::core::PCWSTR;
-use windows::Win32::Foundation::{CloseHandle, FILETIME, HWND};
+use windows::Win32::Foundation::{CloseHandle, FILETIME, HWND, LPARAM, WPARAM};
 use windows::Win32::System::Diagnostics::ToolHelp::{
     CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W, TH32CS_SNAPPROCESS,
 };
 use windows::Win32::System::Power::{
-    GetSystemPowerStatus, SetThreadExecutionState, ES_CONTINUOUS, ES_DISPLAY_REQUIRED,
-    ES_SYSTEM_REQUIRED, SYSTEM_POWER_STATUS,
+    GetSystemPowerStatus, SetSuspendState, SetThreadExecutionState, ES_CONTINUOUS,
+    ES_DISPLAY_REQUIRED, ES_SYSTEM_REQUIRED, SYSTEM_POWER_STATUS,
 };
 use windows::Win32::System::ProcessStatus::{GetProcessMemoryInfo, PROCESS_MEMORY_COUNTERS};
 use windows::Win32::System::Registry::{
     RegCloseKey, RegEnumKeyExW, RegOpenKeyExW, RegQueryValueExW, HKEY, HKEY_CURRENT_USER, KEY_READ,
     REG_EXPAND_SZ, REG_SZ, REG_VALUE_TYPE,
 };
+use windows::Win32::System::Shutdown::LockWorkStation;
 use windows::Win32::System::SystemInformation::{GlobalMemoryStatusEx, MEMORYSTATUSEX};
 use windows::Win32::System::Threading::{
     GetSystemTimes, OpenProcess, TerminateProcess, PROCESS_QUERY_LIMITED_INFORMATION,
@@ -22,7 +23,10 @@ use windows::Win32::System::Threading::{
 use windows::Win32::UI::Input::KeyboardAndMouse::{
     ActivateKeyboardLayout, GetKeyboardLayout, GetKeyboardLayoutList, KLF_SETFORPROCESS,
 };
-use windows::Win32::UI::WindowsAndMessaging::{GetWindowThreadProcessId, PostMessageW};
+use windows::Win32::UI::WindowsAndMessaging::{
+    GetWindowThreadProcessId, PostMessageW, SendNotifyMessageW, HWND_BROADCAST, SC_MONITORPOWER,
+    WM_SYSCOMMAND,
+};
 
 /// Ultra-lightweight Win32 `CreateToolhelp32Snapshot` process name set (replaces heavy .NET `Process.GetProcesses()`!).
 pub fn snapshot_running_process_names() -> HashSet<String> {
@@ -325,18 +329,20 @@ fn read_reg_string_value(hkey: HKEY, name: &str) -> Option<String> {
             return None;
         }
         let mut buf = vec![0u16; (bytes_len as usize).div_ceil(2) + 1];
+        let mut buf_bytes = (buf.len() * 2) as u32;
         let rc2 = RegQueryValueExW(
             hkey,
             PCWSTR(wide_name.as_ptr()),
             None,
             Some(&mut ty),
             Some(buf.as_mut_ptr() as *mut u8),
-            Some(&mut bytes_len),
+            Some(&mut buf_bytes),
         );
-        if rc2.is_err() {
+        if rc2.is_err() || buf_bytes < 2 {
             return None;
         }
-        let end = buf.iter().position(|&c| c == 0).unwrap_or(buf.len());
+        let max_chars = (buf_bytes as usize / 2).min(buf.len());
+        let end = buf[..max_chars].iter().position(|&c| c == 0).unwrap_or(max_chars);
         let s = String::from_utf16_lossy(&buf[..end]).trim().to_string();
         if s.is_empty() { None } else { Some(s) }
     }
@@ -696,14 +702,38 @@ pub fn set_awake_keep_alive(active: bool) {
     }
 }
 
+/// Locks the active Windows user session immediately via Win32 `LockWorkStation`.
+pub fn lock_workstation() {
+    unsafe {
+        let _ = LockWorkStation();
+    }
+}
+
+/// Puts the PC to sleep immediately via Win32 `SetSuspendState(false, false, false)`.
+pub fn sleep_system() {
+    unsafe {
+        let _ = SetSuspendState(false, false, false);
+    }
+}
+
+/// Turns off attached displays via non-blocking `SendNotifyMessageW(HWND_BROADCAST, WM_SYSCOMMAND, SC_MONITORPOWER, 2)`.
+pub fn turn_off_monitors() {
+    unsafe {
+        let _ = SendNotifyMessageW(
+            HWND_BROADCAST,
+            WM_SYSCOMMAND,
+            WPARAM(SC_MONITORPOWER as usize),
+            LPARAM(2),
+        );
+    }
+}
+
 pub fn trigger_lock_workstation() {
-    unsafe { let _ = windows::Win32::System::Shutdown::LockWorkStation(); }
+    lock_workstation();
 }
 
 pub fn trigger_sleep() {
-    let _ = std::process::Command::new("rundll32.exe")
-        .args(["powrprof.dll,SetSuspendState", "0,1,0"])
-        .spawn();
+    sleep_system();
 }
 
 pub fn trigger_power_command(restart: bool) {

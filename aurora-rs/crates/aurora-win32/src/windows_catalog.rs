@@ -76,14 +76,23 @@ pub fn enumerate_open_windows(
         }
 
         // Standard Alt-Tab root owner check — hardened for Java Swing/AWT (`SunAwtFrame` + `SunAwtDialog`):
-        // Only skip `hwnd` in favor of `last_popup` when `last_popup` is ALSO a real, titled, non-tool window!
+        // Only skip `hwnd` in favor of `last_popup` when `last_popup` is ALSO a real, titled, non-tool, non-cloaked window!
         let root = GetAncestor(hwnd, GA_ROOTOWNER);
         let last_popup = GetLastActivePopup(root);
         if last_popup != hwnd && IsWindowVisible(last_popup).as_bool() {
             let lp_ex = GetWindowLongPtrW(last_popup, GWL_EXSTYLE) as u32;
             let lp_is_tool = (lp_ex & WS_EX_TOOLWINDOW.0) != 0 && (lp_ex & WS_EX_APPWINDOW.0) == 0;
             let lp_title_len = GetWindowTextW(last_popup, &mut [0u16; 4]);
-            if !lp_is_tool && lp_title_len > 0 {
+            let mut lp_cloaked = 0i32;
+            let lp_is_cloaked = DwmGetWindowAttribute(
+                last_popup,
+                DWMWA_CLOAKED,
+                &mut lp_cloaked as *mut _ as *mut _,
+                4,
+            )
+            .is_ok()
+                && lp_cloaked != 0;
+            if !lp_is_tool && !lp_is_cloaked && lp_title_len > 0 {
                 return BOOL(1);
             }
         }
@@ -101,7 +110,18 @@ pub fn enumerate_open_windows(
         let mut cls_buf = [0u16; 64];
         let clen = GetClassNameW(hwnd, &mut cls_buf) as usize;
         let cls = String::from_utf16_lossy(&cls_buf[..clen]);
-        if matches!(cls.as_str(), "Progman" | "WorkerW" | "Windows.UI.Core.CoreWindow") {
+        if matches!(
+            cls.as_str(),
+            "Progman"
+                | "WorkerW"
+                | "Windows.UI.Core.CoreWindow"
+                | "MultitaskingViewFrame"
+                | "XamlExplorerHostIslandWindow"
+                | "TaskListThumbnailWnd"
+                | "ForegroundStaging"
+                | "ApplicationManager_DesktopShellWindow"
+                | "Shell_InputSwitchTopLevelWindow"
+        ) {
             return BOOL(1);
         }
 
@@ -306,6 +326,11 @@ unsafe fn is_window_occluded_by_normal_window(hwnd: HWND) -> bool {
                                 | "Shell_SecondaryTrayWnd"
                                 | "EdgeUiInputTopWndClass"
                                 | "ForegroundStaging"
+                                | "MultitaskingViewFrame"
+                                | "XamlExplorerHostIslandWindow"
+                                | "TaskListThumbnailWnd"
+                                | "Shell_InputSwitchTopLevelWindow"
+                                | "ApplicationManager_DesktopShellWindow"
                         );
                         if !is_shell_helper {
                             let mut cloaked = 0i32;
@@ -556,6 +581,10 @@ pub fn analyze_fullscreen_and_dodge(
                 | "Shell_SecondaryTrayWnd"
                 | "XamlExplorerHostIslandWindow"
                 | "MultitaskingViewFrame"
+                | "TaskListThumbnailWnd"
+                | "ForegroundStaging"
+                | "ApplicationManager_DesktopShellWindow"
+                | "Shell_InputSwitchTopLevelWindow"
         ) {
             return BOOL(1);
         }
@@ -597,13 +626,14 @@ pub fn analyze_fullscreen_and_dodge(
         let mb = mon.bounds;
 
         // Per-monitor fullscreen check on the topmost normal user window on this monitor!
-        if ctx.seen_top_mon.insert(mon.device_id.clone()) {
-            let win_rect = PhysicalRect::new(rc.left, rc.top, rw, rh);
-            let is_zoomed = IsZoomed(hwnd).as_bool();
-            let is_d3d_fg = raw == ctx.fg_hwnd && ctx.d3d_exclusive_fs;
-            if is_window_fullscreen_on_monitor(win_rect, mb, mon.work_area, is_zoomed, is_d3d_fg) {
-                ctx.fs.insert(mon.device_id.clone());
-            }
+        // Skip small WS_EX_TOPMOST overlays (PiP, widgets) so they never mask a fullscreen video/game behind them.
+        let win_rect = PhysicalRect::new(rc.left, rc.top, rw, rh);
+        let is_zoomed = IsZoomed(hwnd).as_bool();
+        let is_d3d_fg = raw == ctx.fg_hwnd && ctx.d3d_exclusive_fs;
+        let is_fs = is_window_fullscreen_on_monitor(win_rect, mb, mon.work_area, is_zoomed, is_d3d_fg);
+        let is_small_topmost_overlay = (ex_style & WS_EX_TOPMOST.0) != 0 && !is_fs;
+        if !is_small_topmost_overlay && ctx.seen_top_mon.insert(mon.device_id.clone()) && is_fs {
+            ctx.fs.insert(mon.device_id.clone());
         }
 
         // SmartDodge dock-edge overlap check (geometry-based!)
@@ -704,7 +734,7 @@ unsafe fn hicon_to_premultiplied_bgra(hicon: HICON) -> Option<(u32, u32, Vec<u8>
             Some(&mut bm as *mut _ as *mut _),
         ) != 0
     {
-        (bm.bmWidth.clamp(16, 128), bm.bmHeight.abs().clamp(16, 128))
+        (bm.bmWidth.clamp(16, 128), bm.bmHeight.saturating_abs().clamp(16, 128))
     } else {
         (32, 32)
     };

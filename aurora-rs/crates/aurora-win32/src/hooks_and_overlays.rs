@@ -10,6 +10,9 @@ use windows::Win32::Graphics::Dwm::{
     DWM_THUMBNAIL_PROPERTIES, DWM_TNP_OPACITY, DWM_TNP_RECTDESTINATION, DWM_TNP_SOURCECLIENTAREAONLY,
     DWM_TNP_VISIBLE, DWMWCP_ROUND,
 };
+use windows::Win32::Graphics::Gdi::{
+    GetMonitorInfoW, MonitorFromWindow, MONITORINFO, MONITOR_DEFAULTTONEAREST,
+};
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
 use windows::Win32::System::Threading::GetCurrentThreadId;
 use windows::Win32::UI::Accessibility::{SetWinEventHook, UnhookWinEvent, HWINEVENTHOOK};
@@ -330,13 +333,26 @@ unsafe extern "system" fn low_level_mouse_proc(code: i32, wparam: WPARAM, lparam
                             if !is_forbidden_alt_drag_class(&cls) {
                                 let mut rc = RECT::default();
                                 if GetWindowRect(root, &mut rc).is_ok() {
-                                    if let Some(mut st) = ALT_STATE.try_lock() {
-                                        st.mode = if msg == WM_LBUTTONDOWN { 1 } else { 2 };
-                                        st.hwnd = root.0 as isize;
-                                        st.start_x = info.pt.x;
-                                        st.start_y = info.pt.y;
-                                        st.orig_rc = rc;
-                                        return LRESULT(1);
+                                    // Never intercept Left-Alt+Click on borderless fullscreen windows/games!
+                                    let hmon = MonitorFromWindow(root, MONITOR_DEFAULTTONEAREST);
+                                    let mut mi = MONITORINFO {
+                                        cbSize: std::mem::size_of::<MONITORINFO>() as u32,
+                                        ..Default::default()
+                                    };
+                                    let is_fullscreen = GetMonitorInfoW(hmon, &mut mi).as_bool()
+                                        && rc.left <= mi.rcMonitor.left + 2
+                                        && rc.top <= mi.rcMonitor.top + 2
+                                        && rc.right >= mi.rcMonitor.right - 2
+                                        && rc.bottom >= mi.rcMonitor.bottom - 2;
+                                    if !is_fullscreen {
+                                        if let Some(mut st) = ALT_STATE.try_lock() {
+                                            st.mode = if msg == WM_LBUTTONDOWN { 1 } else { 2 };
+                                            st.hwnd = root.0 as isize;
+                                            st.start_x = info.pt.x;
+                                            st.start_y = info.pt.y;
+                                            st.orig_rc = rc;
+                                            return LRESULT(1);
+                                        }
                                     }
                                 }
                             }

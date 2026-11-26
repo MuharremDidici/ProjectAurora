@@ -101,7 +101,8 @@ impl ClipboardVaultDb {
             return None;
         }
         let hash = sha256_hex(png_bytes);
-        let img_name = format!("{}.png", &hash[..24]);
+        let prefix = hash.get(..24).unwrap_or(&hash);
+        let img_name = format!("{prefix}.png");
         let img_path = self.images_dir.join(img_name);
         if !img_path.exists() {
             std::fs::write(&img_path, png_bytes).ok()?;
@@ -203,7 +204,8 @@ impl ClipboardVaultDb {
         let _lock = self.gate.lock();
         let Ok(conn) = self.connect() else { return 0 };
         conn.query_row("SELECT COUNT(*) FROM ClipboardItems;", [], |r| r.get::<_, i64>(0))
-            .unwrap_or(0) as usize
+            .unwrap_or(0)
+            .max(0) as usize
     }
 
     fn prune_overflow_locked(&self, conn: &Connection) {
