@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
-use crate::tokens::ThemeColorCustomization;
+use crate::tokens::{is_valid_hex_color, ThemeColorCustomization};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub struct PhysicalRect {
@@ -433,6 +433,128 @@ pub struct DesktopWidgetInstance {
     /// Optional local photo path for `photo-frame` desktop widget
     #[serde(default)]
     pub photo_path: Option<String>,
+}
+
+/// Alias matching callers referring to `DesktopWidget`.
+pub type DesktopWidget = DesktopWidgetInstance;
+
+/// Curated list of supported desktop widget kinds/archetypes.
+pub const SUPPORTED_DESKTOP_WIDGET_KINDS: &[&str] = &[
+    "clock",
+    "media",
+    "battery",
+    "ai-quota",
+    "weather",
+    "system",
+    "calendar",
+    "notes",
+    "pomodoro",
+    "launcher",
+    "audio-mixer",
+    "focus-rings",
+    "photo-frame",
+    "quick-drop",
+    "todo",
+    "market",
+    "countdown",
+    "storage-net",
+    "quote",
+    "local-ai",
+    "studio-strip",
+    "world-clock",
+    "forecast-strip",
+    "habit-ring",
+    "pomodoro-studio",
+    "currency-ticker",
+    "quick-note",
+];
+
+impl DesktopWidgetInstance {
+    /// Returns `true` if `self.kind` is one of the recognized Aurora desktop widget kinds.
+    pub fn is_supported_kind(&self) -> bool {
+        let k = self.kind.trim().to_ascii_lowercase();
+        SUPPORTED_DESKTOP_WIDGET_KINDS.contains(&k.as_str())
+    }
+
+    /// Normalizes widget fields (`kind`, `variant`, `skin`, `size`, coordinates, opacity, accent, note)
+    /// cleanly without panicking and with full support for all v7.3+ studio widget kinds/variants.
+    pub fn normalize(&mut self) {
+        let kind_norm = self.kind.trim().to_ascii_lowercase();
+        self.kind = if kind_norm.is_empty() {
+            "clock".into()
+        } else {
+            kind_norm
+        };
+
+        let var_norm = self.variant.trim().to_ascii_lowercase();
+        self.variant = if var_norm.is_empty() || var_norm == "default" {
+            match self.kind.as_str() {
+                "clock" => "swiss".into(),
+                "media" | "studio-strip" => "studio-strip".into(),
+                "world-clock" => "world-clock".into(),
+                "weather" => "dynamic-sky".into(),
+                "forecast-strip" => "forecast-strip".into(),
+                "battery" | "system" | "focus-rings" => "rings".into(),
+                "habit-ring" => "habit-ring".into(),
+                "ai-quota" => "cards".into(),
+                "calendar" => "today".into(),
+                "notes" => "glass".into(),
+                "quick-note" => "quick-note".into(),
+                "pomodoro" => "ring".into(),
+                "pomodoro-studio" => "pomodoro-studio".into(),
+                "launcher" => "grid".into(),
+                "audio-mixer" => "mixer".into(),
+                "photo-frame" => "polaroid".into(),
+                "quick-drop" => "drop".into(),
+                "todo" => "list".into(),
+                "market" => "cards".into(),
+                "currency-ticker" => "currency-ticker".into(),
+                "countdown" => "card".into(),
+                "storage-net" => "bars".into(),
+                "quote" => "editorial".into(),
+                "local-ai" => "status".into(),
+                _ => "default".into(),
+            }
+        } else {
+            var_norm
+        };
+
+        let skin_norm = self.skin.trim().to_ascii_lowercase();
+        self.skin = if matches!(
+            skin_norm.as_str(),
+            "frameless" | "glass" | "neoglass" | "braun" | "matrix" | "editorial"
+        ) {
+            skin_norm
+        } else if matches!(self.kind.as_str(), "clock" | "world-clock") {
+            "frameless".into()
+        } else {
+            "glass".into()
+        };
+
+        let size_norm = self.size.trim().to_ascii_uppercase();
+        self.size = match size_norm.as_str() {
+            "S" | "M" | "L" => size_norm,
+            _ => "M".into(),
+        };
+
+        self.x = self.x.clamp(-3800, 3800);
+        self.y = self.y.clamp(8, 2200);
+        self.opacity = self
+            .opacity
+            .filter(|op| op.is_finite())
+            .map(|op| op.clamp(0.45, 1.0));
+        self.accent_hex = self
+            .accent_hex
+            .as_deref()
+            .map(str::trim)
+            .filter(|hex| is_valid_hex_color(hex))
+            .map(|hex| hex.to_uppercase());
+        if let Some(note) = &mut self.note_text {
+            if note.chars().count() > 1200 {
+                *note = note.chars().take(1200).collect();
+            }
+        }
+    }
 }
 
 /// Tasteful 2-widget first-run desktop starter layout (right-side Frameless Swiss Clock & Optical Glass Battery Rings).
@@ -997,6 +1119,7 @@ impl ShellRuntimePreferences {
     pub fn effective_dock_indicator_style(&self) -> &'static str {
         match self.dock_indicator_style.as_str() {
             "dot" => "dot",
+            "bar" => "bar",
             "frame" => "frame",
             "glow" => "glow",
             _ => "pill",
@@ -1302,5 +1425,130 @@ mod tests {
         assert_eq!(w.variant, "minimal");
         assert_eq!(w.size, "M");
         assert_eq!(w.photo_path, None);
+    }
+
+    #[test]
+    fn shell_user_preferences_backward_compatibility_and_dock_indicator_styles() {
+        let legacy: ShellUserPreferences = serde_json::from_str("{}").unwrap();
+        assert_eq!(legacy.dock_indicator_style, None);
+        assert_eq!(legacy.effective_dock_indicator_style(), "dot");
+        assert_eq!(legacy.active_theme_id, "aurora-glass-dark");
+
+        for style in ["dot", "bar", "glow", "pill"] {
+            let json = format!(r#"{{"dockIndicatorStyle":"{style}"}}"#);
+            let mut parsed: ShellUserPreferences = serde_json::from_str(&json).unwrap();
+            assert_eq!(parsed.effective_dock_indicator_style(), style);
+            parsed.normalize();
+            assert_eq!(parsed.dock_indicator_style.as_deref(), Some(style));
+        }
+
+        let mut unknown = ShellUserPreferences {
+            dock_indicator_style: Some("invalid-style".into()),
+            ..Default::default()
+        };
+        assert_eq!(unknown.effective_dock_indicator_style(), "dot");
+        unknown.normalize();
+        assert_eq!(unknown.dock_indicator_style.as_deref(), Some("dot"));
+    }
+
+    #[test]
+    fn desktop_widget_normalize_supports_all_new_studio_widgets() {
+        let new_kinds = [
+            "studio-strip",
+            "world-clock",
+            "forecast-strip",
+            "habit-ring",
+            "pomodoro-studio",
+            "currency-ticker",
+            "quick-note",
+        ];
+        for kind in new_kinds {
+            let mut w = DesktopWidget {
+                id: format!("w-{kind}"),
+                kind: format!("  {}  ", kind.to_uppercase()),
+                variant: String::new(),
+                skin: "invalid-skin".into(),
+                size: "xl".into(),
+                x: -9999,
+                y: -50,
+                opacity: Some(0.10),
+                accent_hex: Some("not-a-hex".into()),
+                pinned_top: false,
+                note_text: None,
+                photo_path: None,
+            };
+            w.normalize();
+            assert!(w.is_supported_kind(), "{kind} should be supported");
+            assert_eq!(w.kind, kind);
+            assert_eq!(w.variant, kind);
+            assert_eq!(w.size, "M");
+            assert_eq!(w.x, -3800);
+            assert_eq!(w.y, 8);
+            assert_eq!(w.opacity, Some(0.45));
+            assert_eq!(w.accent_hex, None);
+        }
+    }
+}
+
+fn default_user_theme_id() -> String {
+    "aurora-glass-dark".into()
+}
+
+fn default_user_profile_id() -> String {
+    "profile-personal".into()
+}
+
+/// Portable user-level shell preferences with full backward compatibility for older JSON configs.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ShellUserPreferences {
+    #[serde(default = "default_user_theme_id")]
+    pub active_theme_id: String,
+    #[serde(default = "default_user_profile_id")]
+    pub active_profile_id: String,
+    #[serde(default)]
+    pub focus_mode_enabled: bool,
+    #[serde(default)]
+    pub reduced_motion: bool,
+    #[serde(default)]
+    pub dock_indicator_style: Option<String>,
+}
+
+impl Default for ShellUserPreferences {
+    fn default() -> Self {
+        Self {
+            active_theme_id: default_user_theme_id(),
+            active_profile_id: default_user_profile_id(),
+            focus_mode_enabled: false,
+            reduced_motion: false,
+            dock_indicator_style: Some("dot".into()),
+        }
+    }
+}
+
+impl ShellUserPreferences {
+    /// Resolves `dock_indicator_style` to one of `"dot" | "bar" | "glow" | "pill"` (default `"dot"`).
+    pub fn effective_dock_indicator_style(&self) -> &'static str {
+        match self
+            .dock_indicator_style
+            .as_deref()
+            .map(|s| s.trim().to_ascii_lowercase())
+            .as_deref()
+        {
+            Some("bar") => "bar",
+            Some("glow") => "glow",
+            Some("pill") => "pill",
+            _ => "dot",
+        }
+    }
+
+    pub fn normalize(&mut self) {
+        if self.active_theme_id.trim().is_empty() {
+            self.active_theme_id = default_user_theme_id();
+        }
+        if self.active_profile_id.trim().is_empty() {
+            self.active_profile_id = default_user_profile_id();
+        }
+        self.dock_indicator_style = Some(self.effective_dock_indicator_style().into());
     }
 }

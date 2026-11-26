@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use aurora_core::{
-    built_in_themes, evaluate_omni_expression, fuzzy_match_score, theme_by_id, AudioStateSnapshot,
+    built_in_themes, fuzzy_match_score, parse_omni_query, theme_by_id, AudioStateSnapshot,
     BackgroundTrayApp, BluetoothBatteryDevice, ClipboardVaultEntry, DockAppGroup,
     ExternalMonitorBrightness, HardwareOsdEvent, InstalledAppEntry, LanQrShareInfo,
     MediaSessionSnapshot, PinnedShortcut, PrivacySnapshot, ReleaseManifest, ResolvedTheme,
@@ -307,15 +307,25 @@ impl ShellState {
         let q = self.omni_input.text.trim();
         let mut results = Vec::new();
 
-        if let Some((answer, desc)) = evaluate_omni_expression(q) {
+        if let Some(parsed) = parse_omni_query(q) {
+            let subtitle = if parsed.is_copy_value {
+                format!("{}  •  Enter ile sonucu panoya kopyala", parsed.subtitle)
+            } else {
+                parsed.subtitle
+            };
+            let (launch_path, copy_value) = if parsed.is_copy_value {
+                (String::new(), parsed.primary_value)
+            } else {
+                (parsed.primary_value, String::new())
+            };
             results.push(OmniResult {
                 id: "calc-res".into(),
-                title: answer.clone(),
-                subtitle: format!("{desc}  •  Enter ile sonucu panoya kopyala"),
-                badge: "HESAP".into(),
-                launch_path: String::new(),
-                is_copy_value: true,
-                copy_value: answer,
+                title: parsed.display_title,
+                subtitle,
+                badge: parsed.badge.into(),
+                launch_path,
+                is_copy_value: parsed.is_copy_value,
+                copy_value,
                 score: 10_000,
             });
         }
