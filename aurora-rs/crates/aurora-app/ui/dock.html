@@ -839,16 +839,50 @@ body:not(.state-ready) #dockBar {
     padding: 0 calc(18px * var(--ds));
 }
 
-/* 3-Zone Balanced Fixed Bar Layout (Left: Search & Folders | Center: Apps | Right: Tray, Derli, Pin) */
-#dockBar.pinned-bar.layout-split {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
+/* 3-Zone Adaptive Collision-Proof Dock Layout (Symmetric when balanced, Flex when asymmetric, Crowd tiers 1..3) */
+#dockBar:not(.tucked):not([data-dock-layout="symmetric"]) {
+    display: flex;
     align-items: center;
-    gap: calc(10px * var(--ds));
+    justify-content: space-between;
+    gap: calc(8px * var(--ds));
 }
+#dockBar[data-dock-layout="measure"] {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    width: max-content !important;
+    max-width: none !important;
+    gap: calc(8px * var(--ds)) !important;
+}
+#dockBar[data-dock-layout="measure"] .bar-zone-left,
+#dockBar[data-dock-layout="measure"] .bar-zone-center,
+#dockBar[data-dock-layout="measure"] .bar-zone-right {
+    flex: 0 0 auto !important;
+    width: max-content !important;
+    max-width: none !important;
+    overflow: visible !important;
+}
+#dockBar[data-dock-layout="symmetric"] {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+    align-items: center !important;
+    gap: calc(8px * var(--ds)) !important;
+}
+#dockBar[data-dock-layout="symmetric"] .bar-zone-left { justify-self: start; }
+#dockBar[data-dock-layout="symmetric"] .bar-zone-center { justify-self: center; }
+#dockBar[data-dock-layout="symmetric"] .bar-zone-right { justify-self: end; }
+#dockBar[data-dock-layout="flex"] {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: calc(8px * var(--ds)) !important;
+}
+#dockBar[data-dock-layout="flex"] .bar-zone-left { flex: 0 1 auto; min-width: 0; }
+#dockBar[data-dock-layout="flex"] .bar-zone-center { flex: 0 1 auto; min-width: 0; justify-content: center; }
+#dockBar[data-dock-layout="flex"] .bar-zone-right { flex: 0 1 auto; min-width: 0; }
 .bar-zone-left {
     display: flex; align-items: center; justify-content: flex-start;
-    gap: calc(6px * var(--ds)); min-width: 0;
+    gap: calc(5px * var(--ds)); min-width: 0; overflow: hidden;
 }
 .bar-zone-center {
     display: flex; align-items: center; justify-content: center;
@@ -856,7 +890,69 @@ body:not(.state-ready) #dockBar {
 }
 .bar-zone-right {
     display: flex; align-items: center; justify-content: flex-end;
-    gap: calc(6px * var(--ds)); min-width: 0;
+    gap: calc(5px * var(--ds)); min-width: 0; overflow: hidden;
+}
+.bar-zone-center.center-scroll {
+    flex: 1 1 0% !important;
+    justify-content: flex-start !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
+}
+.bar-zone-center.center-scroll::-webkit-scrollbar { display: none; }
+
+/* Progressive Crowd Tiers (data-crowd="1|2|3") */
+#dockBar[data-crowd="1"] .dw-seek-track { width: 46px !important; }
+#dockBar[data-crowd="1"] .dw-ms-meta { max-width: 74px !important; }
+#dockBar[data-crowd="1"] .dw-pill { padding: 0 7px; gap: 4px; }
+#dockBar[data-crowd="1"] .dock-status-pill,
+#dockBar[data-crowd="1"] .dock-clock-pill { padding: 0 7px; gap: 5px; }
+
+#dockBar[data-crowd="2"],
+#dockBar[data-crowd="3"] {
+    --item-sz: calc(35px * var(--ds));
+    --img-sz: calc(22px * var(--ds));
+}
+#dockBar[data-crowd="2"] .bar-zone-center,
+#dockBar[data-crowd="3"] .bar-zone-center {
+    gap: calc(3px * var(--ds));
+}
+#dockBar[data-crowd="2"] .dw-media-studio,
+#dockBar[data-crowd="3"] .dw-media-studio {
+    gap: 6px; padding: 0 4px;
+}
+#dockBar[data-crowd="2"] .dw-media-studio .dw-ms-timeline,
+#dockBar[data-crowd="2"] .dw-media-studio .dw-ms-vol,
+#dockBar[data-crowd="3"] .dw-media-studio .dw-ms-timeline,
+#dockBar[data-crowd="3"] .dw-media-studio .dw-ms-vol {
+    display: none !important;
+}
+#dockBar[data-crowd="2"] .dw-media-studio .dw-ms-meta,
+#dockBar[data-crowd="3"] .dw-media-studio .dw-ms-meta {
+    max-width: 68px !important;
+}
+#dockBar[data-crowd="2"] .dw-pill,
+#dockBar[data-crowd="3"] .dw-pill {
+    padding: 0 6px; gap: 4px;
+}
+#dockBar[data-crowd="2"] .dock-status-pill,
+#dockBar[data-crowd="2"] .dock-clock-pill,
+#dockBar[data-crowd="3"] .dock-status-pill,
+#dockBar[data-crowd="3"] .dock-clock-pill {
+    padding: 0 6px; gap: 4px;
+}
+#dockBar[data-crowd="3"] .dw-ms-artist,
+#dockBar[data-crowd="3"] .dw-st-bot,
+#dockBar[data-crowd="3"] .dock-clock-date,
+#dockBar[data-crowd="3"] .dw-ed-date,
+#dockBar[data-crowd="3"] .dw-sub,
+#dockBar[data-crowd="3"] .start-capsule span {
+    display: none !important;
+}
+#dockBar[data-crowd="3"] .dw-media-studio .dw-ms-meta {
+    max-width: 54px !important;
 }
 
 /* TUCKED INTELLIHIDE / AUTO-HIDE HOME INDICATOR — Ultra-slim 4px flush edge trigger! */
@@ -1941,10 +2037,7 @@ body.sil-islands:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) {
     border: none !important;
     box-shadow: none !important;
     pointer-events: none !important;
-    display: grid !important;
-    grid-template-columns: 1fr auto 1fr !important;
-    align-items: center !important;
-    gap: 12px !important;
+    gap: 10px !important;
 }
 body.sil-islands:not(.edge-left):not(.edge-right) #dockBar:not(.tucked)::after {
     display: none !important;
@@ -2412,27 +2505,38 @@ body.mode-light .dw-ms-vol:hover { background: rgba(15, 23, 42, 0.07); }
     display: inline-flex; align-items: center; justify-content: center;
 }
 
+.tray-btn,
 .dock-tray-chevron {
     position: relative;
-    width: calc(var(--item-sz) * 0.72);
+    width: auto;
+    min-width: calc(var(--item-sz) * 0.78);
     height: calc(var(--item-sz) * 0.78);
+    padding: 0 7px;
+    gap: 4px;
     border-radius: var(--radius-item);
-    border: 1px solid transparent;
-    background: transparent;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-card);
     color: var(--text-2);
     display: inline-flex; align-items: center; justify-content: center;
     cursor: pointer; flex-shrink: 0;
     transition: background 0.14s, color 0.14s, border-color 0.14s;
 }
+.tray-btn:hover, .tray-btn.open,
 .dock-tray-chevron:hover, .dock-tray-chevron.open {
-    background: var(--bg-card-hover); color: var(--text-1); border-color: var(--border-subtle);
+    background: var(--bg-card-hover); color: var(--text-1); border-color: var(--border-rim);
 }
-.dock-tray-chevron.open svg { transform: rotate(180deg); }
+.tray-btn svg, .dock-tray-chevron svg {
+    flex-shrink: 0; transition: transform 0.14s var(--ease);
+}
+.tray-btn.open svg, .dock-tray-chevron.open svg { transform: rotate(180deg); }
+.tray-btn .tray-dot-cnt,
 .dock-tray-chevron .tray-dot-cnt {
-    position: absolute; top: 1px; right: 1px;
-    min-width: 13px; height: 13px; padding: 0 3px;
+    position: static;
+    min-width: 15px; height: 15px; padding: 0 4px;
     border-radius: 99px; background: var(--accent-soft); color: var(--accent-1);
-    font-size: 8.5px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center;
+    font-size: 9.5px; font-weight: 800; line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
 }
 
 /* Hover Style: Glow (zero vertical lift, luminous accent aura) */
@@ -2987,16 +3091,56 @@ body.dock-edit-mode .dw-pill {
 .dw-pill.dw-sz-wide {
     padding: 0 12px; gap: 8px;
 }
+body .dw-pill.dw-st-clean,
 .dw-pill.dw-st-clean {
     background: transparent !important; border-color: transparent !important;
     box-shadow: none !important;
+    padding-left: 5px; padding-right: 5px;
 }
+body .dw-pill.dw-st-clean:hover,
+body .dw-pill.dw-st-clean.open,
 .dw-pill.dw-st-clean:hover {
-    background: rgba(255, 255, 255, 0.08) !important; border-color: rgba(255, 255, 255, 0.08) !important;
+    background: rgba(255, 255, 255, 0.08) !important; border-color: transparent !important;
+    box-shadow: none !important;
 }
-body.mode-light .dw-pill.dw-st-clean:hover {
-    background: rgba(15, 23, 42, 0.06) !important; border-color: rgba(15, 23, 42, 0.08) !important;
+body.mode-light .dw-pill.dw-st-clean:hover,
+body.mode-light .dw-pill.dw-st-clean.open {
+    background: rgba(15, 23, 42, 0.065) !important; border-color: transparent !important;
+    box-shadow: none !important;
 }
+.dw-pill.dw-st-clean .dw-ms-btn.box {
+    background: rgba(255, 255, 255, 0.09); border-color: transparent;
+}
+body.mode-light .dw-pill.dw-st-clean .dw-ms-btn.box {
+    background: rgba(15, 23, 42, 0.065); border-color: transparent;
+}
+.dw-ed-clock {
+    display: inline-flex; flex-direction: column; align-items: flex-end;
+    line-height: 1.05; gap: 1px;
+}
+.dw-ed-time {
+    font-size: 13px; font-weight: 800; letter-spacing: -0.025em; color: var(--text-1);
+}
+.dw-ed-date {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.04em;
+    text-transform: uppercase; color: var(--text-2);
+}
+.dw-quick-tools {
+    gap: 3px !important; padding: 0 5px !important;
+}
+.dw-qt-btn {
+    width: 24px; height: 24px; border-radius: 7px;
+    border: 1px solid transparent; background: transparent;
+    color: var(--text-2); display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0;
+    transition: background 0.12s, color 0.12s, border-color 0.12s, transform 0.10s;
+}
+.dw-qt-btn:hover {
+    background: var(--accent-soft); color: var(--accent-1);
+    border-color: rgba(var(--a1-rgb), 0.28); transform: translateY(-0.5px);
+}
+.dw-qt-btn:active { transform: scale(0.92); }
+.dw-pomo-ring { width: 17px; height: 17px; flex-shrink: 0; display: block; }
 .dw-pill.dw-st-tinted {
     background: linear-gradient(135deg, rgba(var(--a1-rgb), 0.22), rgba(var(--a2-rgb), 0.14)) !important;
     border-color: var(--accent-ring) !important;
@@ -3219,49 +3363,56 @@ body.mode-light .dw-pill {
 
 /* 1. TAHOE SPATIAL GLASS — Optical Floating Capsule + Specular Rim (Dark & Light, Horizontal & Vertical) */
 body.arch-tahoe-glass:not(.edge-left):not(.edge-right) .dock-stage:not(.tucked-stage):not(.pinned-bar-stage) {
-    padding-bottom: 6px !important;
+    padding-bottom: 8px !important;
 }
-body.arch-tahoe-glass:not(.edge-left):not(.edge-right) #dockBar:not(.pinned-bar):not(.tucked) {
-    width: fit-content !important; max-width: calc(100vw - 24px) !important;
-    height: calc(46px * var(--ds)) !important; min-height: calc(46px * var(--ds)) !important;
-    padding: 0 calc(13px * var(--ds)) !important;
+body.arch-tahoe-glass:not(.edge-left):not(.edge-right) #dockBar:not(.pinned-bar):not(.tucked):not([data-dock-layout="measure"]) {
+    width: fit-content; max-width: calc(100vw - 24px) !important;
+    height: calc(48px * var(--ds)) !important; min-height: calc(48px * var(--ds)) !important;
+    padding: 0 calc(14px * var(--ds)) !important;
 }
-body.arch-tahoe-glass:not(.edge-left):not(.edge-right) #dockBar:not(.pinned-bar).density-compact { height: calc(38px * var(--ds)) !important; min-height: calc(38px * var(--ds)) !important; }
-body.arch-tahoe-glass:not(.edge-left):not(.edge-right) #dockBar:not(.pinned-bar).density-cozy { height: calc(54px * var(--ds)) !important; min-height: calc(54px * var(--ds)) !important; }
+body.arch-tahoe-glass:not(.edge-left):not(.edge-right) #dockBar.has-center-scroll:not(.pinned-bar):not(.tucked) {
+    width: calc(100vw - 24px) !important;
+}
+body.arch-tahoe-glass:not(.edge-left):not(.edge-right) #dockBar:not(.pinned-bar).density-compact { height: calc(40px * var(--ds)) !important; min-height: calc(40px * var(--ds)) !important; }
+body.arch-tahoe-glass:not(.edge-left):not(.edge-right) #dockBar:not(.pinned-bar).density-cozy { height: calc(56px * var(--ds)) !important; min-height: calc(56px * var(--ds)) !important; }
 body.arch-tahoe-glass #dockBar:not(.pinned-bar):not(.tucked) {
     border-radius: 24px !important;
     background:
-        linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.03) 38%, transparent 68%),
+        linear-gradient(180deg, rgba(255,255,255,0.20) 0%, rgba(255,255,255,0.04) 38%, transparent 70%),
         linear-gradient(165deg, var(--bg-glass-1), var(--bg-glass-2)) !important;
-    border: 1.25px solid rgba(255, 255, 255, 0.28) !important;
+    border: 1.25px solid rgba(255, 255, 255, 0.30) !important;
     box-shadow:
         0 24px 54px -14px rgba(0, 0, 0, 0.68),
-        inset 0 1.5px 0 rgba(255, 255, 255, 0.42),
+        inset 0 1.5px 0 rgba(255, 255, 255, 0.45),
         inset 0 -1px 0 rgba(255, 255, 255, 0.08) !important;
 }
 body.arch-tahoe-glass.mode-light #dockBar:not(.pinned-bar):not(.tucked) {
     background:
-        linear-gradient(180deg, rgba(255,255,255,0.86) 0%, rgba(255,255,255,0.34) 44%, transparent 72%),
+        linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0.36) 44%, transparent 72%),
         linear-gradient(165deg, var(--bg-glass-1), var(--bg-glass-2)) !important;
     border-color: rgba(15, 23, 42, 0.14) !important;
     box-shadow:
         0 20px 44px -12px rgba(15, 23, 42, 0.20),
-        0 0 0 0.5px rgba(255, 255, 255, 0.85) inset,
-        inset 0 1.5px 0 #FFFFFF !important;
+        inset 0 1.5px 0 #FFFFFF,
+        inset 0 0 0 0.5px rgba(255, 255, 255, 0.85) !important;
 }
 body.arch-tahoe-glass .dock-item { border-radius: 14px !important; }
+body.arch-tahoe-glass:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-left {
+    padding-right: calc(8px * var(--ds)); border-right: 1px solid var(--border-subtle);
+}
+body.arch-tahoe-glass:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-right {
+    padding-left: calc(8px * var(--ds)); border-left: 1px solid var(--border-subtle);
+}
 body.arch-tahoe-glass .dock-pop,
 body.arch-tahoe-glass #omnibar { border-radius: 22px !important; }
 
 /* 2. NOTHING HARDWARE — 3 Detached Matte Dot-Matrix Hardware Islands (#EF4444 LED Dot) */
-body.arch-nothing-hardware:not(.edge-left):not(.edge-right) .dock-stage:not(.tucked-stage) { padding-bottom: 6px !important; }
+body.arch-nothing-hardware:not(.edge-left):not(.edge-right) .dock-stage:not(.tucked-stage) { padding-bottom: 8px !important; }
 body.arch-nothing-hardware:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) {
     width: calc(100vw - 24px) !important; max-width: calc(100vw - 24px) !important;
     height: auto !important; min-height: 0 !important; padding: 0 !important;
     background: transparent !important; border: none !important; box-shadow: none !important;
-    pointer-events: none !important;
-    display: grid !important; grid-template-columns: 1fr auto 1fr !important;
-    align-items: center !important; gap: 10px !important;
+    pointer-events: none !important; gap: 10px !important;
 }
 body.arch-nothing-hardware:not(.edge-left):not(.edge-right) #dockBar:not(.tucked)::after { display: none !important; }
 body.arch-nothing-hardware:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-left,
@@ -3270,7 +3421,7 @@ body.arch-nothing-hardware:not(.edge-left):not(.edge-right) #dockBar:not(.tucked
 body.arch-nothing-hardware.edge-left #dockBar:not(.tucked),
 body.arch-nothing-hardware.edge-right #dockBar:not(.tucked) {
     background:
-        radial-gradient(rgba(255,255,255,0.065) 1px, transparent 1px),
+        radial-gradient(rgba(255,255,255,0.07) 1px, transparent 1px),
         linear-gradient(180deg, rgba(16, 17, 22, 0.96), rgba(9, 10, 14, 0.98)) !important;
     background-size: 9px 9px, 100% 100% !important;
     border: 1px solid rgba(255, 255, 255, 0.16) !important;
@@ -3279,8 +3430,8 @@ body.arch-nothing-hardware.edge-right #dockBar:not(.tucked) {
 body.arch-nothing-hardware:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-left,
 body.arch-nothing-hardware:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-center,
 body.arch-nothing-hardware:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-right {
-    pointer-events: auto; width: fit-content; height: calc(46px * var(--ds));
-    padding: 0 calc(10px * var(--ds)); border-radius: 13px !important;
+    pointer-events: auto; height: calc(46px * var(--ds));
+    padding: 0 calc(10px * var(--ds)); border-radius: 14px !important;
 }
 body.arch-nothing-hardware.mode-light:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-left,
 body.arch-nothing-hardware.mode-light:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-center,
@@ -3288,22 +3439,20 @@ body.arch-nothing-hardware.mode-light:not(.edge-left):not(.edge-right) #dockBar:
 body.arch-nothing-hardware.mode-light.edge-left #dockBar:not(.tucked),
 body.arch-nothing-hardware.mode-light.edge-right #dockBar:not(.tucked) {
     background:
-        radial-gradient(rgba(15,23,42,0.075) 1px, transparent 1px),
-        linear-gradient(180deg, rgba(249, 249, 251, 0.98), rgba(236, 239, 244, 0.99)) !important;
+        radial-gradient(rgba(15,23,42,0.08) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(249, 249, 251, 0.98), rgba(235, 238, 244, 0.99)) !important;
     background-size: 9px 9px, 100% 100% !important;
     border-color: rgba(15, 23, 42, 0.16) !important;
     box-shadow: 0 14px 32px -12px rgba(15, 23, 42, 0.18), inset 0 1px 0 #FFFFFF !important;
 }
-body.arch-nothing-hardware:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-left { justify-self: start; }
-body.arch-nothing-hardware:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-center { justify-self: center; }
-body.arch-nothing-hardware:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-right { justify-self: end; }
 body.arch-nothing-hardware .dock-item,
 body.arch-nothing-hardware .dw-pill,
 body.arch-nothing-hardware .start-btn { border-radius: 9px !important; }
 body.arch-nothing-hardware .num,
-body.arch-nothing-hardware .dock-clock-time { font-family: var(--font-mono) !important; }
-body.arch-nothing-hardware.ind-dot .dock-item.active .dock-dot {
-    background: #EF4444 !important; box-shadow: 0 0 8px rgba(239, 68, 68, 0.72) !important;
+body.arch-nothing-hardware .dock-clock-time,
+body.arch-nothing-hardware .dw-ed-time { font-family: var(--font-mono) !important; }
+body.arch-nothing-hardware .dock-item.active .dock-dot {
+    background: #EF4444 !important; box-shadow: 0 0 8px rgba(239, 68, 68, 0.78) !important;
 }
 body.arch-nothing-hardware .dock-pop,
 body.arch-nothing-hardware #omnibar {
@@ -3348,39 +3497,48 @@ body.arch-linear-studio:not(.edge-left):not(.edge-right) #dockBar.pinned-bar.den
 body.arch-linear-studio .dock-item,
 body.arch-linear-studio .dw-pill,
 body.arch-linear-studio .start-btn,
+body.arch-linear-studio .tray-btn,
 body.arch-linear-studio .dock-status-pill,
 body.arch-linear-studio .dock-clock-pill { border-radius: 6px !important; }
-body.arch-linear-studio .dw-pill { background: transparent !important; border-color: var(--border-subtle) !important; }
+body.arch-linear-studio .dw-pill:not(.dw-st-clean) { background: transparent !important; border-color: var(--border-subtle) !important; }
 body.arch-linear-studio .dock-item.active {
     background: rgba(var(--a1-rgb), 0.11) !important; border-color: rgba(var(--a1-rgb), 0.30) !important;
+    box-shadow: none !important;
+}
+body.arch-linear-studio .dock-item.active .dock-dot {
+    height: 2px !important; width: 18px !important; border-radius: 1px !important;
+    box-shadow: none !important; bottom: 0 !important;
 }
 body.arch-linear-studio .dock-pop,
 body.arch-linear-studio #omnibar { border-radius: 10px !important; box-shadow: var(--shadow-shell) !important; }
 
 /* 4. VISION ORB — Full-Stadium Glass Capsule & Pure Circular Pearlescent Icon Orbs */
-body.arch-vision-orb:not(.edge-left):not(.edge-right) .dock-stage:not(.tucked-stage) { padding-bottom: 6px !important; }
-body.arch-vision-orb:not(.edge-left):not(.edge-right) #dockBar:not(.pinned-bar):not(.tucked) {
-    width: fit-content !important; max-width: calc(100vw - 24px) !important;
-    height: calc(46px * var(--ds)) !important; min-height: calc(46px * var(--ds)) !important;
-    padding: 0 calc(14px * var(--ds)) !important;
+body.arch-vision-orb:not(.edge-left):not(.edge-right) .dock-stage:not(.tucked-stage) { padding-bottom: 8px !important; }
+body.arch-vision-orb:not(.edge-left):not(.edge-right) #dockBar:not(.pinned-bar):not(.tucked):not([data-dock-layout="measure"]) {
+    width: fit-content; max-width: calc(100vw - 24px) !important;
+    height: calc(50px * var(--ds)) !important; min-height: calc(50px * var(--ds)) !important;
+    padding: 0 calc(15px * var(--ds)) !important;
+}
+body.arch-vision-orb:not(.edge-left):not(.edge-right) #dockBar.has-center-scroll:not(.pinned-bar):not(.tucked) {
+    width: calc(100vw - 24px) !important;
 }
 body.arch-vision-orb #dockBar:not(.pinned-bar):not(.tucked) {
     border-radius: 999px !important;
     background:
-        radial-gradient(ellipse 90% 60% at 50% 0%, rgba(255,255,255,0.22), transparent 64%),
-        linear-gradient(155deg, rgba(255,255,255,0.12), rgba(255,255,255,0.03) 55%, rgba(var(--a1-rgb),0.10)),
+        radial-gradient(ellipse 90% 60% at 50% 0%, rgba(255,255,255,0.24), transparent 64%),
+        linear-gradient(155deg, rgba(255,255,255,0.13), rgba(255,255,255,0.03) 55%, rgba(var(--a1-rgb),0.11)),
         var(--bg-glass-1) !important;
-    border: 1.5px solid rgba(255, 255, 255, 0.36) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.38) !important;
     box-shadow:
         0 26px 56px -12px rgba(0, 0, 0, 0.72),
         0 0 28px -10px rgba(var(--a1-rgb), 0.34),
-        inset 0 2px 0 rgba(255, 255, 255, 0.46),
+        inset 0 2px 0 rgba(255, 255, 255, 0.48),
         inset 0 -1.5px 0 rgba(255, 255, 255, 0.14) !important;
 }
 body.arch-vision-orb.mode-light #dockBar:not(.pinned-bar):not(.tucked) {
     background:
-        radial-gradient(ellipse 90% 60% at 50% 0%, rgba(255,255,255,0.92), transparent 68%),
-        linear-gradient(155deg, rgba(255,255,255,0.88), rgba(244,248,255,0.86) 55%, rgba(var(--a1-rgb),0.08)),
+        radial-gradient(ellipse 90% 60% at 50% 0%, rgba(255,255,255,0.94), transparent 68%),
+        linear-gradient(155deg, rgba(255,255,255,0.90), rgba(244,248,255,0.88) 55%, rgba(var(--a1-rgb),0.09)),
         var(--bg-glass-1) !important;
     border-color: rgba(15, 23, 42, 0.14) !important;
     box-shadow: 0 20px 44px -10px rgba(15, 23, 42, 0.20), inset 0 2px 0 #FFFFFF !important;
@@ -3388,21 +3546,21 @@ body.arch-vision-orb.mode-light #dockBar:not(.pinned-bar):not(.tucked) {
 body.arch-vision-orb .dock-item,
 body.arch-vision-orb .start-btn:not(.start-capsule) {
     border-radius: 50% !important;
-    background: rgba(255, 255, 255, 0.08) !important;
-    border: 1px solid rgba(255, 255, 255, 0.18) !important;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24) !important;
+    background: rgba(255, 255, 255, 0.085) !important;
+    border: 1px solid rgba(255, 255, 255, 0.19) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.26) !important;
 }
 body.arch-vision-orb.mode-light .dock-item,
 body.arch-vision-orb.mode-light .start-btn:not(.start-capsule) {
-    background: rgba(255, 255, 255, 0.72) !important;
+    background: rgba(255, 255, 255, 0.76) !important;
     border-color: rgba(15, 23, 42, 0.12) !important;
     box-shadow: inset 0 1px 0 #FFFFFF, 0 2px 6px -2px rgba(15, 23, 42, 0.10) !important;
 }
 body.arch-vision-orb .dock-item:hover,
 body.arch-vision-orb .dock-item.active {
-    background: radial-gradient(circle at 35% 25%, rgba(255,255,255,0.26), rgba(var(--a1-rgb),0.24)) !important;
-    border-color: rgba(255, 255, 255, 0.48) !important;
-    box-shadow: 0 0 16px -4px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.45) !important;
+    background: radial-gradient(circle at 35% 25%, rgba(255,255,255,0.28), rgba(var(--a1-rgb),0.25)) !important;
+    border-color: rgba(255, 255, 255, 0.50) !important;
+    box-shadow: 0 0 16px -4px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.48) !important;
 }
 body.arch-vision-orb.mode-light .dock-item:hover,
 body.arch-vision-orb.mode-light .dock-item.active {
@@ -3411,14 +3569,15 @@ body.arch-vision-orb.mode-light .dock-item.active {
     box-shadow: 0 0 14px -4px var(--accent-glow), inset 0 1px 0 #FFFFFF !important;
 }
 body.arch-vision-orb .dw-pill,
+body.arch-vision-orb .tray-btn,
 body.arch-vision-orb .dock-status-pill,
 body.arch-vision-orb .dock-clock-pill { border-radius: 999px !important; }
 body.arch-vision-orb .dock-pop,
 body.arch-vision-orb #omnibar { border-radius: 26px !important; }
 
 /* 5. ARC SPLIT — 2 Asymmetric Pods: Fused Navigation + Apps Card on Left/Center + Detached Utility Pod on Right */
-body.arch-arc-split:not(.edge-left):not(.edge-right) .dock-stage:not(.tucked-stage) { padding-bottom: 6px !important; }
-body.arch-arc-split:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) {
+body.arch-arc-split:not(.edge-left):not(.edge-right) .dock-stage:not(.tucked-stage) { padding-bottom: 8px !important; }
+body.arch-arc-split:not(.edge-left):not(.edge-right) #dockBar:not(.tucked):not([data-dock-layout="measure"]) {
     width: calc(100vw - 26px) !important; max-width: calc(100vw - 26px) !important;
     height: auto !important; min-height: 0 !important; padding: 0 !important;
     background: transparent !important; border: none !important; box-shadow: none !important;
@@ -3427,28 +3586,40 @@ body.arch-arc-split:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) {
 }
 body.arch-arc-split:not(.edge-left):not(.edge-right) #dockBar:not(.tucked)::after { display: none !important; }
 body.arch-arc-split:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-left {
-    pointer-events: auto; height: calc(46px * var(--ds));
-    padding: 0 calc(9px * var(--ds)) 0 calc(11px * var(--ds));
+    pointer-events: auto; height: calc(46px * var(--ds)); flex: 0 1 auto;
+    padding: 0 calc(10px * var(--ds)) 0 calc(11px * var(--ds));
     border-radius: 17px 0 0 17px !important;
-    background: linear-gradient(135deg, rgba(var(--a1-rgb),0.18), rgba(var(--a2-rgb),0.09)), var(--bg-glass-1) !important;
-    border: 1px solid rgba(var(--a1-rgb), 0.34) !important; border-right: none !important;
+    background: linear-gradient(135deg, rgba(var(--a1-rgb),0.20), rgba(var(--a2-rgb),0.10)), var(--bg-glass-1) !important;
+    border: 1px solid rgba(var(--a1-rgb), 0.36) !important; border-right: 1px solid var(--border-subtle) !important;
     box-shadow: var(--shadow-shell) !important;
 }
 body.arch-arc-split:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-center {
-    pointer-events: auto; height: calc(46px * var(--ds));
+    pointer-events: auto; height: calc(46px * var(--ds)); flex: 0 1 auto;
     padding: 0 calc(12px * var(--ds));
+    margin-right: 10px;
     border-radius: 0 17px 17px 0 !important;
     background: var(--bg-glass-2) !important;
-    border: 1px solid var(--border-rim) !important;
+    border: 1px solid var(--border-rim) !important; border-left: none !important;
     box-shadow: var(--shadow-shell) !important;
 }
+body.arch-arc-split:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-center.center-scroll {
+    flex: 1 1 0% !important;
+}
 body.arch-arc-split:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-right {
-    pointer-events: auto; margin-left: auto; height: calc(46px * var(--ds));
+    pointer-events: auto; margin-left: auto; flex: 0 1 auto; height: calc(46px * var(--ds));
     padding: 0 calc(11px * var(--ds));
     border-radius: 17px !important;
     background: linear-gradient(160deg, var(--bg-glass-1), var(--bg-glass-2)) !important;
     border: 1px solid var(--border-rim) !important;
     box-shadow: var(--shadow-shell) !important;
+}
+body.arch-arc-split.mode-light:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-left {
+    background: linear-gradient(135deg, rgba(var(--a1-rgb),0.14), rgba(var(--a2-rgb),0.08)), rgba(255,255,255,0.92) !important;
+    border-color: rgba(var(--a1-rgb), 0.32) !important;
+}
+body.arch-arc-split.mode-light:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-center {
+    background: rgba(255, 255, 255, 0.90) !important;
+    border-color: rgba(15, 23, 42, 0.14) !important;
 }
 body.arch-arc-split.edge-left #dockBar:not(.tucked),
 body.arch-arc-split.edge-right #dockBar:not(.tucked) {
@@ -3462,45 +3633,48 @@ body.arch-arc-split .dock-item.active {
     border: 1px solid rgba(var(--a1-rgb), 0.42) !important;
 }
 
-/* 6. BRAUN ATELIER — Solid Anodized Matte Aluminum/Ceramic Slab, Concave Wells, Signal Orange #EA580C */
-body.arch-braun-atelier:not(.edge-left):not(.edge-right) .dock-stage:not(.tucked-stage) { padding-bottom: 6px !important; }
-body.arch-braun-atelier:not(.edge-left):not(.edge-right) #dockBar:not(.pinned-bar):not(.tucked) {
-    width: calc(100vw - 32px) !important; max-width: calc(100vw - 32px) !important;
-    height: calc(46px * var(--ds)) !important; min-height: calc(46px * var(--ds)) !important;
+/* 6. BRAUN ATELIER — Solid Anodized Matte Aluminum/Ceramic Slab, Recessed Controls, Signal Orange #EA580C */
+body.arch-braun-atelier:not(.edge-left):not(.edge-right) .dock-stage:not(.tucked-stage) { padding-bottom: 8px !important; }
+body.arch-braun-atelier:not(.edge-left):not(.edge-right) #dockBar:not(.pinned-bar):not(.tucked):not([data-dock-layout="measure"]) {
+    width: calc(100vw - 28px) !important; max-width: calc(100vw - 28px) !important;
+    height: calc(48px * var(--ds)) !important; min-height: calc(48px * var(--ds)) !important;
     padding: 0 calc(12px * var(--ds)) !important;
 }
 body.arch-braun-atelier #dockBar:not(.pinned-bar):not(.tucked) {
     border-radius: 10px !important;
     background: #17181C !important;
     border: 1px solid rgba(255, 255, 255, 0.14) !important;
-    box-shadow: 0 18px 36px -10px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255, 255, 255, 0.10), inset 0 -1px 0 rgba(0, 0, 0, 0.55) !important;
+    box-shadow: 0 18px 36px -10px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255, 255, 255, 0.11), inset 0 -1px 0 rgba(0, 0, 0, 0.55) !important;
 }
 body.arch-braun-atelier #dockBar:not(.pinned-bar):not(.tucked)::after { display: none !important; }
 body.arch-braun-atelier.mode-light #dockBar:not(.pinned-bar):not(.tucked) {
-    background: #EFECE6 !important;
+    background: #EAE6DF !important;
     border: 1px solid rgba(24, 24, 27, 0.18) !important;
     box-shadow: 0 14px 30px -10px rgba(24,24,27,0.18), inset 0 1px 0 #FFFFFF, inset 0 -1px 0 rgba(0, 0, 0, 0.08) !important;
 }
-body.arch-braun-atelier .dw-pill,
+body.arch-braun-atelier .dw-pill:not(.dw-st-clean),
 body.arch-braun-atelier .dock-status-pill,
-body.arch-braun-atelier .dock-clock-pill {
+body.arch-braun-atelier .dock-clock-pill,
+body.arch-braun-atelier .tray-btn {
     border-radius: 7px !important; background: rgba(0, 0, 0, 0.28) !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
     box-shadow: inset 0 1.5px 3px rgba(0, 0, 0, 0.35) !important;
 }
-body.arch-braun-atelier.mode-light .dw-pill,
+body.arch-braun-atelier.mode-light .dw-pill:not(.dw-st-clean),
 body.arch-braun-atelier.mode-light .dock-status-pill,
-body.arch-braun-atelier.mode-light .dock-clock-pill {
-    background: #E4DFD6 !important; border-color: rgba(24, 24, 27, 0.14) !important;
+body.arch-braun-atelier.mode-light .dock-clock-pill,
+body.arch-braun-atelier.mode-light .tray-btn {
+    background: #DFDAD0 !important; border-color: rgba(24, 24, 27, 0.14) !important;
     box-shadow: inset 0 1.5px 3px rgba(0, 0, 0, 0.10) !important;
 }
 body.arch-braun-atelier .dock-item { border-radius: 8px !important; }
 body.arch-braun-atelier .dock-item.active {
-    background: rgba(234, 88, 12, 0.12) !important;
+    background: rgba(234, 88, 12, 0.14) !important;
+    border-color: rgba(234, 88, 12, 0.36) !important;
     box-shadow: inset 0 1px 3px rgba(0,0,0,0.3) !important;
 }
-body.arch-braun-atelier.ind-dot .dock-item.active .dock-dot {
-    background: #EA580C !important; box-shadow: 0 0 6px rgba(234,88,12,0.7) !important;
+body.arch-braun-atelier .dock-item.active .dock-dot {
+    background: #EA580C !important; box-shadow: 0 0 6px rgba(234,88,12,0.72) !important;
 }
 body.arch-braun-atelier .dock-pop,
 body.arch-braun-atelier #omnibar {
@@ -3531,9 +3705,10 @@ body.arch-swiss-editorial.mode-light #dockBar:not(.tucked) {
 body.arch-swiss-editorial.mode-light:not(.edge-left):not(.edge-right) #dockBar.pinned-bar {
     border-top: 2px solid #111827 !important;
 }
-body.arch-swiss-editorial .dw-pill,
+body.arch-swiss-editorial .dw-pill:not(.dw-st-clean),
 body.arch-swiss-editorial .dock-status-pill,
 body.arch-swiss-editorial .dock-clock-pill,
+body.arch-swiss-editorial .tray-btn,
 body.arch-swiss-editorial .dock-item,
 body.arch-swiss-editorial .start-btn {
     border-radius: 3px !important;
@@ -3555,19 +3730,19 @@ body.arch-swiss-editorial.mode-light #omnibar {
 }
 
 /* 8. COCKPIT HUD — Chamfered 45° Octagon Aerospace Rail, Blueprint Grid, Laser Top Reticle */
-body.arch-cockpit-hud:not(.edge-left):not(.edge-right) .dock-stage:not(.tucked-stage) { padding-bottom: 6px !important; }
-body.arch-cockpit-hud:not(.edge-left):not(.edge-right) #dockBar:not(.pinned-bar):not(.tucked) {
+body.arch-cockpit-hud:not(.edge-left):not(.edge-right) .dock-stage:not(.tucked-stage) { padding-bottom: 8px !important; }
+body.arch-cockpit-hud:not(.edge-left):not(.edge-right) #dockBar:not(.pinned-bar):not(.tucked):not([data-dock-layout="measure"]) {
     width: calc(100vw - 24px) !important; max-width: calc(100vw - 24px) !important;
-    height: calc(46px * var(--ds)) !important; min-height: calc(46px * var(--ds)) !important;
-    padding: 0 calc(16px * var(--ds)) !important; border-radius: 0 !important;
+    height: calc(48px * var(--ds)) !important; min-height: calc(48px * var(--ds)) !important;
+    padding: 0 calc(18px * var(--ds)) !important; border-radius: 0 !important;
     clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px) !important;
 }
 body.arch-cockpit-hud #dockBar:not(.pinned-bar):not(.tucked) {
     border-top: 2px solid var(--accent-1) !important;
     border-bottom: 1px solid rgba(var(--a1-rgb), 0.35) !important;
     background:
-        linear-gradient(rgba(var(--a1-rgb), 0.055) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(var(--a1-rgb), 0.055) 1px, transparent 1px),
+        linear-gradient(rgba(var(--a1-rgb), 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(var(--a1-rgb), 0.06) 1px, transparent 1px),
         linear-gradient(180deg, rgba(8, 13, 24, 0.96), rgba(4, 8, 16, 0.98)) !important;
     background-size: 14px 14px, 14px 14px, 100% 100% !important;
 }
@@ -3578,18 +3753,21 @@ body.arch-cockpit-hud.edge-right #dockBar:not(.tucked) {
 }
 body.arch-cockpit-hud.mode-light #dockBar:not(.pinned-bar):not(.tucked) {
     background:
-        linear-gradient(rgba(var(--a1-rgb), 0.08) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(var(--a1-rgb), 0.08) 1px, transparent 1px),
-        linear-gradient(180deg, rgba(244, 248, 255, 0.97), rgba(232, 240, 250, 0.99)) !important;
+        linear-gradient(rgba(var(--a1-rgb), 0.09) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(var(--a1-rgb), 0.09) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(242, 247, 255, 0.97), rgba(229, 238, 250, 0.99)) !important;
     background-size: 14px 14px, 14px 14px, 100% 100% !important;
 }
 body.arch-cockpit-hud .num,
-body.arch-cockpit-hud .dock-clock-time { font-family: var(--font-mono) !important; letter-spacing: 0.04em; }
+body.arch-cockpit-hud .dock-clock-time,
+body.arch-cockpit-hud .dw-ed-time { font-family: var(--font-mono) !important; letter-spacing: 0.04em; }
 body.arch-cockpit-hud .dock-item,
 body.arch-cockpit-hud .dw-pill,
+body.arch-cockpit-hud .tray-btn,
 body.arch-cockpit-hud .start-btn { border-radius: 4px !important; }
 body.arch-cockpit-hud .dock-item.active {
-    background: linear-gradient(180deg, rgba(var(--a1-rgb), 0.20), transparent) !important;
+    background: linear-gradient(180deg, rgba(var(--a1-rgb), 0.22), transparent) !important;
+    border-color: rgba(var(--a1-rgb), 0.45) !important;
 }
 body.arch-cockpit-hud .dock-pop,
 body.arch-cockpit-hud #omnibar {
@@ -3621,28 +3799,24 @@ body.arch-fluent-mica.mode-light .dock-item.active {
 }
 
 /* 10. ZEN GHOST — Zero-Chrome Floating Wallpaper Icons & Whisper Capsules */
-body.arch-zen-ghost:not(.edge-left):not(.edge-right) .dock-stage:not(.tucked-stage) { padding-bottom: 6px !important; }
+body.arch-zen-ghost:not(.edge-left):not(.edge-right) .dock-stage:not(.tucked-stage) { padding-bottom: 8px !important; }
 body.arch-zen-ghost:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) {
     width: calc(100vw - 24px) !important; max-width: calc(100vw - 24px) !important;
     height: auto !important; min-height: 0 !important; padding: 0 !important;
     background: transparent !important; border: none !important; box-shadow: none !important;
-    pointer-events: none !important;
-    display: grid !important; grid-template-columns: 1fr auto 1fr !important; align-items: center !important;
+    pointer-events: none !important; gap: 10px !important;
 }
 body.arch-zen-ghost:not(.edge-left):not(.edge-right) #dockBar:not(.tucked)::after { display: none !important; }
 body.arch-zen-ghost:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-left,
 body.arch-zen-ghost:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-center,
 body.arch-zen-ghost:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-right {
-    pointer-events: auto; width: fit-content; height: calc(46px * var(--ds)); padding: 0 6px;
+    pointer-events: auto; height: calc(46px * var(--ds)); padding: 0 6px;
     background: transparent !important; border: none !important; box-shadow: none !important;
 }
 body.arch-zen-ghost.edge-left #dockBar:not(.tucked),
 body.arch-zen-ghost.edge-right #dockBar:not(.tucked) {
     background: transparent !important; border: none !important; box-shadow: none !important;
 }
-body.arch-zen-ghost .bar-zone-left { justify-self: start; }
-body.arch-zen-ghost .bar-zone-center { justify-self: center; }
-body.arch-zen-ghost .bar-zone-right { justify-self: end; }
 body.arch-zen-ghost .dock-item img { filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.55)); }
 body.arch-zen-ghost.mode-light .dock-item img { filter: drop-shadow(0 3px 8px rgba(15, 23, 42, 0.25)); }
 body.arch-zen-ghost .dock-item:hover,
@@ -3656,16 +3830,38 @@ body.arch-zen-ghost.mode-light .dock-item.active {
     border-color: rgba(15, 23, 42, 0.12) !important;
     box-shadow: 0 8px 20px -6px rgba(15, 23, 42, 0.16) !important;
 }
-body.arch-zen-ghost .dw-pill,
+body.arch-zen-ghost .dw-pill.dw-st-clean {
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
+}
+body.arch-zen-ghost.mode-light .dw-pill.dw-st-clean {
+    text-shadow: 0 1px 3px rgba(255, 255, 255, 0.78);
+}
+body.arch-zen-ghost .dw-pill:not(.dw-st-clean),
+body.arch-zen-ghost .tray-btn,
 body.arch-zen-ghost .dock-status-pill,
 body.arch-zen-ghost .dock-clock-pill {
     background: rgba(12, 16, 28, 0.58) !important; border-color: rgba(255, 255, 255, 0.16) !important;
 }
-body.arch-zen-ghost.mode-light .dw-pill,
+body.arch-zen-ghost.mode-light .dw-pill:not(.dw-st-clean),
+body.arch-zen-ghost.mode-light .tray-btn,
 body.arch-zen-ghost.mode-light .dock-status-pill,
 body.arch-zen-ghost.mode-light .dock-clock-pill {
     background: rgba(255, 255, 255, 0.78) !important; border-color: rgba(15, 23, 42, 0.14) !important;
 }
+
+/* 1-Click Dock Design Switcher Chips inside Picker & Context Menu */
+.dwp-design-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
+}
+.dwp-design-btn {
+    padding: 5px 4px; border-radius: 8px;
+    border: 1px solid var(--border-subtle); background: var(--bg-card);
+    color: var(--text-2); font-family: var(--font); font-size: 9.5px; font-weight: 700;
+    cursor: pointer; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.dwp-design-btn:hover { background: var(--bg-card-hover); color: var(--text-1); border-color: var(--border-rim); }
+.dwp-design-btn.active { background: var(--accent-soft); border-color: var(--accent-ring); color: var(--accent-1); }
         </style>
         </head>
         <body>
@@ -3957,8 +4153,9 @@ const DOCK_ZONE_LABELS = {
     'far-right': 'En Sağ'
 };
 const DOCK_WIDGET_META = {
-    'clock':             { name: 'Saat',             icon: SVG.clock,    variants: [['classic','Klasik'], ['dot5x7','LED 5×7'], ['flip','Split-Flap'], ['analog','Kronograf'], ['matrix','Dot-Matrix'], ['world','Dünya']] },
+    'clock':             { name: 'Saat',             icon: SVG.clock,    variants: [['editorial-2line','Editoryal 2-Satır'], ['classic','Klasik'], ['dot5x7','LED 5×7'], ['flip','Split-Flap'], ['analog','Kronograf'], ['matrix','Dot-Matrix'], ['world','Dünya']] },
     'media':             { name: 'Müzik Çalar',      icon: SVG.musicSm,  variants: [['studio-bar','Stüdyo Bar'], ['art-pill','Kapak & Dalga'], ['vinyl','Vinil Plak'], ['eq','Ekolayzer'], ['capsule','Kapsül']] },
+    'quick-tools':       { name: 'Hızlı Araçlar',    icon: SVG.bolt,     variants: [['strip','Araç Şeridi'], ['compact','Kompakt']] },
     'volume-slider':     { name: 'Ses Kaydırıcı',    icon: SVG.vol,      variants: [['bar','Kaydırıcı'], ['mini','Mini']] },
     'brightness-slider': { name: 'Parlaklık Barı',   icon: SVG.sun,      variants: [['bar','Kaydırıcı'], ['mini','Mini']] },
     'mic-privacy':       { name: 'Mikrofon & LED',   icon: SVG.mic,      variants: [['pill','Kapsül'], ['icon','Sadece İkon']] },
@@ -3968,10 +4165,20 @@ const DOCK_WIDGET_META = {
     'battery':           { name: 'Pil & Bluetooth',  icon: SVG.battery,  variants: [['studio','Stüdyo 2-Satır'], ['ring','Halka'], ['pill','Kapsül']] },
     'system':            { name: 'CPU & RAM',        icon: SVG.cpu,      variants: [['studio','Stüdyo 2-Satır'], ['bars','Çubuk'], ['spark','Canlı Eğri'], ['text','Metin']] },
     'network':           { name: 'Ağ Hızı',          icon: SVG.activity, variants: [['speed','Canlı Hız']] },
-    'pomodoro':          { name: 'Pomodoro',         icon: SVG.timer,    variants: [['pill','Sayaç']] },
+    'pomodoro':          { name: 'Pomodoro',         icon: SVG.timer,    variants: [['ring','Halka Sayaç'], ['pill','Kapsül']] },
     'market':            { name: 'Döviz & BTC',      icon: SVG.market,   variants: [['ticker','Kayan Kur']] },
     'clipboard':         { name: 'Son Pano',         icon: SVG.clip,     variants: [['latest','Özet']] }
 };
+const DOCK_DESIGNS = [
+    { id: 'tahoe-glass', name: 'Tahoe Cam', sub: 'Yüzen Kristal' },
+    { id: 'arc-split', name: 'Arc İkili', sub: 'Bölümlü Ada' },
+    { id: 'linear-studio', name: 'Linear 40px', sub: 'Sıfır Parıltı' },
+    { id: 'nothing-hardware', name: 'Nothing 3-Ada', sub: 'Dot-Matrix' },
+    { id: 'vision-orb', name: 'Vision Küre', sub: 'Dairesel Halo' },
+    { id: 'braun-atelier', name: 'Braun Konsol', sub: 'Mat Anodize' },
+    { id: 'zen-ghost', name: 'Zen Hayalet', sub: 'Şeffaf Şerit' },
+    { id: 'cockpit-hud', name: 'Kokpit HUD', sub: 'Taktik Izgara' }
+];
 const ALL_SHELL_ARCHS = ['tahoe-glass', 'nothing-hardware', 'linear-studio', 'vision-orb', 'arc-split', 'braun-atelier', 'swiss-editorial', 'cockpit-hud', 'fluent-mica', 'zen-ghost'];
 const FLOATING_ARCHS = ['tahoe-glass', 'vision-orb', 'braun-atelier', 'cockpit-hud'];
 const SPLIT_ARCHS = ['nothing-hardware', 'arc-split', 'zen-ghost'];
@@ -4055,6 +4262,108 @@ function applyDockGeometryAndOffset() {
         el._baseW = null;
         el._baseH = null;
     });
+}
+
+let _fittingDockZones = false;
+function fitDockZones() {
+    const dock = document.getElementById('dockBar');
+    if (!dock || isVerticalEdge() || isDockTuckedNow()) {
+        if (dock) {
+            dock.removeAttribute('data-crowd');
+            dock.removeAttribute('data-dock-layout');
+            dock.classList.remove('has-center-scroll');
+        }
+        return;
+    }
+    const leftEl = dock.querySelector('.bar-zone-left');
+    const centerEl = dock.querySelector('.bar-zone-center');
+    const rightEl = dock.querySelector('.bar-zone-right');
+    if (!leftEl || !centerEl || !rightEl) return;
+    if (_fittingDockZones) return;
+    _fittingDockZones = true;
+    try {
+        const arch = getShellArchitecture();
+        const sil = getDockSilhouette();
+        const isIslands = (sil === 'islands' || SPLIT_ARCHS.includes(arch));
+        const isArc = (arch === 'arc-split');
+        const isFitCapsule = !isPinnedBarMode() && !isIslands && (arch === 'tahoe-glass' || arch === 'vision-orb');
+
+        const cs = getComputedStyle(dock);
+        const padX = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
+        const viewportLimit = Math.max(320, window.innerWidth - (isPinnedBarMode() ? 0 : 26));
+        const dockInnerW = Math.max(240, viewportLimit - padX);
+        const gap = isIslands ? 10 : 8;
+
+        const measureZones = (crowdLevel) => {
+            dock.setAttribute('data-crowd', String(crowdLevel));
+            dock.setAttribute('data-dock-layout', 'measure');
+            dock.classList.remove('has-center-scroll');
+            centerEl.classList.remove('center-scroll');
+            leftEl.style.maxWidth = '';
+            rightEl.style.maxWidth = '';
+            centerEl.style.maxWidth = '';
+            const lw = Math.ceil(leftEl.getBoundingClientRect().width);
+            const cw = Math.ceil(centerEl.getBoundingClientRect().width);
+            const rw = Math.ceil(rightEl.getBoundingClientRect().width);
+            return { lw, cw, rw };
+        };
+
+        let chosenCrowd = 0;
+        let chosenLayout = 'flex';
+        let m = measureZones(0);
+
+        const canSym = (x) => !isArc && !isFitCapsule && (Math.max(x.lw, x.rw) * 2 + x.cw + gap * 2 <= dockInnerW);
+        const canFlex = (x) => (x.lw + x.cw + x.rw + gap * 2 <= dockInnerW);
+
+        if (canSym(m)) {
+            chosenCrowd = 0;
+            chosenLayout = 'symmetric';
+        } else if (canFlex(m)) {
+            chosenCrowd = 0;
+            chosenLayout = 'flex';
+        } else {
+            for (const tier of [1, 2, 3]) {
+                m = measureZones(tier);
+                chosenCrowd = tier;
+                if (canSym(m)) {
+                    chosenLayout = 'symmetric';
+                    break;
+                }
+                if (canFlex(m)) {
+                    chosenLayout = 'flex';
+                    break;
+                }
+            }
+        }
+
+        dock.setAttribute('data-crowd', String(chosenCrowd));
+        dock.setAttribute('data-dock-layout', chosenLayout);
+
+        // Mathematical zero-overlap clamp: ensure left.right <= center.left and center.right <= right.left
+        const lr = leftEl.getBoundingClientRect();
+        const cr = centerEl.getBoundingClientRect();
+        const rr = rightEl.getBoundingClientRect();
+        const availForCenter = Math.max(0, dockInnerW - lr.width - rr.width - gap * 2);
+        if (cr.width > availForCenter + 1 || lr.right > cr.left + 0.5 || cr.right > rr.left + 0.5) {
+            if (chosenLayout === 'symmetric') {
+                dock.setAttribute('data-dock-layout', 'flex');
+            }
+            if (lr.width + rr.width + gap * 2 + 120 > dockInnerW) {
+                const sideBudget = Math.max(88, dockInnerW - 120 - gap * 2);
+                const lShare = Math.round(sideBudget * (lr.width / Math.max(1, lr.width + rr.width)));
+                const rShare = Math.max(64, sideBudget - lShare);
+                leftEl.style.maxWidth = `${lShare}px`;
+                rightEl.style.maxWidth = `${rShare}px`;
+            }
+            dock.classList.add('has-center-scroll');
+            centerEl.classList.add('center-scroll');
+        } else if (centerEl.scrollWidth > centerEl.clientWidth + 2) {
+            dock.classList.add('has-center-scroll');
+            centerEl.classList.add('center-scroll');
+        }
+    } finally {
+        _fittingDockZones = false;
+    }
 }
 
 function send(action, payload = {}) {
@@ -4586,7 +4895,7 @@ function renderDock() {
 
     const utilsHtml = showStatus ? `
         ${farRightZoneHtml}
-        <button class="dock-tray-chevron ${trayPopOpen ? 'open' : ''}" onclick="toggleDockTrayPop(event)" title="Gizli Simgeler (${trayCount})">
+        <button class="tray-btn dock-tray-chevron ${trayPopOpen ? 'open' : ''}" onclick="toggleDockTrayPop(event)" title="Gizli Simgeler (${trayCount})">
             ${SVG.tray}
             ${trayCount > 0 ? `<span class="tray-dot-cnt num">${trayCount}</span>` : ''}
         </button>
@@ -4635,7 +4944,24 @@ function renderDock() {
     `;
 
     let html;
-    if (splitLayout) {
+    if (!isVert) {
+        html = `
+            <div class="bar-zone-left">
+                ${searchHtml}
+                ${foldersHtml ? `<div class="dock-sep"></div>${foldersHtml}` : ''}
+                ${farLeftZoneHtml}
+                ${addWidgetBtnHtml}
+            </div>
+            <div class="bar-zone-center">
+                ${beforeAppsZoneHtml}
+                ${appsHtml}
+                ${afterAppsZoneHtml}
+            </div>
+            <div class="bar-zone-right">
+                ${utilsHtml}
+            </div>
+        `;
+    } else if (splitLayout) {
         html = `
             <div class="bar-zone-left">
                 ${searchHtml}
@@ -4668,6 +4994,8 @@ function renderDock() {
     }
 
     dock.innerHTML = html;
+    applyDockGeometryAndOffset();
+    fitDockZones();
     applyDockGeometryAndOffset();
 
     if (branchCatId) {
@@ -4786,6 +5114,17 @@ function renderClockInnerByVariant(variant) {
     }
     if (variant === 'matrix') {
         return `<span class="dw-matrix-clock num" id="dockClockTime">${escHtml(clk)}</span>`;
+    }
+    if (variant === 'editorial-2line') {
+        const daysShort = ['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
+        const dow = daysShort[new Date().getDay()];
+        const dateLine = shortDate ? `${shortDate} · ${dow}` : dow;
+        return `
+            <span class="dw-ed-clock">
+                <span class="dw-ed-time num" id="dockClockTime">${escHtml(clk)}</span>
+                <span class="dw-ed-date">${escHtml(dateLine)}</span>
+            </span>
+        `;
     }
     if (variant === 'world') {
         const now = new Date();
@@ -5129,9 +5468,36 @@ function renderDockMicroWidgetHtml(w, zoneId, zoneIdx) {
         const fmt = kb => kb >= 1000 ? (kb / 1024).toFixed(1) + 'M' : Math.round(kb) + 'K';
         return `<button class="${baseCls} num" ${dwAttrs} onclick="${guardClick}send('openToolsHub',{tab:'telemetry'})" title="Canlı Ağ Hızı"><span>↓${fmt(rx)}</span><span class="dw-sub">↑${fmt(tx)}</span></button>`;
     }
+    if (w.kind === 'quick-tools') {
+        const isCompact = v === 'compact';
+        return `
+            <div class="${baseCls} dw-quick-tools" ${dwAttrs} title="Hızlı Araçlar · OCR, Renk Seçici, Ekran Alıntısı, Araçlar Merkezi · Sağ Tık: Özelleştir">
+                <button class="dw-qt-btn" onpointerdown="event.stopPropagation();" onclick="event.stopPropagation();send('startScreenOcr');" title="Ekran OCR (Metin Yakala)">${SVG.scanText}</button>
+                <button class="dw-qt-btn" onpointerdown="event.stopPropagation();" onclick="event.stopPropagation();send('startColorPicker');" title="Renk Seçici (Eyedropper)">${SVG.pipette}</button>
+                ${isCompact ? '' : `<button class="dw-qt-btn" onpointerdown="event.stopPropagation();" onclick="event.stopPropagation();send('launchPath',{path:'ms-screenclip:'});" title="Ekran Alıntısı">${SVG.scissors}</button>`}
+                <button class="dw-qt-btn" onpointerdown="event.stopPropagation();" onclick="event.stopPropagation();send('openToolsHub',{tab:'shelf'});" title="Araçlar Merkezi">${SVG.grid}</button>
+            </div>
+        `;
+    }
     if (w.kind === 'pomodoro') {
         const f = state.focus || { running: false, label: '25:00' };
-        return `<button class="${baseCls} num ${f.running ? 'active' : ''}" ${dwAttrs} onclick="${guardClick}send('toggleFocus')" title="Pomodoro (Tıkla: Başlat / Duraklat)"><span style="color:${f.running ? 'var(--accent-1)' : 'var(--text-2)'};display:inline-flex;">${SVG.timer}</span><span>${escHtml(f.label || '25:00')}</span></button>`;
+        const total = Math.max(1, Number(f.totalSeconds || f.durationSecs || 1500));
+        const rem = Math.max(0, Math.min(total, Number(f.seconds ?? total)));
+        const frac = f.running ? Math.max(0.05, Math.min(1, rem / total)) : (rem < total ? rem / total : 1);
+        const dashOffset = (44 * (1 - frac)).toFixed(1);
+        if (v === 'pill') {
+            return `<button class="${baseCls} num ${f.running ? 'active' : ''}" ${dwAttrs} onclick="${guardClick}send('toggleFocus')" title="Pomodoro (Tıkla: Başlat / Duraklat)"><span style="color:${f.running ? 'var(--accent-1)' : 'var(--text-2)'};display:inline-flex;">${SVG.timer}</span><span>${escHtml(f.label || '25:00')}</span></button>`;
+        }
+        return `
+            <button class="${baseCls} num ${f.running ? 'active' : ''}" ${dwAttrs} onclick="${guardClick}send('toggleFocus')" title="Pomodoro Odak · Tıkla: Başlat / Duraklat · Sağ Tık: Özelleştir">
+                <svg class="dw-pomo-ring" viewBox="0 0 18 18">
+                    <circle cx="9" cy="9" r="7" fill="none" stroke="var(--border-subtle)" stroke-width="2.1"/>
+                    <circle cx="9" cy="9" r="7" fill="none" stroke="${f.running ? 'var(--accent-1)' : 'var(--text-2)'}" stroke-width="2.1"
+                            stroke-dasharray="44" stroke-dashoffset="${dashOffset}" stroke-linecap="round" transform="rotate(-90 9 9)"/>
+                </svg>
+                <span>${escHtml(f.label || '25:00')}</span>
+            </button>
+        `;
     }
     if (w.kind === 'market') {
         const mk = state.market || {};
@@ -5336,7 +5702,7 @@ const DOCK_WIDGET_CATEGORIES = [
     { id: 'time', label: 'Zaman & Odak', kinds: ['clock', 'pomodoro'] },
     { id: 'media', label: 'Medya & Ses', kinds: ['media', 'volume-slider', 'mic-privacy'] },
     { id: 'sys', label: 'Sistem & Ekran', kinds: ['brightness-slider', 'desktops', 'system', 'network', 'battery'] },
-    { id: 'info', label: 'Bilgi & Araçlar', kinds: ['weather', 'ai-quota', 'market', 'clipboard'] }
+    { id: 'info', label: 'Bilgi & Araçlar', kinds: ['quick-tools', 'weather', 'ai-quota', 'market', 'clipboard'] }
 ];
 
 function setWidgetPickerCat(catId) {
@@ -5390,18 +5756,25 @@ function renderDockWidgetPickerPop() {
         rowsHtml = items.map(renderRow).join('');
     }
 
+    const curArch = getShellArchitecture();
     el.innerHTML = `
         <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
             <div>
-                <div style="font-size:12.5px;font-weight:800;">Alt Dock Widget'ları (${activeCnt}/${list.length || 14})</div>
+                <div style="font-size:12.5px;font-weight:800;">Alt Dock Widget'ları (${activeCnt}/${list.length || 15})</div>
                 <div style="font-size:10px;color:var(--text-2);">4 bölge arasında sürükleyin · Sağ tıkla boyut/stil/tekerlek</div>
             </div>
             <button class="micro-btn" onclick="closeAllDockPopovers(true)">${SVG.close}</button>
         </div>
+        <div>
+            <div class="dwi-lbl">Dock Tasarımı (1-Tık)</div>
+            <div class="dwp-design-grid">
+                ${DOCK_DESIGNS.map(d => `<button class="dwp-design-btn ${curArch === d.id ? 'active' : ''}" onclick="send('setShellArchitecture',{arch:'${d.id}'})" title="${escAttr(d.name + ' · ' + d.sub)}">${escHtml(d.name)}</button>`).join('')}
+            </div>
+        </div>
         <div class="dwp-cats">
             ${DOCK_WIDGET_CATEGORIES.map(c => `<button class="dwp-cat-btn ${widgetPickerCat === c.id ? 'active' : ''}" onclick="setWidgetPickerCat('${c.id}')">${escHtml(c.label)}</button>`).join('')}
         </div>
-        <div style="display:flex;flex-direction:column;gap:5px;max-height:252px;overflow-y:auto;padding-right:2px;">
+        <div style="display:flex;flex-direction:column;gap:5px;max-height:220px;overflow-y:auto;padding-right:2px;">
             ${rowsHtml || `<div style="padding:14px;text-align:center;font-size:11px;color:var(--text-2);">Bu kategoride widget yok.</div>`}
         </div>
         <div class="qc-foot">
@@ -5941,14 +6314,14 @@ function renderCtxMenuPop() {
     const el = document.getElementById('dockCtxMenu');
     if (!el || !state || !ctxMenuOpen) return;
     const curHub = state.dockHubStyle || 'dendritic';
-    const curSil = getDockSilhouette();
+    const curArch = getShellArchitecture();
     const rawInd = state.dockIndicatorStyle || 'dot';
     const curInd = rawInd === 'frame' ? 'pill' : rawInd;
-    positionDockPopover(el, { width: 260, height: 420, left: ctxMenuX, anchorY: ctxMenuY });
+    positionDockPopover(el, { width: 268, height: 470, left: ctxMenuX, anchorY: ctxMenuY });
 
     el.innerHTML = `
         <button class="ctx-row" onclick="toggleDockWidgetPicker(event);">
-            ${SVG.plus}<span>Alt Dock Widget Ekle (14 Pro Widget)</span>
+            ${SVG.plus}<span>Alt Dock Widget Ekle (15 Pro Widget)</span>
         </button>
         <button class="ctx-row" onclick="closeAllDockPopovers(true);send('setDockEditMode',{active:${!state.dockEditMode}});">
             ${SVG.moveWin}<span>${state.dockEditMode ? '✓ Alt Dock Düzenlemeyi Bitir' : 'Alt Dock Widget\'larını Sürükle-Düzenle'}</span>
@@ -5963,20 +6336,17 @@ function renderCtxMenuPop() {
             ${SVG.grid}<span>Widget Stüdyosu (30 Widget)</span>
         </button>
         <div class="ctx-sep"></div>
+        <div style="font-size:9.5px;font-weight:800;color:var(--text-2);padding:2px 8px;text-transform:uppercase;letter-spacing:0.05em;">Dock Tasarımı (8 Stil)</div>
+        <div class="ctx-style-chips">
+            ${DOCK_DESIGNS.map(d => `<button class="ctx-chip ${curArch === d.id ? 'active' : ''}" onclick="send('setShellArchitecture',{arch:'${d.id}'});closeAllDockPopovers(true);" title="${escAttr(d.sub)}">${escHtml(d.name)}</button>`).join('')}
+        </div>
+        <div class="ctx-sep"></div>
         <div style="font-size:9.5px;font-weight:800;color:var(--text-2);padding:2px 8px;text-transform:uppercase;letter-spacing:0.05em;">Aktif Gösterge</div>
         <div class="ctx-style-chips">
             <button class="ctx-chip ${curInd === 'dot' ? 'active' : ''}" onclick="send('setDockIndicatorStyle',{style:'dot'});closeAllDockPopovers(true);">Nokta</button>
             <button class="ctx-chip ${curInd === 'bar' ? 'active' : ''}" onclick="send('setDockIndicatorStyle',{style:'bar'});closeAllDockPopovers(true);">Çubuk</button>
             <button class="ctx-chip ${curInd === 'glow' ? 'active' : ''}" onclick="send('setDockIndicatorStyle',{style:'glow'});closeAllDockPopovers(true);">Parıltı</button>
             <button class="ctx-chip ${curInd === 'pill' ? 'active' : ''}" onclick="send('setDockIndicatorStyle',{style:'pill'});closeAllDockPopovers(true);">Kapsül</button>
-        </div>
-        <div class="ctx-sep"></div>
-        <div style="font-size:9.5px;font-weight:800;color:var(--text-2);padding:2px 8px;text-transform:uppercase;letter-spacing:0.05em;">Dock Silüeti</div>
-        <div class="ctx-style-chips">
-            <button class="ctx-chip ${curSil === 'fixed' ? 'active' : ''}" onclick="send('setDockSilhouette',{silhouette:'fixed'});closeAllDockPopovers(true);">Sabit Çubuk</button>
-            <button class="ctx-chip ${curSil === 'islands' ? 'active' : ''}" onclick="send('setDockSilhouette',{silhouette:'islands'});closeAllDockPopovers(true);">Ayrık Adalar</button>
-            <button class="ctx-chip ${curSil === 'floating' ? 'active' : ''}" onclick="send('setDockSilhouette',{silhouette:'floating'});closeAllDockPopovers(true);">Yüzen Cam</button>
-            <button class="ctx-chip ${curSil === 'minimal-rail' ? 'active' : ''}" onclick="send('setDockSilhouette',{silhouette:'minimal-rail'});closeAllDockPopovers(true);">Minimal Şerit</button>
         </div>
         <div class="ctx-sep"></div>
         <div style="font-size:9.5px;font-weight:800;color:var(--text-2);padding:2px 8px;text-transform:uppercase;letter-spacing:0.05em;">Pencere Dallanma Stili</div>
@@ -7730,15 +8100,31 @@ document.addEventListener('mouseleave', () => {
 });
 
 window.addEventListener('resize', () => {
+    fitDockZones();
     applyDockGeometryAndOffset();
     reportHitRects();
     requestAnimationFrame(reportHitRects);
 });
 
 if (typeof ResizeObserver !== 'undefined') {
-    const dockResizeObs = new ResizeObserver(() => {
-        applyDockGeometryAndOffset();
-        reportHitRects();
+    let _lastFitW = window.innerWidth;
+    let _fitRaf = null;
+    const dockResizeObs = new ResizeObserver((entries) => {
+        const rootChanged = entries.some(en => en.target === document.documentElement) || window.innerWidth !== _lastFitW;
+        if (rootChanged) {
+            _lastFitW = window.innerWidth;
+            if (!_fitRaf) {
+                _fitRaf = requestAnimationFrame(() => {
+                    _fitRaf = null;
+                    fitDockZones();
+                    applyDockGeometryAndOffset();
+                    reportHitRects();
+                });
+            }
+        } else {
+            applyDockGeometryAndOffset();
+            reportHitRects();
+        }
     });
     dockResizeObs.observe(document.documentElement);
     for (const id of ['dockBar', 'omnibar', 'radialHub', 'folderStackCard', 'dockQuickControls', 'dockCalNotif', 'dockTrayPop', 'dockWidgetPicker', 'dockWidgetInspector', 'dockAiPop', 'dockCtxMenu', 'quickWheelPop']) {
@@ -8488,7 +8874,7 @@ function renderOmniBar(preserveInput = false) {
                        oninput="onOmniInput(this.value)"
                        onkeydown="handleOmniKeydown(event)"
                        onfocus="requestDockInputFocus()"/>
-                ${omniQuery ? `<button class="tray-btn" style="width:22px;height:22px;" title="Temizle" onclick="omniQuery='';omniIdx=0;document.getElementById('omniInput').value='';onOmniInput('');document.getElementById('omniInput').focus();">${SVG.close}</button>` : ''}
+                ${omniQuery ? `<button class="micro-btn" style="width:22px;height:22px;" title="Temizle" onclick="omniQuery='';omniIdx=0;document.getElementById('omniInput').value='';onOmniInput('');document.getElementById('omniInput').focus();">${SVG.close}</button>` : ''}
                 <span class="omni-kbd">ESC</span>
             </div>
             <div class="omni-filters" id="omniFilters">
@@ -8768,9 +9154,13 @@ window.chrome.webview.addEventListener('message', e => {
     } else if (msg.type === 'dockLivePreview') {
         liveScaleOverride = typeof msg.scalePercent === 'number' ? msg.scalePercent : null;
         applyDockGeometryAndOffset();
+        fitDockZones();
+        applyDockGeometryAndOffset();
         reportHitRects();
         requestAnimationFrame(reportHitRects);
     } else if (msg.type === 'syncLayout') {
+        applyDockGeometryAndOffset();
+        fitDockZones();
         applyDockGeometryAndOffset();
         reportHitRects();
     } else if (msg.type === 'cursorWake') {
