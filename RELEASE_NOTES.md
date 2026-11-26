@@ -1,5 +1,13 @@
 # Project Aurora — Sürüm Notları
 
+## v8.1.0
+> Summary: Çakışmasız adaptif Dock motoru (`fitDockZones`), tepsi rozet/ok ayrımı, gerçek çerçevesiz `clean` widget görünümü, 8 özgün Dock stili, 8 Dinamik Ada stili + Ayarlar Tasarım Galerisi, Daily Brief / Multi-Ring Battery / Cockpit Telemetry / Atmospheric Weather amiral gemisi widget'ları ve `atelier-showcase` şablonu.
+
+### Öne Çıkanlar
+- **Çakışmasız Dock Motoru, Tepsi Rozet Ayrımı & Gerçek `clean` Widget'lar (`dock.html`):** `fitDockZones()` ve `ResizeObserver` ile tüm ekran genişliklerinde (`data-crowd="1|2|3"` + sol/orta/sağ bölge sınırı) sıfır bölge çakışması; `.tray-btn` ile `.dock-tray-chevron` yan yana konumlandırılarak sayaç rozetinin üst üste binmesi giderildi; `dw-st-clean` seçicisi Dark ve Light modlarda 8 Dock tasarımının tamamında gerçek kenarlıksız/arka plansız render sağlar; ayrıca `quick-tools` ve 1 tıkla Dock Tasarım seçicisi eklendi.
+- **8 Özgün Dock Stili & 8 Dinamik Ada Stili + Tasarım Galerisi (`dock.html`, `crown.html`, `models.rs`):** `Tahoe Glass`, `Arc Split`, `Linear Studio`, `Nothing Hardware`, `Vision Orb`, `Braun Atelier`, `Zen Ghost`, `Cockpit HUD` Dock tasarımları ile `Sıvı Hap`, `Mac Çentik`, `İkili Kapsül (Twin Split)`, `Ufuk Çizgisi`, `Nothing Glyph`, `Yörünge Halka`, `Stüdyo Şerit`, `Gizli Ufuk (Stealth Horizon)` Dinamik Ada stilleri (gizlilik koruması aktifken bile özgün siluetini koruyacak şekilde) ve görsel **Ayarlar Tasarım Galerisi** sunuldu.
+- **Amiral Gemisi Masaüstü Widget'ları & `atelier-showcase` (`widgets.html`, `widgets_store.rs`, `bridge.rs`):** Yeni **Günlük Özet (`daily-brief`)** widget'ı, **Çok Halkalı Pil (`multi-ring`)**, **Kokpit Telemetri (`cockpit`)** (çift radyal CPU/RAM kadranı + sparkline + ağ/disk çubukları), **Atmosferik Hava Durumu (`atmospheric`)**, güncellenmiş `world-clock` / `swiss-chrono` / `turntable` görünümleri, 6 malzeme yüzeyi ve yeni **`atelier-showcase`** masaüstü şablonu eklendi.
+
 ## v8.0.0
 > Summary: Flagship tasarım dili ve 26 WCAG AA+/AAA tema, yüzey başına revizyon bazlı `iconCacheDelta` IPC ile %90+ daha küçük görev çubuğu yükleri, otomatik `wpn_snap` anlık görüntü temizliği, akıllı OmniSearch (AST hesaplama, birim/döviz, dünya saatleri ve sistem komutları) ve sıfır-hata üretim kararlılığı.
 
