@@ -8,6 +8,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::{atomic_write_bytes, aurora_data_dir};
 
+/// Current schema version for bottom Dock micro-widgets polish & migration.
+pub const CURRENT_DOCK_WIDGETS_SCHEMA_VER: u8 = 2;
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WidgetsPersistenceDoc {
@@ -33,7 +36,7 @@ impl Default for WidgetsPersistenceDoc {
             dock_widgets: default_dock_widgets(),
             todos: Vec::new(),
             countdown: default_countdown(),
-            dock_widgets_schema_ver: 1,
+            dock_widgets_schema_ver: CURRENT_DOCK_WIDGETS_SCHEMA_VER,
         }
     }
 }
@@ -69,13 +72,13 @@ impl WidgetsLayoutStore {
                 doc.ai_configs.push(def);
             }
         }
-        // Ensure all 14 Pro bottom Dock micro-widgets exist and normalize 4-zone fields on upgrade
+        // Ensure all 15 Pro bottom Dock micro-widgets exist and run one-time v2 polish migration
         let mut upgraded = false;
-        if doc.dock_widgets_schema_ver < 1 {
-            doc.dock_widgets_schema_ver = 1;
+        if doc.dock_widgets_schema_ver < CURRENT_DOCK_WIDGETS_SCHEMA_VER {
+            doc.dock_widgets_schema_ver = CURRENT_DOCK_WIDGETS_SCHEMA_VER;
             upgraded = true;
             for dw in &mut doc.dock_widgets {
-                if dw.style_mode == "pill" {
+                if matches!(dw.style_mode.as_str(), "pill" | "tinted" | "glass" | "") {
                     dw.style_mode = "clean".into();
                 }
                 if dw.kind == "media" && dw.variant == "vinyl" {
@@ -84,12 +87,33 @@ impl WidgetsLayoutStore {
                 if dw.kind == "weather" && dw.variant == "pill" {
                     dw.variant = "studio".into();
                 }
+                if dw.kind == "clock" && (dw.variant == "classic" || dw.variant == "default" || dw.variant.is_empty()) {
+                    dw.variant = "editorial-2line".into();
+                }
+            }
+            // Prevent legacy 1280px+ dock crowding by trimming overcrowded enabled pill sets to airy defaults
+            let enabled_count = doc.dock_widgets.iter().filter(|w| w.enabled).count();
+            if enabled_count > 3 {
+                let mut kept = 0usize;
+                for dw in &mut doc.dock_widgets {
+                    if !dw.enabled {
+                        continue;
+                    }
+                    let is_core = matches!(dw.kind.as_str(), "media" | "weather" | "clock");
+                    if is_core && kept < 3 {
+                        kept += 1;
+                    } else {
+                        dw.enabled = false;
+                    }
+                }
             }
         }
         for w in &mut doc.dock_widgets {
             let before_z = w.zone.clone();
+            let before_v = w.variant.clone();
+            let before_s = w.style_mode.clone();
             w.normalize();
-            if before_z != w.zone {
+            if before_z != w.zone || before_v != w.variant || before_s != w.style_mode {
                 upgraded = true;
             }
         }
@@ -125,7 +149,8 @@ mod tests {
         let initial = store.load();
         assert_eq!(initial.widgets.len(), 2, "First run should seed 2 starter widgets");
         assert_eq!(initial.ai_configs.len(), 3, "All 3 AI providers (openai/gemini/claude) present");
-        assert_eq!(initial.dock_widgets.len(), 14, "All 14 Pro bottom Dock micro-widgets seeded");
+        assert_eq!(initial.dock_widgets.len(), 15, "All 15 Pro bottom Dock micro-widgets seeded");
+        assert_eq!(initial.dock_widgets_schema_ver, CURRENT_DOCK_WIDGETS_SCHEMA_VER);
 
         let mut modified = initial.clone();
         modified.widgets.push(DesktopWidgetInstance {
@@ -210,18 +235,60 @@ mod tests {
         std::fs::write(tmp.join("widgets_layout.json"), legacy_json).unwrap();
         let store = WidgetsLayoutStore::new(Some(tmp.clone()));
         let mut doc = store.load();
-        assert_eq!(doc.dock_widgets_schema_ver, 1);
+        assert_eq!(doc.dock_widgets_schema_ver, 2);
         let med = doc.dock_widgets.iter().find(|w| w.kind == "media").unwrap();
         assert_eq!(med.variant, "studio-bar");
         assert_eq!(med.style_mode, "clean");
         let wth = doc.dock_widgets.iter().find(|w| w.kind == "weather").unwrap();
         assert_eq!(wth.variant, "studio");
 
-        // User changes style back to pill afterwards -> schema_ver == 1 preserves override!
+        // User changes style back to pill afterwards -> schema_ver == 2 preserves override!
         doc.dock_widgets.iter_mut().find(|w| w.kind == "media").unwrap().style_mode = "pill".into();
         store.save(&doc);
         let reloaded = store.load();
         assert_eq!(reloaded.dock_widgets.iter().find(|w| w.kind == "media").unwrap().style_mode, "pill");
+
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    #[test]
+    fn dock_widgets_schema_ver_2_migration_polishes_v1_crowded_pills_once() {
+        let tmp = std::env::temp_dir().join(format!("aurora_dw_mig_v2_{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&tmp);
+        std::fs::create_dir_all(&tmp).unwrap();
+        let v1_json = r#"{
+            "dockWidgetsSchemaVer": 1,
+            "dockWidgets": [
+                {"id":"dw-media","kind":"media","slot":"left","zone":"far-left","order":0,"variant":"studio-bar","size":"normal","styleMode":"pill","wheelAction":"default","enabled":true},
+                {"id":"dw-weather","kind":"weather","slot":"left","zone":"far-left","order":1,"variant":"studio","size":"normal","styleMode":"tinted","wheelAction":"default","enabled":true},
+                {"id":"dw-clock","kind":"clock","slot":"right","zone":"far-right","order":0,"variant":"classic","size":"normal","styleMode":"glass","wheelAction":"default","enabled":true},
+                {"id":"dw-volume","kind":"volume-slider","slot":"right","zone":"after-apps","order":0,"variant":"bar","size":"normal","styleMode":"pill","wheelAction":"default","enabled":true},
+                {"id":"dw-mic","kind":"mic-privacy","slot":"left","zone":"before-apps","order":0,"variant":"pill","size":"normal","styleMode":"pill","wheelAction":"default","enabled":true}
+            ]
+        }"#;
+        std::fs::write(tmp.join("widgets_layout.json"), v1_json).unwrap();
+        let store = WidgetsLayoutStore::new(Some(tmp.clone()));
+        let mut doc = store.load();
+        assert_eq!(doc.dock_widgets_schema_ver, 2);
+        assert!(doc.dock_widgets.iter().any(|w| w.kind == "quick-tools"));
+
+        // Bordered legacy pills cleaned & crowded extras trimmed for 1280px+ displays
+        for w in &doc.dock_widgets {
+            assert_eq!(w.style_mode, "clean", "{} should be polished to clean", w.kind);
+        }
+        assert_eq!(doc.dock_widgets.iter().find(|w| w.kind == "clock").unwrap().variant, "editorial-2line");
+        let enabled_kinds: Vec<&str> = doc.dock_widgets.iter().filter(|w| w.enabled).map(|w| w.kind.as_str()).collect();
+        assert_eq!(enabled_kinds, vec!["media", "weather", "clock"]);
+
+        // Re-enabling quick-tools with custom style after schema v2 is preserved across reloads
+        let qt = doc.dock_widgets.iter_mut().find(|w| w.kind == "quick-tools").unwrap();
+        qt.enabled = true;
+        qt.style_mode = "tinted".into();
+        store.save(&doc);
+        let reloaded = store.load();
+        let qt2 = reloaded.dock_widgets.iter().find(|w| w.kind == "quick-tools").unwrap();
+        assert!(qt2.enabled);
+        assert_eq!(qt2.style_mode, "tinted");
 
         let _ = std::fs::remove_dir_all(&tmp);
     }
