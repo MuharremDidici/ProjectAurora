@@ -109,8 +109,13 @@ body.edit-mode #editBanner { display: flex; }
 .widget-card.w-sz-S { width: 236px; min-height: 116px; padding: 13px 15px; }
 .widget-card.w-sz-M { width: 320px; min-height: 148px; padding: 16px 18px; }
 .widget-card.w-sz-L { width: 392px; min-height: 184px; padding: 18px 20px; }
+.widget-card.w-kind-studio-strip.w-sz-M,
+.widget-card.w-kind-studio-strip.w-sz-L { width: 448px; min-height: 68px; padding: 11px 15px; }
+.widget-card.w-kind-studio-strip.w-sz-S { width: 336px; min-height: 62px; padding: 10px 13px; }
+.widget-card.w-kind-forecast-strip.w-sz-M,
+.widget-card.w-kind-forecast-strip.w-sz-L { width: 368px; min-height: 132px; }
 
-/* ═══════════ 5 INDUSTRIAL DESIGN ARCHETYPES (SKINS) ═══════════ */
+/* ═══════════ 6 INDUSTRIAL DESIGN ARCHETYPES (SKINS) ═══════════ */
 
 /* 1. OPTICAL GLASS (Apple Tahoe / visionOS) */
 .widget-card.skin-glass {
@@ -118,6 +123,9 @@ body.edit-mode #editBanner { display: flex; }
     border: 1px solid var(--border-rim);
     backdrop-filter: blur(28px) saturate(165%);
     box-shadow: var(--shadow-w);
+}
+body.mode-light .widget-card.skin-glass {
+    border-color: rgba(15, 23, 42, 0.14);
 }
 .widget-card.skin-glass::before {
     content: ''; position: absolute; inset: 0 0 auto 0; height: 1px; pointer-events: none;
@@ -154,11 +162,24 @@ body.mode-light .widget-card.skin-glass::before {
 }
 .widget-card.skin-frameless .ai-row,
 .widget-card.skin-frameless .mkt-chip,
+.widget-card.skin-frameless .mkt-conv,
+.widget-card.skin-frameless .world-cell,
+.widget-card.skin-frameless .forecast-slot,
+.widget-card.skin-frameless .weath-cell,
 .widget-card.skin-frameless .td-row,
 .widget-card.skin-frameless .ln-btn {
-    background: rgba(12, 16, 26, 0.38);
-    border-color: rgba(255, 255, 255, 0.16);
+    background: rgba(12, 16, 26, 0.44);
+    border-color: rgba(255, 255, 255, 0.18);
+    color: #FFFFFF;
     backdrop-filter: blur(14px);
+}
+.widget-card.skin-frameless .td-inp,
+.widget-card.skin-frameless .note-ta,
+.widget-card.skin-frameless .mkt-conv-inp,
+.widget-card.skin-frameless .mkt-conv-sel {
+    background: rgba(12, 16, 26, 0.52);
+    border-color: rgba(255, 255, 255, 0.22);
+    color: #FFFFFF;
 }
 body.edit-mode .widget-card.skin-frameless {
     border: 1px dashed rgba(var(--a1-rgb), 0.72) !important;
@@ -511,6 +532,9 @@ body.mode-light .widget-card:not(.skin-frameless) .deck-window { background: rgb
     display: flex; align-items: center; justify-content: center;
     background: rgba(255, 255, 255, 0.06); border: 1px solid var(--border-subtle);
 }
+body.mode-light .widget-card:not(.skin-frameless) .ai-emblem {
+    background: rgba(15, 23, 42, 0.05); border-color: rgba(15, 23, 42, 0.10);
+}
 .ai-emblem svg { width: 16px; height: 16px; }
 .ai-bar { height: 4px; border-radius: 99px; background: var(--border-subtle); overflow: hidden; margin-top: 5px; }
 .ai-fill { height: 100%; border-radius: 99px; transition: width 0.35s var(--ease); }
@@ -521,6 +545,7 @@ body.mode-light .widget-card:not(.skin-frameless) .deck-window { background: rgb
 .ring-svg { width: 58px; height: 58px; }
 .ring-lbl { font-size: 10.5px; font-weight: 600; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 82px; }
 .bar-track { height: 6px; border-radius: 99px; background: var(--border-subtle); overflow: hidden; }
+body.mode-light .widget-card:not(.skin-frameless) .bar-track { background: rgba(15, 23, 42, 0.11); }
 .bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent-1), var(--accent-2)); transition: width 0.35s var(--ease); }
 
 /* ═══════════ 6. OTHER WIDGETS (TODO / MARKET / LAUNCHER / NOTES / POMODORO / ETC.) ═══════════ */
@@ -562,8 +587,39 @@ body.mode-light .widget-card:not(.skin-frameless) .deck-window { background: rgb
 .td-chk.done { background: var(--accent-1); border-color: var(--accent-1); }
 .td-txt { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
 .td-txt.done { text-decoration: line-through; opacity: 0.5; }
-.mkt-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; }
-.mkt-chip { padding: 8px 10px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-subtle); }
+.mkt-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.mkt-chip { padding: 7px 9px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-subtle); min-width: 0; }
+.mkt-conv {
+    margin-top: 7px; padding: 6px 8px; border-radius: 10px;
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+    display: flex; align-items: center; gap: 6px;
+}
+.mkt-conv-inp {
+    width: 66px; height: 24px; border-radius: 7px; padding: 0 7px;
+    border: 1px solid var(--border-subtle); background: transparent; color: var(--text-1);
+    font-family: inherit; font-size: 11px; font-weight: 700; outline: none; user-select: text;
+}
+.mkt-conv-inp:focus { border-color: var(--accent-1); }
+.mkt-conv-sel {
+    height: 24px; border-radius: 7px; padding: 0 5px;
+    border: 1px solid var(--border-subtle); background: var(--bg-glass-2); color: var(--text-1);
+    font-family: inherit; font-size: 10px; font-weight: 700; outline: none; cursor: pointer;
+}
+.forecast-strip-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 9px; }
+.forecast-slot {
+    padding: 7px 5px; border-radius: 10px; text-align: center;
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+}
+.pomo-preset-row { display: flex; gap: 4px; margin-top: 8px; }
+.pomo-preset-btn {
+    flex: 1; height: 23px; border-radius: 7px; border: 1px solid var(--border-subtle);
+    background: var(--bg-card); color: var(--text-2); font-size: 10px; font-weight: 700; cursor: pointer;
+    transition: background 0.13s, color 0.13s, border-color 0.13s;
+}
+.pomo-preset-btn:hover, .pomo-preset-btn.active {
+    background: rgba(var(--a1-rgb), 0.18); border-color: var(--accent-1); color: var(--accent-1);
+}
 .quote-body { font-size: 13.5px; font-weight: 500; line-height: 1.5; font-style: italic; }
 
 /* ═══════════ DIRECT RIGHT-CLICK PRO INSPECTOR ═══════════ */
@@ -608,11 +664,16 @@ body.mode-light .widget-card:not(.skin-frameless) .deck-window { background: rgb
 }
 body.mode-light .widget-card.skin-neoglass {
     background:
-        linear-gradient(165deg, rgba(255,255,255,0.92) 0%, rgba(244,247,252,0.78) 100%);
-    border-color: rgba(255,255,255,0.90);
+        linear-gradient(165deg, rgba(255,255,255,0.92) 0%, rgba(244,247,252,0.82) 100%);
+    border-color: rgba(15, 23, 42, 0.12);
     box-shadow:
         0 18px 42px -12px rgba(15, 23, 42, 0.18),
+        0 1px 3px rgba(15, 23, 42, 0.06),
         inset 0 1.5px 0 #FFFFFF;
+}
+body.mode-light .widget-card:not(.skin-frameless) .cassette-shell {
+    background: rgba(15, 23, 42, 0.045);
+    border-color: rgba(15, 23, 42, 0.12);
 }
 .med-poster-card { position: relative; min-height: 158px; display: flex; flex-direction: column; justify-content: flex-end; margin: -4px; border-radius: 16px; overflow: hidden; padding: 14px; background: linear-gradient(145deg, rgba(var(--a1-rgb),0.28), rgba(var(--a2-rgb),0.22), #0F172A); }
 .med-poster-bg { position: absolute; inset: 0; background-size: cover; background-position: center; }
@@ -805,9 +866,21 @@ const VARIANT_CATALOG = {
     ],
     weather: [
         { id: 'dynamic-sky', name: 'Canlı Gökyüzü' },
+        { id: 'forecast-strip', name: 'Tahmin Şeridi' },
         { id: 'barometer', name: 'Braun Barometre' },
         { id: 'telemetry', name: 'Telemetri' },
         { id: 'minimal', name: 'Sade' }
+    ],
+    'world-clock': [
+        { id: 'cities', name: '4 Şehir Izgara' },
+        { id: 'compact', name: 'Kompakt Liste' }
+    ],
+    'studio-strip': [
+        { id: 'strip', name: 'Stüdyo Şeridi' }
+    ],
+    'forecast-strip': [
+        { id: 'strip', name: 'Saatlik Şerit' },
+        { id: 'card', name: 'Detay Kart' }
     ],
     'ai-quota': [
         { id: 'cards', name: 'Kartlar' },
@@ -862,12 +935,13 @@ const VARIANT_CATALOG = {
 };
 
 const KIND_LABELS = {
-    clock: 'Saat', media: 'Medya Oynatıcı', weather: 'Hava Durumu', 'ai-quota': 'AI Kota Stüdyosu',
+    clock: 'Saat', 'world-clock': 'Dünya Saatleri', media: 'Medya Oynatıcı', 'studio-strip': 'Medya Şeridi',
+    weather: 'Hava Durumu', 'forecast-strip': 'Hava Tahmin Şeridi', 'ai-quota': 'AI Kota Stüdyosu',
     battery: 'Pil & Bluetooth', system: 'Sistem Telemetri', calendar: 'Takvim & Ajanda',
     'audio-mixer': 'Ses Mikseri', 'focus-rings': 'Odak Halkaları', 'photo-frame': 'Fotoğraf Çerçevesi', 'quick-drop': 'Hızlı Pano & Araç',
-    notes: 'Yapışkan Not', pomodoro: 'Odak Zamanlayıcı', launcher: 'Hızlı Başlatıcı',
-    todo: 'Görev Listesi', market: 'Piyasa & Döviz', countdown: 'Geri Sayım',
-    'storage-net': 'Disk & Ağ', quote: 'Günün Sözü', 'local-ai': 'Yerel AI Monitör'
+    notes: 'Yapışkan Not', 'quick-note': 'Hızlı Not', pomodoro: 'Odak Zamanlayıcı', 'pomodoro-studio': 'Odak Stüdyo', focus: 'Odak Zamanlayıcı',
+    launcher: 'Hızlı Başlatıcı', todo: 'Görev Listesi', market: 'Piyasa & Döviz', 'currency-ticker': 'Döviz Çevirici',
+    countdown: 'Geri Sayım', 'storage-net': 'Disk & Ağ', quote: 'Günün Sözü', 'local-ai': 'Yerel AI Monitör'
 };
 
 const QUOTES_TR = [
@@ -878,6 +952,23 @@ const QUOTES_TR = [
     { text: 'Odaklanmak, yüzlerce iyi fikre hayır diyebilmektir.', author: 'Aurora Stüdyo' }
 ];
 
+const ICON_CACHE = new Map();
+function ingestIconCacheDelta(delta) {
+    if (!delta || typeof delta !== 'object') return;
+    for (const [k, v] of Object.entries(delta)) {
+        if (k && typeof v === 'string' && v.length > 0) ICON_CACHE.set(k, v);
+    }
+}
+function resolveItemIcon(item) {
+    if (!item || typeof item !== 'object') return null;
+    if (typeof item.icon === 'string' && item.icon.length > 0) {
+        if (item.iconKey) ICON_CACHE.set(item.iconKey, item.icon);
+        return item.icon;
+    }
+    if (item.iconKey && ICON_CACHE.has(item.iconKey)) return ICON_CACHE.get(item.iconKey);
+    return null;
+}
+
 let state = null;
 let dragCtx = null;
 let lastRenderSig = '';
@@ -886,6 +977,7 @@ let countdownEditOpen = false;
 let quoteOffset = 0;
 let inspectorWid = null;
 let inspectorPos = { x: 0, y: 0 };
+const marketConvState = { amount: '100', pair: 'usd-try' };
 
 function escHtml(s) {
     return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -1103,6 +1195,96 @@ function btDeviceIcon(cat) {
     return IC.battery;
 }
 
+function renderWorldClockHtml(now, compact) {
+    const zones = [
+        { city: 'İstanbul', tag: 'TRT', tz: 'Europe/Istanbul' },
+        { city: 'Londra', tag: 'LON', tz: 'Europe/London' },
+        { city: 'New York', tag: 'NYC', tz: 'America/New_York' },
+        { city: 'Tokyo', tag: 'TYO', tz: 'Asia/Tokyo' }
+    ];
+    return `
+        <div class="w-head"><span class="w-title">${IC.clock} Dünya Saatleri</span><span class="w-sub">${escHtml(state?.shortDate || '')}</span></div>
+        <div class="world-list" style="${compact ? 'grid-template-columns:1fr;gap:5px;' : ''}">
+            ${zones.map(z => {
+                let tStr = '--:--', hr = 12;
+                try {
+                    const fmt = new Intl.DateTimeFormat('tr-TR', { timeZone: z.tz, hour: '2-digit', minute: '2-digit', hour12: false });
+                    tStr = fmt.format(now);
+                    hr = parseInt(tStr.split(':')[0], 10) || 12;
+                } catch (_) {}
+                const isDay = hr >= 6 && hr < 19;
+                return `<div class="world-cell" style="${compact ? 'padding:6px 10px;' : ''}">
+                    <div>
+                        <div style="font-size:10.5px;color:var(--text-2);font-weight:600;">${z.city} <span style="opacity:0.65;font-size:9px;">${z.tag}</span></div>
+                        <div style="font-size:${compact ? '14px' : '16px'};font-weight:800;margin-top:1px;" class="num" data-world-tz="${z.tz}">${tStr}</div>
+                    </div>
+                    <span style="width:15px;height:15px;color:${isDay ? '#FBBF24' : '#818CF8'};">${isDay ? IC.sun : IC.moon}</span>
+                </div>`;
+            }).join('')}
+        </div>
+    `;
+}
+
+function renderForecastStripHtml(wt, now) {
+    const live = Boolean(wt?.live);
+    const baseTemp = live ? Math.round(wt.temp) : 20;
+    const city = wt?.city || 'İstanbul';
+    const sum = wt?.summary || (live ? 'Açık' : 'Veri bekleniyor');
+    const customSlots = Array.isArray(wt?.forecast) && wt.forecast.length ? wt.forecast.slice(0, 4) : null;
+    const slots = customSlots || [0, 3, 6, 9].map((offsetH, idx) => {
+        const h = (now.getHours() + offsetH) % 24;
+        const delta = idx === 0 ? 0 : (h >= 12 && h <= 16 ? 2 : (h >= 21 || h < 6 ? -3 : -1));
+        const label = idx === 0 ? 'Şimdi' : `${String(h).padStart(2, '0')}:00`;
+        const slotSum = (h >= 20 || h < 6) && !/yağmur|kar|bulut/i.test(sum) ? 'Açık Gece' : sum;
+        return { label, temp: baseTemp + delta, summary: slotSum };
+    });
+    return `
+        <div class="w-head">
+            <span class="w-title">${IC.sun} Hava Tahmin Şeridi</span>
+            <span class="w-badge">${escHtml(city)} · ${live ? baseTemp + '°' : '--°'}</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:2px;">
+            <div>
+                <div class="num" style="font-size:28px;font-weight:800;line-height:1;">${live ? baseTemp + '°' : '--°'}</div>
+                <div class="w-sub" style="margin-top:2px;">${escHtml(sum)}</div>
+            </div>
+            <div style="width:42px;height:42px;">${weatherIllustrationSvg(sum).replace('class="weath-svg"', 'width="42" height="42"')}</div>
+        </div>
+        <div class="forecast-strip-grid">
+            ${slots.map(s => `
+                <div class="forecast-slot">
+                    <span class="num w-sub" style="font-size:9.5px;font-weight:700;">${escHtml(s.label)}</span>
+                    <span style="width:22px;height:22px;display:inline-flex;">${weatherIllustrationSvg(s.summary || sum).replace('class="weath-svg"', 'width="22" height="22"')}</span>
+                    <span class="num" style="font-size:12.5px;font-weight:800;">${live ? Math.round(s.temp) + '°' : '--°'}</span>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function computeMarketConversion(mk) {
+    const amt = parseFloat(String(marketConvState.amount || '0').replace(',', '.'));
+    if (!isFinite(amt) || amt < 0) return '--';
+    const usd = Number(mk?.usdTry) || 0;
+    const eur = Number(mk?.eurTry) || 0;
+    const btc = Number(mk?.btcUsd) || 0;
+    const pair = marketConvState.pair || 'usd-try';
+    if (pair === 'usd-try' && usd > 0) return (amt * usd).toFixed(2) + ' ₺';
+    if (pair === 'eur-try' && eur > 0) return (amt * eur).toFixed(2) + ' ₺';
+    if (pair === 'try-usd' && usd > 0) return '$' + (amt / usd).toFixed(2);
+    if (pair === 'btc-usd' && btc > 0) return '$' + Math.round(amt * btc).toLocaleString('tr-TR');
+    return '--';
+}
+
+function updateMarketConvPreview(wid) {
+    const amtEl = document.getElementById('mktAmt-' + wid);
+    const pairEl = document.getElementById('mktPair-' + wid);
+    const outEl = document.getElementById('mktOut-' + wid);
+    if (amtEl) marketConvState.amount = amtEl.value;
+    if (pairEl) marketConvState.pair = pairEl.value;
+    if (outEl) outEl.textContent = computeMarketConversion(state?.market);
+}
+
 function buildWidgetInner(w) {
     const variant = normalizeVariant(w.kind, w.variant);
     const now = new Date();
@@ -1116,6 +1298,10 @@ function buildWidgetInner(w) {
     const ss = String(now.getSeconds()).padStart(2,'0');
     const secPct = ((now.getSeconds() / 59) * 100).toFixed(1);
     const weathLine = state.weather?.live ? `${Math.round(state.weather.temp)}° · ${escHtml(state.weather.city || '')}` : '';
+
+    if (w.kind === 'world-clock') {
+        return renderWorldClockHtml(now, variant === 'compact');
+    }
 
     /* 1. CLOCK (10+ STUDIO DESIGNS) */
     if (w.kind === 'clock') {
@@ -1248,33 +1434,7 @@ function buildWidgetInner(w) {
             `;
         }
         if (variant === 'world') {
-            const zones = [
-                { city: 'İstanbul', tz: 'Europe/Istanbul' },
-                { city: 'Londra', tz: 'Europe/London' },
-                { city: 'New York', tz: 'America/New_York' },
-                { city: 'Tokyo', tz: 'Asia/Tokyo' }
-            ];
-            return `
-                <div class="w-head"><span class="w-title">${IC.clock} Dünya Saatleri</span><span class="w-sub">${escHtml(state.shortDate || '')}</span></div>
-                <div class="world-list">
-                    ${zones.map(z => {
-                        let tStr = '--:--', hr = 12;
-                        try {
-                            const fmt = new Intl.DateTimeFormat('tr-TR', { timeZone: z.tz, hour: '2-digit', minute: '2-digit', hour12: false });
-                            tStr = fmt.format(now);
-                            hr = parseInt(tStr.split(':')[0], 10) || 12;
-                        } catch (_) {}
-                        const isDay = hr >= 6 && hr < 19;
-                        return `<div class="world-cell">
-                            <div>
-                                <div style="font-size:10.5px;color:var(--text-2);font-weight:600;">${z.city}</div>
-                                <div style="font-size:16px;font-weight:800;margin-top:1px;" class="num">${tStr}</div>
-                            </div>
-                            <span style="width:15px;height:15px;color:${isDay ? '#FBBF24' : '#818CF8'};">${isDay ? IC.sun : IC.moon}</span>
-                        </div>`;
-                    }).join('')}
-                </div>
-            `;
+            return renderWorldClockHtml(now, false);
         }
         // Default: Swiss Editorial Giant
         return `
@@ -1350,7 +1510,7 @@ function buildWidgetInner(w) {
         window.addEventListener('pointercancel', onUp);
     };
 
-    if (w.kind === 'media') {
+    if (w.kind === 'media' || w.kind === 'studio-strip') {
         const m = state.media;
         const playing = Boolean(m?.isPlaying);
         const title = m?.title || 'Çalan Medya Yok';
@@ -1367,7 +1527,7 @@ function buildWidgetInner(w) {
                 <div class="eq-bars ${playing ? 'play' : ''}" style="margin-left:auto;"><i></i><i></i><i></i><i></i></div>
             </div>
         `;
-        if (variant === 'studio-strip') {
+        if (w.kind === 'studio-strip' || variant === 'studio-strip') {
             return `
                 <div class="med-strip-row">
                     <div class="med-art" style="width:36px;height:36px;border-radius:8px;flex-shrink:0;">${artSrc ? `<img src="${artSrc}"/>` : `<span style="width:16px;height:16px;color:var(--accent-1);">${IC.music}</span>`}</div>
@@ -1518,7 +1678,10 @@ function buildWidgetInner(w) {
         `;
     }
 
-    /* 3. WEATHER (4 PRO VECTOR DESIGNS) */
+    /* 3. WEATHER (5 PRO VECTOR DESIGNS + FORECAST STRIP) */
+    if (w.kind === 'forecast-strip' || (w.kind === 'weather' && variant === 'forecast-strip')) {
+        return renderForecastStripHtml(state.weather, now);
+    }
     if (w.kind === 'weather') {
         const wt = state.weather || {};
         const temp = wt.live ? `${Math.round(wt.temp)}°` : '--°';
@@ -1775,7 +1938,7 @@ function buildWidgetInner(w) {
     }
 
     /* 8. STICKY NOTES */
-    if (w.kind === 'notes') {
+    if (w.kind === 'notes' || w.kind === 'quick-note') {
         return `
             <div class="w-head"><span class="w-title">${IC.note} Hızlı Not</span><span class="w-sub">Otomatik Kayıt</span></div>
             <textarea class="note-ta" data-note-wid="${escHtml(w.id)}" placeholder="Notunuzu yazın..."
@@ -1785,42 +1948,69 @@ function buildWidgetInner(w) {
         `;
     }
 
-    /* 9. POMODORO */
-    if (w.kind === 'pomodoro') {
-        const f = state.focus || { running: false, seconds: 1500, label: '25:00' };
-        const pct = Math.max(0, Math.min(100, Math.round(((1500 - (f.seconds || 0)) / 1500) * 100)));
+    /* 9. POMODORO & FOCUS */
+    if (w.kind === 'pomodoro' || w.kind === 'pomodoro-studio' || w.kind === 'focus') {
+        const f = state.focus || { running: false, seconds: 1500, durationSecs: 1500, label: '25:00' };
+        const totalSecs = Math.max(60, Number(f.durationSecs || f.totalSeconds || 1500));
+        const remSecs = Math.max(0, Math.min(totalSecs, Number(f.seconds ?? totalSecs)));
+        const pct = Math.max(0, Math.min(100, Math.round(((totalSecs - remSecs) / totalSecs) * 100)));
+        const curMins = Math.round(totalSecs / 60);
+        const ringR = 25, ringC = 2 * Math.PI * ringR;
+        const ringOff = (ringC * (1 - pct / 100)).toFixed(1);
         return `
             <div class="w-head"><span class="w-title">${IC.timer} Odak Zamanlayıcı</span><span class="w-badge">${f.running ? 'Aktif' : 'Hazır'}</span></div>
             <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-                <div style="font-size:36px;font-weight:800;letter-spacing:-0.03em;" class="num">${escHtml(f.label || '25:00')}</div>
-                <div style="display:flex;gap:6px;" onpointerdown="event.stopPropagation()">
+                <div style="display:flex;align-items:center;gap:11px;">
+                    <svg viewBox="0 0 60 60" width="54" height="54" style="flex-shrink:0;">
+                        <circle cx="30" cy="30" r="${ringR}" fill="none" stroke="var(--border-subtle)" stroke-width="4.5"/>
+                        <circle cx="30" cy="30" r="${ringR}" fill="none" stroke="var(--accent-1)" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="${ringC.toFixed(1)}" stroke-dashoffset="${ringOff}" transform="rotate(-90 30 30)"/>
+                        <text x="30" y="33.5" text-anchor="middle" fill="currentColor" font-size="11" font-weight="800" class="num">${pct}%</text>
+                    </svg>
+                    <div style="font-size:32px;font-weight:800;letter-spacing:-0.03em;line-height:1;" class="num">${escHtml(f.label || '25:00')}</div>
+                </div>
+                <div style="display:flex;gap:5px;" onpointerdown="event.stopPropagation()">
                     <button class="w-btn primary" onclick="send('toggleFocus')">${f.running ? 'Duraklat' : 'Başlat'}</button>
                     <button class="w-ibtn" onclick="send('resetFocus')" title="Sıfırla">${IC.refresh}</button>
                 </div>
             </div>
-            <div class="bar-track" style="margin-top:10px;"><div class="bar-fill" style="width:${pct}%;"></div></div>
+            <div class="pomo-preset-row" onpointerdown="event.stopPropagation()">
+                ${[5, 15, 25, 45].map(m => `<button class="pomo-preset-btn num ${curMins===m?'active':''}" onclick="send('setFocusPreset',{minutes:${m},start:true})">${m}d</button>`).join('')}
+            </div>
         `;
     }
 
-    /* 10. QUICK LAUNCHER (SAFE INDEX-BASED — ZERO INLINE PATH ESCAPING!) */
+    /* 10. QUICK LAUNCHER (SAFE INDEX-BASED + ICON_CACHE) */
     if (w.kind === 'launcher') {
         const pins = (state.pinnedShortcuts || []).slice(0, w.size === 'S' ? 4 : 8);
         return `
             <div class="w-head"><span class="w-title">${IC.grid} Hızlı Başlatıcı</span><span class="w-sub">${pins.length} kısayol</span></div>
             <div class="ln-grid" onpointerdown="event.stopPropagation()">
-                ${pins.map((p, idx) => `<button class="ln-btn" onclick="launchPinnedIndex(${idx})" title="${escHtml(p.name)}">
-                    ${p.icon ? `<img src="data:image/png;base64,${p.icon}"/>` : `<span style="width:22px;height:22px;border-radius:6px;background:rgba(var(--a1-rgb),0.18);color:var(--accent-1);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;">${escHtml((p.name || 'A')[0].toUpperCase())}</span>`}
+                ${pins.map((p, idx) => { const pIcon = resolveItemIcon(p); return `<button class="ln-btn" onclick="launchPinnedIndex(${idx})" title="${escHtml(p.name)}">
+                    ${pIcon ? `<img src="data:image/png;base64,${pIcon}"/>` : `<span style="width:22px;height:22px;border-radius:6px;background:rgba(var(--a1-rgb),0.18);color:var(--accent-1);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;">${escHtml((p.name || 'A')[0].toUpperCase())}</span>`}
                     <span>${escHtml(p.name)}</span>
-                </button>`).join('')}
+                </button>`; }).join('')}
             </div>
         `;
     }
 
-    /* 11. TODO LIST */
+    /* 11. TODO LIST (PROGRESS RING + QUICK-ADD) */
     if (w.kind === 'todo') {
         const todos = state.todos || [];
+        const doneCnt = todos.filter(t => t.done).length;
+        const pct = todos.length > 0 ? Math.round((doneCnt / todos.length) * 100) : 0;
+        const r = 10, c = 2 * Math.PI * r;
+        const off = (c * (1 - pct / 100)).toFixed(1);
         return `
-            <div class="w-head"><span class="w-title">${IC.list} Görevler</span><span class="w-sub num">${todos.filter(t => !t.done).length} açık</span></div>
+            <div class="w-head">
+                <span class="w-title">${IC.list} Görevler</span>
+                <div style="display:inline-flex;align-items:center;gap:6px;">
+                    <svg viewBox="0 0 26 26" width="22" height="22">
+                        <circle cx="13" cy="13" r="${r}" fill="none" stroke="var(--border-subtle)" stroke-width="2.8"/>
+                        <circle cx="13" cy="13" r="${r}" fill="none" stroke="var(--accent-1)" stroke-width="2.8" stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off}" transform="rotate(-90 13 13)"/>
+                    </svg>
+                    <span class="w-sub num">${doneCnt}/${todos.length} · %${pct}</span>
+                </div>
+            </div>
             <div class="td-inp-row" onpointerdown="event.stopPropagation()">
                 <input class="td-inp" id="tdInp-${escHtml(w.id)}" placeholder="Yeni görev ekle..."
                     onfocus="send('requestWidgetFocus')" onblur="send('releaseWidgetFocus')"
@@ -1839,22 +2029,42 @@ function buildWidgetInner(w) {
         `;
     }
 
-    /* 12. MARKET & FX */
-    if (w.kind === 'market') {
+    /* 12. MARKET & FX + INLINE CONVERTER */
+    if (w.kind === 'market' || w.kind === 'currency-ticker') {
         const mk = state.market || {};
+        const btcChg = Number(mk.btcChange24h || 0);
+        const chgLbl = mk.btcUsd ? `${btcChg >= 0 ? '+' : ''}${btcChg.toFixed(1)}%` : '';
         const rows = [
-            { k: 'USD/TRY', v: mk.usdTry ? mk.usdTry.toFixed(2) + ' ₺' : '--' },
-            { k: 'EUR/TRY', v: mk.eurTry ? mk.eurTry.toFixed(2) + ' ₺' : '--' },
-            { k: 'BTC', v: mk.btcUsd ? '$' + Math.round(mk.btcUsd).toLocaleString('tr-TR') : '--' },
-            { k: 'ETH', v: mk.ethUsd ? '$' + Math.round(mk.ethUsd).toLocaleString('tr-TR') : '--' }
+            { k: 'USD/TRY', v: mk.usdTry ? mk.usdTry.toFixed(2) + ' ₺' : '--', sub: '' },
+            { k: 'EUR/TRY', v: mk.eurTry ? mk.eurTry.toFixed(2) + ' ₺' : '--', sub: '' },
+            { k: 'BTC', v: mk.btcUsd ? '$' + Math.round(mk.btcUsd).toLocaleString('tr-TR') : '--', sub: chgLbl }
         ];
+        const convVal = computeMarketConversion(mk);
         return `
             <div class="w-head">
                 <span class="w-title">${IC.chart} Piyasa & Döviz</span>
-                <button class="w-ibtn" style="width:22px;height:22px;" onpointerdown="event.stopPropagation()" onclick="send('refreshMarket')" title="Yenile">${IC.refresh}</button>
+                <div style="display:flex;align-items:center;gap:5px;" onpointerdown="event.stopPropagation()">
+                    ${mk.updatedAtHhmm ? `<span class="num w-sub" style="font-size:9.5px;">${escHtml(mk.updatedAtHhmm)}</span>` : ''}
+                    <button class="w-ibtn" style="width:22px;height:22px;" onclick="send('refreshMarket')" title="Yenile">${IC.refresh}</button>
+                </div>
             </div>
             <div class="mkt-grid">
-                ${rows.map(r => `<div class="mkt-chip"><div class="w-sub">${r.k}</div><div class="num" style="font-size:14px;font-weight:800;margin-top:2px;">${r.v}</div></div>`).join('')}
+                ${rows.map(r => `<div class="mkt-chip">
+                    <div class="w-sub" style="font-size:9.5px;display:flex;justify-content:space-between;"><span>${r.k}</span>${r.sub ? `<span class="num" style="color:${btcChg>=0?'#10B981':'#FB7185'};font-weight:700;">${r.sub}</span>` : ''}</div>
+                    <div class="num" style="font-size:13px;font-weight:800;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.v}</div>
+                </div>`).join('')}
+            </div>
+            <div class="mkt-conv" onpointerdown="event.stopPropagation()">
+                <input class="mkt-conv-inp num" id="mktAmt-${escHtml(w.id)}" value="${escHtml(marketConvState.amount)}" inputmode="decimal"
+                    onfocus="send('requestWidgetFocus')" onblur="send('releaseWidgetFocus')"
+                    oninput="updateMarketConvPreview('${escHtml(w.id)}')"/>
+                <select class="mkt-conv-sel" id="mktPair-${escHtml(w.id)}" onchange="updateMarketConvPreview('${escHtml(w.id)}')">
+                    <option value="usd-try" ${marketConvState.pair==='usd-try'?'selected':''}>USD→TRY</option>
+                    <option value="eur-try" ${marketConvState.pair==='eur-try'?'selected':''}>EUR→TRY</option>
+                    <option value="try-usd" ${marketConvState.pair==='try-usd'?'selected':''}>TRY→USD</option>
+                    <option value="btc-usd" ${marketConvState.pair==='btc-usd'?'selected':''}>BTC→USD</option>
+                </select>
+                <span class="num" id="mktOut-${escHtml(w.id)}" style="margin-left:auto;font-size:12px;font-weight:800;color:var(--accent-1);">${escHtml(convVal)}</span>
             </div>
         `;
     }
@@ -2191,7 +2401,9 @@ function renderWidgets(force) {
         notes: state.agendaNotes,
         pins: (state.pinnedShortcuts || []).length
     });
-    if (!force && sig === lastRenderSig) {
+    const ae = document.activeElement;
+    const editingInline = ae && (ae.classList?.contains('td-inp') || ae.classList?.contains('note-ta') || ae.classList?.contains('mkt-conv-inp') || ae.classList?.contains('mkt-conv-sel'));
+    if (!force && (sig === lastRenderSig || editingInline)) {
         updateLiveClockDom();
         return;
     }
@@ -2204,7 +2416,7 @@ function renderWidgets(force) {
         const skin = w.skin || 'glass';
         const opStyle = typeof w.opacity === 'number' ? `opacity:${w.opacity.toFixed(2)};` : '';
         return `
-            <div class="widget-card w-sz-${escHtml(w.size || 'M')} skin-${escHtml(skin)}"
+            <div class="widget-card w-sz-${escHtml(w.size || 'M')} w-kind-${escHtml(w.kind || 'clock')} skin-${escHtml(skin)}"
                  data-wid="${escHtml(w.id)}"
                  style="left:${pos.left}px;top:${pos.top}px;${opStyle}"
                  oncontextmenu="openWidgetInspector(event,'${escHtml(w.id)}')"
@@ -2271,6 +2483,13 @@ function updateLiveClockDom() {
     document.querySelectorAll('[data-chrono-h]').forEach(el => el.setAttribute('transform', `rotate(${hDeg} 50 50)`));
     document.querySelectorAll('[data-chrono-m]').forEach(el => el.setAttribute('transform', `rotate(${mDeg} 50 50)`));
     document.querySelectorAll('[data-chrono-s]').forEach(el => el.setAttribute('transform', `rotate(${sDeg} 50 50)`));
+    document.querySelectorAll('[data-world-tz]').forEach(el => {
+        const tz = el.getAttribute('data-world-tz');
+        if (!tz) return;
+        try {
+            el.textContent = new Intl.DateTimeFormat('tr-TR', { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: false }).format(now);
+        } catch (_) {}
+    });
 
     if (!window.__widgetMediaSeeking && state?.media && Number(state.media.durationSecs) > 0) {
         const dur = Number(state.media.durationSecs);
@@ -2350,6 +2569,8 @@ window.chrome.webview.addEventListener('message', e => {
     const msg = e.data;
     if (msg.type === 'state') {
         state = msg.payload;
+        if (state?.iconCacheDelta) ingestIconCacheDelta(state.iconCacheDelta);
+        if (Array.isArray(state?.pinnedShortcuts)) state.pinnedShortcuts.forEach(resolveItemIcon);
         renderWidgets(false);
     } else if (msg.type === 'clockTick') {
         if (state && msg.clock) {
@@ -2365,6 +2586,7 @@ window.chrome.webview.addEventListener('message', e => {
 });
 
 function signalUiReady() {
+    if (!state) ICON_CACHE.clear();
     try { window.chrome.webview.postMessage({ type: 'uiReady' }); } catch (_) {}
 }
 signalUiReady();

@@ -1926,11 +1926,36 @@ body.theme-tokyo-rain-dark .glass-shell {
         radial-gradient(ellipse 52% 48% at 18% 100%, rgba(56, 189, 248, 0.13), transparent 62%),
         linear-gradient(168deg, var(--bg-glass-1), var(--bg-glass-2));
 }
-body.theme-rose-velvet-dark .glass-shell {
+body.theme-rose-velvet-dark .glass-shell,
+body.theme-rose-velvet .glass-shell {
     background: radial-gradient(ellipse 66% 54% at 22% 0%, rgba(249, 168, 212, 0.14), transparent 64%), linear-gradient(166deg, var(--bg-glass-1), var(--bg-glass-2));
 }
 body.theme-desert-dune-dark .glass-shell {
     background: radial-gradient(ellipse 64% 52% at 78% 0%, rgba(251, 191, 36, 0.13), transparent 64%), linear-gradient(166deg, var(--bg-glass-1), var(--bg-glass-2));
+}
+body.theme-oled-carbon .glass-shell {
+    background: rgba(5, 6, 8, 0.97) !important;
+    border-color: rgba(255, 255, 255, 0.14) !important;
+    box-shadow: 0 22px 54px rgba(0, 0, 0, 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+body.theme-kyoto-paper .glass-shell {
+    background: radial-gradient(ellipse 68% 52% at 18% 0%, rgba(190, 24, 93, 0.06), transparent 62%), linear-gradient(180deg, var(--bg-glass-1), var(--bg-glass-2));
+}
+body.theme-nordic-frost .glass-shell {
+    background: radial-gradient(ellipse 66% 54% at 24% 0%, rgba(56, 189, 248, 0.15), transparent 64%), linear-gradient(166deg, var(--bg-glass-1), var(--bg-glass-2));
+}
+body.theme-emerald-studio .glass-shell {
+    background: radial-gradient(ellipse 64% 54% at 20% 0%, rgba(16, 185, 129, 0.16), transparent 64%), linear-gradient(166deg, var(--bg-glass-1), var(--bg-glass-2));
+}
+body.theme-alabaster-mist .glass-shell {
+    background: radial-gradient(ellipse 70% 52% at 50% 0%, rgba(37, 99, 235, 0.06), transparent 64%), linear-gradient(180deg, var(--bg-glass-1), var(--bg-glass-2));
+}
+.theme-swatch-strip {
+    display: inline-flex; align-items: center; gap: 3px;
+}
+.theme-swatch-strip i {
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    border: 0.5px solid rgba(128,128,128,0.35);
 }
 body.eco-mode .eq span { animation-play-state: paused !important; }
 
@@ -2126,11 +2151,22 @@ body.isl-hardware-pod #crown.droplet {
     border-radius: 9px !important; padding: 0 13px !important;
     font-family: var(--font-mono);
 }
+body.mode-light.isl-hardware-pod #crown.droplet {
+    background: radial-gradient(rgba(15,23,42,0.07) 1px, transparent 1px), #F1EFEA !important;
+    background-size: 8px 8px, 100% 100% !important;
+    border-color: rgba(15,23,42,0.18) !important;
+    color: #14171F !important;
+}
 body.isl-hardware-pod #crown.droplet::after { display: none !important; }
 body.isl-hardware-pod #crown.live-stage {
     border-radius: 14px !important; font-family: var(--font-mono);
     background: radial-gradient(rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(180deg, #101218, #08090D) !important;
     background-size: 10px 10px, 100% 100% !important;
+}
+body.mode-light.isl-hardware-pod #crown.live-stage {
+    background: radial-gradient(rgba(15,23,42,0.06) 1px, transparent 1px), linear-gradient(180deg, #FAF8F4, #ECE8E0) !important;
+    background-size: 10px 10px, 100% 100% !important;
+    border-color: rgba(15,23,42,0.18) !important;
 }
 
 body.isl-glass-bar #crown.droplet:not(.osd-active):not(.rec-live):not(.bt-popin):not(.notif-morph) {
@@ -2147,11 +2183,30 @@ body.isl-orbital-halo #crown.droplet:not(.osd-active):not(.rec-live):not(.bt-pop
     border: 1.5px solid rgba(255, 255, 255, 0.34) !important;
     box-shadow: 0 10px 26px -6px rgba(0, 0, 0, 0.62), 0 0 18px -4px var(--accent-glow) !important;
 }
+body.mode-light.isl-orbital-halo #crown.droplet:not(.osd-active):not(.rec-live):not(.bt-popin):not(.notif-morph):not(.privacy-alert) {
+    border-color: rgba(15, 23, 42, 0.22) !important;
+    box-shadow: 0 8px 22px -6px rgba(15, 23, 42, 0.24), 0 0 14px -4px var(--accent-glow) !important;
+}
 body.isl-orbital-halo #crown.droplet::after { display: none !important; }
 .orb-halo-ring {
     width: 14px; height: 14px; border-radius: 50%;
     border: 2px solid var(--accent-1); box-shadow: 0 0 10px var(--accent-glow);
 }
+.snap-tile-grid {
+    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px;
+}
+.snap-tile {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    padding: 7px 4px; border-radius: 10px;
+    border: 1px solid var(--border-subtle); background: var(--bg-card); color: var(--text-1);
+    font-family: var(--font); font-size: 9.8px; font-weight: 700; cursor: pointer;
+    transition: border-color 0.14s, background 0.14s, transform 0.12s var(--ease);
+}
+.snap-tile:hover {
+    background: var(--accent-soft); border-color: var(--accent-1); color: var(--accent-1); transform: translateY(-1px);
+}
+.snap-tile:active { transform: scale(0.96); }
+.snap-tile svg { width: 22px; height: 15px; display: block; }
 
 #crown.droplet.auto-stealth-idle { opacity: 0.48; }
 #crown.droplet.auto-stealth-idle:hover { opacity: 1; }
@@ -2427,6 +2482,54 @@ body.isl-orbital-halo #crown.droplet::after { display: none !important; }
 };
 
         let state = null;
+const ICON_CACHE = new Map();
+function ingestIconCacheDelta(delta) {
+    if (!delta || typeof delta !== 'object') return;
+    for (const [k, v] of Object.entries(delta)) {
+        if (k && typeof v === 'string' && v.length > 0) {
+            ICON_CACHE.set(k, v);
+        }
+    }
+}
+function resolveItemIcon(item) {
+    if (!item || typeof item !== 'object') return null;
+    if (typeof item.icon === 'string' && item.icon.length > 0) {
+        if (item.iconKey) ICON_CACHE.set(item.iconKey, item.icon);
+        return item.icon;
+    }
+    if (item.iconKey && ICON_CACHE.has(item.iconKey)) {
+        return ICON_CACHE.get(item.iconKey);
+    }
+    return null;
+}
+const BUILTIN_THEMES_26 = [
+    { id: 'aurora-glass-dark', name: 'Liquid Glass 26', desc: 'Gerçek DWM optik cam bulanıklığı ve kırılma yansıması.', visualStyle: 'liquid-glass', mode: 'Koyu', isLight: false, accent: '#38BDF8', accent2: '#818CF8', surface1: '#0F172A', surface2: '#162038' },
+    { id: 'aurora-glass-light', name: 'Bento Silk', desc: 'Katmanlı beyaz porselen kartlar ve doğal gün ışığı.', visualStyle: 'bento-silk', mode: 'Açık', isLight: true, accent: '#2563EB', accent2: '#0EA5E9', surface1: '#F7F5F0', surface2: '#ECE8E0' },
+    { id: 'obsidian-pro-dark', name: 'Linear Swiss', desc: 'Mat karbon yüzey, 1px İsviçre çizgileri ve sıfır parlama.', visualStyle: 'linear-precision', mode: 'Koyu', isLight: false, accent: '#10B981', accent2: '#34D399', surface1: '#101217', surface2: '#161920' },
+    { id: 'mono-matrix-dark', name: 'Mono Matrix', desc: 'Nokta matris doku, dairesel soketler ve mono tipografi.', visualStyle: 'mono-matrix', mode: 'Koyu', isLight: false, accent: '#FF453A', accent2: '#FF9F0A', surface1: '#0E0E11', surface2: '#16161A' },
+    { id: 'aurora-flow-dark', name: 'Spatial Vision', desc: 'Tam kapsül uzamsal cam ve dairesel odak haleleri.', visualStyle: 'spatial-vision', mode: 'Koyu', isLight: false, accent: '#A78BFA', accent2: '#2DD4BF', surface1: '#14162A', surface2: '#1D203C' },
+    { id: 'nebula-dark', name: 'Cyber HUD', desc: 'Açılı trapez üst çentik ve taktik lazer parlaması.', visualStyle: 'cyber-prism', mode: 'Koyu', isLight: false, accent: '#06B6D4', accent2: '#F43F5E', surface1: '#090E1C', surface2: '#10182E' },
+    { id: 'nordic-frost-light', name: 'Nordic Frost', desc: 'Buzlu İskandinav camı ve serin kutup mavisi.', visualStyle: 'liquid-glass', mode: 'Açık', isLight: true, accent: '#0369A1', accent2: '#0284C7', surface1: '#F2F7FD', surface2: '#E4EEF9' },
+    { id: 'warm-latte-light', name: 'Warm Latte', desc: 'Sıcak krem kağıt dokusu ve düşük mavi ışıklı açık tema.', visualStyle: 'bento-silk', mode: 'Açık', isLight: true, accent: '#B45309', accent2: '#C2410C', surface1: '#FAF6F0', surface2: '#F2EBE1' },
+    { id: 'midnight-emerald-dark', name: 'Midnight Emerald', desc: 'Derin zümrüt cam yüzey ve altın-yeşil lüks vurgular.', visualStyle: 'liquid-glass', mode: 'Koyu', isLight: false, accent: '#34D399', accent2: '#FBBF24', surface1: '#081A16', surface2: '#0E2620' },
+    { id: 'sunset-kyoto-dark', name: 'Sunset Kyoto', desc: 'Gece mürdüm camı ve mercan-amber geçişli vurgular.', visualStyle: 'spatial-vision', mode: 'Koyu', isLight: false, accent: '#FB7185', accent2: '#F59E0B', surface1: '#180E1B', surface2: '#241529' },
+    { id: 'oled-obsidian-dark', name: 'True OLED', desc: 'Saf #000000 OLED siyahı ve sıfır arka plan parıltısı.', visualStyle: 'linear-precision', mode: 'Koyu', isLight: false, accent: '#38BDF8', accent2: '#A78BFA', surface1: '#000000', surface2: '#0A0A0D' },
+    { id: 'aurora-high-contrast', name: 'Yüksek Kontrast', desc: 'Sıfır bulanıklık, maksimum WCAG AAA metin kontrastı.', visualStyle: 'high-contrast', mode: 'Koyu', isLight: false, accent: '#00E5FF', accent2: '#FFFF00', surface1: '#0A0A0A', surface2: '#141414' },
+    { id: 'aurora-borealis-dark', name: 'Aurora Borealis', desc: 'Kuzey ışıkları zümrüt ve mor kırılmalı gece camı.', visualStyle: 'liquid-glass', mode: 'Koyu', isLight: false, accent: '#2DD4BF', accent2: '#C084FC', surface1: '#0B1322', surface2: '#121E34' },
+    { id: 'crystal-sapphire-dark', name: 'Crystal Sapphire', desc: 'Derin safir kırılma camı ve berrak kobalt vurgular.', visualStyle: 'liquid-glass', mode: 'Koyu', isLight: false, accent: '#60A5FA', accent2: '#38BDF8', surface1: '#0A1428', surface2: '#11203D' },
+    { id: 'frosted-quartz-light', name: 'Frosted Quartz', desc: 'Buzlu kuvars aydınlık camı ve lavanta ametist vurgular.', visualStyle: 'spatial-vision', mode: 'Açık', isLight: true, accent: '#6D28D9', accent2: '#9333EA', surface1: '#F6F4FA', surface2: '#ECE8F4' },
+    { id: 'matcha-paper-light', name: 'Matcha Paper', desc: 'Dingin Japon matcha yeşili ve pirinç kağıdı dokusu.', visualStyle: 'bento-silk', mode: 'Açık', isLight: true, accent: '#166534', accent2: '#4D7C0F', surface1: '#F4F6F0', surface2: '#E8EDE1' },
+    { id: 'graphite-studio-dark', name: 'Graphite Studio', desc: 'Nötr Apple Pro grafit yüzeyi ve titanyum gümüş.', visualStyle: 'linear-precision', mode: 'Koyu', isLight: false, accent: '#CBD5E1', accent2: '#60A5FA', surface1: '#16171A', surface2: '#1F2126' },
+    { id: 'tokyo-rain-dark', name: 'Tokyo Rain', desc: 'Gece yağmuru çivit yüzeyi, neon gül ve elektrik mavi.', visualStyle: 'cyber-prism', mode: 'Koyu', isLight: false, accent: '#FB7185', accent2: '#38BDF8', surface1: '#0D0F1E', surface2: '#151830' },
+    { id: 'rose-velvet-dark', name: 'Rose Velvet', desc: 'Şarap kadife yüzey ve sıcak rose gold vurgular.', visualStyle: 'spatial-vision', mode: 'Koyu', isLight: false, accent: '#F9A8D4', accent2: '#FDBA74', surface1: '#1A0E15', surface2: '#261520' },
+    { id: 'desert-dune-dark', name: 'Desert Dune', desc: 'Sıcak kumtaşı koyu yüzey ve kehribar altın parıltısı.', visualStyle: 'bento-silk', mode: 'Koyu', isLight: false, accent: '#FBBF24', accent2: '#FB923C', surface1: '#19140E', surface2: '#241D15' },
+    { id: 'oled-carbon', name: 'OLED Karbon', desc: 'Karbon siyahı OLED tuval, keskin kontrast ve düşük güç.', visualStyle: 'linear-precision', mode: 'Koyu', isLight: false, accent: '#38BDF8', accent2: '#22D3EE', surface1: '#050608', surface2: '#0D1016' },
+    { id: 'kyoto-paper', name: 'Kyoto Kağıt', desc: 'Washi kağıdı dokusu, kiraz mürekkebi ve sakin gündüz odağı.', visualStyle: 'bento-silk', mode: 'Açık', isLight: true, accent: '#BE185D', accent2: '#D97706', surface1: '#FAF7F2', surface2: '#F1ECE3' },
+    { id: 'nordic-frost', name: 'Nordik Buz', desc: 'Gece kutup buzu camı, arktik camgöbeği ve derin kontrast.', visualStyle: 'liquid-glass', mode: 'Koyu', isLight: false, accent: '#7DD3FC', accent2: '#38BDF8', surface1: '#0C1624', surface2: '#132236' },
+    { id: 'rose-velvet', name: 'Gül Kadife', desc: 'Derin gül kadifesi, şampanya vurgular ve yumuşak uzamsal cam.', visualStyle: 'spatial-vision', mode: 'Koyu', isLight: false, accent: '#FDA4AF', accent2: '#F472B6', surface1: '#180B12', surface2: '#25121D' },
+    { id: 'emerald-studio', name: 'Zümrüt Stüdyo', desc: 'Stüdyo zümrüt camı, nane vurgular ve odaklanmış gece yüzeyi.', visualStyle: 'liquid-glass', mode: 'Koyu', isLight: false, accent: '#34D399', accent2: '#2DD4BF', surface1: '#071713', surface2: '#0E241E' },
+    { id: 'alabaster-mist', name: 'Alabaster Sis', desc: 'Mat kaymaktaşı porseleni, safir vurgu ve net gündüz çizgisi.', visualStyle: 'bento-silk', mode: 'Açık', isLight: true, accent: '#1D4ED8', accent2: '#0284C7', surface1: '#F8FAFC', surface2: '#EEF2F6' }
+];
 let appCatalog = [];
 let themesCatalog = [];
 let searchFrecency = {};
@@ -2455,7 +2558,60 @@ let liveNotifMorph = null;
 let notifMorphTimer = null;
 
 function getInstalledApps() { return appCatalog.length ? appCatalog : (state?.installedApps || []); }
-function getThemesList() { return themesCatalog.length ? themesCatalog : (state?.themes || []); }
+function getThemesList() {
+    const raw = themesCatalog.length ? themesCatalog : (state?.themes || []);
+    if (!raw.length) return BUILTIN_THEMES_26;
+    const byId = new Map(raw.map(t => [t.id, t]));
+    for (const fb of BUILTIN_THEMES_26) {
+        if (!byId.has(fb.id)) byId.set(fb.id, fb);
+    }
+    return Array.from(byId.values());
+}
+function toggleGifRecording() {
+    const rec = liveGifRec || state?.gifRec || { recording: false };
+    expanded = false;
+    renderAll();
+    syncFocusDemand();
+    send(rec.recording ? 'stopGifRecording' : 'startGifRecording');
+}
+function fmtMediaPos(s) {
+    const sec = Math.max(0, Math.floor(Number(s) || 0));
+    return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+}
+function updateCrownLiveMediaSeek() {
+    const m = state?.media;
+    const dur = Number(m?.durationSecs || 0);
+    if (!m || dur <= 0) return;
+    const basePos = Number(m.positionSecs || 0);
+    const elapsed = m.isPlaying && m.timelineUpdatedMs ? Math.max(0, Math.floor((Date.now() - m.timelineUpdatedMs) / 1000)) : 0;
+    const pos = Math.min(dur, basePos + elapsed);
+    const pct = Math.max(0, Math.min(100, (pos / dur) * 100)).toFixed(1) + '%';
+    const posEl = document.getElementById('crownMediaPos');
+    const fillEl = document.getElementById('crownMediaFill');
+    const knobEl = document.getElementById('crownMediaKnob');
+    if (posEl) posEl.textContent = fmtMediaPos(pos);
+    if (fillEl) fillEl.style.width = pct;
+    if (knobEl) knobEl.style.left = pct;
+}
+function seekCrownMedia(e, trackEl, durSecs) {
+    const dur = Math.max(1, Number(durSecs) || 0);
+    const r = trackEl.getBoundingClientRect();
+    if (r.width <= 0) return;
+    const ratio = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+    const sec = Math.round(ratio * dur);
+    const pct = (ratio * 100).toFixed(1) + '%';
+    const posEl = document.getElementById('crownMediaPos');
+    const fillEl = document.getElementById('crownMediaFill');
+    const knobEl = document.getElementById('crownMediaKnob');
+    if (posEl) posEl.textContent = fmtMediaPos(sec);
+    if (fillEl) fillEl.style.width = pct;
+    if (knobEl) knobEl.style.left = pct;
+    if (state?.media) {
+        state.media.positionSecs = sec;
+        state.media.timelineUpdatedMs = Date.now();
+    }
+    send('mediaSeek', { positionSecs: sec });
+}
 function notifyMetricsVisible() { send('setMetricsActive', { active: Boolean(expanded && (activeTab === 'metrics' || (deckMode === 'tools' && activeTab === 'metrics'))) }); }
 let omniOpen = false;
 let trayOpen = false;
@@ -2855,7 +3011,7 @@ function computeExpandedDeckSignature() {
             state.crownVisibilityMode, state.showDockStatusCluster, state.dockHubStyle,
             state.dockHoverStyle, state.cornerRadiusPreset, state.autoDayNightTheme,
             state.dockStartStyle, state.dockSilhouette, state.dockIndicatorStyle,
-            state.ecoModeAuto, state.ecoModeActive,
+            state.notificationMode, state.ecoModeAuto, state.ecoModeActive,
             state.dayThemeId, state.nightThemeId, state.widgetsEnabled, state.widgetsLocked,
             state.widgetEditMode, state.crownPinned,
             state.hardwareOsdEnabled, state.altDragEnabled,
@@ -3036,19 +3192,30 @@ function buildMicroDeckHtml() {
             ${shelf.length > 0 ? `<div style="display:flex;flex-direction:column;gap:4px;">${shelf.slice(0, 2).map((f, idx) => `<div class="clip-item" style="margin:0;padding:4px 8px;justify-content:space-between;" onclick="send('openShelfFile',{index:${idx}})">${SVG.inbox}<span style="flex:1;overflow:hidden;text-overflow:ellipsis;">${escHtml(f.name)}</span><button class="micro-btn" style="width:20px;height:20px;" onclick="event.stopPropagation();crownHovered=false;microDeckOpen=false;renderAll();syncFocusDemand();send('shareShelfFileQr',{index:${idx}})">${SVG.qr}</button></div>`).join('')}</div>` : ''}
         `;
     } else if (curTab === 'focus') {
+        const vdList = (state.virtualDesktop?.list || []).slice(0, 4);
+        const fRun = Boolean(state.focus?.running);
+        const fDurMins = Math.round((state.focus?.durationSecs || state.focus?.totalSeconds || 1500) / 60);
         body = `
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 9px;border-radius:10px;background:var(--bg-inset);border:1px solid var(--border-subtle);">
                 <span style="font-size:11px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${activeWin ? escHtml(activeWin.title || activeWin.processName) : 'Aktif pencere bekleniyor'}</span>
-                ${activeWin ? `<button class="pill-btn ${activeWin.isTopMost?'accent':''}" style="height:23px;font-size:10px;padding:0 8px;" onclick="send('toggleTopMost',{hwnd:${activeWin.hwnd}})">${SVG.pin}<span>Üstte Tut</span></button>` : ''}
+                <div style="display:inline-flex;gap:4px;align-items:center;flex-shrink:0;">
+                    ${vdList.map(d => `<button class="pill-btn ${d.current?'accent':''}" style="height:21px;font-size:9.5px;padding:0 6px;" onclick="send('switchVirtualDesktopIndex',{index:${d.index}})" title="${escHtml(d.name)}">M${d.index}</button>`).join('')}
+                    <button class="micro-btn" style="width:21px;height:21px;" onclick="send('createVirtualDesktop')" title="Yeni Sanal Masaüstü">${SVG.plus}</button>
+                    ${activeWin ? `<button class="pill-btn ${activeWin.isTopMost?'accent':''}" style="height:21px;font-size:9.5px;padding:0 7px;" onclick="send('toggleTopMost',{hwnd:${activeWin.hwnd}})">${SVG.pin}<span>Üstte</span></button>` : ''}
+                </div>
             </div>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;">
-                <button class="pill-btn" style="height:26px;font-size:10.5px;justify-content:center;" onclick="send('arrangeActive',{mode:'left'})">${SVG.snapL}<span>Sol %50</span></button>
-                <button class="pill-btn" style="height:26px;font-size:10.5px;justify-content:center;" onclick="send('arrangeActive',{mode:'right'})">${SVG.snapR}<span>Sağ %50</span></button>
-                <button class="pill-btn" style="height:26px;font-size:10.5px;justify-content:center;" onclick="send('arrangeActive',{mode:'center'})">${SVG.snapC}<span>Ortala</span></button>
+            <div class="snap-tile-grid">
+                <button class="snap-tile" onclick="send('arrangeActive',{mode:'left'})" title="Sol %50"><svg viewBox="0 0 28 18"><rect x="1" y="1" width="26" height="16" rx="2.5" fill="none" stroke="currentColor" stroke-opacity="0.4"/><rect x="2.5" y="2.5" width="11" height="13" rx="1.5" fill="var(--accent-1)"/></svg><span>Sol %50</span></button>
+                <button class="snap-tile" onclick="send('arrangeActive',{mode:'right'})" title="Sağ %50"><svg viewBox="0 0 28 18"><rect x="1" y="1" width="26" height="16" rx="2.5" fill="none" stroke="currentColor" stroke-opacity="0.4"/><rect x="14.5" y="2.5" width="11" height="13" rx="1.5" fill="var(--accent-1)"/></svg><span>Sağ %50</span></button>
+                <button class="snap-tile" onclick="send('applyWindowLayout',{preset:'split'})" title="İki Pencere 50/50"><svg viewBox="0 0 28 18"><rect x="1" y="1" width="26" height="16" rx="2.5" fill="none" stroke="currentColor" stroke-opacity="0.4"/><rect x="2.5" y="2.5" width="10.5" height="13" rx="1.5" fill="var(--accent-1)" opacity="0.85"/><rect x="15" y="2.5" width="10.5" height="13" rx="1.5" fill="var(--accent-2)" opacity="0.85"/></svg><span>50 / 50</span></button>
+                <button class="snap-tile" onclick="send('arrangeActive',{mode:'center'})" title="Zen Ortala"><svg viewBox="0 0 28 18"><rect x="1" y="1" width="26" height="16" rx="2.5" fill="none" stroke="currentColor" stroke-opacity="0.4"/><rect x="6" y="3" width="16" height="12" rx="1.5" fill="var(--accent-1)"/></svg><span>Ortala</span></button>
+                <button class="snap-tile" onclick="send('arrangeActive',{mode:'max'})" title="Tam Ekran"><svg viewBox="0 0 28 18"><rect x="1" y="1" width="26" height="16" rx="2.5" fill="none" stroke="currentColor" stroke-opacity="0.4"/><rect x="2.5" y="2.5" width="23" height="13" rx="1.5" fill="var(--accent-1)"/></svg><span>Büyüt</span></button>
             </div>
-            <div style="display:flex;gap:5px;align-items:center;">
-                <button class="pill-btn ${state.focus?.running ? 'accent' : ''}" style="flex:1;height:27px;font-size:10.5px;justify-content:center;" onclick="send('toggleFocus')">${SVG.timer}<span>Odak ${escHtml(state.focus?.label || '25:00')}</span></button>
-                <button class="pill-btn ${state.awake?.active ? 'accent' : ''}" style="flex:1;height:27px;font-size:10.5px;justify-content:center;" onclick="send('cycleAwake')">${SVG.coffee}<span>${state.awake?.active ? escHtml(state.awake.shortLabel) : 'Uyanık Kal'}</span></button>
+            <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
+                <button class="pill-btn ${fRun ? 'accent' : ''}" style="height:25px;font-size:10.5px;padding:0 9px;" onclick="send('toggleFocus')">${SVG.timer}<span>${fRun ? 'Duraklat' : 'Başlat'} ${escHtml(state.focus?.label || '25:00')}</span></button>
+                ${[5, 15, 25, 45].map(m => `<button class="pill-btn ${!fRun && fDurMins===m ? 'accent' : 'subtle'}" style="height:25px;font-size:10px;padding:0 7px;" onclick="send('setFocusPreset',{minutes:${m},start:true})">${m}d</button>`).join('')}
+                <button class="micro-btn" style="width:25px;height:25px;" onclick="send('resetFocus')" title="Odak Sayacını Sıfırla">${SVG.refresh}</button>
+                <button class="pill-btn ${state.awake?.active ? 'accent' : ''}" style="margin-left:auto;height:25px;font-size:10px;padding:0 8px;" onclick="send('cycleAwake')">${SVG.coffee}<span>${state.awake?.active ? escHtml(state.awake.shortLabel) : 'Uyanık'}</span></button>
             </div>
             <div style="display:flex;gap:5px;">
                 <input id="mdTodoInp" class="md-todo-inp" placeholder="Hızlı görev ekle (Enter)..." onfocus="send('requestInteractiveFocus')" onblur="if(!isAnyPopupOpen())send('releaseInteractiveFocus')" onkeydown="if(event.key==='Enter'){const v=this.value.trim();if(v){this.value='';send('addTodo',{text:v});}}" />
@@ -3087,15 +3254,15 @@ function buildMicroDeckHtml() {
                         const fmt = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
                         return `
                             <div style="display:flex;align-items:center;gap:6px;margin:2px 0;">
-                                <span class="num" style="font-size:9.5px;color:var(--text-3);min-width:26px;">${fmt(pos)}</span>
+                                <span id="crownMediaPos" class="num" style="font-size:9.5px;color:var(--text-2);min-width:26px;">${fmt(pos)}</span>
                                 <div style="position:relative;flex:1;height:12px;display:flex;align-items:center;cursor:pointer;"
-                                     onclick="const r=this.getBoundingClientRect();if(r.width>0){const s=Math.max(0,Math.min(${dur},Math.round(((event.clientX-r.left)/r.width)*${dur})));send('mediaSeek',{positionSecs:s});}">
+                                     onpointerdown="event.stopPropagation();seekCrownMedia(event,this,${dur});">
                                     <div style="position:relative;width:100%;height:3px;border-radius:99px;background:var(--border-rim);overflow:hidden;">
-                                        <div style="width:${pct}%;height:100%;background:var(--text-1);border-radius:99px;"></div>
+                                        <div id="crownMediaFill" style="width:${pct}%;height:100%;background:var(--text-1);border-radius:99px;"></div>
                                     </div>
-                                    <span style="position:absolute;left:${pct}%;top:50%;width:8px;height:8px;border-radius:50%;background:var(--text-1);transform:translate(-50%,-50%);box-shadow:0 1px 3px rgba(0,0,0,0.4);"></span>
+                                    <span id="crownMediaKnob" style="position:absolute;left:${pct}%;top:50%;width:8px;height:8px;border-radius:50%;background:var(--text-1);transform:translate(-50%,-50%);box-shadow:0 1px 3px rgba(0,0,0,0.4);"></span>
                                 </div>
-                                <span class="num" style="font-size:9.5px;color:var(--text-3);min-width:26px;text-align:right;">${fmt(dur)}</span>
+                                <span class="num" style="font-size:9.5px;color:var(--text-2);min-width:26px;text-align:right;">${fmt(dur)}</span>
                             </div>
                         `;
                     })()}
@@ -3394,10 +3561,13 @@ const WIDGET_SKINS = [
 
 const WIDGET_GALLERY_ITEMS = [
     { kind: 'clock', name: 'Saat Stüdyosu (11 Tasarım)', desc: 'LED Dot-Matrix, Solar Orbit, Orbital Chrono, Editoryal Poster, Dev Hex, Braun Pro, Swiss', variant: 'swiss', size: 'M' },
+    { kind: 'world-clock', name: 'Dünya Saatleri (4 Şehir)', desc: 'İstanbul, Londra, New York ve Tokyo canlı saatleri & gündüz/gece göstergesi', variant: 'cities', size: 'M' },
     { kind: 'media', name: 'Medya Stüdyo (8 Tasarım)', desc: 'Tam Kapak Poster, TP-7 Makara, Kaset Teyp, Spektrum, Pikap Plak ve Donanım Deck', variant: 'poster', size: 'M' },
+    { kind: 'studio-strip', name: 'Medya Stüdyo Şeridi', desc: 'Yatay şeffaf medya barı, canlı sarıcı, oynat/duraklat ve ses seviyesi', variant: 'strip', size: 'L' },
     { kind: 'battery', name: 'Pil & Bluetooth Halkaları', desc: 'Laptop ve bağlı BT kulaklık/fare şarj halkaları + vektör cihaz ikonları', variant: 'rings', size: 'M' },
     { kind: 'ai-quota', name: 'AI Kota Stüdyosu', desc: 'ChatGPT, Gemini ve Claude marka amblemli canlı API / CLI / sayaç kotası', variant: 'cards', size: 'L' },
-    { kind: 'weather', name: 'Vektör Hava Durumu (3)', desc: 'Dinamik Gökyüzü Atmosferi, Barometre & Rüzgar Kadrani veya Minimal Sıcaklık', variant: 'dynamic-sky', size: 'S' },
+    { kind: 'weather', name: 'Vektör Hava Durumu (4)', desc: 'Dinamik Gökyüzü Atmosferi, Barometre & Rüzgar Kadranı veya Minimal Sıcaklık', variant: 'dynamic-sky', size: 'S' },
+    { kind: 'forecast-strip', name: 'Hava Tahmin Şeridi', desc: 'Güncel hava durumu ve saatlik vektör tahmin şeridi', variant: 'strip', size: 'M' },
     { kind: 'system', name: 'Sistem Telemetri (3)', desc: 'Osiloskop Canlı Akış Grafiği, Hassas Halkalar veya Kompakt Metrikler', variant: 'oscilloscope', size: 'M' },
     { kind: 'calendar', name: 'Takvim & Ajanda (2)', desc: 'Tam Aylık İnteraktif Takvim Izgarası veya Mimari Gün & Ajanda Kartı', variant: 'month', size: 'M' },
     { kind: 'audio-mixer', name: 'Uygulama Ses Mikseri', desc: 'Masaüstünden her uygulamanın sesini ayrı kaydırıcıyla anında ayarla ve sustur', variant: 'bars', size: 'M' },
@@ -3489,6 +3659,15 @@ function buildWidgetMiniPreview(kind) {
     if (kind === 'market') {
         return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:10.5px;"><div style="padding:5px 7px;border-radius:7px;background:rgba(128,128,128,0.12);"><div style="font-size:8.5px;opacity:0.7;">USD/TRY</div><strong class="num">₺34.8</strong></div><div style="padding:5px 7px;border-radius:7px;background:rgba(128,128,128,0.12);"><div style="font-size:8.5px;opacity:0.7;">BTC</div><strong class="num">$92k</strong></div></div>`;
     }
+    if (kind === 'world-clock') {
+        return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:9.5px;"><div style="padding:3px 6px;border-radius:6px;background:rgba(128,128,128,0.12);display:flex;justify-content:space-between;"><span>IST</span><strong class="num">${escHtml(clk)}</strong></div><div style="padding:3px 6px;border-radius:6px;background:rgba(128,128,128,0.12);display:flex;justify-content:space-between;"><span>LDN</span><strong class="num">--:--</strong></div><div style="padding:3px 6px;border-radius:6px;background:rgba(128,128,128,0.12);display:flex;justify-content:space-between;"><span>NYC</span><strong class="num">--:--</strong></div><div style="padding:3px 6px;border-radius:6px;background:rgba(128,128,128,0.12);display:flex;justify-content:space-between;"><span>TYO</span><strong class="num">--:--</strong></div></div>`;
+    }
+    if (kind === 'studio-strip') {
+        return `<div style="display:flex;align-items:center;gap:8px;"><div style="width:26px;height:26px;border-radius:6px;background:var(--accent-soft);color:var(--accent-1);display:flex;align-items:center;justify-content:center;">${SVG.musicSm}</div><div style="flex:1;min-width:0;"><div style="height:5px;width:70%;border-radius:99px;background:currentColor;opacity:0.28;margin-bottom:5px;"></div><div style="height:3px;width:100%;border-radius:99px;background:var(--accent-1);opacity:0.75;"></div></div>${SVG.play}</div>`;
+    }
+    if (kind === 'forecast-strip') {
+        return `<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;"><strong class="num" style="font-size:20px;">21°</strong><div style="display:flex;gap:6px;font-size:9px;opacity:0.85;"><span class="num">+3s 22°</span><span class="num">+6s 19°</span><span class="num">+9s 17°</span></div></div>`;
+    }
     const icMap = { notes: SVG.note, launcher: SVG.grid, todo: SVG.layers, countdown: SVG.timer, 'storage-net': SVG.activity, quote: SVG.sparkles, 'local-ai': SVG.cpu };
     return `<div style="display:flex;align-items:center;gap:10px;opacity:0.9;"><span class="dw-ic-box" style="width:32px;height:32px;color:var(--accent-1);">${icMap[kind] || SVG.grid}</span><div style="flex:1;"><div style="height:6px;width:72%;border-radius:99px;background:currentColor;opacity:0.22;margin-bottom:6px;"></div><div style="height:5px;width:48%;border-radius:99px;background:var(--accent-1);opacity:0.62;"></div></div></div>`;
 }
@@ -3511,10 +3690,10 @@ const DOCK_WIDGET_CATALOG = [
 ];
 
 function classifyThemeGroup(th) {
-    const id = th.id || '';
-    if (th.isLight) return 'minimal';
-    if (['aurora-glass-dark','aurora-flow-dark','aurora-borealis-dark','crystal-sapphire-dark'].includes(id)) return 'glass';
-    if (['midnight-emerald-dark','sunset-kyoto-dark','rose-velvet-dark','desert-dune-dark','tokyo-rain-dark'].includes(id)) return 'mood';
+    const id = (th.id || '').toLowerCase();
+    if (th.isLight || ['kyoto-paper', 'alabaster-mist'].includes(id)) return 'minimal';
+    if (['aurora-glass-dark', 'aurora-flow-dark', 'aurora-borealis-dark', 'crystal-sapphire-dark', 'nordic-frost', 'emerald-studio'].includes(id)) return 'glass';
+    if (['midnight-emerald-dark', 'sunset-kyoto-dark', 'rose-velvet-dark', 'rose-velvet', 'desert-dune-dark', 'tokyo-rain-dark'].includes(id)) return 'mood';
     return 'tech';
 }
 
@@ -3607,7 +3786,7 @@ function buildExpandedDeckHtml() {
 
     // DEFAULT: Apple / Linear 6-Section Sidebar Settings ("Aurora Ayarlar")
     const navItems = [
-        ['appearance', SVG.palette, 'Mimari & 20 Tema'],
+        ['appearance', SVG.palette, 'Mimari & 26 Tema'],
         ['taskbar', SVG.layers, 'Görev Çubuğu & Akış'],
         ['widgets', SVG.grid, 'Widget Stüdyosu'],
         ['island', SVG.sparkles, 'Dinamik Ada Stüdyosu'],
@@ -3619,8 +3798,8 @@ function buildExpandedDeckHtml() {
             <div style="display:flex;align-items:center;gap:9px;">
                 <div class="orb" onclick="openOmni()" title="Başlat & Ara">✦</div>
                 <div>
-                    <div style="font-size:13.5px;font-weight:800;letter-spacing:-0.015em;">Aurora Ayarlar <span style="font-size:10.5px;font-weight:700;color:var(--accent-1);">v${escHtml(state.version || '6.0.0')}</span></div>
-                    <div style="font-size:10.5px;color:var(--text-2);">6 Kabuk Mimarisi · Her değişiklik anında canlı uygulanır</div>
+                    <div style="font-size:13.5px;font-weight:800;letter-spacing:-0.015em;">Aurora Ayarlar <span style="font-size:10.5px;font-weight:700;color:var(--accent-1);">v${escHtml(state.version || '8.0.0')}</span></div>
+                    <div style="font-size:10.5px;color:var(--text-2);">10 Kabuk Mimarisi · 26 Tema · Her değişiklik anında canlı uygulanır</div>
                 </div>
             </div>
             <div style="display:flex;gap:6px;align-items:center;">
@@ -3724,8 +3903,8 @@ function buildSettingsSectionHtml() {
         ];
         return `
             <div>
-                <div class="sp-title">10 Kabuk Tasarım Mimarisi & 20 Tema</div>
-                <div class="sp-sub">Her biri gerçek yerleşim, köşe geometrisi ve yüzey yapısıyla ayrışan 10 kabuk mimarisini 20 renk paletiyle özgürce birleştirin.</div>
+                <div class="sp-title">10 Kabuk Tasarım Mimarisi & ${themes.length} Tema</div>
+                <div class="sp-sub">Her biri gerçek yerleşim, köşe geometrisi ve yüzey yapısıyla ayrışan 10 kabuk mimarisini ${themes.length} WCAG AA+ renk paletiyle özgürce birleştirin.</div>
             </div>
             <div class="sp-group">
                 <div class="sp-group-title">
@@ -3744,15 +3923,15 @@ function buildSettingsSectionHtml() {
             </div>
             <div class="sp-group">
                 <div class="sp-group-title">
-                    <span>20 Tasarım Teması (${filteredThemes.length} gösteriliyor)</span>
+                    <span>${themes.length} Tasarım Teması (${filteredThemes.length} gösteriliyor)</span>
                     <span style="color:var(--accent-1);">${escHtml(t.displayName || '')}</span>
                 </div>
                 <div class="theme-filter-bar">
-                    <button class="tf-chip ${themeCategoryFilter==='all'?'active':''}" onclick="themeCategoryFilter='all';lastExpandedSig='';renderAll();">Tümü (20)</button>
-                    <button class="tf-chip ${themeCategoryFilter==='glass'?'active':''}" onclick="themeCategoryFilter='glass';lastExpandedSig='';renderAll();">Cam & Uzamsal</button>
-                    <button class="tf-chip ${themeCategoryFilter==='minimal'?'active':''}" onclick="themeCategoryFilter='minimal';lastExpandedSig='';renderAll();">Aydınlık & Kağıt</button>
-                    <button class="tf-chip ${themeCategoryFilter==='mood'?'active':''}" onclick="themeCategoryFilter='mood';lastExpandedSig='';renderAll();">Atmosfer & Estetik</button>
-                    <button class="tf-chip ${themeCategoryFilter==='tech'?'active':''}" onclick="themeCategoryFilter='tech';lastExpandedSig='';renderAll();">Teknik & OLED</button>
+                    <button class="tf-chip ${themeCategoryFilter==='all'?'active':''}" onclick="themeCategoryFilter='all';lastExpandedSig='';renderAll();">Tümü (${themes.length})</button>
+                    <button class="tf-chip ${themeCategoryFilter==='glass'?'active':''}" onclick="themeCategoryFilter='glass';lastExpandedSig='';renderAll();">Cam & Uzamsal (${themes.filter(x=>classifyThemeGroup(x)==='glass').length})</button>
+                    <button class="tf-chip ${themeCategoryFilter==='minimal'?'active':''}" onclick="themeCategoryFilter='minimal';lastExpandedSig='';renderAll();">Aydınlık & Kağıt (${themes.filter(x=>classifyThemeGroup(x)==='minimal').length})</button>
+                    <button class="tf-chip ${themeCategoryFilter==='mood'?'active':''}" onclick="themeCategoryFilter='mood';lastExpandedSig='';renderAll();">Atmosfer & Estetik (${themes.filter(x=>classifyThemeGroup(x)==='mood').length})</button>
+                    <button class="tf-chip ${themeCategoryFilter==='tech'?'active':''}" onclick="themeCategoryFilter='tech';lastExpandedSig='';renderAll();">Teknik & OLED (${themes.filter(x=>classifyThemeGroup(x)==='tech').length})</button>
                 </div>
                 <div class="theme-gallery" style="grid-template-columns:repeat(4,minmax(0,1fr));">
                     ${filteredThemes.map(th => `
@@ -3767,6 +3946,10 @@ function buildSettingsSectionHtml() {
                             </div>
                             <div class="theme-card-meta">
                                 <span class="theme-card-name">${escHtml(th.name)}</span>
+                                <span class="theme-swatch-strip"><i style="background:${th.surface1};"></i><i style="background:${th.accent};"></i><i style="background:${th.accent2};"></i></span>
+                            </div>
+                            <div class="theme-card-meta">
+                                <span class="theme-card-tag">${escHtml(th.styleTag || th.mode)}</span>
                                 <span class="theme-card-tag">${escHtml(th.mode)}</span>
                             </div>
                         </div>
@@ -3850,10 +4033,10 @@ function buildSettingsSectionHtml() {
                 <div class="sp-row">
                     <div><div class="sp-row-lbl">Aktif Uygulama Göstergesi</div><div class="sp-row-desc">Çalışan ve odaklanan uygulamaların altındaki görsel işaret stili.</div></div>
                     <div class="seg-group">
-                        <button class="seg-btn ${ind==='pill'?'active':''}" onclick="send('setDockIndicatorStyle',{style:'pill'})">Çubuk</button>
                         <button class="seg-btn ${ind==='dot'?'active':''}" onclick="send('setDockIndicatorStyle',{style:'dot'})">Nokta</button>
-                        <button class="seg-btn ${ind==='frame'?'active':''}" onclick="send('setDockIndicatorStyle',{style:'frame'})">Çerçeve</button>
+                        <button class="seg-btn ${ind==='bar'?'active':''}" onclick="send('setDockIndicatorStyle',{style:'bar'})">Çubuk</button>
                         <button class="seg-btn ${ind==='glow'?'active':''}" onclick="send('setDockIndicatorStyle',{style:'glow'})">Parıltı</button>
+                        <button class="seg-btn ${ind==='pill'?'active':''}" onclick="send('setDockIndicatorStyle',{style:'pill'})">Kapsül</button>
                     </div>
                 </div>
                 <div class="sp-row">
@@ -4080,23 +4263,27 @@ function buildSettingsSectionHtml() {
                     </div>
                 </div>
                 <div class="sp-group">
-                    <div class="sp-group-title"><span>Küratörlü Masaüstü Paketleri (4 Profesyonel Set)</span></div>
+                    <div class="sp-group-title"><span>1-Tık Widget Paketleri (5 Küratörlü Düzen)</span></div>
                     <div class="bundle-row">
-                        <button class="bundle-btn" onclick="send('applyWidgetBundle',{bundle:'editorial-minimal'})">
-                            <strong>İsviçre Editoryal</strong>
-                            <span>Poster saat, takvim ayı, sanat fotoğrafı ve alıntı (4 widget)</span>
+                        <button class="bundle-btn" onclick="send('applyWidgetPreset',{preset:'minimal-studio'})">
+                            <strong>Minimal Stüdyo</strong>
+                            <span>İsviçre saat, hava tahmin şeridi ve medya barı</span>
                         </button>
-                        <button class="bundle-btn" onclick="send('applyWidgetBundle',{bundle:'nothing-hardware'})">
-                            <strong>Nothing Hardware Pack</strong>
-                            <span>5×7 LED saat, TP-7 makara, dot-matrix pil ve osiloskop</span>
-                        </button>
-                        <button class="bundle-btn" onclick="send('applyWidgetBundle',{bundle:'productivity-studio'})">
-                            <strong>Üretkenlik Stüdyosu</strong>
-                            <span>Odak halkaları, ses mikseri, görev listesi ve hızlı pano</span>
-                        </button>
-                        <button class="bundle-btn" onclick="send('applyWidgetBundle',{bundle:'dev-cockpit'})">
+                        <button class="bundle-btn" onclick="send('applyWidgetPreset',{preset:'dev-cockpit'})">
                             <strong>Geliştirici Kokpiti</strong>
-                            <span>Dev Hex saat, osiloskop, AI kotası, disk ve yerel AI</span>
+                            <span>Dev Hex saat, osiloskop, AI kotası ve yerel AI</span>
+                        </button>
+                        <button class="bundle-btn" onclick="send('applyWidgetPreset',{preset:'productivity'})">
+                            <strong>Üretkenlik Stüdyosu</strong>
+                            <span>Odak halkaları, pomodoro, görevler, takvim ve notlar</span>
+                        </button>
+                        <button class="bundle-btn" onclick="send('applyWidgetPreset',{preset:'media-lounge'})">
+                            <strong>Medya Salonu</strong>
+                            <span>Stüdyo medya şeridi, poster çalar, mikser ve dünya saati</span>
+                        </button>
+                        <button class="bundle-btn" style="grid-column:span 2;" onclick="send('applyWidgetPreset',{preset:'clean'})">
+                            <strong>Temiz Masaüstü</strong>
+                            <span>Tüm masaüstü widget'larını kaldırıp saf duvar kağıdına geç</span>
                         </button>
                     </div>
                 </div>
@@ -4256,8 +4443,8 @@ function buildSettingsSectionHtml() {
                 <div class="sp-row">
                     <div><div class="sp-row-lbl">Bildirim Yönetimi (Çift Bildirimsiz)</div><div class="sp-row-desc">Windows Yerel modunda tüm uygulama bildirimleri doğrudan Windows’ta sorunsuz görünür (sağ alt takvimden Win+N 1 tık).</div></div>
                     <div class="seg-group">
-                        <button class="seg-btn ${notifMode==='windows-native'?'active':''}" onclick="send('setNotificationMode',{mode:'windows-native'})">Windows Yerel (Önerilen)</button>
-                        <button class="seg-btn ${notifMode==='aurora-mirror'?'active':''}" onclick="send('setNotificationMode',{mode:'aurora-mirror'})">Aurora Yansıtma</button>
+                        <button class="seg-btn ${notifMode==='windows-native'?'active':''}" onclick="send('setIslandConfig',{notifMirror:false})">Windows Yerel (Önerilen)</button>
+                        <button class="seg-btn ${notifMode==='aurora-mirror'?'active':''}" onclick="send('setIslandConfig',{notifMirror:true})">Aurora Yansıtma</button>
                     </div>
                 </div>
                 <div class="sp-row">
@@ -4486,7 +4673,7 @@ function buildControlTab() {
                         <div style="font-size:11.5px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m ? escHtml(m.artist) : 'Spotify, YouTube veya tarayıcı başlatın'}</div>
                         ${m ? `
                         <div style="display:flex;gap:6px;margin-top:8px;">
-                            <button class="micro-btn" onclick="send('mediaCmd',{cmd:'previous'})">${SVG.prev}</button>
+                            <button class="micro-btn" onclick="send('mediaCmd',{cmd:'prev'})">${SVG.prev}</button>
                             <button class="pill-btn accent" style="height:26px;" onclick="send('mediaCmd',{cmd:'playpause'})">${m.isPlaying ? SVG.pause + '<span>Duraklat</span>' : SVG.play + '<span>Oynat</span>'}</button>
                             <button class="micro-btn" onclick="send('mediaCmd',{cmd:'next'})">${SVG.next}</button>
                         </div>` : ''}
@@ -4499,7 +4686,7 @@ function buildControlTab() {
                         <div style="display:flex;align-items:center;gap:4px;">
                             <button class="pill-btn" style="height:21px;padding:0 7px;font-size:10px;" onclick="expanded=false;renderAll();send('startScreenOcr');" title="Ekrandan Metin Yakala (OCR)">${SVG.scanText}<span>OCR</span></button>
                             <button class="pill-btn" style="height:21px;padding:0 7px;font-size:10px;" onclick="expanded=false;renderAll();send('startColorPicker');" title="Ekrandan Renk Seç (HEX/RGB)">${SVG.pipette}<span>Renk</span></button>
-                            <button class="pill-btn ${recState.recording?'danger-arm':''}" style="height:21px;padding:0 7px;font-size:10px;" onclick="expanded=false;renderAll();send('${recState.recording?'stopGifRecording':'startGifRecording'}');" title="Seçili ekran bölgesini animasyonlu GIF kaydet (10 FPS)">${SVG.record}<span>${recState.recording ? formatRecTime(recState.elapsed) : 'GIF'}</span></button>
+                            <button class="pill-btn ${recState.recording?'danger-arm':''}" style="height:21px;padding:0 7px;font-size:10px;" onclick="toggleGifRecording()" title="Seçili ekran bölgesini animasyonlu GIF kaydet (10 FPS)">${SVG.record}<span>${recState.recording ? formatRecTime(recState.elapsed) : 'GIF'}</span></button>
                             <button class="pill-btn num" style="height:21px;padding:0 7px;font-size:10px;" onclick="send('openUri',{uri:'ms-settings:powersleep'})" title="Laptop Pili: %${state.battery.percent} · ${escHtml(state.battery.status || '')} (Güç ayarlarını aç)">
                                 ${buildLaptopBatterySvg(state.battery.percent, Boolean(state.battery.charging))}<span>%${state.battery.percent}${state.battery.charging ? ' · Şarj' : ''}</span>
                             </button>
@@ -4537,22 +4724,25 @@ function buildShelfTab() {
                 <div class="card" style="padding:11px 12px;">
                     <div class="card-title" style="margin-bottom:7px;"><span class="card-title-l">${SVG.snapL}<span>Pencere Düzenleri & Odak</span></span><span class="num">${state.focus.running ? state.focus.label : '1 Tık'}</span></div>
                     <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px;">
-                        <button class="pill-btn" style="height:24px;font-size:10.5px;padding:0 8px;" onclick="send('applyWindowLayout',{preset:'code6535'})">${SVG.snapL}<span>65/35</span></button>
-                        <button class="pill-btn" style="height:24px;font-size:10.5px;padding:0 8px;" onclick="send('applyWindowLayout',{preset:'split5050'})">${SVG.snapR}<span>50/50</span></button>
-                        <button class="pill-btn" style="height:24px;font-size:10.5px;padding:0 8px;" onclick="send('applyWindowLayout',{preset:'studio3'})">${SVG.layers}<span>Üçlü</span></button>
-                        <button class="pill-btn" style="height:24px;font-size:10.5px;padding:0 8px;" onclick="send('applyWindowLayout',{preset:'zen75'})">${SVG.snapC}<span>Zen</span></button>
+                        <button class="pill-btn" style="height:24px;font-size:10.5px;padding:0 8px;" onclick="send('arrangeActive',{mode:'left'})">${SVG.snapL}<span>Sol %50</span></button>
+                        <button class="pill-btn" style="height:24px;font-size:10.5px;padding:0 8px;" onclick="send('arrangeActive',{mode:'right'})">${SVG.snapR}<span>Sağ %50</span></button>
+                        <button class="pill-btn" style="height:24px;font-size:10.5px;padding:0 8px;" onclick="send('applyWindowLayout',{preset:'split'})">${SVG.layers}<span>50 / 50</span></button>
+                        <button class="pill-btn" style="height:24px;font-size:10.5px;padding:0 8px;" onclick="send('arrangeActive',{mode:'center'})">${SVG.snapC}<span>Zen</span></button>
+                        <button class="pill-btn" style="height:24px;font-size:10.5px;padding:0 8px;" onclick="send('arrangeActive',{mode:'max'})">${SVG.max}<span>Büyüt</span></button>
                     </div>
                     <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-bottom:6px;padding-top:5px;border-top:1px solid var(--border-subtle);">
-                        ${(state.virtualDesktop?.list || []).slice(0, 3).map(d => `
+                        ${(state.virtualDesktop?.list || []).slice(0, 4).map(d => `
                             <button class="pill-btn ${d.current?'accent':''}" style="height:23px;font-size:10px;padding:0 8px;" onclick="send('switchVirtualDesktopIndex',{index:${d.index}})">${escHtml(d.name)}</button>
                         `).join('')}
                         <button class="pill-btn" style="height:23px;font-size:10px;padding:0 7px;" onclick="send('createVirtualDesktop')">${SVG.plus}<span>Yeni</span></button>
                     </div>
                     <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
-                        <button class="pill-btn ${state.focus.running?'accent':''}" style="height:23px;font-size:10.5px;padding:0 8px;" onclick="send('startFocusMinutes',{minutes:25})">${SVG.timer}<span>25 dk</span></button>
-                        <button class="pill-btn" style="height:23px;font-size:10.5px;padding:0 8px;" onclick="send('startFocusMinutes',{minutes:45})">45 dk</button>
-                        <button class="pill-btn" style="height:23px;font-size:10.5px;padding:0 8px;" onclick="send('startFocusMinutes',{minutes:5})">5 dk</button>
-                        ${state.focus.running ? `<button class="micro-btn danger" style="width:23px;height:23px;" onclick="send('toggleFocus')">${SVG.close}</button>` : ''}
+                        <button class="pill-btn ${state.focus.running?'accent':''}" style="height:23px;font-size:10.5px;padding:0 8px;" onclick="send('toggleFocus')">${SVG.timer}<span>${state.focus.running ? 'Duraklat' : 'Başlat'}</span></button>
+                        <button class="pill-btn" style="height:23px;font-size:10.5px;padding:0 8px;" onclick="send('setFocusPreset',{minutes:5,start:true})">5 dk</button>
+                        <button class="pill-btn" style="height:23px;font-size:10.5px;padding:0 8px;" onclick="send('setFocusPreset',{minutes:15,start:true})">15 dk</button>
+                        <button class="pill-btn" style="height:23px;font-size:10.5px;padding:0 8px;" onclick="send('setFocusPreset',{minutes:25,start:true})">25 dk</button>
+                        <button class="pill-btn" style="height:23px;font-size:10.5px;padding:0 8px;" onclick="send('setFocusPreset',{minutes:45,start:true})">45 dk</button>
+                        <button class="micro-btn" style="width:23px;height:23px;" onclick="send('resetFocus')" title="Odak Sayacını Sıfırla">${SVG.refresh}</button>
                     </div>
                 </div>
 
@@ -4571,9 +4761,9 @@ function buildShelfTab() {
                         </div>
                     ` : `
                         <div style="max-height:76px;overflow-y:auto;">
-                            ${shelfFiles.map((f, idx) => `
+                            ${shelfFiles.map((f, idx) => { const fIcon = resolveItemIcon(f); return `
                                 <div class="shelf-file-row">
-                                    ${f.icon ? `<img src="data:image/png;base64,${f.icon}"/>` : SVG.folder}
+                                    ${fIcon ? `<img src="data:image/png;base64,${fIcon}"/>` : SVG.folder}
                                     <div style="flex:1;min-width:0;cursor:pointer;" onclick="send('openShelfFile',{index:${idx}})" title="${escHtml(f.path)}">
                                         <div style="font-size:11.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(f.name)}</div>
                                     </div>
@@ -4582,7 +4772,7 @@ function buildShelfTab() {
                                     <button class="micro-btn" style="width:22px;height:22px;" onclick="send('revealShelfFile',{index:${idx}})" title="Klasörde Göster">${SVG.folder}</button>
                                     <button class="micro-btn danger" style="width:22px;height:22px;" onclick="send('removeShelfFile',{index:${idx}})" title="Kaldır">${SVG.close}</button>
                                 </div>
-                            `).join('')}
+                            `; }).join('')}
                         </div>
                     `}
                 </div>
@@ -5139,13 +5329,13 @@ function renderOmniList(query, skipFileDispatch = false) {
                 <span style="font-weight:500;">Sık kullanılanlar üstte • Sabitlemek için üzerine gelin</span>
             </div>
             <div class="app-grid">
-                ${apps.map((a, i) => `
+                ${apps.map((a, i) => { const aIcon = resolveItemIcon(a); return `
                     <div class="app-card" onclick="execOmni(${i})">
-                        ${a.icon ? `<img src="data:image/png;base64,${a.icon}"/>` : SVG.layers}
+                        ${aIcon ? `<img src="data:image/png;base64,${aIcon}"/>` : SVG.layers}
                         <span class="app-name" title="${escHtml(a.name)}">${escHtml(a.name)}</span>
                         <span class="pin-mini" onclick="event.stopPropagation();pinAppByPath(${i});" title="Dock'a Sabitle">${SVG.pin}</span>
                     </div>
-                `).join('')}
+                `; }).join('')}
             </div>
         `;
         currentOmniItems = apps.map(a => ({
@@ -5212,7 +5402,7 @@ function renderOmniList(query, skipFileDispatch = false) {
             badge: a.category || (isSettingOrTool ? 'Sistem' : 'Uygulama'),
             title: a.name,
             sub: a.kind === 'setting' ? 'Windows 11 Ayar Sayfası' : (a.kind === 'tool' ? 'Windows Sistem Aracı' : 'Uygulamayı Başlat'),
-            icon: a.icon,
+            icon: resolveItemIcon(a),
             svgIcon: a.kind === 'setting' ? SVG.settings : SVG.layers,
             canPin: a.kind === 'app',
             pinName: a.name,
@@ -5233,7 +5423,7 @@ function renderOmniList(query, skipFileDispatch = false) {
                 badge: 'Açık Pencere',
                 title: w.title,
                 sub: `${w.processName} • Öne Getir`,
-                icon: w.icon,
+                icon: resolveItemIcon(w),
                 svgIcon: SVG.desktop,
                 run: () => send('focusWindow', { hwnd: w.hwnd })
             });
@@ -5249,7 +5439,7 @@ function renderOmniList(query, skipFileDispatch = false) {
                 badge: f.badge || (f.isDir ? 'Klasör' : 'Dosya'),
                 title: f.name,
                 sub: f.subtitle || f.path,
-                icon: f.icon,
+                icon: resolveItemIcon(f),
                 svgIcon: f.isDir ? SVG.folder : SVG.note,
                 revealPath: f.path,
                 run: () => send('launchPath', { path: f.path })
@@ -5268,7 +5458,7 @@ function renderOmniList(query, skipFileDispatch = false) {
                 badge: 'Sistem Tepsisi',
                 title: t.name,
                 sub: t.subtitle || `${t.memoryMb} MB arka plan`,
-                icon: t.icon,
+                icon: resolveItemIcon(t),
                 svgIcon: SVG.tray,
                 run: () => send('openTrayAppByKey', { key: t.key })
             });
@@ -5281,19 +5471,20 @@ function renderOmniList(query, skipFileDispatch = false) {
             { badge: 'Widget', title: 'Widget Stüdyosunu Aç (14 Alt Dock + 16 Masaüstü)', sub: '4 bölgeli Pro Dock widgetları, Ses/Parlaklık kaydırıcı, AI Kota', kw: 'widget galeri saat muzik ai kota chatgpt gemini claude masaustu ses parlaklik', run: () => openSettingsModal('widgets') },
             { badge: 'Dock', title: 'Alt Dock Widget\'larını Sürükle ve Düzenle', sub: '4 bölge arasında sürükle-bırak düzenleme modu', kw: 'dock duzenle widget tasi surukle edit bolge', run: () => send('setDockEditMode', { active: true }) },
             { badge: 'Widget', title: 'Masaüstü Widget\'larını Sürükle ve Düzenle', sub: '16px manyetik ızgara düzenleme modu', kw: 'widget duzenle tasi surukle edit', run: () => send('setWidgetEditMode', { active: true }) },
-            { badge: 'Ayarlar', title: 'Aurora Ayarlar & 12 Tema Stüdyosunu Aç', sub: 'Görünüm, Görev Çubuğu Dallanma, Widget\'lar', kw: 'aurora ayarlar tema dallanma studio settings', run: () => openSettingsModal('appearance') },
-            { badge: 'Düzen', title: 'Kodlama Düzeni Uygula (Sol %65 + Sağ %35)', sub: '2 pencereyi akıllı yerleştir', kw: 'kodlama duzen tiling layout 65 35', run: () => send('applyWindowLayout', { preset: 'code6535' }) },
-            { badge: 'Düzen', title: 'Eşit İkili Düzen Uygula (50 / 50)', sub: '2 pencereyi yan yana yasla', kw: 'ikili duzen split 50 50 tiling', run: () => send('applyWindowLayout', { preset: 'split5050' }) },
-            { badge: 'Düzen', title: 'Üçlü Stüdyo Düzeni (50 / 25 / 25)', sub: '3 pencereyi tek tıkla yerleştir', kw: 'uclu studyo duzen 3 pencere tiling', run: () => send('applyWindowLayout', { preset: 'studio3' }) },
+            { badge: 'Ayarlar', title: 'Aurora Ayarlar & 26 Tema Stüdyosunu Aç', sub: 'Görünüm, Görev Çubuğu Dallanma, Widget\'lar', kw: 'aurora ayarlar tema dallanma studio settings', run: () => openSettingsModal('appearance') },
+            { badge: 'Düzen', title: 'Eşit İkili Düzen Uygula (50 / 50)', sub: '2 pencereyi yan yana yasla', kw: 'ikili duzen split 50 50 tiling', run: () => send('applyWindowLayout', { preset: 'split' }) },
+            { badge: 'Düzen', title: 'Odak Pencere Düzeni Uygula (Merkez)', sub: 'Aktif pencereyi merkezle', kw: 'odak duzen focus center tiling', run: () => send('applyWindowLayout', { preset: 'focus' }) },
+            { badge: 'Düzen', title: 'Tam Ekran Pencere Düzeni', sub: 'Aktif pencereyi büyüt', kw: 'tam ekran max uclu studyo duzen', run: () => send('arrangeActive', { mode: 'max' }) },
             { badge: 'Masaüstü', title: 'Yeni Sanal Masaüstü Oluştur', sub: 'Ctrl+Win+D', kw: 'yeni sanal masaustu virtual desktop', run: () => send('createVirtualDesktop') },
             { badge: 'Masaüstü', title: 'Sonraki Sanal Masaüstüne Geç', sub: 'Sanal masaüstü geçişi', kw: 'sonraki masaustu desktop gec', run: () => send('switchVirtualDesktopDelta', { delta: 1 }) },
             { badge: 'Pencere', title: 'Aktif Pencereyi Sol Yarıya Yasla (%50)', sub: 'Snap Left', kw: 'sol yasla snap left', run: () => send('arrangeActive', { mode: 'left' }) },
             { badge: 'Pencere', title: 'Aktif Pencereyi Sağ Yarıya Yasla (%50)', sub: 'Snap Right', kw: 'sag yasla snap right', run: () => send('arrangeActive', { mode: 'right' }) },
             { badge: 'Pencere', title: 'Aktif Pencereyi Zen Modunda Ortala (%75)', sub: 'Snap Center', kw: 'zen ortala center', run: () => send('arrangeActive', { mode: 'center' }) },
-            { badge: 'Üretkenlik', title: '25 Dakika Odak (Pomodoro) Başlat', sub: 'Üst Damla Adada canlı sayaç', kw: 'pomodoro odak timer sayac', run: () => send('startFocusMinutes', { minutes: 25 }) },
+            { badge: 'Üretkenlik', title: '25 Dakika Odak (Pomodoro) Başlat', sub: 'Üst Damla Adada canlı sayaç', kw: 'pomodoro odak timer sayac', run: () => send('setFocusPreset', { minutes: 25, start: true }) },
+            { badge: 'Üretkenlik', title: 'Odak Zamanlayıcıyı Sıfırla', sub: 'Sayacı durdur ve 25 dk sıfırla', kw: 'odak sifirla reset pomodoro', run: () => send('resetFocus') },
             { badge: 'Araçlar', title: 'Ekrandan Metin Yakala (Çevrimdışı OCR)', sub: 'Görsel veya videodan metin kopyala', kw: 'ocr metin yakala tara resim yazi kopyala text extractor', run: () => send('startScreenOcr') },
             { badge: 'Araçlar', title: 'Ekrandan Renk Seç (Renk Damlalığı HEX / RGB)', sub: 'Canlı büyüteçle piksel rengi al', kw: 'renk sec damlalik color picker eyedropper hex rgb hsl', run: () => send('startColorPicker') },
-            { badge: 'Güç', title: 'Uyanık Tut (1 Saat — Ekran Kararmaz)', sub: 'Awake / Caffeine Modu', kw: 'uyanik tut awake caffeine uyku engelle ekran acik', run: () => send('setAwakeMode', { mode: '1h' }) },
+            { badge: 'Güç', title: 'Uyanık Tut (1 Saat — Ekran Kararmaz)', sub: 'Awake / Caffeine Modu', kw: 'uyanik tut awake caffeine uyku engelle ekran acik', run: () => send('setAwakeMode', { mode: '60m' }) },
             { badge: 'Güç', title: 'Uyanık Tut (Süresiz)', sub: 'Kapatılana kadar uyku devre dışı', kw: 'uyanik tut suresiz awake forever', run: () => send('setAwakeMode', { mode: 'indefinite' }) },
             { badge: 'Güç', title: 'Uyanık Tut Modunu Kapat', sub: 'Normal güç yönetimine dön', kw: 'uyanik kapat awake off', run: () => send('setAwakeMode', { mode: 'off' }) },
             { badge: 'Görünüm', title: 'Kompakt / İnce Dock Moduna Geç', sub: 'Dizüstü ekranları için ince görev çubuğu', kw: 'kompakt ince kucuk dock density boyut', run: () => send('setDockDensity', { density: 'Compact' }) },
@@ -5419,7 +5610,10 @@ function renderTrayPopup() {
         return;
     }
     const apps = state.trayApps || [];
-    const sig = apps.map(a => `${a.key}|${a.name}|${a.memoryMb}|${a.icon ? a.icon.length : 0}`).join(';');
+    const sig = apps.map(a => {
+        const ic = resolveItemIcon(a);
+        return `${a.key}|${a.name}|${a.memoryMb}|${ic ? ic.length : 0}`;
+    }).join(';');
     if (el.classList.contains('open') && sig === lastTraySig) {
         return;
     }
@@ -5437,16 +5631,16 @@ function renderTrayPopup() {
             </div>
         ` : `
             <div class="tray-grid">
-                ${apps.map((a, idx) => `
+                ${apps.map((a, idx) => { const aIcon = resolveItemIcon(a); return `
                     <div class="tray-item" onclick="send('openTrayApp',{index:${idx}});toggleTrayPopup();" title="${escHtml(a.name)}${a.subtitle ? ' — ' + escHtml(a.subtitle) : ''}${a.memoryMb > 0 ? ' (' + a.memoryMb + ' MB)' : ''}">
-                        ${a.icon ? `<img src="data:image/png;base64,${a.icon}"/>` : `<span style="width:24px;display:inline-flex;justify-content:center;color:var(--accent-1);">${SVG.layers}</span>`}
+                        ${aIcon ? `<img src="data:image/png;base64,${aIcon}"/>` : `<span style="width:24px;display:inline-flex;justify-content:center;color:var(--accent-1);">${SVG.layers}</span>`}
                         <div style="flex:1;min-width:0;">
                             <div style="font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(a.name)}</div>
                             <div style="font-size:10.5px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" class="num">${escHtml(a.subtitle || 'Arka Plan')}${a.memoryMb > 0 ? ' · ' + a.memoryMb + ' MB' : ''}</div>
                         </div>
                         ${a.canQuit ? `<button class="micro-btn danger" onclick="event.stopPropagation();send('quitTrayApp',{index:${idx}});" title="Uygulamayı Sonlandır">${SVG.close}</button>` : ''}
                     </div>
-                `).join('')}
+                `; }).join('')}
             </div>
         `}
         <div class="power-strip" style="padding-top:8px;">
@@ -5565,7 +5759,10 @@ function renderDropPopup() {
         return;
     }
     const files = state.dropShelf || [];
-    const sig = `${isDraggingFile}|` + files.map(f => `${f.path}|${f.icon ? f.icon.length : 0}`).join(';');
+    const sig = `${isDraggingFile}|` + files.map(f => {
+        const ic = resolveItemIcon(f);
+        return `${f.path}|${ic ? ic.length : 0}`;
+    }).join(';');
     if (el.classList.contains('open') && sig === lastDropSig) return;
     const prevScroll = el.querySelector('.shelf-scroll-list')?.scrollTop || 0;
     lastDropSig = sig;
@@ -5586,9 +5783,9 @@ function renderDropPopup() {
         </div>
         ${files.length > 0 ? `
             <div class="shelf-scroll-list" style="max-height:200px;overflow-y:auto;">
-                ${files.map((f, idx) => `
+                ${files.map((f, idx) => { const fIcon = resolveItemIcon(f); return `
                     <div class="shelf-file-row">
-                        ${f.icon ? `<img src="data:image/png;base64,${f.icon}"/>` : SVG.folder}
+                        ${fIcon ? `<img src="data:image/png;base64,${fIcon}"/>` : SVG.folder}
                         <div style="flex:1;min-width:0;cursor:pointer;" onclick="send('openShelfFile',{index:${idx}});toggleDropPopup();" title="${escHtml(f.path)}">
                             <div style="font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(f.name)}</div>
                             <div style="font-size:10.5px;color:var(--text-2);">${escHtml(f.sizeLabel)}</div>
@@ -5599,7 +5796,7 @@ function renderDropPopup() {
                         <button class="micro-btn" onclick="send('revealShelfFile',{index:${idx}})" title="Klasörde Göster">${SVG.folder}</button>
                         <button class="micro-btn danger" onclick="send('removeShelfFile',{index:${idx}})" title="Kaldır">${SVG.close}</button>
                     </div>
-                `).join('')}
+                `; }).join('')}
             </div>
         ` : ''}
     `;
@@ -6231,7 +6428,11 @@ window.chrome.webview.addEventListener('message', e => {
         renderAll();
         syncFocusDemand();
     } else if (msg.type === 'catalog') {
-        if (Array.isArray(msg.installedApps)) appCatalog = msg.installedApps;
+        if (msg.iconCacheDelta) ingestIconCacheDelta(msg.iconCacheDelta);
+        if (Array.isArray(msg.installedApps)) {
+            appCatalog = msg.installedApps;
+            for (const a of appCatalog) resolveItemIcon(a);
+        }
         if (Array.isArray(msg.themes)) themesCatalog = msg.themes;
         if (msg.frecency && typeof msg.frecency === 'object') searchFrecency = msg.frecency;
         if (omniOpen) {
@@ -6256,9 +6457,15 @@ window.chrome.webview.addEventListener('message', e => {
             if (tEl) tEl.textContent = msg.clock;
             const pEl = document.getElementById('crownClockPill');
             if (pEl) pEl.textContent = `${msg.clock} • ${state.shortDate || ''}`;
+            updateCrownLiveMediaSeek();
         }
     } else if (msg.type === 'state') {
         state = msg.payload;
+        if (state?.iconCacheDelta) ingestIconCacheDelta(state.iconCacheDelta);
+        if (Array.isArray(state?.openWindows)) state.openWindows.forEach(resolveItemIcon);
+        if (state?.activeWindow) resolveItemIcon(state.activeWindow);
+        if (Array.isArray(state?.trayApps)) state.trayApps.forEach(resolveItemIcon);
+        if (Array.isArray(state?.dropShelf)) state.dropShelf.forEach(resolveItemIcon);
         if (typeof state.crownPinned === 'boolean') crownPinned = state.crownPinned;
         const activeEl = document.activeElement;
         const editingText = activeEl && (activeEl.id === 'agendaInput' || activeEl.id === 'scratchArea' || activeEl.id === 'clipSearchInput' || activeEl.id === 'mdTodoInp' || activeEl.id === 'stageScratch' || activeEl.classList?.contains('ai-key-inp'));
@@ -6373,6 +6580,7 @@ window.chrome.webview.addEventListener('message', e => {
 
 // Cold-boot / wake-from-sleep self-healing readiness handshake
 function signalUiReady() {
+    if (!state) ICON_CACHE.clear();
     try { window.chrome.webview.postMessage({ type: 'uiReady' }); } catch (_) {}
 }
 signalUiReady();
