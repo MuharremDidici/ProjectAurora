@@ -1050,15 +1050,241 @@ pub fn built_in_themes() -> Vec<ThemeTokens> {
             radius_btn: 11.0,
             shadow_intensity: 0.44,
         },
+        // 21. OLED Karbon — Pure Carbon OLED Matte (Dark)
+        ThemeTokens {
+            id: "oled-carbon".into(),
+            display_name: "OLED Karbon".into(),
+            description: "Saf karbon OLED siyahı, ultra düşük parıltı ve hassas İsviçre çizgileri.".into(),
+            color_mode: ColorMode::Dark,
+            visual_style: VisualStyle::LinearPrecision,
+            colors: ThemePalette {
+                canvas: "#000000".into(),
+                surface1: "#040406".into(),
+                surface2: "#0B0C10".into(),
+                surface3: "#14161D".into(),
+                surface_elevated: "#0E1015".into(),
+                text_primary: "#F8FAFC".into(),
+                text_secondary: "#AEB8C8".into(),
+                text_disabled: "#646D7E".into(),
+                border_subtle: "#1E222D".into(),
+                border_strong: "#3A4254".into(),
+                accent_primary: "#38BDF8".into(),
+                accent_secondary: "#94A3B8".into(),
+                state_success: "#34D399".into(),
+                state_warning: "#FBBF24".into(),
+                state_danger: "#FB7185".into(),
+                state_info: "#38BDF8".into(),
+            },
+            surface_opacity: 0.99,
+            radius_shell: 12.0,
+            radius_card: 9.0,
+            radius_item: 8.0,
+            radius_btn: 7.0,
+            shadow_intensity: 0.22,
+        },
+        // 22. Kyoto Kağıt — Warm Washi Paper & Torii Vermilion (Light)
+        ThemeTokens {
+            id: "kyoto-paper".into(),
+            display_name: "Kyoto Kağıt".into(),
+            description: "Doğal Japon washi kağıdı dokusu, torii kırmızısı vurgu ve dingin editoryal kontrast.".into(),
+            color_mode: ColorMode::Light,
+            visual_style: VisualStyle::BentoSilk,
+            colors: ThemePalette {
+                canvas: "#EAE4D9".into(),
+                surface1: "#F6F2EA".into(),
+                surface2: "#ECE6DA".into(),
+                surface3: "#E1D9CA".into(),
+                surface_elevated: "#FCF9F4".into(),
+                text_primary: "#1B1917".into(),
+                text_secondary: "#524B42".into(),
+                text_disabled: "#8A8175".into(),
+                border_subtle: "#D7CFC0".into(),
+                border_strong: "#B3A793".into(),
+                accent_primary: "#B91C1C".into(),
+                accent_secondary: "#1D4ED8".into(),
+                state_success: "#15803D".into(),
+                state_warning: "#B45309".into(),
+                state_danger: "#B91C1C".into(),
+                state_info: "#1D4ED8".into(),
+            },
+            surface_opacity: 0.97,
+            radius_shell: 20.0,
+            radius_card: 15.0,
+            radius_item: 12.0,
+            radius_btn: 10.0,
+            shadow_intensity: 0.20,
+        },
+        // 23. Nordik Buz — Deep Arctic Night Glass & Glacier Ice (Dark)
+        ThemeTokens {
+            id: "nordic-frost".into(),
+            display_name: "Nordik Buz".into(),
+            description: "Kutup gecesi buz camı, berrak buzul mavisi vurgular ve sakin kuzey derinliği.".into(),
+            color_mode: ColorMode::Dark,
+            visual_style: VisualStyle::LiquidGlass,
+            colors: ThemePalette {
+                canvas: "#050B14".into(),
+                surface1: "#0A1526".into(),
+                surface2: "#112138".into(),
+                surface3: "#192F4D".into(),
+                surface_elevated: "#132640".into(),
+                text_primary: "#F0F8FF".into(),
+                text_secondary: "#AECAE6".into(),
+                text_disabled: "#5D7D9E".into(),
+                border_subtle: "#203959".into(),
+                border_strong: "#3B6291".into(),
+                accent_primary: "#7DD3FC".into(),
+                accent_secondary: "#38BDF8".into(),
+                state_success: "#34D399".into(),
+                state_warning: "#FBBF24".into(),
+                state_danger: "#FB7185".into(),
+                state_info: "#7DD3FC".into(),
+            },
+            surface_opacity: 0.86,
+            radius_shell: 24.0,
+            radius_card: 17.0,
+            radius_item: 13.0,
+            radius_btn: 12.0,
+            shadow_intensity: 0.46,
+        },
+        // 24. Gül Kadife — Plush Plum Velvet & Rose Quartz (Dark)
+        ThemeTokens {
+            id: "rose-velvet".into(),
+            display_name: "Gül Kadife".into(),
+            description: "Derin gül kadife yüzeyi, yumuşak pembe kuvars vurgular ve sıcak akşam parıltısı.".into(),
+            color_mode: ColorMode::Dark,
+            visual_style: VisualStyle::SpatialVision,
+            colors: ThemePalette {
+                canvas: "#0E070D".into(),
+                surface1: "#170C15".into(),
+                surface2: "#231320".into(),
+                surface3: "#311B2D".into(),
+                surface_elevated: "#281625".into(),
+                text_primary: "#FFF1F5".into(),
+                text_secondary: "#E0BAC9".into(),
+                text_disabled: "#916B7B".into(),
+                border_subtle: "#47263E".into(),
+                border_strong: "#7A426B".into(),
+                accent_primary: "#F472B6".into(),
+                accent_secondary: "#FBBF24".into(),
+                state_success: "#34D399".into(),
+                state_warning: "#FBBF24".into(),
+                state_danger: "#FB7185".into(),
+                state_info: "#93C5FD".into(),
+            },
+            surface_opacity: 0.88,
+            radius_shell: 28.0,
+            radius_card: 20.0,
+            radius_item: 14.0,
+            radius_btn: 999.0,
+            shadow_intensity: 0.48,
+        },
+        // 25. Zümrüt Stüdyo — Matte Slate Emerald Precision (Dark)
+        ThemeTokens {
+            id: "emerald-studio".into(),
+            display_name: "Zümrüt Stüdyo".into(),
+            description: "Mat arduvaz zümrüt stüdyo yüzeyi, yüksek okunaklı yeşil vurgular ve odak odaklı düzen.".into(),
+            color_mode: ColorMode::Dark,
+            visual_style: VisualStyle::LinearPrecision,
+            colors: ThemePalette {
+                canvas: "#060C0A".into(),
+                surface1: "#0B1512".into(),
+                surface2: "#12211C".into(),
+                surface3: "#1A2E27".into(),
+                surface_elevated: "#152620".into(),
+                text_primary: "#ECFDF5".into(),
+                text_secondary: "#A6D4C4".into(),
+                text_disabled: "#5D8779".into(),
+                border_subtle: "#1F3930".into(),
+                border_strong: "#366152".into(),
+                accent_primary: "#10B981".into(),
+                accent_secondary: "#6EE7B7".into(),
+                state_success: "#34D399".into(),
+                state_warning: "#FBBF24".into(),
+                state_danger: "#FB7185".into(),
+                state_info: "#38BDF8".into(),
+            },
+            surface_opacity: 0.95,
+            radius_shell: 14.0,
+            radius_card: 10.0,
+            radius_item: 9.0,
+            radius_btn: 8.0,
+            shadow_intensity: 0.34,
+        },
+        // 26. Alabaster Sis — Cool Minimalist Alabaster Stone & Mist Teal (Light)
+        ThemeTokens {
+            id: "alabaster-mist".into(),
+            display_name: "Alabaster Sis".into(),
+            description: "Serin alabaster taşı yüzeyi, sisli petrol vurgular ve yalın gündüz berraklığı.".into(),
+            color_mode: ColorMode::Light,
+            visual_style: VisualStyle::LiquidGlass,
+            colors: ThemePalette {
+                canvas: "#E5E9EE".into(),
+                surface1: "#F4F6F9".into(),
+                surface2: "#E9EDF2".into(),
+                surface3: "#DCE2EA".into(),
+                surface_elevated: "#FFFFFF".into(),
+                text_primary: "#111827".into(),
+                text_secondary: "#475569".into(),
+                text_disabled: "#8592A3".into(),
+                border_subtle: "#CFD7E2".into(),
+                border_strong: "#A3B1C4".into(),
+                accent_primary: "#0F766E".into(),
+                accent_secondary: "#2563EB".into(),
+                state_success: "#047857".into(),
+                state_warning: "#B45309".into(),
+                state_danger: "#BE123C".into(),
+                state_info: "#2563EB".into(),
+            },
+            surface_opacity: 0.93,
+            radius_shell: 22.0,
+            radius_card: 16.0,
+            radius_item: 13.0,
+            radius_btn: 11.0,
+            shadow_intensity: 0.22,
+        },
     ]
 }
 
+fn fallback_default_theme() -> ThemeTokens {
+    ThemeTokens {
+        id: "aurora-glass-dark".into(),
+        display_name: "Liquid Glass 26".into(),
+        description: "Gerçek DWM optik cam bulanıklığı, üst kırılma yansıması ve akıcı simge ışığı.".into(),
+        color_mode: ColorMode::Dark,
+        visual_style: VisualStyle::LiquidGlass,
+        colors: ThemePalette {
+            canvas: "#0A0F1D".into(),
+            surface1: "#0F172A".into(),
+            surface2: "#162038".into(),
+            surface3: "#1E2C4A".into(),
+            surface_elevated: "#1A2744".into(),
+            text_primary: "#F8FAFC".into(),
+            text_secondary: "#B6C4D8".into(),
+            text_disabled: "#64748B".into(),
+            border_subtle: "#2A3A5C".into(),
+            border_strong: "#47608E".into(),
+            accent_primary: "#38BDF8".into(),
+            accent_secondary: "#818CF8".into(),
+            state_success: "#34D399".into(),
+            state_warning: "#FBBF24".into(),
+            state_danger: "#FB7185".into(),
+            state_info: "#60A5FA".into(),
+        },
+        surface_opacity: 0.84,
+        radius_shell: 24.0,
+        radius_card: 17.0,
+        radius_item: 13.0,
+        radius_btn: 999.0,
+        shadow_intensity: 0.48,
+    }
+}
+
 pub fn theme_by_id(id: &str) -> ThemeTokens {
-    let all = built_in_themes();
-    all.iter()
-        .find(|t| t.id.eq_ignore_ascii_case(id))
-        .cloned()
-        .unwrap_or_else(|| all.into_iter().next().unwrap())
+    let mut all = built_in_themes();
+    if let Some(pos) = all.iter().position(|t| t.id.eq_ignore_ascii_case(id)) {
+        return all.swap_remove(pos);
+    }
+    all.into_iter().next().unwrap_or_else(fallback_default_theme)
 }
 
 #[cfg(test)]
@@ -1066,27 +1292,66 @@ mod tests {
     use super::*;
 
     #[test]
-    fn all_twenty_themes_exceed_wcag_aa_on_primary_secondary_and_accent() {
+    fn all_twenty_six_themes_exceed_wcag_aa_on_primary_secondary_and_accent() {
         let themes = built_in_themes();
-        assert_eq!(themes.len(), 20, "Expected 20 curated built-in themes in v4.1");
-        for theme in themes {
+        assert_eq!(themes.len(), 26, "Expected 26 curated built-in themes");
+
+        let required_ids = [
+            "aurora-glass-dark",
+            "aurora-glass-light",
+            "obsidian-pro-dark",
+            "mono-matrix-dark",
+            "aurora-flow-dark",
+            "nebula-dark",
+            "nordic-frost-light",
+            "warm-latte-light",
+            "midnight-emerald-dark",
+            "sunset-kyoto-dark",
+            "oled-obsidian-dark",
+            "aurora-high-contrast",
+            "aurora-borealis-dark",
+            "crystal-sapphire-dark",
+            "frosted-quartz-light",
+            "matcha-paper-light",
+            "graphite-studio-dark",
+            "tokyo-rain-dark",
+            "rose-velvet-dark",
+            "desert-dune-dark",
+            "oled-carbon",
+            "kyoto-paper",
+            "nordic-frost",
+            "rose-velvet",
+            "emerald-studio",
+            "alabaster-mist",
+        ];
+        for id in required_ids {
+            assert!(
+                themes.iter().any(|t| t.id == id),
+                "Missing required theme ID: {id}"
+            );
+        }
+
+        for theme in &themes {
             let r_primary = contrast_ratio(&theme.colors.text_primary, &theme.colors.surface1);
             let r_secondary = contrast_ratio(&theme.colors.text_secondary, &theme.colors.surface2);
             let r_accent = contrast_ratio(&theme.colors.accent_primary, &theme.colors.surface1);
             assert!(
                 r_primary >= 7.0,
-                "{} primary text contrast {r_primary}:1 < 7.0 (AAA)",
-                theme.display_name
+                "{} ({}) primary text contrast {r_primary}:1 < 7.0 (AAA)",
+                theme.display_name,
+                theme.id
             );
             assert!(
                 r_secondary >= 4.5,
-                "{} secondary text contrast {r_secondary}:1 < 4.5 (AA)",
-                theme.display_name
+                "{} ({}) secondary text contrast {r_secondary}:1 < 4.5 (AA)",
+                theme.display_name,
+                theme.id
             );
             assert!(
                 r_accent >= 4.5,
-                "{} accent contrast {r_accent}:1 < 4.5 (AA)",
-                theme.display_name
+                "{} ({}) accent contrast {r_accent}:1 < 4.5 (AA)",
+                theme.display_name,
+                theme.id
             );
         }
     }
