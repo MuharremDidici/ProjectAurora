@@ -213,9 +213,12 @@ body.style-mono-matrix .wcag-pill {
 body.style-mono-matrix .pill-btn {
     border-radius: 999px;
     border: 1px solid rgba(255, 255, 255, 0.14);
-    font-family: var(--font-ui);
+    font-family: var(--font);
     font-size: 11px;
     font-weight: 600;
+}
+body.style-mono-matrix.mode-light .pill-btn:not(.accent) {
+    border-color: rgba(15, 23, 42, 0.14);
 }
 body.style-mono-matrix .pill-btn.accent {
     background: var(--accent-1);
@@ -592,7 +595,7 @@ body.mode-light .orb-node.hovered {
     padding: 0 4px;
     border-radius: 999px;
     background: var(--accent-1);
-    color: var(--on-accent, #05131f);
+    color: var(--accent-ink, #05131f);
     font-size: 9px;
     font-weight: 800;
     display: flex;
@@ -1989,24 +1992,92 @@ body.sil-compact:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) {
     min-height: calc(48px * var(--ds));
 }
 
-/* 4 User-Selectable Active App Indicator Styles */
+/* 4 User-Selectable Active App Indicator Styles (dot | bar | glow | pill) */
 body.ind-dot .dock-item.active .dock-dot {
-    width: 6px !important; height: 6px !important; border-radius: 50% !important; bottom: -3px !important;
+    width: 6px !important; height: 6px !important; border-radius: 50% !important;
+    bottom: -3px !important;
+    background: var(--accent-1) !important;
+    box-shadow: 0 0 8px var(--accent-glow) !important;
 }
 body.ind-dot .dock-item.running:not(.active) .dock-dot {
     width: 4px !important; height: 4px !important; border-radius: 50% !important;
+    background: var(--text-2) !important; opacity: 0.72 !important;
 }
-body.ind-frame .dock-item.active {
-    border: 1.5px solid var(--accent-1) !important;
+body.ind-dot.edge-left .dock-item.active .dock-dot,
+body.ind-dot.edge-right .dock-item.active .dock-dot {
+    width: 6px !important; height: 6px !important; border-radius: 50% !important;
+}
+
+body.ind-bar .dock-item.active {
     background: var(--accent-soft) !important;
+    border-color: rgba(var(--a1-rgb), 0.24) !important;
 }
-body.ind-frame .dock-item.active .dock-dot { opacity: 0 !important; }
+body.ind-bar .dock-item.active .dock-dot {
+    width: 18px !important; height: 3px !important; border-radius: 99px !important;
+    bottom: -1px !important;
+    background: linear-gradient(90deg, var(--accent-1), var(--accent-2)) !important;
+    box-shadow: none !important;
+}
+body.ind-bar .dock-item.running:not(.active) .dock-dot {
+    width: 7px !important; height: 2.5px !important; border-radius: 99px !important;
+    background: var(--text-2) !important; opacity: 0.72 !important;
+}
+body.ind-bar.edge-left .dock-item.active .dock-dot,
+body.ind-bar.edge-right .dock-item.active .dock-dot {
+    width: 3px !important; height: 18px !important;
+    background: linear-gradient(180deg, var(--accent-1), var(--accent-2)) !important;
+}
+body.ind-bar.edge-left .dock-item.running:not(.active) .dock-dot,
+body.ind-bar.edge-right .dock-item.running:not(.active) .dock-dot {
+    width: 2.5px !important; height: 7px !important;
+}
+
 body.ind-glow .dock-item.active {
+    background: radial-gradient(circle at 50% 60%, rgba(var(--a1-rgb), 0.24), rgba(var(--a2-rgb), 0.10)) !important;
+    border-color: rgba(var(--a1-rgb), 0.44) !important;
     box-shadow: 0 6px 20px -4px var(--accent-glow), inset 0 -2px 12px -4px var(--accent-glow) !important;
 }
 body.ind-glow .dock-item.active .dock-dot {
-    width: 20px !important; height: 3px !important;
+    width: 20px !important; height: 3px !important; border-radius: 99px !important;
+    background: var(--accent-1) !important;
     box-shadow: 0 0 12px var(--accent-1), 0 0 6px var(--accent-2) !important;
+}
+body.ind-glow .dock-item.running:not(.active) .dock-dot {
+    width: 6px !important; height: 2.5px !important;
+    background: var(--accent-1) !important; opacity: 0.60 !important;
+    box-shadow: 0 0 6px var(--accent-glow) !important;
+}
+body.ind-glow.edge-left .dock-item.active .dock-dot,
+body.ind-glow.edge-right .dock-item.active .dock-dot {
+    width: 3px !important; height: 20px !important;
+}
+
+body.ind-pill .dock-item.active,
+body.ind-frame .dock-item.active {
+    border: 1.5px solid var(--accent-1) !important;
+    background: linear-gradient(180deg, rgba(var(--a1-rgb), 0.22), rgba(var(--a1-rgb), 0.11)) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 4px 12px -4px var(--accent-glow) !important;
+}
+body.ind-pill.mode-light .dock-item.active,
+body.ind-frame.mode-light .dock-item.active {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 4px 12px -4px var(--accent-glow) !important;
+}
+body.ind-pill .dock-item.running:not(.active),
+body.ind-frame .dock-item.running:not(.active) {
+    border-color: var(--border-rim) !important;
+    background: var(--bg-card) !important;
+}
+body.ind-pill .dock-item.active .dock-dot,
+body.ind-frame .dock-item.active .dock-dot {
+    width: 11px !important; height: 2.5px !important; border-radius: 99px !important;
+    bottom: 1px !important;
+    background: var(--accent-1) !important; box-shadow: none !important;
+}
+body.ind-pill.edge-left .dock-item.active .dock-dot,
+body.ind-pill.edge-right .dock-item.active .dock-dot,
+body.ind-frame.edge-left .dock-item.active .dock-dot,
+body.ind-frame.edge-right .dock-item.active .dock-dot {
+    width: 2.5px !important; height: 11px !important;
 }
 
 /* ========== v4.1 CUTE MODULAR BOTTOM DOCK MICRO-WIDGETS ========== */
@@ -2370,11 +2441,41 @@ body.hover-glow .dock-item:hover {
     background: var(--accent-soft);
 }
 
-/* ========== BOTTOM-RIGHT POPOVERS (Quick Controls, Calendar/Notifications, Tray, Context Menu) ========== */
+body.mode-light .glass-shell {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.24) 36%, transparent 66%),
+        radial-gradient(ellipse 68% 58% at 18% 0%, rgba(var(--a1-rgb), 0.10), transparent 66%),
+        radial-gradient(ellipse 52% 46% at 86% 100%, rgba(var(--a2-rgb), 0.08), transparent 62%),
+        linear-gradient(165deg, var(--bg-glass-1), var(--bg-glass-2));
+    border-color: var(--border-rim);
+}
+body.mode-light .cn-tab.active {
+    background: #FFFFFF;
+    color: var(--text-1);
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.12);
+}
+body.mode-light .dw-flip-card {
+    box-shadow: inset 0 -1px 0 rgba(15, 23, 42, 0.10);
+}
+body.mode-light .dw-flip-card::after {
+    background: rgba(15, 23, 42, 0.12);
+}
+body.mode-light .dw-ms-art {
+    border-color: rgba(15, 23, 42, 0.14);
+    box-shadow: 0 3px 8px -2px rgba(15, 23, 42, 0.16);
+}
+body.mode-light .app-audio-badge {
+    background: #FFFFFF;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.18);
+}
+
+/* ========== BOTTOM-RIGHT POPOVERS & DAILY-DRIVER CONTROLS ========== */
 .dock-pop {
     position: fixed;
     bottom: 62px;
     right: 12px;
+    max-width: calc(100vw - 24px);
+    max-height: calc(100vh - 78px);
     border-radius: var(--radius-shell);
     padding: 13px;
     display: none;
@@ -2387,16 +2488,248 @@ body.hover-glow .dock-item:hover {
 }
 .dock-pop.open { display: flex; }
 @keyframes popRiseIn {
-    from { opacity: 0; transform: translateY(10px) scale(0.96); }
+    from { opacity: 0; transform: translateY(8px) scale(0.96); }
     to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-#dockQuickControls { width: 344px; max-height: 392px; overflow-y: auto; }
-#dockCalNotif { width: 356px; max-height: 396px; overflow-y: auto; }
-#dockTrayPop { width: 280px; max-height: 356px; overflow-y: auto; right: 170px; }
+#dockQuickControls { width: 364px; max-height: min(468px, calc(100vh - 78px)); overflow-y: auto; }
+#dockCalNotif { width: 372px; max-height: min(490px, calc(100vh - 78px)); overflow-y: auto; }
+#dockTrayPop { width: 296px; max-height: min(390px, calc(100vh - 78px)); overflow-y: auto; right: 170px; }
 #dockCtxMenu {
-    width: 244px; padding: 7px; gap: 3px;
+    width: 260px; padding: 7px; gap: 3px;
+    max-height: calc(100vh - 78px); overflow-y: auto;
     right: auto; transform-origin: bottom left; z-index: 60;
+}
+
+.qc-mixer-box {
+    display: flex; flex-direction: column; gap: 6px;
+    padding: 9px 10px; border-radius: var(--radius-card);
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+}
+.qc-mixer-hdr {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 10px; font-weight: 800; color: var(--text-2);
+    text-transform: uppercase; letter-spacing: 0.05em;
+}
+.qc-app-row {
+    display: flex; align-items: center; gap: 7px;
+}
+.qc-app-name {
+    width: 82px; font-size: 11px; font-weight: 600; color: var(--text-1);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0;
+}
+.qc-app-row input[type=range] {
+    flex: 1; accent-color: var(--accent-1); height: 4px; cursor: pointer;
+}
+.qc-power-row {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+}
+.qc-pwr-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+    height: 28px; padding: 0 8px; border-radius: var(--radius-item);
+    border: 1px solid var(--border-subtle); background: var(--bg-card);
+    color: var(--text-1); font-family: var(--font); font-size: 11px; font-weight: 600;
+    cursor: pointer; transition: background 0.14s, border-color 0.14s, color 0.14s;
+}
+.qc-pwr-btn:hover { background: var(--bg-card-hover); border-color: var(--border-rim); }
+.qc-pwr-btn.danger:hover {
+    background: rgba(251, 113, 133, 0.15); border-color: var(--danger); color: var(--danger);
+}
+
+/* Calendar Hero, Tasks & Countdown inside #dockCalNotif */
+.cal-today-hero {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 8px 10px; border-radius: var(--radius-card);
+    background: linear-gradient(135deg, rgba(var(--a1-rgb), 0.14), rgba(var(--a2-rgb), 0.09));
+    border: 1px solid var(--accent-ring);
+}
+.cal-cd-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 8px; border-radius: 99px;
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+    font-size: 10.5px; font-weight: 700; color: var(--text-1); cursor: pointer;
+    transition: border-color 0.14s, background 0.14s;
+}
+.cal-cd-pill:hover { border-color: var(--accent-ring); background: var(--bg-card-hover); }
+.cal-section {
+    display: flex; flex-direction: column; gap: 6px;
+    padding-top: 8px; border-top: 1px solid var(--border-subtle);
+}
+.cal-sec-hdr {
+    display: flex; align-items: center; justify-content: space-between; gap: 6px;
+    font-size: 10.5px; font-weight: 800; color: var(--text-2);
+    text-transform: uppercase; letter-spacing: 0.04em;
+}
+.cal-todo-list {
+    display: flex; flex-direction: column; gap: 4px; max-height: 104px; overflow-y: auto;
+}
+.cal-todo-row {
+    display: flex; align-items: center; gap: 7px;
+    padding: 5px 7px; border-radius: 9px;
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+    font-size: 11.5px;
+}
+.cal-todo-chk {
+    width: 16px; height: 16px; border-radius: 5px;
+    border: 1.5px solid var(--border-rim); background: transparent;
+    color: var(--accent-ink); display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0; font-size: 10px; font-weight: 800;
+}
+.cal-todo-chk.done {
+    background: var(--accent-1); border-color: var(--accent-1);
+}
+.cal-todo-txt {
+    flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    cursor: pointer;
+}
+.cal-todo-txt.done { text-decoration: line-through; opacity: 0.55; }
+
+/* Categorized Widget Picker */
+.dwp-cats {
+    display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+}
+.dwp-cat-btn {
+    height: 23px; padding: 0 8px; border-radius: 99px;
+    border: 1px solid var(--border-subtle); background: var(--bg-card);
+    color: var(--text-2); font-family: var(--font); font-size: 10px; font-weight: 700;
+    cursor: pointer; transition: all 0.12s;
+}
+.dwp-cat-btn:hover { color: var(--text-1); border-color: var(--border-rim); }
+.dwp-cat-btn.active { background: var(--accent-soft); border-color: var(--accent-ring); color: var(--accent-1); }
+.dwp-group-lbl {
+    font-size: 9.5px; font-weight: 800; color: var(--text-2);
+    text-transform: uppercase; letter-spacing: 0.05em;
+    padding: 4px 2px 1px;
+}
+
+/* ========== BOTTOM OMNISEARCH (#omnibar) ========== */
+#omnibar {
+    pointer-events: auto;
+    position: fixed;
+    left: 50%;
+    bottom: 64px;
+    transform: translateX(-50%);
+    width: min(700px, calc(100vw - 24px));
+    max-height: min(530px, calc(100vh - 82px));
+    overflow: hidden;
+    border-radius: var(--radius-shell);
+    padding: 13px;
+    display: none;
+    flex-direction: column;
+    gap: 9px;
+    z-index: 58;
+    animation: omniPopIn 0.17s var(--spring);
+}
+#omnibar.open { display: flex; }
+body.edge-left #omnibar,
+body.edge-right #omnibar {
+    transform: none;
+    animation: popRiseIn 0.17s var(--spring);
+    width: min(640px, calc(100vw - 92px));
+    max-height: calc(100vh - 28px);
+}
+@keyframes omniPopIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(10px) scale(0.97); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+.omni-input-wrap {
+    display: flex; align-items: center; gap: 9px;
+    background: var(--bg-inset);
+    border: 1.5px solid var(--accent-ring);
+    border-radius: var(--radius-card);
+    padding: 8px 11px;
+    box-shadow: 0 0 0 3px rgba(var(--a1-rgb), 0.10);
+}
+.omni-input-wrap:focus-within {
+    border-color: var(--accent-1);
+    box-shadow: 0 0 0 3px rgba(var(--a1-rgb), 0.22);
+}
+.omni-input-wrap input {
+    flex: 1; min-width: 0; background: transparent; border: none; outline: none;
+    color: var(--text-1); font-family: var(--font); font-size: 13.5px; font-weight: 500;
+    user-select: text;
+}
+.omni-input-wrap input::placeholder { color: var(--text-2); opacity: 0.78; }
+.omni-filters {
+    display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+}
+.omni-chip {
+    height: 24px; padding: 0 9px; border-radius: 99px;
+    border: 1px solid var(--border-subtle); background: var(--bg-card);
+    color: var(--text-2); font-family: var(--font); font-size: 10.5px; font-weight: 700;
+    cursor: pointer; transition: all 0.12s;
+}
+.omni-chip:hover { color: var(--text-1); border-color: var(--border-rim); }
+.omni-chip.active { background: var(--accent-soft); border-color: var(--accent-ring); color: var(--accent-1); }
+.omni-smart-card {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 9px 12px; border-radius: var(--radius-card);
+    background: linear-gradient(135deg, rgba(var(--a1-rgb), 0.16), rgba(var(--a2-rgb), 0.10));
+    border: 1.5px solid var(--accent-ring);
+    cursor: pointer; transition: border-color 0.12s, box-shadow 0.12s;
+}
+.omni-smart-card.sel, .omni-smart-card:hover {
+    border-color: var(--accent-1);
+    box-shadow: 0 0 0 2px rgba(var(--a1-rgb), 0.32);
+}
+.omni-list {
+    display: flex; flex-direction: column; gap: 4px;
+    max-height: 276px; overflow-y: auto; padding-right: 2px;
+}
+.omni-row {
+    display: flex; align-items: center; gap: 9px;
+    padding: 7px 10px; border-radius: var(--radius-item);
+    background: var(--bg-card); border: 1px solid transparent;
+    cursor: pointer; transition: background 0.11s, border-color 0.11s, box-shadow 0.11s;
+}
+.omni-row:hover {
+    background: var(--bg-card-hover); border-color: var(--border-rim);
+}
+.omni-row.sel {
+    background: var(--accent-soft);
+    border-color: var(--accent-1);
+    box-shadow: 0 0 0 2px rgba(var(--a1-rgb), 0.34);
+}
+.omni-row img { width: 22px; height: 22px; border-radius: 5px; flex-shrink: 0; object-fit: contain; }
+.omni-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 6px; max-height: 272px; overflow-y: auto; padding: 2px;
+}
+.omni-app-card {
+    position: relative;
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 9px; border-radius: var(--radius-item);
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+    cursor: pointer; transition: background 0.12s, border-color 0.12s, box-shadow 0.12s;
+}
+.omni-app-card:hover {
+    background: var(--bg-card-hover); border-color: var(--border-rim);
+}
+.omni-app-card.sel {
+    background: var(--accent-soft);
+    border-color: var(--accent-1);
+    box-shadow: 0 0 0 2px rgba(var(--a1-rgb), 0.36);
+}
+.omni-app-card img { width: 22px; height: 22px; border-radius: 5px; flex-shrink: 0; object-fit: contain; }
+.omni-app-card .pin-mini {
+    opacity: 0; width: 20px; height: 20px; border-radius: 6px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--bg-inset); color: var(--text-2); flex-shrink: 0;
+    transition: opacity 0.12s, color 0.12s;
+}
+.omni-app-card:hover .pin-mini, .omni-app-card.sel .pin-mini { opacity: 1; }
+.omni-app-card .pin-mini:hover { color: var(--accent-1); }
+.omni-foot {
+    display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap;
+    padding-top: 7px; border-top: 1px solid var(--border-subtle);
+}
+.omni-row button:focus-visible, .omni-chip:focus-visible, .omni-app-card:focus-visible, .omni-input-wrap input:focus-visible {
+    outline: none;
+}
+.omni-kbd {
+    font-family: var(--font-mono); font-size: 9.5px; font-weight: 700;
+    padding: 1px 5px; border-radius: 5px;
+    background: var(--bg-inset); border: 1px solid var(--border-subtle); color: var(--text-2);
 }
 
 .qc-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; }
@@ -2884,15 +3217,19 @@ body.mode-light .dw-pill {
     background: rgba(20, 22, 26, 0.038);
 }
 
-/* 1. TAHOE SPATIAL GLASS — Thick Optical Floating Capsule + Round Glowing Active Dots */
+/* 1. TAHOE SPATIAL GLASS — Optical Floating Capsule + Specular Rim (Dark & Light, Horizontal & Vertical) */
 body.arch-tahoe-glass:not(.edge-left):not(.edge-right) .dock-stage:not(.tucked-stage):not(.pinned-bar-stage) {
     padding-bottom: 6px !important;
 }
-body.arch-tahoe-glass #dockBar:not(.pinned-bar):not(.tucked) {
+body.arch-tahoe-glass:not(.edge-left):not(.edge-right) #dockBar:not(.pinned-bar):not(.tucked) {
     width: fit-content !important; max-width: calc(100vw - 24px) !important;
     height: calc(46px * var(--ds)) !important; min-height: calc(46px * var(--ds)) !important;
-    border-radius: 24px !important;
     padding: 0 calc(13px * var(--ds)) !important;
+}
+body.arch-tahoe-glass:not(.edge-left):not(.edge-right) #dockBar:not(.pinned-bar).density-compact { height: calc(38px * var(--ds)) !important; min-height: calc(38px * var(--ds)) !important; }
+body.arch-tahoe-glass:not(.edge-left):not(.edge-right) #dockBar:not(.pinned-bar).density-cozy { height: calc(54px * var(--ds)) !important; min-height: calc(54px * var(--ds)) !important; }
+body.arch-tahoe-glass #dockBar:not(.pinned-bar):not(.tucked) {
+    border-radius: 24px !important;
     background:
         linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.03) 38%, transparent 68%),
         linear-gradient(165deg, var(--bg-glass-1), var(--bg-glass-2)) !important;
@@ -2902,18 +3239,19 @@ body.arch-tahoe-glass #dockBar:not(.pinned-bar):not(.tucked) {
         inset 0 1.5px 0 rgba(255, 255, 255, 0.42),
         inset 0 -1px 0 rgba(255, 255, 255, 0.08) !important;
 }
-body.arch-tahoe-glass #dockBar:not(.pinned-bar).density-compact { height: calc(38px * var(--ds)) !important; min-height: calc(38px * var(--ds)) !important; }
-body.arch-tahoe-glass #dockBar:not(.pinned-bar).density-cozy { height: calc(54px * var(--ds)) !important; min-height: calc(54px * var(--ds)) !important; }
 body.arch-tahoe-glass.mode-light #dockBar:not(.pinned-bar):not(.tucked) {
-    border-color: rgba(255, 255, 255, 0.84) !important;
-    box-shadow: 0 20px 44px -12px rgba(15, 23, 42, 0.22), inset 0 1.5px 0 #FFFFFF !important;
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.86) 0%, rgba(255,255,255,0.34) 44%, transparent 72%),
+        linear-gradient(165deg, var(--bg-glass-1), var(--bg-glass-2)) !important;
+    border-color: rgba(15, 23, 42, 0.14) !important;
+    box-shadow:
+        0 20px 44px -12px rgba(15, 23, 42, 0.20),
+        0 0 0 0.5px rgba(255, 255, 255, 0.85) inset,
+        inset 0 1.5px 0 #FFFFFF !important;
 }
 body.arch-tahoe-glass .dock-item { border-radius: 14px !important; }
-body.arch-tahoe-glass .dock-item.active .dock-dot {
-    width: 6px; height: 6px; border-radius: 50%;
-    box-shadow: 0 0 10px var(--accent-glow);
-}
-body.arch-tahoe-glass .dock-pop { border-radius: 22px !important; }
+body.arch-tahoe-glass .dock-pop,
+body.arch-tahoe-glass #omnibar { border-radius: 22px !important; }
 
 /* 2. NOTHING HARDWARE — 3 Detached Matte Dot-Matrix Hardware Islands (#EF4444 LED Dot) */
 body.arch-nothing-hardware:not(.edge-left):not(.edge-right) .dock-stage:not(.tucked-stage) { padding-bottom: 6px !important; }
@@ -2928,24 +3266,32 @@ body.arch-nothing-hardware:not(.edge-left):not(.edge-right) #dockBar:not(.tucked
 body.arch-nothing-hardware:not(.edge-left):not(.edge-right) #dockBar:not(.tucked)::after { display: none !important; }
 body.arch-nothing-hardware:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-left,
 body.arch-nothing-hardware:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-center,
-body.arch-nothing-hardware:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-right {
-    pointer-events: auto; width: fit-content; height: calc(46px * var(--ds));
-    padding: 0 calc(10px * var(--ds)); border-radius: 13px !important;
+body.arch-nothing-hardware:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-right,
+body.arch-nothing-hardware.edge-left #dockBar:not(.tucked),
+body.arch-nothing-hardware.edge-right #dockBar:not(.tucked) {
     background:
         radial-gradient(rgba(255,255,255,0.065) 1px, transparent 1px),
-        linear-gradient(180deg, rgba(16, 17, 22, 0.95), rgba(9, 10, 14, 0.98)) !important;
+        linear-gradient(180deg, rgba(16, 17, 22, 0.96), rgba(9, 10, 14, 0.98)) !important;
     background-size: 9px 9px, 100% 100% !important;
     border: 1px solid rgba(255, 255, 255, 0.16) !important;
     box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.74), inset 0 1px 0 rgba(255, 255, 255, 0.10) !important;
 }
+body.arch-nothing-hardware:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-left,
+body.arch-nothing-hardware:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-center,
+body.arch-nothing-hardware:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-right {
+    pointer-events: auto; width: fit-content; height: calc(46px * var(--ds));
+    padding: 0 calc(10px * var(--ds)); border-radius: 13px !important;
+}
 body.arch-nothing-hardware.mode-light:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-left,
 body.arch-nothing-hardware.mode-light:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-center,
-body.arch-nothing-hardware.mode-light:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-right {
+body.arch-nothing-hardware.mode-light:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-right,
+body.arch-nothing-hardware.mode-light.edge-left #dockBar:not(.tucked),
+body.arch-nothing-hardware.mode-light.edge-right #dockBar:not(.tucked) {
     background:
-        radial-gradient(rgba(15,23,42,0.07) 1px, transparent 1px),
-        linear-gradient(180deg, rgba(249, 249, 251, 0.97), rgba(238, 240, 244, 0.98)) !important;
+        radial-gradient(rgba(15,23,42,0.075) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(249, 249, 251, 0.98), rgba(236, 239, 244, 0.99)) !important;
     background-size: 9px 9px, 100% 100% !important;
-    border-color: rgba(15, 23, 42, 0.15) !important;
+    border-color: rgba(15, 23, 42, 0.16) !important;
     box-shadow: 0 14px 32px -12px rgba(15, 23, 42, 0.18), inset 0 1px 0 #FFFFFF !important;
 }
 body.arch-nothing-hardware:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-left { justify-self: start; }
@@ -2956,9 +3302,23 @@ body.arch-nothing-hardware .dw-pill,
 body.arch-nothing-hardware .start-btn { border-radius: 9px !important; }
 body.arch-nothing-hardware .num,
 body.arch-nothing-hardware .dock-clock-time { font-family: var(--font-mono) !important; }
-body.arch-nothing-hardware .dock-item.active .dock-dot {
-    width: 6px !important; height: 6px !important; border-radius: 50% !important;
+body.arch-nothing-hardware.ind-dot .dock-item.active .dock-dot {
     background: #EF4444 !important; box-shadow: 0 0 8px rgba(239, 68, 68, 0.72) !important;
+}
+body.arch-nothing-hardware .dock-pop,
+body.arch-nothing-hardware #omnibar {
+    border-radius: 15px !important;
+    background:
+        radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(16, 17, 22, 0.97), rgba(10, 11, 15, 0.99)) !important;
+    background-size: 10px 10px, 100% 100% !important;
+}
+body.arch-nothing-hardware.mode-light .dock-pop,
+body.arch-nothing-hardware.mode-light #omnibar {
+    background:
+        radial-gradient(rgba(15,23,42,0.05) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(250, 250, 252, 0.98), rgba(239, 241, 246, 0.99)) !important;
+    background-size: 10px 10px, 100% 100% !important;
 }
 
 /* 3. LINEAR STUDIO — Razor 40px Edge-to-Edge Zero-Glow Precision Bar */
@@ -2966,10 +3326,15 @@ body.arch-linear-studio:not(.edge-left):not(.edge-right) .dock-stage.pinned-bar-
 body.arch-linear-studio:not(.edge-left):not(.edge-right) #dockBar.pinned-bar {
     height: calc(40px * var(--ds)) !important; min-height: calc(40px * var(--ds)) !important;
     --item-sz: calc(30px * var(--ds)); --img-sz: calc(19px * var(--ds));
-    background: var(--bg-glass-1) !important;
-    border-top: 1px solid var(--border-rim) !important;
-    box-shadow: none !important;
     padding: 0 calc(12px * var(--ds)) !important;
+}
+body.arch-linear-studio #dockBar:not(.tucked) {
+    background: var(--bg-glass-1) !important;
+    border-color: var(--border-rim) !important;
+    box-shadow: none !important;
+}
+body.arch-linear-studio:not(.edge-left):not(.edge-right) #dockBar.pinned-bar {
+    border-top: 1px solid var(--border-rim) !important;
 }
 body.arch-linear-studio:not(.edge-left):not(.edge-right) #dockBar.pinned-bar::after { display: none !important; }
 body.arch-linear-studio:not(.edge-left):not(.edge-right) #dockBar.pinned-bar.density-compact {
@@ -2987,21 +3352,20 @@ body.arch-linear-studio .dock-status-pill,
 body.arch-linear-studio .dock-clock-pill { border-radius: 6px !important; }
 body.arch-linear-studio .dw-pill { background: transparent !important; border-color: var(--border-subtle) !important; }
 body.arch-linear-studio .dock-item.active {
-    background: rgba(var(--a1-rgb), 0.10) !important; border-color: rgba(var(--a1-rgb), 0.28) !important;
+    background: rgba(var(--a1-rgb), 0.11) !important; border-color: rgba(var(--a1-rgb), 0.30) !important;
 }
-body.arch-linear-studio .dock-item.active .dock-dot {
-    width: 20px !important; height: 2px !important; border-radius: 1px !important;
-    background: var(--accent-1) !important; box-shadow: none !important; bottom: 0 !important;
-}
-body.arch-linear-studio .dock-pop { border-radius: 11px !important; box-shadow: 0 18px 42px -12px rgba(0,0,0,0.65) !important; }
+body.arch-linear-studio .dock-pop,
+body.arch-linear-studio #omnibar { border-radius: 10px !important; box-shadow: var(--shadow-shell) !important; }
 
 /* 4. VISION ORB — Full-Stadium Glass Capsule & Pure Circular Pearlescent Icon Orbs */
 body.arch-vision-orb:not(.edge-left):not(.edge-right) .dock-stage:not(.tucked-stage) { padding-bottom: 6px !important; }
-body.arch-vision-orb #dockBar:not(.pinned-bar):not(.tucked) {
+body.arch-vision-orb:not(.edge-left):not(.edge-right) #dockBar:not(.pinned-bar):not(.tucked) {
     width: fit-content !important; max-width: calc(100vw - 24px) !important;
     height: calc(46px * var(--ds)) !important; min-height: calc(46px * var(--ds)) !important;
-    border-radius: 999px !important;
     padding: 0 calc(14px * var(--ds)) !important;
+}
+body.arch-vision-orb #dockBar:not(.pinned-bar):not(.tucked) {
+    border-radius: 999px !important;
     background:
         radial-gradient(ellipse 90% 60% at 50% 0%, rgba(255,255,255,0.22), transparent 64%),
         linear-gradient(155deg, rgba(255,255,255,0.12), rgba(255,255,255,0.03) 55%, rgba(var(--a1-rgb),0.10)),
@@ -3014,8 +3378,12 @@ body.arch-vision-orb #dockBar:not(.pinned-bar):not(.tucked) {
         inset 0 -1.5px 0 rgba(255, 255, 255, 0.14) !important;
 }
 body.arch-vision-orb.mode-light #dockBar:not(.pinned-bar):not(.tucked) {
-    border-color: rgba(255, 255, 255, 0.92) !important;
-    box-shadow: 0 20px 44px -10px rgba(15, 23, 42, 0.22), inset 0 2px 0 #FFFFFF !important;
+    background:
+        radial-gradient(ellipse 90% 60% at 50% 0%, rgba(255,255,255,0.92), transparent 68%),
+        linear-gradient(155deg, rgba(255,255,255,0.88), rgba(244,248,255,0.86) 55%, rgba(var(--a1-rgb),0.08)),
+        var(--bg-glass-1) !important;
+    border-color: rgba(15, 23, 42, 0.14) !important;
+    box-shadow: 0 20px 44px -10px rgba(15, 23, 42, 0.20), inset 0 2px 0 #FFFFFF !important;
 }
 body.arch-vision-orb .dock-item,
 body.arch-vision-orb .start-btn:not(.start-capsule) {
@@ -3024,20 +3392,29 @@ body.arch-vision-orb .start-btn:not(.start-capsule) {
     border: 1px solid rgba(255, 255, 255, 0.18) !important;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24) !important;
 }
+body.arch-vision-orb.mode-light .dock-item,
+body.arch-vision-orb.mode-light .start-btn:not(.start-capsule) {
+    background: rgba(255, 255, 255, 0.72) !important;
+    border-color: rgba(15, 23, 42, 0.12) !important;
+    box-shadow: inset 0 1px 0 #FFFFFF, 0 2px 6px -2px rgba(15, 23, 42, 0.10) !important;
+}
 body.arch-vision-orb .dock-item:hover,
 body.arch-vision-orb .dock-item.active {
     background: radial-gradient(circle at 35% 25%, rgba(255,255,255,0.26), rgba(var(--a1-rgb),0.24)) !important;
     border-color: rgba(255, 255, 255, 0.48) !important;
     box-shadow: 0 0 16px -4px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.45) !important;
 }
+body.arch-vision-orb.mode-light .dock-item:hover,
+body.arch-vision-orb.mode-light .dock-item.active {
+    background: radial-gradient(circle at 35% 25%, #FFFFFF, rgba(var(--a1-rgb), 0.18)) !important;
+    border-color: rgba(var(--a1-rgb), 0.55) !important;
+    box-shadow: 0 0 14px -4px var(--accent-glow), inset 0 1px 0 #FFFFFF !important;
+}
 body.arch-vision-orb .dw-pill,
 body.arch-vision-orb .dock-status-pill,
 body.arch-vision-orb .dock-clock-pill { border-radius: 999px !important; }
-body.arch-vision-orb .dock-item.active .dock-dot {
-    width: 12px !important; height: 3px !important; border-radius: 99px !important;
-    background: #FFFFFF !important; box-shadow: 0 0 8px rgba(255,255,255,0.8) !important; bottom: -2px !important;
-}
-body.arch-vision-orb .dock-pop { border-radius: 26px !important; }
+body.arch-vision-orb .dock-pop,
+body.arch-vision-orb #omnibar { border-radius: 26px !important; }
 
 /* 5. ARC SPLIT — 2 Asymmetric Pods: Fused Navigation + Apps Card on Left/Center + Detached Utility Pod on Right */
 body.arch-arc-split:not(.edge-left):not(.edge-right) .dock-stage:not(.tucked-stage) { padding-bottom: 6px !important; }
@@ -3053,9 +3430,9 @@ body.arch-arc-split:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-
     pointer-events: auto; height: calc(46px * var(--ds));
     padding: 0 calc(9px * var(--ds)) 0 calc(11px * var(--ds));
     border-radius: 17px 0 0 17px !important;
-    background: linear-gradient(135deg, rgba(var(--a1-rgb),0.16), rgba(var(--a2-rgb),0.08)), var(--bg-glass-1) !important;
+    background: linear-gradient(135deg, rgba(var(--a1-rgb),0.18), rgba(var(--a2-rgb),0.09)), var(--bg-glass-1) !important;
     border: 1px solid rgba(var(--a1-rgb), 0.34) !important; border-right: none !important;
-    box-shadow: 0 20px 44px -14px rgba(0,0,0,0.62) !important;
+    box-shadow: var(--shadow-shell) !important;
 }
 body.arch-arc-split:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-center {
     pointer-events: auto; height: calc(46px * var(--ds));
@@ -3063,7 +3440,7 @@ body.arch-arc-split:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-
     border-radius: 0 17px 17px 0 !important;
     background: var(--bg-glass-2) !important;
     border: 1px solid var(--border-rim) !important;
-    box-shadow: 0 20px 44px -14px rgba(0,0,0,0.62) !important;
+    box-shadow: var(--shadow-shell) !important;
 }
 body.arch-arc-split:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-right {
     pointer-events: auto; margin-left: auto; height: calc(46px * var(--ds));
@@ -3071,24 +3448,29 @@ body.arch-arc-split:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-
     border-radius: 17px !important;
     background: linear-gradient(160deg, var(--bg-glass-1), var(--bg-glass-2)) !important;
     border: 1px solid var(--border-rim) !important;
-    box-shadow: 0 20px 44px -14px rgba(0,0,0,0.62) !important;
+    box-shadow: var(--shadow-shell) !important;
+}
+body.arch-arc-split.edge-left #dockBar:not(.tucked),
+body.arch-arc-split.edge-right #dockBar:not(.tucked) {
+    border-radius: 17px !important;
+    background: linear-gradient(180deg, rgba(var(--a1-rgb), 0.14), transparent 22%), linear-gradient(180deg, var(--bg-glass-1), var(--bg-glass-2)) !important;
+    border: 1px solid rgba(var(--a1-rgb), 0.32) !important;
 }
 body.arch-arc-split .dock-item { border-radius: 11px !important; }
 body.arch-arc-split .dock-item.active {
     background: rgba(var(--a1-rgb), 0.14) !important;
     border: 1px solid rgba(var(--a1-rgb), 0.42) !important;
 }
-body.arch-arc-split .dock-item.active .dock-dot {
-    width: 5px !important; height: 5px !important; border-radius: 50% !important;
-    background: var(--accent-1) !important; box-shadow: none !important;
-}
 
 /* 6. BRAUN ATELIER — Solid Anodized Matte Aluminum/Ceramic Slab, Concave Wells, Signal Orange #EA580C */
 body.arch-braun-atelier:not(.edge-left):not(.edge-right) .dock-stage:not(.tucked-stage) { padding-bottom: 6px !important; }
-body.arch-braun-atelier #dockBar:not(.pinned-bar):not(.tucked) {
+body.arch-braun-atelier:not(.edge-left):not(.edge-right) #dockBar:not(.pinned-bar):not(.tucked) {
     width: calc(100vw - 32px) !important; max-width: calc(100vw - 32px) !important;
     height: calc(46px * var(--ds)) !important; min-height: calc(46px * var(--ds)) !important;
-    border-radius: 10px !important; padding: 0 calc(12px * var(--ds)) !important;
+    padding: 0 calc(12px * var(--ds)) !important;
+}
+body.arch-braun-atelier #dockBar:not(.pinned-bar):not(.tucked) {
+    border-radius: 10px !important;
     background: #17181C !important;
     border: 1px solid rgba(255, 255, 255, 0.14) !important;
     box-shadow: 0 18px 36px -10px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255, 255, 255, 0.10), inset 0 -1px 0 rgba(0, 0, 0, 0.55) !important;
@@ -3117,19 +3499,36 @@ body.arch-braun-atelier .dock-item.active {
     background: rgba(234, 88, 12, 0.12) !important;
     box-shadow: inset 0 1px 3px rgba(0,0,0,0.3) !important;
 }
-body.arch-braun-atelier .dock-item.active .dock-dot {
-    width: 6px !important; height: 6px !important; border-radius: 50% !important;
-    background: #EA580C !important; box-shadow: 0 0 6px rgba(234,88,12,0.7) !important; bottom: -2px !important;
+body.arch-braun-atelier.ind-dot .dock-item.active .dock-dot {
+    background: #EA580C !important; box-shadow: 0 0 6px rgba(234,88,12,0.7) !important;
+}
+body.arch-braun-atelier .dock-pop,
+body.arch-braun-atelier #omnibar {
+    border-radius: 11px !important;
+    background: #1B1C21 !important;
+    border-color: rgba(255, 255, 255, 0.14) !important;
+}
+body.arch-braun-atelier.mode-light .dock-pop,
+body.arch-braun-atelier.mode-light #omnibar {
+    background: #F4F1EB !important;
+    border-color: rgba(24, 24, 27, 0.18) !important;
 }
 
 /* 7. SWISS EDITORIAL — Architectural Poster Bar, Bold 2px Top Ink Rule, Hairline Grid Cells */
-body.arch-swiss-editorial #dockBar.pinned-bar {
+body.arch-swiss-editorial #dockBar:not(.tucked) {
     background: #0B0D12 !important;
-    border-top: 2px solid var(--accent-1) !important;
+    border-color: var(--border-rim) !important;
     box-shadow: none !important;
 }
-body.arch-swiss-editorial.mode-light #dockBar.pinned-bar {
+body.arch-swiss-editorial:not(.edge-left):not(.edge-right) #dockBar.pinned-bar {
+    border-top: 2px solid var(--accent-1) !important;
+}
+body.arch-swiss-editorial.edge-left #dockBar:not(.tucked) { border-right: 2px solid var(--accent-1) !important; }
+body.arch-swiss-editorial.edge-right #dockBar:not(.tucked) { border-left: 2px solid var(--accent-1) !important; }
+body.arch-swiss-editorial.mode-light #dockBar:not(.tucked) {
     background: #FAF9F6 !important;
+}
+body.arch-swiss-editorial.mode-light:not(.edge-left):not(.edge-right) #dockBar.pinned-bar {
     border-top: 2px solid #111827 !important;
 }
 body.arch-swiss-editorial .dw-pill,
@@ -3145,32 +3544,43 @@ body.arch-swiss-editorial .dock-item.active {
     background: rgba(var(--a1-rgb), 0.12) !important;
     border-color: var(--accent-1) !important;
 }
-body.arch-swiss-editorial .dock-item.active .dock-dot {
-    width: 6px !important; height: 6px !important; border-radius: 1px !important;
-    background: var(--accent-1) !important; box-shadow: none !important;
+body.arch-swiss-editorial .dock-pop,
+body.arch-swiss-editorial #omnibar {
+    border-radius: 4px !important; border-width: 1.5px !important;
+    background: #0D1017 !important;
 }
-body.arch-swiss-editorial .dock-pop { border-radius: 4px !important; border-width: 1.5px !important; }
+body.arch-swiss-editorial.mode-light .dock-pop,
+body.arch-swiss-editorial.mode-light #omnibar {
+    background: #FAF9F6 !important;
+}
 
-/* 8. COCKPIT HUD — Chamfered 45° Octagon Aerospace Rail, Blueprint Grid, Laser Top Dot */
+/* 8. COCKPIT HUD — Chamfered 45° Octagon Aerospace Rail, Blueprint Grid, Laser Top Reticle */
 body.arch-cockpit-hud:not(.edge-left):not(.edge-right) .dock-stage:not(.tucked-stage) { padding-bottom: 6px !important; }
-body.arch-cockpit-hud #dockBar:not(.pinned-bar):not(.tucked) {
+body.arch-cockpit-hud:not(.edge-left):not(.edge-right) #dockBar:not(.pinned-bar):not(.tucked) {
     width: calc(100vw - 24px) !important; max-width: calc(100vw - 24px) !important;
     height: calc(46px * var(--ds)) !important; min-height: calc(46px * var(--ds)) !important;
     padding: 0 calc(16px * var(--ds)) !important; border-radius: 0 !important;
     clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px) !important;
+}
+body.arch-cockpit-hud #dockBar:not(.pinned-bar):not(.tucked) {
     border-top: 2px solid var(--accent-1) !important;
     border-bottom: 1px solid rgba(var(--a1-rgb), 0.35) !important;
     background:
         linear-gradient(rgba(var(--a1-rgb), 0.055) 1px, transparent 1px),
         linear-gradient(90deg, rgba(var(--a1-rgb), 0.055) 1px, transparent 1px),
-        linear-gradient(180deg, rgba(8, 13, 24, 0.95), rgba(4, 8, 16, 0.98)) !important;
+        linear-gradient(180deg, rgba(8, 13, 24, 0.96), rgba(4, 8, 16, 0.98)) !important;
     background-size: 14px 14px, 14px 14px, 100% 100% !important;
+}
+body.arch-cockpit-hud.edge-left #dockBar:not(.tucked),
+body.arch-cockpit-hud.edge-right #dockBar:not(.tucked) {
+    border-radius: 4px !important;
+    border: 1px solid rgba(var(--a1-rgb), 0.42) !important;
 }
 body.arch-cockpit-hud.mode-light #dockBar:not(.pinned-bar):not(.tucked) {
     background:
         linear-gradient(rgba(var(--a1-rgb), 0.08) 1px, transparent 1px),
         linear-gradient(90deg, rgba(var(--a1-rgb), 0.08) 1px, transparent 1px),
-        linear-gradient(180deg, rgba(244, 248, 255, 0.96), rgba(232, 240, 250, 0.98)) !important;
+        linear-gradient(180deg, rgba(244, 248, 255, 0.97), rgba(232, 240, 250, 0.99)) !important;
     background-size: 14px 14px, 14px 14px, 100% 100% !important;
 }
 body.arch-cockpit-hud .num,
@@ -3181,26 +3591,33 @@ body.arch-cockpit-hud .start-btn { border-radius: 4px !important; }
 body.arch-cockpit-hud .dock-item.active {
     background: linear-gradient(180deg, rgba(var(--a1-rgb), 0.20), transparent) !important;
 }
-body.arch-cockpit-hud .dock-item.active .dock-dot {
-    top: -1px !important; bottom: auto !important;
-    width: 18px !important; height: 2px !important; border-radius: 0 !important;
-    background: var(--accent-1) !important; box-shadow: 0 0 10px var(--accent-glow) !important;
+body.arch-cockpit-hud .dock-pop,
+body.arch-cockpit-hud #omnibar {
+    border-radius: 6px !important;
+    border: 1px solid rgba(var(--a1-rgb), 0.36) !important;
 }
 
 /* 9. FLUENT 2 MICA — Edge-to-Edge Windows 11 Silk Porcelain Bar */
-body.arch-fluent-mica #dockBar.pinned-bar {
+body.arch-fluent-mica #dockBar:not(.tucked) {
     background: linear-gradient(180deg, var(--bg-glass-2), var(--bg-glass-1)) !important;
-    border-top: 1px solid var(--border-rim) !important;
+    border-color: var(--border-rim) !important;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
 }
-body.arch-fluent-mica.mode-light #dockBar.pinned-bar { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.96) !important; }
+body.arch-fluent-mica:not(.edge-left):not(.edge-right) #dockBar.pinned-bar {
+    border-top: 1px solid var(--border-rim) !important;
+}
+body.arch-fluent-mica.mode-light #dockBar:not(.tucked) {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.96), 0 10px 28px -10px rgba(15, 23, 42, 0.16) !important;
+}
 body.arch-fluent-mica .dock-item { border-radius: 8px !important; }
 body.arch-fluent-mica .dock-item.active {
     background: var(--bg-card-hover) !important; border-color: var(--border-subtle) !important;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
 }
-body.arch-fluent-mica .dock-item.active .dock-dot {
-    width: 16px !important; height: 3px !important; border-radius: 99px !important; bottom: 1px !important;
+body.arch-fluent-mica.mode-light .dock-item.active {
+    background: rgba(255, 255, 255, 0.88) !important;
+    border-color: rgba(15, 23, 42, 0.12) !important;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08), inset 0 1px 0 #FFFFFF !important;
 }
 
 /* 10. ZEN GHOST — Zero-Chrome Floating Wallpaper Icons & Whisper Capsules */
@@ -3219,24 +3636,35 @@ body.arch-zen-ghost:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-
     pointer-events: auto; width: fit-content; height: calc(46px * var(--ds)); padding: 0 6px;
     background: transparent !important; border: none !important; box-shadow: none !important;
 }
+body.arch-zen-ghost.edge-left #dockBar:not(.tucked),
+body.arch-zen-ghost.edge-right #dockBar:not(.tucked) {
+    background: transparent !important; border: none !important; box-shadow: none !important;
+}
 body.arch-zen-ghost .bar-zone-left { justify-self: start; }
 body.arch-zen-ghost .bar-zone-center { justify-self: center; }
 body.arch-zen-ghost .bar-zone-right { justify-self: end; }
 body.arch-zen-ghost .dock-item img { filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.55)); }
+body.arch-zen-ghost.mode-light .dock-item img { filter: drop-shadow(0 3px 8px rgba(15, 23, 42, 0.25)); }
 body.arch-zen-ghost .dock-item:hover,
 body.arch-zen-ghost .dock-item.active {
-    background: rgba(255, 255, 255, 0.12) !important;
+    background: rgba(255, 255, 255, 0.14) !important;
     box-shadow: 0 8px 20px -6px rgba(0,0,0,0.45) !important;
+}
+body.arch-zen-ghost.mode-light .dock-item:hover,
+body.arch-zen-ghost.mode-light .dock-item.active {
+    background: rgba(255, 255, 255, 0.72) !important;
+    border-color: rgba(15, 23, 42, 0.12) !important;
+    box-shadow: 0 8px 20px -6px rgba(15, 23, 42, 0.16) !important;
 }
 body.arch-zen-ghost .dw-pill,
 body.arch-zen-ghost .dock-status-pill,
 body.arch-zen-ghost .dock-clock-pill {
-    background: rgba(12, 16, 28, 0.55) !important; border-color: rgba(255, 255, 255, 0.14) !important;
+    background: rgba(12, 16, 28, 0.58) !important; border-color: rgba(255, 255, 255, 0.16) !important;
 }
 body.arch-zen-ghost.mode-light .dw-pill,
 body.arch-zen-ghost.mode-light .dock-status-pill,
 body.arch-zen-ghost.mode-light .dock-clock-pill {
-    background: rgba(255, 255, 255, 0.72) !important; border-color: rgba(15, 23, 42, 0.12) !important;
+    background: rgba(255, 255, 255, 0.78) !important; border-color: rgba(15, 23, 42, 0.14) !important;
 }
         </style>
         </head>
@@ -3252,6 +3680,7 @@ body.arch-zen-ghost.mode-light .dock-clock-pill {
             <div id="dockAiPop" class="glass-shell dock-pop"></div>
             <div id="dockCtxMenu" class="glass-shell dock-pop"></div>
             <div id="quickWheelPop" class="glass-shell"></div>
+            <div id="omnibar" class="glass-shell" role="dialog" aria-label="OmniSearch"></div>
             <div id="scrubToast" class="glass-shell"></div>
             <div id="dockBar" class="glass-shell"></div>
         </div>
@@ -3342,6 +3771,121 @@ body.arch-zen-ghost.mode-light .dock-clock-pill {
             try { window.chrome.webview.postMessage({ type: 'uiDiag', detail: 'JS_ERROR: ' + msg + ' @' + line + ':' + col }); } catch (_) {}
         };
         let state = null;
+const ICON_CACHE = new Map();
+let dockCatalog = { installedApps: [], themes: [], frecency: {} };
+let omniOpen = false;
+let omniFilter = 'all';
+let omniIdx = 0;
+let currentOmniItems = [];
+let omniQuery = '';
+let omniFileSearchTimer = null;
+let omniFileSearchSeq = 0;
+let omniLatestFileQuery = '';
+let omniLatestFileHits = [];
+let calCdEditOpen = false;
+let widgetPickerCat = 'all';
+let dockFocusRequested = false;
+
+function ingestIconCache(obj) {
+    if (!obj || typeof obj !== 'object') return;
+    const delta = obj.iconCacheDelta;
+    if (delta && typeof delta === 'object') {
+        if (Array.isArray(delta)) {
+            for (const entry of delta) {
+                if (Array.isArray(entry) && entry[0] && entry[1]) ICON_CACHE.set(String(entry[0]), String(entry[1]));
+                else if (entry && entry.key && entry.icon) ICON_CACHE.set(String(entry.key), String(entry.icon));
+            }
+        } else {
+            for (const [k, v] of Object.entries(delta)) {
+                if (k && typeof v === 'string' && v.length > 0) ICON_CACHE.set(k, v);
+            }
+        }
+    }
+    for (const arr of [obj.groups, obj.trayApps, obj.openWindows, obj.installedApps, obj.pinnedShortcuts]) {
+        if (!Array.isArray(arr)) continue;
+        for (const it of arr) {
+            if (it && it.iconKey && typeof it.icon === 'string' && it.icon.length > 0) {
+                ICON_CACHE.set(String(it.iconKey), it.icon);
+            }
+        }
+    }
+}
+
+function resolveItemIcon(item) {
+    if (!item || typeof item !== 'object') return null;
+    const ik = item.iconKey ? String(item.iconKey) : '';
+    const fbKey = item.key ? String(item.key) : '';
+    if (typeof item.icon === 'string' && item.icon.length > 0) {
+        if (ik) ICON_CACHE.set(ik, item.icon);
+        else if (fbKey) ICON_CACHE.set(fbKey, item.icon);
+        return item.icon;
+    }
+    if (ik && ICON_CACHE.has(ik)) return ICON_CACHE.get(ik);
+    if (fbKey && ICON_CACHE.has(fbKey)) return ICON_CACHE.get(fbKey);
+    return null;
+}
+
+function requestDockInputFocus() {
+    if (!dockFocusRequested) {
+        dockFocusRequested = true;
+        send('requestDockFocus');
+    }
+}
+function releaseDockInputFocus() {
+    if (dockFocusRequested) {
+        dockFocusRequested = false;
+        send('releaseDockFocus');
+    }
+}
+
+function positionDockPopover(el, opts = {}) {
+    if (!el) return;
+    const dockR = document.getElementById('dockBar')?.getBoundingClientRect();
+    const edge = getDockEdge();
+    const isVert = isVerticalEdge();
+    const estW = opts.width || el.offsetWidth || 340;
+    const estH = opts.height || el.offsetHeight || 360;
+
+    if (isVert) {
+        el.style.bottom = 'auto';
+        const edgeX = dockR
+            ? (edge === 'Left' ? (dockR.right + 10) : (window.innerWidth - dockR.left + 10))
+            : 68;
+        if (edge === 'Left') {
+            el.style.left = `${Math.max(8, Math.min(window.innerWidth - estW - 10, Math.round(edgeX)))}px`;
+            el.style.right = 'auto';
+        } else {
+            el.style.right = `${Math.max(8, Math.min(window.innerWidth - estW - 10, Math.round(edgeX)))}px`;
+            el.style.left = 'auto';
+        }
+        let targetTop = typeof opts.anchorY === 'number'
+            ? (opts.anchorY - estH / 2)
+            : (opts.align === 'bottom' ? (window.innerHeight - estH - 12) : (opts.align === 'top' ? 12 : (window.innerHeight - estH) / 2));
+        targetTop = Math.max(10, Math.min(window.innerHeight - estH - 10, Math.round(targetTop)));
+        el.style.top = `${targetTop}px`;
+        el.style.transformOrigin = edge === 'Left' ? 'center left' : 'center right';
+    } else {
+        el.style.top = 'auto';
+        const bottomPx = Math.max(54, dockR ? Math.round(window.innerHeight - dockR.top + (opts.gap ?? 8)) : 60);
+        el.style.bottom = `${Math.min(window.innerHeight - 100, bottomPx)}px`;
+        if (typeof opts.anchorX === 'number') {
+            const leftPx = Math.max(10, Math.min(window.innerWidth - estW - 10, Math.round(opts.anchorX - estW / 2)));
+            el.style.left = `${leftPx}px`;
+            el.style.right = 'auto';
+            el.style.transformOrigin = 'bottom center';
+        } else if (opts.left !== undefined) {
+            el.style.left = `${Math.max(10, Math.min(window.innerWidth - estW - 10, opts.left))}px`;
+            el.style.right = 'auto';
+            el.style.transformOrigin = 'bottom left';
+        } else {
+            const rightPx = Math.max(10, Math.min(window.innerWidth - estW - 10, opts.right ?? 12));
+            el.style.right = `${rightPx}px`;
+            el.style.left = 'auto';
+            el.style.transformOrigin = 'bottom right';
+        }
+    }
+}
+
 let radialGroupKey = null;
 let branchCatId = null;
 let branchSubTimer = null;
@@ -3469,10 +4013,17 @@ function applyDockGeometryAndOffset() {
     dock.style.setProperty('--ds', ds.toFixed(3));
 
     if (!tuckedNow && !pinnedBar && isVert) {
-        const maxH = Math.max(240, window.innerHeight - 24);
+        const maxH = Math.max(220, window.innerHeight - 24);
         const actualH = dock.scrollHeight;
         if (actualH > maxH && actualH > 0) {
-            const fitDs = Math.max(0.68, ds * ((maxH - 6) / actualH));
+            const fitDs = Math.max(0.56, ds * ((maxH - 8) / actualH));
+            dock.style.setProperty('--ds', fitDs.toFixed(3));
+        }
+    } else if (!tuckedNow && isVert && pinnedBar) {
+        const maxH = Math.max(220, window.innerHeight - 16);
+        const actualH = dock.scrollHeight;
+        if (actualH > maxH && actualH > 0) {
+            const fitDs = Math.max(0.56, ds * ((maxH - 8) / actualH));
             dock.style.setProperty('--ds', fitDs.toFixed(3));
         }
     }
@@ -3571,8 +4122,9 @@ function applyThemeVars(t) {
     for (const s of ['fixed', 'floating', 'islands', 'minimal-rail', 'compact']) {
         document.body.classList.toggle('sil-' + s, s === sil);
     }
-    const ind = state?.dockIndicatorStyle || 'pill';
-    for (const ii of ['pill', 'dot', 'frame', 'glow']) {
+    const rawInd = state?.dockIndicatorStyle || 'dot';
+    const ind = rawInd === 'frame' ? 'pill' : rawInd;
+    for (const ii of ['dot', 'bar', 'glow', 'pill', 'frame']) {
         document.body.classList.toggle('ind-' + ii, ii === ind);
     }
     document.body.classList.toggle('eco-mode', Boolean(state?.ecoModeActive));
@@ -3587,8 +4139,12 @@ function applyThemeVars(t) {
     root.setProperty('--bg-glass-2', hexToRgba(t.colors.surface2, op2));
     root.setProperty('--bg-card', isLight ? 'rgba(20,22,26,0.048)' : 'rgba(255,255,255,0.05)');
     root.setProperty('--bg-card-hover', isLight ? 'rgba(20,22,26,0.095)' : 'rgba(255,255,255,0.105)');
-    root.setProperty('--border-rim', isLight ? 'rgba(20,22,26,0.14)' : 'rgba(255,255,255,0.15)');
-    root.setProperty('--border-subtle', isLight ? 'rgba(20,22,26,0.08)' : 'rgba(255,255,255,0.08)');
+    root.setProperty('--bg-inset', isLight ? 'rgba(15,23,42,0.068)' : 'rgba(0,0,0,0.28)');
+    root.setProperty('--border-rim', isLight ? 'rgba(20,22,26,0.15)' : 'rgba(255,255,255,0.15)');
+    root.setProperty('--border-subtle', isLight ? 'rgba(20,22,26,0.09)' : 'rgba(255,255,255,0.08)');
+    root.setProperty('--shadow-shell', isLight
+        ? '0 20px 46px -14px rgba(15, 23, 42, 0.22), 0 4px 14px -4px rgba(15, 23, 42, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.94), inset 0 0 0 0.5px rgba(15, 23, 42, 0.08)'
+        : '0 22px 54px -14px rgba(0, 0, 0, 0.72), 0 4px 16px -4px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.22), inset 0 0 0 0.5px rgba(255, 255, 255, 0.07)');
     root.setProperty('--text-1', t.colors.textPrimary);
     root.setProperty('--text-2', t.colors.textSecondary);
     root.setProperty('--accent-1', t.colors.accentPrimary);
@@ -3621,7 +4177,7 @@ function applyThemeVars(t) {
 }
 
 function isDockTuckedNow() {
-    if (radialGroupKey || openFolderPath || quickControlsOpen || calNotifOpen || trayPopOpen || widgetPickerOpen || widgetInspectorKind || quickWheelOpen || aiPopOpen || ctxMenuOpen || state?.dockEditMode || autoHideRevealed || isDraggingFileOverDock)
+    if (radialGroupKey || openFolderPath || quickControlsOpen || calNotifOpen || trayPopOpen || widgetPickerOpen || widgetInspectorKind || quickWheelOpen || aiPopOpen || ctxMenuOpen || omniOpen || state?.dockEditMode || autoHideRevealed || isDraggingFileOverDock)
         return false;
     if (manualTucked)
         return true;
@@ -3651,6 +4207,7 @@ function reportHitRects() {
     const aiPop = document.getElementById('dockAiPop');
     const ctxPop = document.getElementById('dockCtxMenu');
     const qwPop = document.getElementById('quickWheelPop');
+    const omniPop = document.getElementById('omnibar');
     const edge = getDockEdge();
     const isVert = isVerticalEdge();
     const pinnedBar = isPinnedBarMode();
@@ -3723,7 +4280,7 @@ function reportHitRects() {
         }
     }
 
-    for (const pop of [hub, fcard, qcPop, cnPop, trPop, wpPop, wiPop, aiPop, ctxPop, qwPop]) {
+    for (const pop of [hub, fcard, qcPop, cnPop, trPop, wpPop, wiPop, aiPop, ctxPop, qwPop, omniPop]) {
         if (pop && getComputedStyle(pop).display !== 'none') {
             const hr = pop.getBoundingClientRect();
             if (hr.width > 0 && hr.height > 0) {
@@ -3756,7 +4313,7 @@ function reportHitRects() {
     const anyPopOpen = Boolean(
         radialGroupKey || branchCatId || openFolderPath || expandedAccordionCat
         || quickControlsOpen || calNotifOpen || trayPopOpen || widgetPickerOpen
-        || widgetInspectorKind || quickWheelOpen || aiPopOpen || ctxMenuOpen
+        || widgetInspectorKind || quickWheelOpen || aiPopOpen || ctxMenuOpen || omniOpen
     );
     if (anyPopOpen !== lastReportedDockPopOpen) {
         lastReportedDockPopOpen = anyPopOpen;
@@ -3823,7 +4380,8 @@ function getSmartTidyBuckets(runningUnpinned) {
         buckets[cat.id].groups.push(g);
         buckets[cat.id].windows.push(...g.windows);
         if (g.hasActive) buckets[cat.id].hasActive = true;
-        if (g.icon && buckets[cat.id].icons.length < 4) buckets[cat.id].icons.push(g.icon);
+        const ic = resolveItemIcon(g);
+        if (ic && buckets[cat.id].icons.length < 4) buckets[cat.id].icons.push(ic);
     }
     return Object.values(buckets);
 }
@@ -3884,15 +4442,15 @@ function renderDock() {
     const runningUnpinned = groups.filter(g => !g.isPinned && g.windows.length > 0);
     const compactMode = isVert || (window.innerWidth < 1050);
 
-    // Item #1: ONE single unified Start & Search trigger (never two duplicate buttons side by side!)
+    // Item #1: ONE single unified Start & OmniSearch trigger
     const startStyle = state.dockStartStyle || 'icon';
     const searchHtml = (startStyle === 'capsule' && !compactMode)
-        ? `<button class="start-btn start-capsule" onclick="closeAllDockPopovers(false);send('openStartHub');" title="Başlat & Ara (Win)">
+        ? `<button class="start-btn start-capsule ${omniOpen ? 'active' : ''}" onclick="toggleDockOmni(event)" oncontextmenu="event.preventDefault();event.stopPropagation();send('openStartHub');" title="Başlat & OmniSearch (Sağ Tık: Üst OmniSearch)">
                ${SVG.sparkles}<span>Ara</span>
            </button>`
-        : `<button class="start-btn" onclick="closeAllDockPopovers(false);send('openStartHub');" title="Başlat & Ara (Win)">
+        : `<button class="start-btn ${omniOpen ? 'active' : ''}" onclick="toggleDockOmni(event)" oncontextmenu="event.preventDefault();event.stopPropagation();send('openStartHub');" title="Başlat & OmniSearch (Sağ Tık: Üst OmniSearch)">
                ${SVG.sparkles}
-               <span class="hover-label">Başlat & Ara (Win)</span>
+               <span class="hover-label">Başlat & OmniSearch</span>
            </button>`;
 
     const dockWidgets = Array.isArray(state.dockWidgets) ? state.dockWidgets : [];
@@ -4052,11 +4610,20 @@ function renderDock() {
                 : ''}
         </button>
     ` : `
-        <button class="pill-btn dock-v-btn num" onclick="toggleDockTrayPop(event)" title="Sistem Tepsisi (${trayCount})">
+        <button class="pill-btn dock-v-btn num ${trayPopOpen ? 'active' : ''}" onclick="toggleDockTrayPop(event)" title="Sistem Tepsisi (${trayCount})">
             ${SVG.tray}${isVert ? '' : `<span>${trayCount}</span>`}
             ${isVert && trayCount > 0 ? `<span class="dock-v-badge num">${trayCount}</span>` : ''}
             ${isVert ? `<span class="hover-label">Sistem Tepsisi (${trayCount})</span>` : ''}
         </button>
+        ${isVert ? `
+        <button class="micro-btn dock-pin-btn ${quickControlsOpen ? 'active' : ''}" onclick="toggleQuickControls(event)" title="Hızlı Kontroller">
+            ${SVG.sliders}
+            <span class="hover-label">Hızlı Kontroller</span>
+        </button>
+        <button class="micro-btn dock-pin-btn ${calNotifOpen ? 'active' : ''}" onclick="toggleCalNotif(event, ${state.notificationMode === 'aurora-mirror' ? 'null' : "'calendar'"})" title="Takvim & Ajanda">
+            ${SVG.calendar}
+            <span class="hover-label">Takvim & Ajanda</span>
+        </button>` : ''}
         <button class="micro-btn dock-pin-btn" onclick="send('openSettings',{section:'appearance'})" title="Aurora Ayarları">
             ${SVG.settings}
             <span class="hover-label">Ayarlar</span>
@@ -4132,6 +4699,7 @@ function renderDock() {
     if (quickWheelOpen) renderQuickWheelPop();
     if (aiPopOpen) renderDockAiPop();
     if (ctxMenuOpen) renderCtxMenuPop();
+    if (omniOpen) positionOmniBar();
     reportHitRects();
     requestAnimationFrame(reportHitRects);
     if (edgeChanged) { setTimeout(reportHitRects, 140); setTimeout(reportHitRects, 320); }
@@ -4644,9 +5212,7 @@ function renderWidgetInspectorPop() {
     const curSize = dw.size || 'normal';
     const curStyle = dw.styleMode || 'pill';
     const curWheel = dw.wheelAction || 'default';
-    const dockR = document.getElementById('dockBar')?.getBoundingClientRect();
-    el.style.bottom = `${Math.max(54, dockR ? Math.round(window.innerHeight - dockR.top + 8) : 60)}px`;
-    el.style.left = `${Math.max(10, Math.min(window.innerWidth - 294, widgetInspectorX - 140))}px`;
+    positionDockPopover(el, { width: 282, height: 340, anchorX: widgetInspectorX });
     const sk = escAttr(dw.kind);
     el.innerHTML = `
         <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
@@ -4707,9 +5273,7 @@ function openQuickWheel(cx) {
 function renderQuickWheelPop() {
     const el = document.getElementById('quickWheelPop');
     if (!el || !state || !quickWheelOpen) return;
-    const dockR = document.getElementById('dockBar')?.getBoundingClientRect();
-    el.style.bottom = `${Math.max(58, dockR ? Math.round(window.innerHeight - dockR.top + 10) : 64)}px`;
-    el.style.left = `${Math.max(12, Math.min(window.innerWidth - 244, quickWheelX - 116))}px`;
+    positionDockPopover(el, { width: 232, height: 232, anchorX: quickWheelX, gap: 10 });
     const muted = Boolean(state.audio?.muted);
     const micMuted = Boolean(state.mic?.muted);
     const items = [
@@ -4767,43 +5331,78 @@ function flipDockWidgetSlot(kind) {
     send('updateDockWidget', { kind, slot: dw.slot === 'left' ? 'right' : 'left' });
 }
 
+const DOCK_WIDGET_CATEGORIES = [
+    { id: 'all', label: 'Tümü', kinds: null },
+    { id: 'time', label: 'Zaman & Odak', kinds: ['clock', 'pomodoro'] },
+    { id: 'media', label: 'Medya & Ses', kinds: ['media', 'volume-slider', 'mic-privacy'] },
+    { id: 'sys', label: 'Sistem & Ekran', kinds: ['brightness-slider', 'desktops', 'system', 'network', 'battery'] },
+    { id: 'info', label: 'Bilgi & Araçlar', kinds: ['weather', 'ai-quota', 'market', 'clipboard'] }
+];
+
+function setWidgetPickerCat(catId) {
+    widgetPickerCat = catId || 'all';
+    renderDockWidgetPickerPop();
+}
+
 function renderDockWidgetPickerPop() {
     const el = document.getElementById('dockWidgetPicker');
     if (!el || !state || !widgetPickerOpen) return;
-    const dockR = document.getElementById('dockBar')?.getBoundingClientRect();
-    el.style.bottom = `${Math.max(54, dockR ? Math.round(window.innerHeight - dockR.top + 8) : 60)}px`;
-    el.style.left = '14px';
+    positionDockPopover(el, { width: 356, height: 410, left: 14, align: 'top' });
 
     const list = Array.isArray(state.dockWidgets) ? state.dockWidgets : [];
     const activeCnt = list.filter(w => w.enabled).length;
+    const catGroups = DOCK_WIDGET_CATEGORIES.filter(c => c.id !== 'all');
+
+    const renderRow = (w) => {
+        const m = DOCK_WIDGET_META[w.kind] || { name: w.kind, icon: '✦', variants: [['default','Varsayılan']] };
+        const curV = m.variants.find(x => x[0] === w.variant) || m.variants[0];
+        const curZ = getWidgetZone(w);
+        return `
+            <div class="dwp-row ${w.enabled ? 'on' : ''}">
+                <span class="dw-ic-badge">${m.icon}</span>
+                <div class="dwp-meta">
+                    <div class="dwp-name">${escHtml(m.name)}</div>
+                    <div class="dwp-sub">${escHtml(DOCK_ZONE_LABELS[curZ] || curZ)} · ${escHtml(curV[1])}</div>
+                </div>
+                <div class="dwp-ctrls">
+                    ${m.variants.length > 1 ? `<button class="dwp-mini" onclick="cycleDockWidgetVariant('${escAttr(w.kind)}')" title="Stil Değiştir">${escHtml(curV[1])}</button>` : ''}
+                    <button class="dwp-mini" onclick="cycleDockWidgetZone('${escAttr(w.kind)}')" title="4 Bölge Arasında Taşı">${escHtml(DOCK_ZONE_LABELS[curZ] || curZ)}</button>
+                    <button class="dwp-tog ${w.enabled ? 'on' : ''}" onclick="send('toggleDockWidget',{kind:'${escAttr(w.kind)}'})" title="${w.enabled ? 'Kaldır' : 'Ekle'}"><span></span></button>
+                </div>
+            </div>
+        `;
+    };
+
+    let rowsHtml = '';
+    if (widgetPickerCat === 'all') {
+        const usedKinds = new Set();
+        for (const cat of catGroups) {
+            const items = list.filter(w => cat.kinds.includes(w.kind));
+            if (items.length === 0) continue;
+            items.forEach(w => usedKinds.add(w.kind));
+            rowsHtml += `<div class="dwp-group-lbl">${escHtml(cat.label)}</div>${items.map(renderRow).join('')}`;
+        }
+        const rest = list.filter(w => !usedKinds.has(w.kind));
+        if (rest.length > 0) rowsHtml += `<div class="dwp-group-lbl">Diğer</div>${rest.map(renderRow).join('')}`;
+    } else {
+        const cat = catGroups.find(c => c.id === widgetPickerCat);
+        const items = cat ? list.filter(w => cat.kinds.includes(w.kind)) : list;
+        rowsHtml = items.map(renderRow).join('');
+    }
+
     el.innerHTML = `
         <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
             <div>
                 <div style="font-size:12.5px;font-weight:800;">Alt Dock Widget'ları (${activeCnt}/${list.length || 14})</div>
-                <div style="font-size:10px;color:var(--text-2);">4 bölge arasında sürükleyin · Sağ tıkla boyut/stil/tekerlek ayarlayın</div>
+                <div style="font-size:10px;color:var(--text-2);">4 bölge arasında sürükleyin · Sağ tıkla boyut/stil/tekerlek</div>
             </div>
             <button class="micro-btn" onclick="closeAllDockPopovers(true)">${SVG.close}</button>
         </div>
-        <div style="display:flex;flex-direction:column;gap:5px;max-height:278px;overflow-y:auto;">
-            ${list.map(w => {
-                const m = DOCK_WIDGET_META[w.kind] || { name: w.kind, icon: '✦', variants: [['default','Varsayılan']] };
-                const curV = m.variants.find(x => x[0] === w.variant) || m.variants[0];
-                const curZ = getWidgetZone(w);
-                return `
-                    <div class="dwp-row ${w.enabled ? 'on' : ''}">
-                        <span class="dw-ic-badge">${m.icon}</span>
-                        <div class="dwp-meta">
-                            <div class="dwp-name">${escHtml(m.name)}</div>
-                            <div class="dwp-sub">${escHtml(DOCK_ZONE_LABELS[curZ] || curZ)} · ${escHtml(curV[1])}</div>
-                        </div>
-                        <div class="dwp-ctrls">
-                            ${m.variants.length > 1 ? `<button class="dwp-mini" onclick="cycleDockWidgetVariant('${escAttr(w.kind)}')" title="Stil Değiştir">${escHtml(curV[1])}</button>` : ''}
-                            <button class="dwp-mini" onclick="cycleDockWidgetZone('${escAttr(w.kind)}')" title="4 Bölge Arasında Taşı">${escHtml(DOCK_ZONE_LABELS[curZ] || curZ)}</button>
-                            <button class="dwp-tog ${w.enabled ? 'on' : ''}" onclick="send('toggleDockWidget',{kind:'${escAttr(w.kind)}'})" title="${w.enabled ? 'Kaldır' : 'Ekle'}"><span></span></button>
-                        </div>
-                    </div>
-                `;
-            }).join('')}
+        <div class="dwp-cats">
+            ${DOCK_WIDGET_CATEGORIES.map(c => `<button class="dwp-cat-btn ${widgetPickerCat === c.id ? 'active' : ''}" onclick="setWidgetPickerCat('${c.id}')">${escHtml(c.label)}</button>`).join('')}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;max-height:252px;overflow-y:auto;padding-right:2px;">
+            ${rowsHtml || `<div style="padding:14px;text-align:center;font-size:11px;color:var(--text-2);">Bu kategoride widget yok.</div>`}
         </div>
         <div class="qc-foot">
             <div style="display:flex;gap:5px;">
@@ -4834,9 +5433,7 @@ function toggleDockAiPop(e) {
 function renderDockAiPop() {
     const el = document.getElementById('dockAiPop');
     if (!el || !state || !aiPopOpen) return;
-    const dockR = document.getElementById('dockBar')?.getBoundingClientRect();
-    el.style.bottom = `${Math.max(54, dockR ? Math.round(window.innerHeight - dockR.top + 8) : 60)}px`;
-    el.style.right = '16px';
+    positionDockPopover(el, { width: 332, height: 380, right: 16, align: 'bottom' });
 
     const snaps = state.aiSnapshots || [];
     const colors = { openai: '#10B981', gemini: '#38BDF8', claude: '#F59E0B' };
@@ -4878,7 +5475,10 @@ function renderDockAiPop() {
 }
 function openAiPortalByIdx(idx) {
     const s = (state?.aiSnapshots || [])[idx];
-    if (s && s.usageUrl) send('launchPath', { path: s.usageUrl });
+    if (s && s.usageUrl) {
+        if (/^https?:\/\//i.test(s.usageUrl)) send('openWebUrl', { url: s.usageUrl });
+        else send('launchPath', { path: s.usageUrl });
+    }
 }
 
 function toggleDockPin() {
@@ -4897,7 +5497,7 @@ function scheduleDockAutoHide(delayMs = 440) {
         const shouldHide = (mode === 'AutoHide') ||
             (mode === 'SmartDodge' && ((liveDodgedOverride !== null) ? liveDodgedOverride : Boolean(state?.dockDodged)));
         const pointerOutside = isVerticalEdge() ? (mouseY === null) : (mouseX === null);
-        if (shouldHide && !pointerInRadial && !radialGroupKey && !pointerInFolder && !openFolderPath && !quickControlsOpen && !calNotifOpen && !trayPopOpen && !widgetPickerOpen && !widgetInspectorKind && !quickWheelOpen && !aiPopOpen && !ctxMenuOpen && !state?.dockEditMode && !isDraggingFileOverDock && pointerOutside) {
+        if (shouldHide && !pointerInRadial && !radialGroupKey && !pointerInFolder && !openFolderPath && !quickControlsOpen && !calNotifOpen && !trayPopOpen && !widgetPickerOpen && !widgetInspectorKind && !quickWheelOpen && !aiPopOpen && !ctxMenuOpen && !omniOpen && !state?.dockEditMode && !isDraggingFileOverDock && pointerOutside) {
             autoHideRevealed = false;
             renderDock();
         }
@@ -4906,7 +5506,7 @@ function scheduleDockAutoHide(delayMs = 440) {
 
 /* ========== v4.0/v4.2 BOTTOM-RIGHT QUICK CONTROLS, CALENDAR/NOTIFICATIONS, TRAY, WIDGET PICKER, INSPECTOR & QUICK WHEEL ========== */
 function closeAllDockPopovers(updateRects = true) {
-    const hadAny = quickControlsOpen || calNotifOpen || trayPopOpen || widgetPickerOpen || Boolean(widgetInspectorKind) || quickWheelOpen || aiPopOpen || ctxMenuOpen;
+    const hadAny = quickControlsOpen || calNotifOpen || trayPopOpen || widgetPickerOpen || Boolean(widgetInspectorKind) || quickWheelOpen || aiPopOpen || ctxMenuOpen || omniOpen;
     quickControlsOpen = false;
     calNotifOpen = false;
     trayPopOpen = false;
@@ -4915,11 +5515,12 @@ function closeAllDockPopovers(updateRects = true) {
     quickWheelOpen = false;
     aiPopOpen = false;
     ctxMenuOpen = false;
-    for (const id of ['dockQuickControls', 'dockCalNotif', 'dockTrayPop', 'dockWidgetPicker', 'dockWidgetInspector', 'dockAiPop', 'dockCtxMenu', 'quickWheelPop']) {
+    omniOpen = false;
+    for (const id of ['dockQuickControls', 'dockCalNotif', 'dockTrayPop', 'dockWidgetPicker', 'dockWidgetInspector', 'dockAiPop', 'dockCtxMenu', 'quickWheelPop', 'omnibar']) {
         const el = document.getElementById(id);
         if (el) { el.classList.remove('open'); el.innerHTML = ''; }
     }
-    send('releaseDockFocus');
+    releaseDockInputFocus();
     if (hadAny && updateRects) {
         renderDock();
     } else if (updateRects) {
@@ -4944,14 +5545,18 @@ function renderQuickControlsPop() {
     const vol = state.audio?.volume ?? 50;
     const muted = Boolean(state.audio?.muted);
     const outs = state.audioOutputs || [];
+    const rawSessions = Array.isArray(state.audioSessions) ? state.audioSessions : [];
+    const sessions = rawSessions.length > 0
+        ? rawSessions
+        : (state.groups || [])
+            .filter(g => Boolean(g.audioPid))
+            .map(g => ({ pid: g.audioPid, name: g.displayName, volume: g.audioVolume ?? 100, muted: Boolean(g.audioMuted) }));
     const mons = state.monitorBrightness || [];
     const med = state.media;
     const bat = state.battery || { present: false, percent: 100, charging: false, status: 'AC Güç' };
     const bts = state.btDevices || [];
 
-    const dockR = document.getElementById('dockBar')?.getBoundingClientRect();
-    el.style.bottom = `${Math.max(54, dockR ? Math.round(window.innerHeight - dockR.top + 8) : 60)}px`;
-    el.style.right = '12px';
+    positionDockPopover(el, { width: 364, height: 440, right: 12, align: 'bottom' });
 
     el.innerHTML = `
         <div class="qc-grid">
@@ -4965,7 +5570,7 @@ function renderQuickControlsPop() {
             </button>
             <button class="qc-tile ${state.quietHours ? 'on' : ''}" onclick="send('toggleQuietHours')">
                 <span class="qc-ic">${SVG.moon}</span>
-                <div><div class="qc-lbl">Odak Modu</div><div class="qc-sub">${state.quietHours ? 'Bildirimler Sessiz' : 'Normal'}</div></div>
+                <div><div class="qc-lbl">Odak / DND</div><div class="qc-sub">${state.quietHours ? 'Bildirimler Sessiz' : 'Normal'}</div></div>
             </button>
             <button class="qc-tile ${state.awake?.active ? 'on' : ''}" onclick="send('cycleAwake')">
                 <span class="qc-ic">${SVG.coffee}</span>
@@ -4979,7 +5584,7 @@ function renderQuickControlsPop() {
                 <input type="range" min="0" max="100" value="${vol}" oninput="send('setVolume',{value:Number(this.value)})"/>
                 <span class="qc-val num">${muted ? 'Sessiz' : vol + '%'}</span>
             </div>
-            ${outs.length > 1 ? `
+            ${outs.length > 0 ? `
                 <div class="qc-out-chips">
                     ${outs.slice(0, 4).map(o => `
                         <button class="qc-out-chip ${o.isDefault ? 'active' : ''}" onclick="send('setAudioOutputDevice',{id:'${escAttr(o.id)}'})" title="${escHtml(o.fullName || o.name)}">${escHtml(o.name)}</button>
@@ -4994,6 +5599,23 @@ function renderQuickControlsPop() {
                 </div>
             `).join('')}
         </div>
+
+        ${sessions.length > 0 ? `
+            <div class="qc-mixer-box">
+                <div class="qc-mixer-hdr">
+                    <span>Uygulama Ses Mikseri (${sessions.length})</span>
+                    ${state.mic?.supported ? `<button class="dwp-mini" style="${state.mic.muted ? 'color:var(--danger);border-color:var(--danger);' : ''}" onclick="send('toggleMicMute')">${state.mic.muted ? 'Mik Kapalı' : 'Mik Açık'}</button>` : ''}
+                </div>
+                ${sessions.slice(0, 4).map(s => `
+                    <div class="qc-app-row">
+                        <button class="micro-btn ${s.muted ? 'danger' : ''}" style="width:22px;height:22px;" onclick="send('toggleAppMute',{pid:${Number(s.pid)}})" title="${s.muted ? 'Sesi Aç' : 'Sustur'}">${s.muted ? SVG.mute : SVG.vol}</button>
+                        <span class="qc-app-name" title="${escHtml(s.name)}">${escHtml(s.name)}</span>
+                        <input type="range" min="0" max="100" value="${Number(s.volume ?? 100)}" oninput="const v=Number(this.value);if(this.nextElementSibling)this.nextElementSibling.textContent='%'+v;send('setAppVolume',{pid:${Number(s.pid)},value:v})"/>
+                        <span class="qc-val num" style="width:32px;font-size:10.5px;">%${Number(s.volume ?? 100)}</span>
+                    </div>
+                `).join('')}
+            </div>
+        ` : ''}
 
         ${med ? `
             <div class="qc-media">
@@ -5016,6 +5638,12 @@ function renderQuickControlsPop() {
                 ${bts.slice(0, 3).map(d => `<span class="qc-bat-chip num">${d.category === 'headset' ? SVG.headphones : (d.category === 'mouse' ? SVG.mouse : SVG.bluetooth)} ${escHtml(d.name.slice(0, 14))}${d.hasBattery ? ' ' + d.percent + '%' : ''}</span>`).join('')}
             </div>
         ` : ''}
+
+        <div class="qc-power-row">
+            <button class="qc-pwr-btn" onclick="closeAllDockPopovers(true);send('systemPower',{action:'lock'});" title="Oturumu Kilitle">${SVG.lock}<span>Kilitle</span></button>
+            <button class="qc-pwr-btn" onclick="closeAllDockPopovers(true);send('systemPower',{action:'display_off'});" title="Ekranı Kapat">${SVG.monitor}<span>Ekran Kapat</span></button>
+            <button class="qc-pwr-btn danger" onclick="closeAllDockPopovers(true);send('systemPower',{action:'sleep'});" title="Uyku Modu">${SVG.sleep}<span>Uyku</span></button>
+        </div>
 
         <div class="qc-foot">
             <div style="display:flex;gap:5px;">
@@ -5075,19 +5703,48 @@ function saveDockCalNote() {
     const inp = document.getElementById('dockCalNoteInp');
     if (!inp) return;
     send('saveAgendaNote', { date: calSelectedDate, note: inp.value.trim() });
-    send('releaseDockFocus');
+    releaseDockInputFocus();
+}
+
+function addDockCalTodo() {
+    const inp = document.getElementById('dockCalTodoInp');
+    if (!inp) return;
+    const txt = inp.value.trim();
+    if (!txt) return;
+    inp.value = '';
+    send('addTodo', { text: txt });
+}
+
+function saveDockCalCountdown() {
+    const tInp = document.getElementById('dockCdTitleInp');
+    const dInp = document.getElementById('dockCdDateInp');
+    if (!tInp || !dInp) return;
+    send('saveCountdown', { title: tInp.value.trim() || 'Hedef', targetDate: dInp.value.trim() });
+    calCdEditOpen = false;
+    releaseDockInputFocus();
+    renderCalNotifPop();
+}
+
+function jumpDockCalToday() {
+    const now = new Date();
+    calViewYear = now.getFullYear();
+    calViewMonth = now.getMonth();
+    calSelectedDate = `${calViewYear}-${String(calViewMonth+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    renderCalNotifPop();
 }
 
 function renderCalNotifPop() {
     const el = document.getElementById('dockCalNotif');
     if (!el || !state || !calNotifOpen) return;
-    const dockR = document.getElementById('dockBar')?.getBoundingClientRect();
-    el.style.bottom = `${Math.max(54, dockR ? Math.round(window.innerHeight - dockR.top + 8) : 60)}px`;
-    el.style.right = '12px';
+    positionDockPopover(el, { width: 372, height: 470, right: 12, align: 'bottom' });
 
     const notifs = state.notifications || [];
     const notes = state.agendaNotes || {};
+    const todos = state.todos || [];
+    const cd = state.countdown || { title: 'Yeni Hedef', targetDate: '' };
+    const focus = state.focus || { running: false, label: '25:00' };
     const monthsTr = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+    const daysTr = ['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
     const dows = ['Pt','Sa','Ça','Pe','Cu','Ct','Pz'];
 
     const mirror = state.notificationMode === 'aurora-mirror';
@@ -5118,6 +5775,15 @@ function renderCalNotifPop() {
         const prevDays = new Date(calViewYear, calViewMonth, 0).getDate();
         const now = new Date();
         const todayIso = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+        const todayFull = `${now.getDate()} ${monthsTr[now.getMonth()]} · ${daysTr[now.getDay()]}`;
+
+        let cdBadge = 'Geri Sayım';
+        if (cd.targetDate && /^\d{4}-\d{2}-\d{2}$/.test(cd.targetDate)) {
+            const targetMs = new Date(cd.targetDate + 'T00:00:00').getTime();
+            const todayMs = new Date(todayIso + 'T00:00:00').getTime();
+            const diffDays = Math.round((targetMs - todayMs) / 86400000);
+            cdBadge = diffDays === 0 ? 'Bugün!' : (diffDays > 0 ? `${diffDays} gün` : `${Math.abs(diffDays)} gün geçti`);
+        }
 
         let cells = dows.map(d => `<div class="cal-dow">${d}</div>`).join('');
         for (let i = startOffset - 1; i >= 0; i--) {
@@ -5129,18 +5795,70 @@ function renderCalNotifPop() {
             cells += `<button class="${cls}" onclick="selectDockCalDay('${iso}')">${d}</button>`;
         }
         const curNote = notes[calSelectedDate] || '';
+        const pendingCnt = todos.filter(t => !t.done).length;
         bodyHtml = `
+            <div class="cal-today-hero">
+                <div style="min-width:0;">
+                    <div style="font-size:12px;font-weight:800;color:var(--text-1);">${escHtml(todayFull)}</div>
+                    <div style="font-size:10px;color:var(--text-2);margin-top:1px;" class="num">Odak: ${escHtml(focus.label || '25:00')} ${focus.running ? '· Aktif' : ''}</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+                    <button class="dwp-mini" onclick="send('setFocusPreset',{minutes:25,start:true})" title="25 dk Odak Başlat">25d</button>
+                    <button class="dwp-mini" onclick="send('toggleFocus')" title="${focus.running ? 'Duraklat' : 'Başlat'}">${focus.running ? 'Duraklat' : 'Başlat'}</button>
+                    <button class="dwp-mini" onclick="send('resetFocus')" title="Odak Sayacını Sıfırla">Sıfırla</button>
+                </div>
+            </div>
+
             <div class="cal-head">
                 <button class="micro-btn" onclick="stepDockCalMonth(-1)">${SVG.chevL}</button>
-                <span>${monthsTr[calViewMonth]} ${calViewYear}</span>
+                <span style="display:inline-flex;align-items:center;gap:6px;">
+                    <span>${monthsTr[calViewMonth]} ${calViewYear}</span>
+                    <button class="dwp-mini" onclick="jumpDockCalToday()">Bugün</button>
+                </span>
                 <button class="micro-btn" onclick="stepDockCalMonth(1)">${SVG.chevR}</button>
             </div>
             <div class="cal-grid">${cells}</div>
             <div class="cal-note-row">
-                <input id="dockCalNoteInp" class="cal-note-inp" type="text" placeholder="${escHtml(calSelectedDate)} için not ekle..." value="${escHtml(curNote)}"
-                       onfocus="send('requestDockFocus')" onblur="send('releaseDockFocus')"
+                <input id="dockCalNoteInp" class="cal-note-inp" type="text" placeholder="${escHtml(calSelectedDate)} ajanda notu..." value="${escHtml(curNote)}"
+                       onfocus="requestDockInputFocus()" onblur="releaseDockInputFocus()"
                        onkeydown="if(event.key==='Enter'){saveDockCalNote();}"/>
                 <button class="pill-btn accent" style="height:30px;padding:0 11px;" onclick="saveDockCalNote()">Kaydet</button>
+            </div>
+
+            <div class="cal-section">
+                <div class="cal-sec-hdr">
+                    <span>Görevler (${pendingCnt} açık)</span>
+                    <button class="cal-cd-pill" onclick="calCdEditOpen=!calCdEditOpen;renderCalNotifPop();" title="Geri sayım hedefini düzenle">
+                        ${SVG.timer}<span>${escHtml(cd.title || 'Hedef')}: <strong class="num" style="color:var(--accent-1);">${escHtml(cdBadge)}</strong></span>
+                    </button>
+                </div>
+                ${calCdEditOpen ? `
+                    <div class="cal-note-row">
+                        <input id="dockCdTitleInp" class="cal-note-inp" type="text" placeholder="Hedef adı..." value="${escHtml(cd.title || '')}"
+                               onfocus="requestDockInputFocus()" onblur="releaseDockInputFocus()"/>
+                        <input id="dockCdDateInp" class="cal-note-inp num" type="text" style="max-width:98px;" placeholder="YYYY-AA-GG" value="${escHtml(cd.targetDate || todayIso)}"
+                               onfocus="requestDockInputFocus()" onblur="releaseDockInputFocus()"
+                               onkeydown="if(event.key==='Enter'){saveDockCalCountdown();}"/>
+                        <button class="pill-btn accent" style="height:30px;padding:0 9px;" onclick="saveDockCalCountdown()">✓</button>
+                    </div>
+                ` : ''}
+                <div class="cal-note-row" style="margin-top:0;">
+                    <input id="dockCalTodoInp" class="cal-note-inp" type="text" placeholder="Hızlı görev ekle..."
+                           onfocus="requestDockInputFocus()" onblur="releaseDockInputFocus()"
+                           onkeydown="if(event.key==='Enter'){addDockCalTodo();}"/>
+                    <button class="pill-btn" style="height:30px;padding:0 10px;" onclick="addDockCalTodo()">${SVG.plus}</button>
+                </div>
+                ${todos.length > 0 ? `
+                    <div class="cal-todo-list">
+                        ${todos.slice(0, 6).map(td => `
+                            <div class="cal-todo-row">
+                                <button class="cal-todo-chk ${td.done ? 'done' : ''}" onclick="send('toggleTodo',{id:'${escAttr(td.id)}'})">${td.done ? '✓' : ''}</button>
+                                <span class="cal-todo-txt ${td.done ? 'done' : ''}" onclick="send('toggleTodo',{id:'${escAttr(td.id)}'})" title="${escHtml(td.text)}">${escHtml(td.text)}</span>
+                                <button class="micro-btn danger" style="width:20px;height:20px;" onclick="send('removeTodo',{id:'${escAttr(td.id)}'})" title="Sil">${SVG.close}</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
             </div>
         `;
     }
@@ -5177,26 +5895,29 @@ function renderTrayPop() {
     const el = document.getElementById('dockTrayPop');
     if (!el || !state || !trayPopOpen) return;
     const trays = state.trayApps || [];
-    const dockR = document.getElementById('dockBar')?.getBoundingClientRect();
-    el.style.bottom = `${Math.max(54, dockR ? Math.round(window.innerHeight - dockR.top + 8) : 60)}px`;
-    el.style.right = isVerticalEdge() ? '16px' : '168px';
+    positionDockPopover(el, { width: 296, height: 360, right: 168, align: 'bottom' });
 
     el.innerHTML = `
         <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
             <span style="font-size:12px;font-weight:800;">Arka Plan & Tepsi (${trays.length})</span>
-            <button class="pill-btn subtle" style="height:24px;font-size:10.5px;" onclick="closeAllDockPopovers(true);send('peekNativeTray');">Klasik (10sn)</button>
+            <div style="display:flex;gap:4px;">
+                <button class="pill-btn subtle" style="height:24px;font-size:10.5px;" onclick="closeAllDockPopovers(true);send('peekNativeTray');">Klasik (10sn)</button>
+                <button class="micro-btn" style="width:24px;height:24px;" onclick="closeAllDockPopovers(true);send('launchPath',{path:'taskmgr.exe'});" title="Görev Yöneticisi">${SVG.activity}</button>
+            </div>
         </div>
-        <div class="fstack-list" style="max-height:320px;">
-            ${trays.length === 0 ? `<div style="padding:16px;text-align:center;font-size:11.5px;color:var(--text-2);">Arka planda çalışan ek uygulama yok.</div>` : trays.map((t, idx) => `
+        <div class="fstack-list" style="max-height:300px;">
+            ${trays.length === 0 ? `<div style="padding:16px;text-align:center;font-size:11.5px;color:var(--text-2);">Arka planda çalışan ek uygulama yok.</div>` : trays.map((t, idx) => {
+                const ic = resolveItemIcon(t);
+                return `
                 <div class="fstack-row" onclick="send('openTrayApp',{index:${idx}});closeAllDockPopovers(true);">
-                    ${t.icon ? `<img src="data:image/png;base64,${t.icon}"/>` : `<span style="width:20px;display:inline-flex;justify-content:center;color:var(--accent-1);">${SVG.layers}</span>`}
+                    ${ic ? `<img src="data:image/png;base64,${ic}"/>` : `<span style="width:20px;display:inline-flex;justify-content:center;color:var(--accent-1);">${SVG.layers}</span>`}
                     <div style="flex:1;min-width:0;">
                         <div style="font-size:11.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(t.name)}</div>
                         <div style="font-size:10px;color:var(--text-2);" class="num">${escHtml(t.subtitle || 'Arka Plan')} · ${t.memoryMb || 0} MB</div>
                     </div>
                     <button class="micro-btn danger" style="width:22px;height:22px;" onclick="event.stopPropagation();send('quitTrayApp',{index:${idx}});" title="Kapat">${SVG.close}</button>
-                </div>
-            `).join('')}
+                </div>`;
+            }).join('')}
         </div>
     `;
     el.classList.add('open');
@@ -5219,12 +5940,11 @@ function openDockCtxMenu(e) {
 function renderCtxMenuPop() {
     const el = document.getElementById('dockCtxMenu');
     if (!el || !state || !ctxMenuOpen) return;
-    const dockR = document.getElementById('dockBar')?.getBoundingClientRect();
     const curHub = state.dockHubStyle || 'dendritic';
     const curSil = getDockSilhouette();
-    el.style.left = `${ctxMenuX}px`;
-    el.style.right = 'auto';
-    el.style.bottom = `${Math.max(56, dockR ? Math.round(window.innerHeight - dockR.top + 8) : 60)}px`;
+    const rawInd = state.dockIndicatorStyle || 'dot';
+    const curInd = rawInd === 'frame' ? 'pill' : rawInd;
+    positionDockPopover(el, { width: 260, height: 420, left: ctxMenuX, anchorY: ctxMenuY });
 
     el.innerHTML = `
         <button class="ctx-row" onclick="toggleDockWidgetPicker(event);">
@@ -5242,6 +5962,14 @@ function renderCtxMenuPop() {
         <button class="ctx-row" onclick="closeAllDockPopovers(true);send('openWidgetGallery');">
             ${SVG.grid}<span>Widget Stüdyosu (30 Widget)</span>
         </button>
+        <div class="ctx-sep"></div>
+        <div style="font-size:9.5px;font-weight:800;color:var(--text-2);padding:2px 8px;text-transform:uppercase;letter-spacing:0.05em;">Aktif Gösterge</div>
+        <div class="ctx-style-chips">
+            <button class="ctx-chip ${curInd === 'dot' ? 'active' : ''}" onclick="send('setDockIndicatorStyle',{style:'dot'});closeAllDockPopovers(true);">Nokta</button>
+            <button class="ctx-chip ${curInd === 'bar' ? 'active' : ''}" onclick="send('setDockIndicatorStyle',{style:'bar'});closeAllDockPopovers(true);">Çubuk</button>
+            <button class="ctx-chip ${curInd === 'glow' ? 'active' : ''}" onclick="send('setDockIndicatorStyle',{style:'glow'});closeAllDockPopovers(true);">Parıltı</button>
+            <button class="ctx-chip ${curInd === 'pill' ? 'active' : ''}" onclick="send('setDockIndicatorStyle',{style:'pill'});closeAllDockPopovers(true);">Kapsül</button>
+        </div>
         <div class="ctx-sep"></div>
         <div style="font-size:9.5px;font-weight:800;color:var(--text-2);padding:2px 8px;text-transform:uppercase;letter-spacing:0.05em;">Dock Silüeti</div>
         <div class="ctx-style-chips">
@@ -5311,6 +6039,7 @@ function buildDockIconHtml(g, pinIndex, catId, runIndex = -1) {
         <span class="prog-pill num">${prog}%</span>
     ` : '';
 
+    const gIcon = resolveItemIcon(g);
     return `
         <div class="${cls}" data-group-key="${safeKey}" ${dragAttrs}
              onmouseenter="onDockItemEnter(this,'${safeKeyAttr}',${g.windows.length},${safeCat})"
@@ -5326,7 +6055,7 @@ function buildDockIconHtml(g, pinIndex, catId, runIndex = -1) {
             ${audioBadgeHtml}
             ${(hasAttn && !showAudioBadge) ? `<span class="attn-pip"></span>` : ''}
             <span class="hover-label">${escHtml(labelText)}</span>
-            ${g.icon ? `<img src="data:image/png;base64,${g.icon}"/>` : `<div class="fallback-badge">${monogram}</div>`}
+            ${gIcon ? `<img src="data:image/png;base64,${gIcon}"/>` : `<div class="fallback-badge">${monogram}</div>`}
             ${g.windows.length > 1 ? `<span class="count-pill num">${g.windows.length}</span>` : ''}
             ${g.windows.length > 0 ? `<span class="dock-dot"></span>` : ''}
         </div>
@@ -5815,7 +6544,7 @@ function buildConstellationModel() {
                 hasKids,
                 kidCount: g.windows.length,
                 isLeaf: !hasKids && Boolean(w0),
-                icon: g.icon || null,
+                icon: resolveItemIcon(g) || null,
                 monogram: (g.displayName || 'A').slice(0, 1).toUpperCase(),
                 label: shortOrbLabel(g.displayName),
                 fullTitle: hasKids
@@ -5853,7 +6582,7 @@ function buildConstellationModel() {
                         hasKids: false,
                         kidCount: 0,
                         isLeaf: true,
-                        icon: g.icon || null,
+                        icon: resolveItemIcon(g) || null,
                         monogram: (g.displayName || 'A').slice(0, 1).toUpperCase(),
                         label: shortOrbLabel(clean),
                         fullTitle: `${g.displayName} — ${clean}`,
@@ -5894,7 +6623,7 @@ function buildConstellationModel() {
                 kidCount: 0,
                 isLeaf: false,
                 isLaunch: true,
-                icon: g.icon || null,
+                icon: resolveItemIcon(g) || null,
                 monogram: (g.displayName || 'A').slice(0, 1).toUpperCase(),
                 label: shortOrbLabel(g.displayName),
                 fullTitle: `${g.displayName} · Başlat`,
@@ -5925,7 +6654,7 @@ function buildConstellationModel() {
                     hasKids: false,
                     kidCount: 0,
                     isLeaf: true,
-                    icon: g.icon || null,
+                    icon: resolveItemIcon(g) || null,
                     monogram: (g.displayName || 'A').slice(0, 1).toUpperCase(),
                     label: shortOrbLabel(clean),
                     fullTitle: clean,
@@ -6149,8 +6878,9 @@ function renderAlternateHubStyle(hub, g, hubStyle, forceAnimate) {
     const edge = getDockEdge();
     const isVert = isVerticalEdge();
     const safeKey = escAttr(g.key);
-    const icHtml = g.icon
-        ? `<img src="data:image/png;base64,${g.icon}" style="width:18px;height:18px;border-radius:4px;"/>`
+    const gIcon = resolveItemIcon(g);
+    const icHtml = gIcon
+        ? `<img src="data:image/png;base64,${gIcon}" style="width:18px;height:18px;border-radius:4px;"/>`
         : `<span style="width:18px;height:18px;border-radius:5px;background:var(--accent-1);color:var(--accent-ink);font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;">${escHtml((g.displayName||'A')[0])}</span>`;
 
     if (hubStyle === 'radial' && !isVert && wins.length > 0) {
@@ -6181,7 +6911,7 @@ function renderAlternateHubStyle(hub, g, hubStyle, forceAnimate) {
                      onmouseenter="radialSelectedHwnd=${w.hwnd};scheduleDwmPreview(${w.hwnd},false);"
                      onclick="event.stopPropagation();send('focusWindow',{hwnd:${w.hwnd}});closeRadialHub(true);"
                      onauxclick="if(event.button===1){event.stopPropagation();send('closeWindow',{hwnd:${w.hwnd}});}">
-                    ${g.icon ? `<img src="data:image/png;base64,${g.icon}"/>` : ''}
+                    ${gIcon ? `<img src="data:image/png;base64,${gIcon}"/>` : ''}
                     <span>${escHtml(shortOrbLabel(clean))}</span>
                     <button class="orb-tbtn danger" style="width:18px;height:18px;" onclick="event.stopPropagation();send('closeWindow',{hwnd:${w.hwnd}});">${SVG.close}</button>
                 </div>
@@ -6232,7 +6962,7 @@ function renderAlternateHubStyle(hub, g, hubStyle, forceAnimate) {
                          onmouseenter="radialSelectedHwnd=${w.hwnd};scheduleDwmPreview(${w.hwnd},false);"
                          onclick="event.stopPropagation();send('focusWindow',{hwnd:${w.hwnd}});closeRadialHub(true);">
                         <div class="wcard-top">
-                            ${g.icon ? `<img src="data:image/png;base64,${g.icon}"/>` : ''}
+                            ${gIcon ? `<img src="data:image/png;base64,${gIcon}"/>` : ''}
                             <span class="wcard-title">${escHtml(shortOrbLabel(clean))}</span>
                         </div>
                         <div class="wcard-sub">${escHtml(clean)}</div>
@@ -6257,7 +6987,7 @@ function renderAlternateHubStyle(hub, g, hubStyle, forceAnimate) {
                          onmouseenter="radialSelectedHwnd=${w.hwnd};scheduleDwmPreview(${w.hwnd},false);"
                          onclick="event.stopPropagation();send('focusWindow',{hwnd:${w.hwnd}});closeRadialHub(true);">
                         <div class="wcard-top">
-                            ${g.icon ? `<img src="data:image/png;base64,${g.icon}"/>` : ''}
+                            ${gIcon ? `<img src="data:image/png;base64,${gIcon}"/>` : ''}
                             <span class="wcard-title">${escHtml(g.displayName)}</span>
                             <button class="orb-tbtn danger" title="Kapat" onclick="event.stopPropagation();execOrbWindowAction(${w.hwnd},'close','',this);">${SVG.close}</button>
                         </div>
@@ -6613,9 +7343,26 @@ function showScrubToast(mode, pct, clientX) {
     const t = document.getElementById('scrubToast');
     if (!t) return;
     const dockR = document.getElementById('dockBar')?.getBoundingClientRect();
-    t.style.bottom = `${Math.max(58, dockR ? Math.round(window.innerHeight - dockR.top + 10) : 64)}px`;
-    if (typeof clientX === 'number') {
-        t.style.left = `${Math.max(96, Math.min(window.innerWidth - 96, clientX))}px`;
+    if (isVerticalEdge() && dockR) {
+        const edge = getDockEdge();
+        t.style.bottom = 'auto';
+        t.style.top = `${Math.max(16, Math.min(window.innerHeight - 48, Math.round(dockR.top + dockR.height / 2 - 18)))}px`;
+        t.style.transform = 'none';
+        if (edge === 'Left') {
+            t.style.left = `${Math.round(dockR.right + 12)}px`;
+            t.style.right = 'auto';
+        } else {
+            t.style.right = `${Math.round(window.innerWidth - dockR.left + 12)}px`;
+            t.style.left = 'auto';
+        }
+    } else {
+        t.style.top = 'auto';
+        t.style.right = 'auto';
+        t.style.transform = 'translateX(-50%)';
+        t.style.bottom = `${Math.max(58, dockR ? Math.round(window.innerHeight - dockR.top + 10) : 64)}px`;
+        if (typeof clientX === 'number') {
+            t.style.left = `${Math.max(96, Math.min(window.innerWidth - 96, clientX))}px`;
+        }
     }
     const ic = mode === 'brightness' ? SVG.sun : (pct === 0 ? SVG.mute : SVG.vol);
     const lbl = mode === 'brightness' ? 'Parlaklık' : 'Ses';
@@ -6994,7 +7741,7 @@ if (typeof ResizeObserver !== 'undefined') {
         reportHitRects();
     });
     dockResizeObs.observe(document.documentElement);
-    for (const id of ['dockBar', 'radialHub', 'folderStackCard', 'dockQuickControls', 'dockCalNotif', 'dockTrayPop', 'dockWidgetPicker', 'dockWidgetInspector', 'dockAiPop', 'dockCtxMenu', 'quickWheelPop']) {
+    for (const id of ['dockBar', 'omnibar', 'radialHub', 'folderStackCard', 'dockQuickControls', 'dockCalNotif', 'dockTrayPop', 'dockWidgetPicker', 'dockWidgetInspector', 'dockAiPop', 'dockCtxMenu', 'quickWheelPop']) {
         const el = document.getElementById(id);
         if (el) dockResizeObs.observe(el);
     }
@@ -7019,7 +7766,7 @@ function stepParabolicWave() {
     const magStrength = hoverStyle === 'lift' ? 0.24 : ((state?.dockMagnification ?? 48) / 100.0);
     const edge = getDockEdge();
     const isVert = isVerticalEdge();
-    const active = ((isVert ? mouseY !== null : mouseX !== null) && magStrength > 0.02 && !pointerInRadial && !pointerInFolder && !quickControlsOpen && !calNotifOpen && !trayPopOpen && !widgetPickerOpen && !widgetInspectorKind && !quickWheelOpen && !aiPopOpen && !ctxMenuOpen && !dragAppState && !dragWidgetState);
+    const active = ((isVert ? mouseY !== null : mouseX !== null) && magStrength > 0.02 && !omniOpen && !pointerInRadial && !pointerInFolder && !quickControlsOpen && !calNotifOpen && !trayPopOpen && !widgetPickerOpen && !widgetInspectorKind && !quickWheelOpen && !aiPopOpen && !ctxMenuOpen && !dragAppState && !dragWidgetState);
 
     let needsNextFrame = false;
     const targets = [];
@@ -7077,13 +7824,947 @@ function stepParabolicWave() {
     }
 }
 
+// ========== BOTTOM OMNISEARCH (#omnibar) ==========
+function normTr(s) {
+    return String(s || '')
+        .replace(/İ/g, 'i').replace(/I/g, 'i').replace(/ı/g, 'i')
+        .replace(/Ğ/g, 'g').replace(/ğ/g, 'g')
+        .replace(/Ü/g, 'u').replace(/ü/g, 'u')
+        .replace(/Ş/g, 's').replace(/ş/g, 's')
+        .replace(/Ö/g, 'o').replace(/ö/g, 'o')
+        .replace(/Ç/g, 'c').replace(/ç/g, 'c')
+        .toLowerCase();
+}
+
+function positionOmniBar() {
+    const el = document.getElementById('omnibar');
+    if (!el || !omniOpen) return;
+    const dockR = document.getElementById('dockBar')?.getBoundingClientRect();
+    if (isVerticalEdge()) {
+        el.style.transform = 'none';
+        positionDockPopover(el, { width: 640, height: 470, align: 'center' });
+    } else {
+        el.style.top = 'auto';
+        el.style.right = 'auto';
+        el.style.left = '50%';
+        el.style.transform = 'translateX(-50%)';
+        const bottomPx = dockR ? Math.max(58, Math.round(window.innerHeight - dockR.top + 8)) : 64;
+        el.style.bottom = `${bottomPx}px`;
+    }
+}
+
+function toggleDockOmni(ev) {
+    if (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+    }
+    if (omniOpen) closeDockOmni(true);
+    else openDockOmni();
+}
+
+function openDockOmni() {
+    closeRadialHub(false);
+    closeFolderStack(false);
+    closeAllDockPopovers(false);
+    omniOpen = true;
+    omniIdx = 0;
+    const startBtn = document.querySelector('#dockBar .start-btn');
+    if (startBtn) startBtn.classList.add('active');
+    renderOmniBar();
+    positionOmniBar();
+    requestDockInputFocus();
+    requestAnimationFrame(() => {
+        const inp = document.getElementById('omniInput');
+        if (inp) {
+            inp.focus({ preventScroll: true });
+            inp.setSelectionRange(inp.value.length, inp.value.length);
+        }
+        positionOmniBar();
+        reportHitRects();
+    });
+}
+
+function closeDockOmni(shouldReport = true) {
+    omniOpen = false;
+    if (omniFileSearchTimer) {
+        clearTimeout(omniFileSearchTimer);
+        omniFileSearchTimer = null;
+    }
+    const el = document.getElementById('omnibar');
+    if (el) el.classList.remove('open');
+    const startBtn = document.querySelector('#dockBar .start-btn');
+    if (startBtn) startBtn.classList.remove('active');
+    releaseDockInputFocus();
+    scheduleDockAutoHide();
+    if (shouldReport) reportHitRects();
+}
+
+function setOmniFilter(f) {
+    omniFilter = f || 'all';
+    omniIdx = 0;
+    renderOmniBar(true);
+    const inp = document.getElementById('omniInput');
+    if (inp) inp.focus({ preventScroll: true });
+}
+
+function onOmniInput(val) {
+    omniQuery = val || '';
+    omniIdx = 0;
+    const trimmed = omniQuery.trim();
+    if (omniFileSearchTimer) {
+        clearTimeout(omniFileSearchTimer);
+        omniFileSearchTimer = null;
+    }
+    const allowFiles = (omniFilter === 'all' || omniFilter === 'files')
+        && trimmed.length >= 2
+        && !trimmed.startsWith('>')
+        && !/^(g|yt|gh)\s+/i.test(trimmed);
+    if (allowFiles) {
+        const seq = ++omniFileSearchSeq;
+        omniFileSearchTimer = setTimeout(() => {
+            omniLatestFileQuery = trimmed;
+            send('searchLocalFiles', { query: trimmed, seq });
+        }, 120);
+    } else if (!trimmed) {
+        omniLatestFileQuery = '';
+        omniLatestFileHits = [];
+    }
+    renderOmniResults();
+}
+
+function evalSafeMathAst(expr) {
+    let s = String(expr || '').trim()
+        .replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-').replace(/,/g, '.');
+    if (!s || s.length > 96) return null;
+    s = s.replace(/\bpi\b/gi, String(Math.PI)).replace(/\be\b/gi, String(Math.E));
+    const tokens = [];
+    let i = 0;
+    while (i < s.length) {
+        const ch = s[i];
+        if (/\s/.test(ch)) { i++; continue; }
+        if (/[0-9.]/.test(ch)) {
+            let num = '';
+            let dotSeen = false;
+            while (i < s.length && /[0-9.]/.test(s[i])) {
+                if (s[i] === '.') {
+                    if (dotSeen) return null;
+                    dotSeen = true;
+                }
+                num += s[i++];
+            }
+            const v = Number(num);
+            if (!Number.isFinite(v)) return null;
+            tokens.push({ t: 'num', v });
+            continue;
+        }
+        if (/[a-zA-Z]/.test(ch)) {
+            let id = '';
+            while (i < s.length && /[a-zA-Z0-9_]/.test(s[i])) id += s[i++];
+            tokens.push({ t: 'id', v: id.toLowerCase() });
+            continue;
+        }
+        if ('+-*/%^()'.includes(ch)) {
+            tokens.push({ t: 'op', v: ch });
+            i++;
+            continue;
+        }
+        return null;
+    }
+    if (tokens.length === 0) return null;
+    const hasOp = tokens.some(tk => tk.t === 'op' && '+-*/%^'.includes(tk.v)) || tokens.some(tk => tk.t === 'id');
+    if (!hasOp) return null;
+
+    let pos = 0;
+    const peek = () => tokens[pos] || null;
+    const consume = () => tokens[pos++] || null;
+    const funcs = {
+        sqrt: Math.sqrt, abs: Math.abs, round: Math.round, floor: Math.floor, ceil: Math.ceil,
+        sin: Math.sin, cos: Math.cos, tan: Math.tan, log: Math.log10, ln: Math.log
+    };
+    function parseExpr() {
+        let left = parseTerm();
+        if (left === null) return null;
+        while (peek() && peek().t === 'op' && (peek().v === '+' || peek().v === '-')) {
+            const op = consume().v;
+            const rhsStart = pos;
+            const right = parseTerm();
+            if (right === null) return null;
+            if (peek() && peek().t === 'op' && peek().v === '%' && pos - rhsStart === 1) {
+                consume();
+                const pct = left * (right / 100);
+                left = op === '+' ? (left + pct) : (left - pct);
+            } else {
+                left = op === '+' ? (left + right) : (left - right);
+            }
+        }
+        return left;
+    }
+    function parseTerm() {
+        let left = parsePow();
+        if (left === null) return null;
+        while (peek() && peek().t === 'op' && (peek().v === '*' || peek().v === '/')) {
+            const op = consume().v;
+            const right = parsePow();
+            if (right === null) return null;
+            if (op === '/' && right === 0) return null;
+            left = op === '*' ? (left * right) : (left / right);
+        }
+        return left;
+    }
+    function parsePow() {
+        let base = parseUnary();
+        if (base === null) return null;
+        if (peek() && peek().t === 'op' && peek().v === '^') {
+            consume();
+            const exp = parsePow();
+            if (exp === null) return null;
+            return Math.pow(base, exp);
+        }
+        return base;
+    }
+    function parseUnary() {
+        if (peek() && peek().t === 'op' && (peek().v === '+' || peek().v === '-')) {
+            const op = consume().v;
+            const v = parseUnary();
+            if (v === null) return null;
+            return op === '-' ? -v : v;
+        }
+        return parsePrimary();
+    }
+    function parsePrimary() {
+        const tk = consume();
+        if (!tk) return null;
+        if (tk.t === 'num') {
+            if (peek() && peek().t === 'op' && peek().v === '%') {
+                const next = tokens[pos + 1];
+                if (!next || (next.t === 'op' && '*/^)'.includes(next.v))) {
+                    consume();
+                    return tk.v / 100;
+                }
+            }
+            return tk.v;
+        }
+        if (tk.t === 'id' && funcs[tk.v]) {
+            if (!peek() || peek().t !== 'op' || peek().v !== '(') return null;
+            consume();
+            const arg = parseExpr();
+            if (arg === null || !peek() || peek().t !== 'op' || peek().v !== ')') return null;
+            consume();
+            return funcs[tk.v](arg);
+        }
+        if (tk.t === 'op' && tk.v === '(') {
+            const inner = parseExpr();
+            if (inner === null || !peek() || peek().t !== 'op' || peek().v !== ')') return null;
+            consume();
+            return inner;
+        }
+        return null;
+    }
+    const res = parseExpr();
+    if (res === null || pos !== tokens.length || !Number.isFinite(res)) return null;
+    return res;
+}
+
+function tryEvalMath(q) {
+    const val = evalSafeMathAst(q);
+    if (val === null) return null;
+    const fmt = Number.isInteger(val) ? String(val) : Number(val.toFixed(6)).toString();
+    return {
+        kind: 'smart',
+        badge: 'HESAP',
+        title: fmt,
+        subtitle: `${q.trim()} = ${fmt} · Enter: Kopyala`,
+        copyText: fmt
+    };
+}
+
+function tryConvertUnit(q) {
+    const m = q.trim().match(/^(-?\d+(?:[.,]\d+)?)\s*([a-zA-Z°/]+)\s*(?:to|in|->|=|kac|kaç)?\s*([a-zA-Z°/]+)$/i);
+    if (!m) return null;
+    const num = parseFloat(m[1].replace(',', '.'));
+    if (!Number.isFinite(num)) return null;
+    const u1 = m[2].toLowerCase().replace('°', '');
+    const u2 = m[3].toLowerCase().replace('°', '');
+    if (u1 === u2) return null;
+
+    const groups = [
+        { map: { mm: 0.001, cm: 0.01, m: 1, km: 1000, in: 0.0254, ft: 0.3048, yd: 0.9144, mi: 1609.344 } },
+        { map: { mg: 0.001, g: 1, gr: 1, kg: 1000, ton: 1e6, lb: 453.59237, oz: 28.349523 } },
+        { map: { b: 1, kb: 1000, mb: 1e6, gb: 1e9, tb: 1e12, kib: 1024, mib: 1048576, gib: 1073741824 } },
+        { map: { ms: 1, 'm/s': 1, kmh: 1 / 3.6, 'km/h': 1 / 3.6, mph: 0.44704, knot: 0.514444 } },
+        { map: { s: 1, sn: 1, min: 60, dk: 60, h: 3600, sa: 3600, d: 86400, gun: 86400 } }
+    ];
+    for (const g of groups) {
+        if (u1 in g.map && u2 in g.map) {
+            const res = (num * g.map[u1]) / g.map[u2];
+            const fmt = Math.abs(res) >= 100 ? res.toFixed(2) : Number(res.toFixed(4)).toString();
+            return {
+                kind: 'smart',
+                badge: 'BİRİM',
+                title: `${fmt} ${m[3]}`,
+                subtitle: `${num} ${m[2]} = ${fmt} ${m[3]} · Enter: Kopyala`,
+                copyText: fmt
+            };
+        }
+    }
+    const tempAlias = { c: 'c', cel: 'c', f: 'f', fah: 'f', k: 'k' };
+    if (u1 in tempAlias && u2 in tempAlias) {
+        const a = tempAlias[u1], b = tempAlias[u2];
+        const c = a === 'c' ? num : (a === 'f' ? (num - 32) * 5 / 9 : num - 273.15);
+        const res = b === 'c' ? c : (b === 'f' ? (c * 9 / 5 + 32) : c + 273.15);
+        const fmt = Number(res.toFixed(2)).toString();
+        return {
+            kind: 'smart',
+            badge: 'SICAKLIK',
+            title: `${fmt} °${b.toUpperCase()}`,
+            subtitle: `${num} °${a.toUpperCase()} = ${fmt} °${b.toUpperCase()} · Enter: Kopyala`,
+            copyText: fmt
+        };
+    }
+    return null;
+}
+
+function tryConvertCurrency(q) {
+    const mk = state?.market || {};
+    const usdTry = (mk.usdTry > 0) ? mk.usdTry : 34.5;
+    const eurTry = (mk.eurTry > 0) ? mk.eurTry : (usdTry * 1.08);
+    const gbpTry = (mk.gbpTry > 0) ? mk.gbpTry : (usdTry * 1.27);
+    const btcTry = (mk.btcUsd > 0) ? (mk.btcUsd * usdTry) : (90000 * usdTry);
+    const rates = {
+        try: 1, tl: 1, usd: usdTry, '$': usdTry, dolar: usdTry,
+        eur: eurTry, '€': eurTry, euro: eurTry,
+        gbp: gbpTry, '£': gbpTry, sterlin: gbpTry,
+        btc: btcTry, '₿': btcTry
+    };
+    const m = normTr(q).trim().match(/^(\d+(?:[.,]\d+)?)\s*(try|tl|usd|dolar|\$|eur|euro|€|gbp|sterlin|£|btc|₿)(?:\s*(?:to|in|->|=|kac)?\s*(try|tl|usd|dolar|\$|eur|euro|€|gbp|sterlin|£|btc|₿))?$/i);
+    if (!m) return null;
+    const amount = parseFloat(m[1].replace(',', '.'));
+    const fromKey = m[2];
+    const toKey = m[3] || (fromKey === 'try' || fromKey === 'tl' ? 'usd' : 'try');
+    if (!(fromKey in rates) || !(toKey in rates)) return null;
+    const res = (amount * rates[fromKey]) / rates[toKey];
+    const fmt = toKey === 'btc' ? res.toFixed(6) : res.toFixed(2);
+    const toDisp = toKey.toUpperCase().replace('$', 'USD').replace('€', 'EUR').replace('£', 'GBP').replace('₿', 'BTC');
+    const fromDisp = fromKey.toUpperCase().replace('$', 'USD').replace('€', 'EUR').replace('£', 'GBP').replace('₿', 'BTC');
+    return {
+        kind: 'smart',
+        badge: mk.valid ? 'CANLI KUR' : 'TAHMİNİ KUR',
+        title: `${fmt} ${toDisp}`,
+        subtitle: `${amount} ${fromDisp} ≈ ${fmt} ${toDisp} · Enter: Kopyala`,
+        copyText: fmt
+    };
+}
+
+function tryParseColor(q) {
+    const t = q.trim();
+    const hexM = t.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+    let r, g, b, hex;
+    if (hexM) {
+        let h = hexM[1];
+        if (h.length === 3) h = h.split('').map(c => c + c).join('');
+        r = parseInt(h.slice(0, 2), 16);
+        g = parseInt(h.slice(2, 4), 16);
+        b = parseInt(h.slice(4, 6), 16);
+        hex = `#${h.toUpperCase()}`;
+    } else {
+        const rgbM = t.match(/^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/i);
+        if (!rgbM) return null;
+        r = Math.min(255, +rgbM[1]); g = Math.min(255, +rgbM[2]); b = Math.min(255, +rgbM[3]);
+        hex = '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
+    }
+    const max = Math.max(r, g, b) / 255, min = Math.min(r, g, b) / 255;
+    const l = (max + min) / 2;
+    let h = 0, s = 0;
+    if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        const rn = r / 255, gn = g / 255, bn = b / 255;
+        h = max === rn ? ((gn - bn) / d + (gn < bn ? 6 : 0)) : (max === gn ? ((bn - rn) / d + 2) : ((rn - gn) / d + 4));
+        h /= 6;
+    }
+    const hslStr = `hsl(${Math.round(h * 360)}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%)`;
+    const rgbStr = `rgb(${r}, ${g}, ${b})`;
+    return {
+        kind: 'smart',
+        badge: 'RENK',
+        swatch: hex,
+        title: `${hex} · ${rgbStr}`,
+        subtitle: `${hslStr} · Enter: HEX Kopyala`,
+        copyText: hex
+    };
+}
+
+function tryEvalTimezone(q) {
+    const m = normTr(q).trim().match(/^(?:time|saat)\s+([a-z\s]+)$/);
+    if (!m) return null;
+    const key = m[1].trim();
+    const zones = {
+        istanbul: 'Europe/Istanbul', ankara: 'Europe/Istanbul', tr: 'Europe/Istanbul',
+        london: 'Europe/London', londra: 'Europe/London', uk: 'Europe/London',
+        ny: 'America/New_York', 'new york': 'America/New_York', est: 'America/New_York',
+        sf: 'America/Los_Angeles', la: 'America/Los_Angeles', pst: 'America/Los_Angeles',
+        tokyo: 'Asia/Tokyo', jp: 'Asia/Tokyo',
+        berlin: 'Europe/Berlin', paris: 'Europe/Paris', dubai: 'Asia/Dubai',
+        utc: 'UTC', gmt: 'UTC'
+    };
+    const tz = zones[key];
+    if (!tz) return null;
+    const now = new Date();
+    const timeStr = new Intl.DateTimeFormat('tr-TR', { timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(now);
+    const dateStr = new Intl.DateTimeFormat('tr-TR', { timeZone: tz, weekday: 'short', day: 'numeric', month: 'short' }).format(now);
+    return {
+        kind: 'smart',
+        badge: tz,
+        title: timeStr,
+        subtitle: `${key.toUpperCase()} · ${dateStr} · Enter: Kopyala`,
+        copyText: timeStr
+    };
+}
+
+function buildOmniSmartCard(q) {
+    const trimmed = (q || '').trim();
+    if (!trimmed || trimmed.startsWith('>')) return null;
+
+    const webM = trimmed.match(/^(g|yt|gh)\s+(.+)$/i);
+    if (webM) {
+        const prefix = webM[1].toLowerCase();
+        const term = webM[2].trim();
+        const engines = {
+            g:  { name: 'Google',  url: `https://www.google.com/search?q=${encodeURIComponent(term)}` },
+            yt: { name: 'YouTube', url: `https://www.youtube.com/results?search_query=${encodeURIComponent(term)}` },
+            gh: { name: 'GitHub',  url: `https://github.com/search?q=${encodeURIComponent(term)}` }
+        };
+        const eng = engines[prefix];
+        return {
+            kind: 'smart-web',
+            badge: eng.name.toUpperCase(),
+            title: `${eng.name}: "${term}"`,
+            subtitle: 'Tarayıcıda ara · Enter',
+            url: eng.url
+        };
+    }
+
+    if (/^(https?:\/\/)?[a-z0-9-]+(\.[a-z0-9-]+)+(\/.*)?$/i.test(trimmed) && !/\s/.test(trimmed)) {
+        const url = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+        return {
+            kind: 'smart-web',
+            badge: 'WEB URL',
+            title: url,
+            subtitle: 'Bağlantıyı aç · Enter',
+            url
+        };
+    }
+
+    return tryParseColor(trimmed)
+        || tryConvertCurrency(trimmed)
+        || tryConvertUnit(trimmed)
+        || tryEvalTimezone(trimmed)
+        || tryEvalMath(trimmed);
+}
+
+function scoreOmniMatch(nq, hayRaw) {
+    if (!nq) return 10;
+    const hay = normTr(hayRaw);
+    if (hay === nq) return 120;
+    if (hay.startsWith(nq)) return 95;
+    if (hay.includes(' ' + nq)) return 80;
+    if (hay.includes(nq)) return 60;
+    let qi = 0;
+    for (let i = 0; i < hay.length && qi < nq.length; i++) {
+        if (hay[i] === nq[qi]) qi++;
+    }
+    return qi === nq.length ? 30 : 0;
+}
+
+function collectOmniResults() {
+    const raw = omniQuery || '';
+    const trimmed = raw.trim();
+    const nq = normTr(trimmed);
+
+    const smart = (omniFilter === 'all' || omniFilter === 'web') ? buildOmniSmartCard(trimmed) : null;
+
+    const cmdMode = trimmed.startsWith('>');
+    const cmdTerm = cmdMode ? normTr(trimmed.slice(1).trim()) : nq;
+    const themeList = (state?.themes && state.themes.length > 0) ? state.themes : (dockCatalog?.themes || []);
+    const powerCmds = [
+        { id: 'cmd-lock', title: 'Kilit (Kilitle)', sub: 'Bilgisayarı kilitle · > Kilit', icon: SVG.lock, kw: 'kilit lock kilitle', act: { t: 'power', v: 'lock' } },
+        { id: 'cmd-sleep', title: 'Uyku', sub: 'Bilgisayarı uyut · > Uyku', icon: SVG.sleep, kw: 'uyku sleep', act: { t: 'power', v: 'sleep' } },
+        { id: 'cmd-display-off', title: 'Ekran Kapat', sub: 'Monitörleri uyut · > Ekran Kapat', icon: SVG.monitor, kw: 'ekran kapat display off monitor', act: { t: 'power', v: 'display_off' } },
+        { id: 'cmd-focus-25', title: 'Odak 25d (Başlat)', sub: '25 dakikalık Pomodoro sayacı · > Odak 25d', icon: SVG.timer, kw: 'odak 25d pomodoro focus timer', act: { t: 'focus25' } },
+        { id: 'cmd-focus-reset', title: 'Odak Sıfırla', sub: 'Sayacı durdur ve sıfırla', icon: SVG.timer, kw: 'odak sifirla focus reset', act: { t: 'focusReset' } },
+        { id: 'cmd-theme-cycle', title: 'Tema Seç / Değiştir', sub: `${themeList.length} tema kullanılabilir · > Tema <isim>`, icon: SVG.palette, kw: 'tema theme renk palet', act: { t: 'openThemes' } }
+    ];
+
+    const items = [];
+    if (smart) items.push(smart);
+
+    if (cmdMode || omniFilter === 'cmds' || (nq.length >= 2 && omniFilter === 'all')) {
+        for (const c of powerCmds) {
+            const sc = cmdMode ? (cmdTerm ? scoreOmniMatch(cmdTerm, `${c.title} ${c.kw}`) : 80) : scoreOmniMatch(nq, `${c.title} ${c.kw}`);
+            if (sc > 0) {
+                items.push({ kind: 'cmd', score: sc + (cmdMode ? 50 : 0), title: c.title, subtitle: c.sub, svgIcon: c.icon, act: c.act });
+            }
+        }
+        if (cmdMode && (cmdTerm.startsWith('tema') || cmdTerm.startsWith('theme') || cmdTerm === '')) {
+            const tq = cmdTerm.replace(/^(tema|theme)\s*/, '').trim();
+            for (const th of themeList) {
+                const tsc = tq ? scoreOmniMatch(tq, `${th.name || ''} ${th.id || ''}`) : 55;
+                if (tsc > 0) {
+                    items.push({
+                        kind: 'cmd',
+                        score: tsc + 40,
+                        title: `Tema: ${th.name || th.id}`,
+                        subtitle: 'Anında uygula · Enter',
+                        svgIcon: SVG.palette,
+                        act: { t: 'theme', id: th.id }
+                    });
+                }
+            }
+        }
+        const shellCmd = trimmed.slice(1).trim();
+        if (cmdMode && shellCmd.length >= 2) {
+            items.push({
+                kind: 'cmd',
+                score: 35,
+                title: `Komut Çalıştır: ${shellCmd}`,
+                subtitle: 'Shell üzerinden çalıştır (cmdrun)',
+                svgIcon: SVG.extLink,
+                act: { t: 'shell', cmd: shellCmd }
+            });
+        }
+        if (cmdMode) return items.sort((a, b) => (b.score || 200) - (a.score || 200)).slice(0, 14);
+    }
+
+    if (omniFilter === 'all' || omniFilter === 'wins') {
+        const winSeen = new Set();
+        const openWins = Array.isArray(state?.openWindows) && state.openWindows.length > 0
+            ? state.openWindows
+            : (state?.groups || []).flatMap(g => (g.windows || []).map(w => ({
+                hwnd: w.hwnd,
+                title: w.title,
+                processName: w.processName || g.displayName,
+                displayName: g.displayName,
+                isActive: w.isActive,
+                iconKey: g.iconKey || w.iconKey,
+                icon: resolveItemIcon(w) || resolveItemIcon(g)
+            })));
+        for (const w of openWins) {
+            if (!w || !w.hwnd || winSeen.has(w.hwnd)) continue;
+            winSeen.add(w.hwnd);
+            const appName = w.displayName || w.processName || 'Pencere';
+            const cleanT = cleanWindowTitle(w.title || appName, appName);
+            const sc = nq ? scoreOmniMatch(nq, `${appName} ${cleanT} ${w.title || ''}`) : (w.isActive ? 92 : 76);
+            if (sc > 0) {
+                items.push({
+                    kind: 'win',
+                    score: sc + 20,
+                    hwnd: w.hwnd,
+                    title: cleanT || appName,
+                    subtitle: `${appName}${w.isActive ? ' · Aktif' : ' · Pencereye geç'}`,
+                    icon: resolveItemIcon(w) || null,
+                    mono: appName.slice(0, 1).toUpperCase()
+                });
+            }
+        }
+    }
+
+    if (omniFilter === 'all' || omniFilter === 'clip') {
+        const clips = Array.isArray(state?.clipboard) ? state.clipboard : [];
+        const clipTerm = nq.startsWith('@clip') ? nq.replace(/^@clip\s*/, '') : nq;
+        for (const cl of clips.slice(0, 15)) {
+            const text = String(cl.preview || cl.text || '').trim();
+            if (!text) continue;
+            const sc = clipTerm ? scoreOmniMatch(clipTerm, text) : (omniFilter === 'clip' ? 75 : 22);
+            if (sc > 0) {
+                items.push({
+                    kind: 'clip',
+                    score: sc + (omniFilter === 'clip' ? 40 : 0),
+                    clipId: cl.id,
+                    title: text.slice(0, 72),
+                    subtitle: 'Pano geçmişi · Enter: Kopyala',
+                    svgIcon: SVG.clip
+                });
+            }
+        }
+    }
+
+    if ((omniFilter === 'all' || omniFilter === 'files') && Array.isArray(omniLatestFileHits) && omniLatestFileHits.length > 0) {
+        for (const fh of omniLatestFileHits.slice(0, 8)) {
+            const path = fh.path || fh.fullPath || '';
+            const name = fh.name || fh.title || path.split(/[\\/]/).pop() || path;
+            if (!path) continue;
+            items.push({
+                kind: 'file',
+                score: 52,
+                path,
+                title: name,
+                subtitle: path,
+                svgIcon: fh.isDir ? SVG.folder : SVG.extLink
+            });
+        }
+    }
+
+    if ((omniFilter === 'web' || (omniFilter === 'all' && trimmed.length >= 2 && !smart)) && !trimmed.startsWith('>')) {
+        items.push({
+            kind: 'web',
+            score: omniFilter === 'web' ? 95 : 14,
+            title: `Google'da ara: "${trimmed}"`,
+            subtitle: 'Kısayol: g <sorgu>',
+            url: `https://www.google.com/search?q=${encodeURIComponent(trimmed)}`,
+            svgIcon: SVG.globe
+        });
+    }
+
+    let apps = [];
+    if (omniFilter === 'all' || omniFilter === 'apps') {
+        const seenApps = new Set();
+        const pinnedPaths = new Set((state?.groups || []).filter(g => g.isPinned).map(g => (g.executablePath || g.key || '').toLowerCase()));
+        const rawApps = [
+            ...(Array.isArray(dockCatalog?.installedApps) ? dockCatalog.installedApps : []),
+            ...(state?.groups || []).map(g => ({
+                name: g.displayName,
+                displayName: g.displayName,
+                path: g.executablePath || '',
+                aumid: g.aumid || '',
+                key: g.key,
+                iconKey: g.iconKey,
+                icon: resolveItemIcon(g),
+                isPinned: g.isPinned
+            }))
+        ];
+        for (const a of rawApps) {
+            const name = a.name || a.displayName || '';
+            const dedupe = (a.path || a.aumid || a.key || name).toLowerCase();
+            if (!name || !dedupe || seenApps.has(dedupe)) continue;
+            seenApps.add(dedupe);
+            const sc = nq ? scoreOmniMatch(nq, `${name} ${a.path || ''}`) : 64;
+            if (sc > 0) {
+                apps.push({
+                    kind: 'app',
+                    score: sc + (a.isPinned || pinnedPaths.has(dedupe) ? 8 : 0),
+                    name,
+                    path: a.path || '',
+                    aumid: a.aumid || '',
+                    key: a.key || '',
+                    isPinned: Boolean(a.isPinned || pinnedPaths.has(dedupe)),
+                    icon: resolveItemIcon(a) || null,
+                    mono: name.slice(0, 1).toUpperCase()
+                });
+            }
+        }
+        apps.sort((a, b) => b.score - a.score);
+        if (!nq) apps = apps.slice(0, omniFilter === 'apps' ? 24 : 8);
+        else apps = apps.slice(0, 16);
+    }
+
+    items.sort((a, b) => (b.score || 999) - (a.score || 999));
+    return { smart, listItems: items.filter(x => x !== smart).slice(0, 10), apps };
+}
+
+function renderOmniBar(preserveInput = false) {
+    const el = document.getElementById('omnibar');
+    if (!el) return;
+    if (!omniOpen) {
+        el.classList.remove('open');
+        return;
+    }
+    const existingInput = preserveInput ? document.getElementById('omniInput') : null;
+    const filters = [
+        { id: 'all',   label: 'Tümü' },
+        { id: 'apps',  label: 'Uygulamalar' },
+        { id: 'wins',  label: 'Pencereler' },
+        { id: 'cmds',  label: 'Komutlar (>)' },
+        { id: 'clip',  label: 'Pano' },
+        { id: 'files', label: 'Dosyalar' }
+    ];
+    if (!existingInput || !el.classList.contains('open')) {
+        el.innerHTML = `
+            <div class="omni-input-wrap">
+                <span style="color:var(--accent-1);display:inline-flex;flex-shrink:0;">
+                    <svg class="svg-ic sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                </span>
+                <input id="omniInput" type="text" value="${escAttr(omniQuery)}"
+                       placeholder="Uygulama, pencere, hesap (24*8), kur (100 usd), web (g ...), komut (> Kilit)..."
+                       oninput="onOmniInput(this.value)"
+                       onkeydown="handleOmniKeydown(event)"
+                       onfocus="requestDockInputFocus()"/>
+                ${omniQuery ? `<button class="tray-btn" style="width:22px;height:22px;" title="Temizle" onclick="omniQuery='';omniIdx=0;document.getElementById('omniInput').value='';onOmniInput('');document.getElementById('omniInput').focus();">${SVG.close}</button>` : ''}
+                <span class="omni-kbd">ESC</span>
+            </div>
+            <div class="omni-filters" id="omniFilters">
+                ${filters.map(f => `<button class="omni-chip ${omniFilter === f.id ? 'active' : ''}" onclick="setOmniFilter('${f.id}')">${f.label}</button>`).join('')}
+            </div>
+            <div id="omniResultsWrap" style="display:flex;flex-direction:column;gap:8px;min-height:0;"></div>
+            <div class="omni-foot">
+                <span style="font-size:10px;color:var(--text-2);display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                    <span><span class="omni-kbd">↑↓←→</span> Gezin</span>
+                    <span><span class="omni-kbd">Enter</span> Aç / Kopyala</span>
+                    <span><span class="omni-kbd">Tab</span> Sekme</span>
+                </span>
+                <span style="font-size:10px;color:var(--text-2);">g · yt · gh · &gt; Kilit · &gt; Odak 25d</span>
+            </div>
+        `;
+        el.classList.add('open');
+    } else {
+        const fWrap = document.getElementById('omniFilters');
+        if (fWrap) {
+            fWrap.innerHTML = filters.map(f => `<button class="omni-chip ${omniFilter === f.id ? 'active' : ''}" onclick="setOmniFilter('${f.id}')">${f.label}</button>`).join('');
+        }
+    }
+    renderOmniResults();
+}
+
+function renderOmniResults() {
+    const wrap = document.getElementById('omniResultsWrap');
+    if (!wrap) return;
+    const collected = collectOmniResults();
+    let smart = null, listItems = [], apps = [];
+    if (Array.isArray(collected)) {
+        listItems = collected;
+    } else {
+        smart = collected.smart;
+        listItems = collected.listItems || [];
+        apps = collected.apps || [];
+    }
+
+    currentOmniItems = [];
+    let html = '';
+
+    if (smart) {
+        const idx = currentOmniItems.length;
+        currentOmniItems.push(smart);
+        const selCls = omniIdx === idx ? 'sel' : '';
+        html += `
+            <div class="omni-smart-card ${selCls}" data-omni-idx="${idx}" onclick="execOmniItem(${idx})">
+                <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+                    ${smart.swatch ? `<span style="width:26px;height:26px;border-radius:7px;background:${escAttr(smart.swatch)};border:1px solid var(--border-rim);flex-shrink:0;"></span>` : `<span style="padding:3px 7px;border-radius:7px;background:var(--accent-soft);color:var(--accent-1);font-size:9.5px;font-weight:800;flex-shrink:0;">${escHtml(smart.badge)}</span>`}
+                    <div style="min-width:0;">
+                        <div style="font-size:13.5px;font-weight:800;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(smart.title)}</div>
+                        <div style="font-size:10.5px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(smart.subtitle)}</div>
+                    </div>
+                </div>
+                <span class="omni-kbd">Enter</span>
+            </div>
+        `;
+    }
+
+    if (listItems.length > 0) {
+        html += `<div class="omni-list">`;
+        for (const it of listItems) {
+            const idx = currentOmniItems.length;
+            currentOmniItems.push(it);
+            const selCls = omniIdx === idx ? 'sel' : '';
+            const icHtml = it.icon
+                ? `<img src="data:image/png;base64,${it.icon}"/>`
+                : (it.svgIcon
+                    ? `<span style="width:22px;height:22px;border-radius:6px;background:var(--bg-inset);color:var(--accent-1);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">${it.svgIcon}</span>`
+                    : `<span style="width:22px;height:22px;border-radius:6px;background:var(--accent-soft);color:var(--accent-1);font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">${escHtml(it.mono || 'A')}</span>`);
+            const badgeLabel = it.kind === 'win' ? 'Pencere' : (it.kind === 'clip' ? 'Pano' : (it.kind === 'file' ? 'Dosya' : (it.kind === 'web' ? 'Web' : 'Komut')));
+            html += `
+                <div class="omni-row ${selCls}" data-omni-idx="${idx}" onclick="execOmniItem(${idx})" onmouseenter="setOmniHoverIdx(${idx})">
+                    ${icHtml}
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:12px;font-weight:700;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(it.title)}</div>
+                        <div style="font-size:10px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(it.subtitle || '')}</div>
+                    </div>
+                    <span class="omni-kbd">${badgeLabel}</span>
+                </div>
+            `;
+        }
+        html += `</div>`;
+    }
+
+    if (apps.length > 0) {
+        const gridStartIdx = currentOmniItems.length;
+        html += `<div class="omni-grid" data-grid-start="${gridStartIdx}">`;
+        for (const ap of apps) {
+            const idx = currentOmniItems.length;
+            currentOmniItems.push(ap);
+            const selCls = omniIdx === idx ? 'sel' : '';
+            const icHtml = ap.icon
+                ? `<img src="data:image/png;base64,${ap.icon}"/>`
+                : `<span style="width:22px;height:22px;border-radius:6px;background:var(--accent-1);color:var(--accent-ink);font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">${escHtml(ap.mono)}</span>`;
+            html += `
+                <div class="omni-app-card ${selCls}" data-omni-idx="${idx}" onclick="execOmniItem(${idx})" onmouseenter="setOmniHoverIdx(${idx})">
+                    ${icHtml}
+                    <span style="flex:1;min-width:0;font-size:11.5px;font-weight:700;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(ap.name)}</span>
+                    <button class="pin-mini" title="${ap.isPinned ? 'Docktan Kaldır' : 'Docka Sabitle'}" onclick="toggleOmniPin(event,${idx})" style="${ap.isPinned ? 'opacity:1;color:var(--accent-1);' : ''}">${SVG.pin}</button>
+                </div>
+            `;
+        }
+        html += `</div>`;
+    }
+
+    if (currentOmniItems.length === 0) {
+        html = `<div style="padding:18px 8px;text-align:center;font-size:11.5px;color:var(--text-2);">Eşleşen sonuç yok · Web araması için <span class="omni-kbd">g ${escHtml(omniQuery.trim() || 'sorgu')}</span></div>`;
+    }
+
+    if (omniIdx >= currentOmniItems.length) omniIdx = Math.max(0, currentOmniItems.length - 1);
+    wrap.innerHTML = html;
+    syncOmniSelectionVisual();
+    requestAnimationFrame(() => { positionOmniBar(); reportHitRects(); });
+}
+
+function setOmniHoverIdx(idx) {
+    if (omniIdx === idx) return;
+    omniIdx = idx;
+    syncOmniSelectionVisual();
+}
+
+function syncOmniSelectionVisual() {
+    const wrap = document.getElementById('omniResultsWrap');
+    if (!wrap) return;
+    wrap.querySelectorAll('[data-omni-idx]').forEach(node => {
+        const i = Number(node.getAttribute('data-omni-idx'));
+        node.classList.toggle('sel', i === omniIdx);
+        if (i === omniIdx) node.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    });
+}
+
+function toggleOmniPin(ev, idx) {
+    if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+    const it = currentOmniItems[idx];
+    if (!it || it.kind !== 'app') return;
+    send('togglePin', { name: it.name, path: it.path || '', aumid: it.aumid || '' });
+}
+
+function execOmniItem(idx) {
+    const it = currentOmniItems[idx];
+    if (!it) return;
+    if (it.kind === 'smart' && it.copyText) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(it.copyText).catch(() => {});
+        }
+        closeDockOmni(true);
+        return;
+    }
+    if ((it.kind === 'smart-web' || it.kind === 'web') && it.url) {
+        send('openWebUrl', { url: it.url });
+        closeDockOmni(true);
+        return;
+    }
+    if (it.kind === 'win' && it.hwnd) {
+        send('focusWindow', { hwnd: it.hwnd });
+        closeDockOmni(true);
+        return;
+    }
+    if (it.kind === 'clip' && it.clipId !== undefined) {
+        send('copyClipById', { id: it.clipId });
+        closeDockOmni(true);
+        return;
+    }
+    if (it.kind === 'file' && it.path) {
+        send('launchPath', { path: it.path });
+        closeDockOmni(true);
+        return;
+    }
+    if (it.kind === 'app') {
+        if (it.path) send('launchNewInstance', { path: it.path });
+        else if (it.key) send('launchNewInstance', { key: it.key });
+        closeDockOmni(true);
+        return;
+    }
+    if (it.kind === 'cmd' && it.act) {
+        const a = it.act;
+        if (a.t === 'power') send('systemPower', { action: a.v });
+        else if (a.t === 'focus25') send('setFocusPreset', { minutes: 25, start: true });
+        else if (a.t === 'focusReset') send('resetFocus', {});
+        else if (a.t === 'theme') { send('applyTheme', { id: a.id }); return; }
+        else if (a.t === 'openThemes') { omniQuery = '> Tema '; renderOmniBar(false); const inp = document.getElementById('omniInput'); if (inp) inp.focus(); return; }
+        else if (a.t === 'shell') send('launchPath', { path: 'cmdrun:' + a.cmd });
+        closeDockOmni(true);
+    }
+}
+
+function handleOmniKeydown(e) {
+    if (!omniOpen) return;
+    const total = currentOmniItems.length;
+    if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        closeDockOmni(true);
+        return;
+    }
+    if (e.key === 'Tab') {
+        e.preventDefault();
+        const order = ['all', 'apps', 'wins', 'cmds', 'clip', 'files'];
+        const nextIdx = (order.indexOf(omniFilter) + (e.shiftKey ? order.length - 1 : 1)) % order.length;
+        setOmniFilter(order[nextIdx]);
+        return;
+    }
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        if (total > 0) execOmniItem(omniIdx);
+        return;
+    }
+    if (total === 0) return;
+
+    const gridEl = document.querySelector('#omniResultsWrap .omni-grid');
+    const gridStart = gridEl ? Number(gridEl.getAttribute('data-grid-start')) : total;
+    let cols = 1;
+    if (gridEl && gridEl.children.length > 1) {
+        const firstTop = gridEl.children[0].offsetTop;
+        let c = 0;
+        for (const ch of gridEl.children) {
+            if (ch.offsetTop === firstTop) c++; else break;
+        }
+        cols = Math.max(1, c);
+    }
+
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (omniIdx >= gridStart && cols > 1) {
+            omniIdx = Math.min(total - 1, omniIdx + cols);
+        } else {
+            omniIdx = (omniIdx + 1) % total;
+        }
+        syncOmniSelectionVisual();
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (omniIdx >= gridStart && cols > 1) {
+            const up = omniIdx - cols;
+            omniIdx = up >= gridStart ? up : Math.max(0, gridStart - 1);
+        } else {
+            omniIdx = (omniIdx - 1 + total) % total;
+        }
+        syncOmniSelectionVisual();
+    } else if (e.key === 'ArrowRight' && omniIdx >= gridStart) {
+        e.preventDefault();
+        omniIdx = (omniIdx + 1 < total) ? omniIdx + 1 : gridStart;
+        syncOmniSelectionVisual();
+    } else if (e.key === 'ArrowLeft' && omniIdx >= gridStart) {
+        e.preventDefault();
+        omniIdx = (omniIdx > gridStart) ? omniIdx - 1 : total - 1;
+        syncOmniSelectionVisual();
+    }
+}
+
 window.chrome.webview.addEventListener('message', e => {
     const msg = e.data;
     if (msg.type === 'state') {
         state = msg.payload;
+        ingestIconCache(state);
         liveDodgedOverride = null;
         liveScaleOverride = null;
         renderDock();
+        if (omniOpen) renderOmniResults();
+    } else if (msg.type === 'catalog') {
+        ingestIconCache(msg);
+        dockCatalog = {
+            installedApps: msg.installedApps || [],
+            themes: msg.themes || dockCatalog.themes || [],
+            frecency: msg.frecency || dockCatalog.frecency || {}
+        };
+        if (omniOpen) renderOmniResults();
+    } else if (msg.type === 'fileSearchResults') {
+        if (!omniOpen) return;
+        if (msg.seq === omniFileSearchSeq || (msg.query && msg.query.trim() === omniQuery.trim())) {
+            omniLatestFileQuery = msg.query || omniQuery;
+            omniLatestFileHits = Array.isArray(msg.items) ? msg.items : (Array.isArray(msg.results) ? msg.results : []);
+            renderOmniResults();
+        }
+    } else if (msg.type === 'toggleOmni' || msg.type === 'toggleDockOmni') {
+        toggleDockOmni();
     } else if (msg.type === 'dockLivePreview') {
         liveScaleOverride = typeof msg.scalePercent === 'number' ? msg.scalePercent : null;
         applyDockGeometryAndOffset();
@@ -7123,7 +8804,7 @@ window.chrome.webview.addEventListener('message', e => {
         const sorted = [...state.groups].sort((a, b) => (b.windows?.length || 0) - (a.windows?.length || 0));
         let pick = sorted.find(g => (g.windows?.length || 0) > 1);
         if (!pick && state.groups.length >= 3) {
-            const baseIcon = state.groups[2]?.icon || state.groups[0]?.icon || null;
+            const baseIcon = resolveItemIcon(state.groups[2]) || resolveItemIcon(state.groups[0]) || null;
             const demoGroup = {
                 key: 'preview-opera',
                 displayName: 'Opera',
@@ -7151,9 +8832,9 @@ window.chrome.webview.addEventListener('message', e => {
         const realGroups = (state.groups || []).filter(g => !g.key.startsWith('preview-'));
         const unpinnedReal = realGroups.filter(g => !g.isPinned && g.windows.length > 0);
         if (unpinnedReal.length === 0 && realGroups.length >= 3) {
-            const ic1 = realGroups[0]?.icon || null;
-            const ic2 = realGroups[1]?.icon || null;
-            const ic3 = realGroups[2]?.icon || null;
+            const ic1 = resolveItemIcon(realGroups[0]) || null;
+            const ic2 = resolveItemIcon(realGroups[1]) || null;
+            const ic3 = resolveItemIcon(realGroups[2]) || null;
             state = {
                 ...state,
                 smartTidy: true,
@@ -7200,9 +8881,15 @@ window.chrome.webview.addEventListener('message', e => {
     } else if (msg.type === 'toggleCalNotif') {
         toggleCalNotif(null, msg.tab || null);
     } else if (msg.type === 'outsideDeactivate') {
+        pointerOverDock = false;
+        mouseX = null;
+        mouseY = null;
+        applyParabolicWave();
         if (radialGroupKey || branchCatId) closeRadialHub(true);
         if (openFolderPath) closeFolderStack(true);
+        if (omniOpen) closeDockOmni(false);
         if (quickControlsOpen || calNotifOpen || trayPopOpen || widgetPickerOpen || widgetInspectorKind || quickWheelOpen || aiPopOpen || ctxMenuOpen) closeAllDockPopovers(true);
+        else releaseDockInputFocus();
         if (expandedAccordionCat) {
             expandedAccordionCat = null;
             renderDock();
@@ -7210,23 +8897,25 @@ window.chrome.webview.addEventListener('message', e => {
     }
 });
 
-// Clicking empty space on the Dock bar or transparent backdrop closes any open Dock popover on click #1
+// Clicking empty space on the Dock bar, app icons, or transparent backdrop closes any open Dock popover on click #1
 document.addEventListener('pointerdown', (e) => {
     const anyOpen = radialGroupKey || branchCatId || openFolderPath || expandedAccordionCat
         || quickControlsOpen || calNotifOpen || trayPopOpen || widgetPickerOpen
-        || widgetInspectorKind || quickWheelOpen || aiPopOpen || ctxMenuOpen;
+        || widgetInspectorKind || quickWheelOpen || aiPopOpen || ctxMenuOpen || omniOpen;
     if (!anyOpen) return;
     if (e.target.closest(
-        '#radialHub, #folderStackCard, #quickWheelPop, #dockCtxMenu, #dockTrayPop, ' +
+        '#omnibar, #radialHub, #folderStackCard, #quickWheelPop, #dockCtxMenu, #dockTrayPop, ' +
         '#dockQuickControls, #dockCalNotif, #dockWidgetPicker, #dockWidgetInspector, #dockAiPop, ' +
         '.dock-pop, .hub-shell-card, .fan3d-card, .win-card, .arc-node, .orb-node, ' +
-        '.dock-item, .dock-pill, .dock-widget, .micro-btn, .tray-btn, button, input, select'
+        '.start-btn, .dock-status-pill, .dock-clock-pill, .dock-tray-chevron, .dw-add-btn, .folder-chip, .acc-head, [data-dw-kind="ai-quota"]'
     )) {
         return;
     }
     if (radialGroupKey || branchCatId) closeRadialHub(true);
     if (openFolderPath) closeFolderStack(true);
+    if (omniOpen) closeDockOmni(false);
     if (quickControlsOpen || calNotifOpen || trayPopOpen || widgetPickerOpen || widgetInspectorKind || quickWheelOpen || aiPopOpen || ctxMenuOpen) closeAllDockPopovers(true);
+    else releaseDockInputFocus();
     if (expandedAccordionCat) {
         expandedAccordionCat = null;
         renderDock();
