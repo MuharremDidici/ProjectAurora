@@ -3,52 +3,56 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Aurora Desktop Widgets v5.0</title>
+<title>Aurora Desktop Widgets v8.1</title>
 <style>
 :root {
     --bg-glass-1: rgba(14, 18, 28, 0.78);
-    --bg-glass-2: rgba(20, 26, 40, 0.88);
+    --bg-glass-2: rgba(20, 26, 40, 0.90);
     --bg-card: rgba(255, 255, 255, 0.055);
     --bg-card-hover: rgba(255, 255, 255, 0.11);
     --border-subtle: rgba(255, 255, 255, 0.10);
-    --border-rim: rgba(255, 255, 255, 0.19);
+    --border-rim: rgba(255, 255, 255, 0.20);
     --text-1: #F8FAFC;
     --text-2: #94A3B8;
     --accent-1: #38BDF8;
     --accent-2: #818CF8;
     --accent-ink: #040914;
+    --danger: #FB7185;
+    --ok: #34D399;
     --a1-rgb: 56, 189, 248;
     --a2-rgb: 129, 140, 248;
     --radius-w: 22px;
     --ease: cubic-bezier(0.22, 1, 0.36, 1);
-    --shadow-w: 0 18px 46px -14px rgba(0, 0, 0, 0.56), inset 0 1px 0 rgba(255, 255, 255, 0.16);
-    --braun-bg: #1A1B1E;
-    --braun-bg-2: #23252A;
+    --shadow-w: 0 20px 48px -14px rgba(0, 0, 0, 0.58), 0 2px 10px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    --braun-bg: linear-gradient(180deg, #1E2024 0%, #17181B 100%);
+    --braun-solid: #1A1B1E;
     --braun-border: rgba(255, 255, 255, 0.11);
     --braun-accent: #F97316;
-    --matrix-bg: rgba(9, 10, 13, 0.92);
-    --matrix-dot: rgba(255, 255, 255, 0.075);
-    --editorial-bg: rgba(15, 17, 23, 0.95);
+    --matrix-bg: rgba(8, 10, 14, 0.93);
+    --matrix-dot: rgba(255, 255, 255, 0.085);
+    --editorial-bg: rgba(13, 15, 21, 0.96);
     --editorial-line: rgba(255, 255, 255, 0.10);
 }
 body.mode-light {
     --bg-glass-1: rgba(252, 250, 247, 0.84);
-    --bg-glass-2: rgba(255, 254, 252, 0.94);
-    --bg-card: rgba(20, 24, 34, 0.045);
-    --bg-card-hover: rgba(20, 24, 34, 0.09);
-    --border-subtle: rgba(20, 24, 34, 0.10);
-    --border-rim: rgba(20, 24, 34, 0.17);
-    --text-1: #14171F;
-    --text-2: #525B6B;
-    --shadow-w: 0 16px 38px -14px rgba(15, 23, 42, 0.16), 0 2px 6px rgba(15, 23, 42, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.95);
-    --braun-bg: #F2EFEA;
-    --braun-bg-2: #E7E3DC;
-    --braun-border: rgba(24, 24, 27, 0.12);
+    --bg-glass-2: rgba(255, 254, 252, 0.95);
+    --bg-card: rgba(15, 23, 42, 0.045);
+    --bg-card-hover: rgba(15, 23, 42, 0.09);
+    --border-subtle: rgba(15, 23, 42, 0.09);
+    --border-rim: rgba(15, 23, 42, 0.15);
+    --text-1: #111827;
+    --text-2: #4B5563;
+    --danger: #E11D48;
+    --ok: #059669;
+    --shadow-w: 0 18px 40px -14px rgba(15, 23, 42, 0.17), 0 2px 8px rgba(15, 23, 42, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.96);
+    --braun-bg: linear-gradient(180deg, #F5F2EC 0%, #EAE5DC 100%);
+    --braun-solid: #EFECE5;
+    --braun-border: rgba(24, 24, 27, 0.13);
     --braun-accent: #EA580C;
-    --matrix-bg: rgba(245, 246, 248, 0.94);
-    --matrix-dot: rgba(15, 23, 42, 0.085);
-    --editorial-bg: rgba(252, 251, 249, 0.96);
-    --editorial-line: rgba(20, 24, 34, 0.10);
+    --matrix-bg: rgba(244, 246, 249, 0.95);
+    --matrix-dot: rgba(15, 23, 42, 0.095);
+    --editorial-bg: rgba(252, 250, 247, 0.97);
+    --editorial-line: rgba(15, 23, 42, 0.10);
 }
 body.radius-sharp { --radius-w: 10px; }
 body.radius-soft { --radius-w: 28px; }
@@ -100,65 +104,136 @@ body.edit-mode #editBanner { display: flex; }
 
 /* ═══════════ BASE WIDGET CONTAINER ═══════════ */
 .widget-card {
+    --wp-y: 16px;
+    --wp-x: 18px;
     position: absolute; pointer-events: auto;
     border-radius: var(--radius-w);
-    padding: 16px 18px;
+    padding: var(--wp-y) var(--wp-x);
     overflow: hidden;
     transition: box-shadow 0.2s var(--ease), border-color 0.18s ease, transform 0.18s var(--ease);
 }
-.widget-card.w-sz-S { width: 236px; min-height: 116px; padding: 13px 15px; }
-.widget-card.w-sz-M { width: 320px; min-height: 148px; padding: 16px 18px; }
-.widget-card.w-sz-L { width: 392px; min-height: 184px; padding: 18px 20px; }
+.widget-card.w-sz-S { --wp-y: 13px; --wp-x: 15px; width: 248px; min-height: 112px; }
+.widget-card.w-sz-M { --wp-y: 16px; --wp-x: 18px; width: 328px; min-height: 142px; }
+.widget-card.w-sz-L { --wp-y: 18px; --wp-x: 20px; width: 404px; min-height: 176px; }
+
+.widget-card.w-kind-daily-brief.w-sz-S { width: 276px; }
+.widget-card.w-kind-daily-brief.w-sz-M { width: 356px; }
+.widget-card.w-kind-daily-brief.w-sz-L { width: 420px; }
+
 .widget-card.w-kind-studio-strip.w-sz-M,
-.widget-card.w-kind-studio-strip.w-sz-L { width: 448px; min-height: 68px; padding: 11px 15px; }
-.widget-card.w-kind-studio-strip.w-sz-S { width: 336px; min-height: 62px; padding: 10px 13px; }
+.widget-card.w-kind-studio-strip.w-sz-L,
+.widget-card.w-variant-studio-strip.w-sz-M,
+.widget-card.w-variant-studio-strip.w-sz-L { --wp-y: 11px; --wp-x: 15px; width: 456px; min-height: 66px; }
+.widget-card.w-kind-studio-strip.w-sz-S,
+.widget-card.w-variant-studio-strip.w-sz-S { --wp-y: 10px; --wp-x: 13px; width: 348px; min-height: 60px; }
+
 .widget-card.w-kind-forecast-strip.w-sz-M,
-.widget-card.w-kind-forecast-strip.w-sz-L { width: 368px; min-height: 132px; }
+.widget-card.w-kind-forecast-strip.w-sz-L,
+.widget-card.w-variant-forecast-strip.w-sz-M,
+.widget-card.w-variant-forecast-strip.w-sz-L { width: 376px; min-height: 132px; }
 
-/* ═══════════ 6 INDUSTRIAL DESIGN ARCHETYPES (SKINS) ═══════════ */
+/* ═══════════ 6 FLAGSHIP INDUSTRIAL DESIGN SKINS (DARK + LIGHT) ═══════════ */
 
-/* 1. OPTICAL GLASS (Apple Tahoe / visionOS) */
+/* 1. OPTICAL GLASS (visionOS / Tahoe Directional Rim) */
 .widget-card.skin-glass {
-    background: var(--bg-glass-1);
-    border: 1px solid var(--border-rim);
-    backdrop-filter: blur(28px) saturate(165%);
-    box-shadow: var(--shadow-w);
+    background:
+        linear-gradient(155deg, rgba(255, 255, 255, 0.11) 0%, rgba(255, 255, 255, 0.02) 48%, rgba(0, 0, 0, 0.08) 100%),
+        var(--bg-glass-1);
+    border: 1px solid rgba(255, 255, 255, 0.20);
+    backdrop-filter: blur(30px) saturate(175%);
+    box-shadow:
+        0 20px 46px -14px rgba(0, 0, 0, 0.56),
+        inset 0 1px 0 rgba(255, 255, 255, 0.28),
+        inset 1px 0 0 rgba(255, 255, 255, 0.08);
 }
 body.mode-light .widget-card.skin-glass {
-    border-color: rgba(15, 23, 42, 0.14);
+    background:
+        linear-gradient(155deg, rgba(255, 255, 255, 0.88) 0%, rgba(248, 250, 252, 0.72) 55%, rgba(235, 241, 248, 0.76) 100%),
+        var(--bg-glass-1);
+    border-color: rgba(15, 23, 42, 0.12);
+    box-shadow:
+        0 18px 38px -14px rgba(15, 23, 42, 0.16),
+        0 2px 6px rgba(15, 23, 42, 0.05),
+        inset 0 1.5px 0 rgba(255, 255, 255, 0.98),
+        inset 1px 0 0 rgba(255, 255, 255, 0.68);
 }
 .widget-card.skin-glass::before {
-    content: ''; position: absolute; inset: 0 0 auto 0; height: 1px; pointer-events: none;
-    background: linear-gradient(90deg, transparent 6%, rgba(255,255,255,0.34) 50%, transparent 94%);
-    opacity: 0.72;
+    content: ''; position: absolute; inset: 0 0 auto 0; height: 1px; pointer-events: none; z-index: 2;
+    background: linear-gradient(90deg, transparent 5%, rgba(255, 255, 255, 0.44) 48%, transparent 95%);
+    opacity: 0.78;
 }
 body.mode-light .widget-card.skin-glass::before {
-    background: linear-gradient(90deg, transparent 6%, rgba(255,255,255,1) 50%, transparent 94%);
+    background: linear-gradient(90deg, transparent 5%, #FFFFFF 50%, transparent 95%);
+    opacity: 0.95;
 }
 
-/* 2. FRAMELESS WALLPAPER TYPOGRAPHY (Zero box, floats directly over wallpaper!) */
+/* 2. ACRYLIC / NEO-GLASS (Deep Multi-Layer Specular Acrylic) */
+.widget-card.skin-acrylic,
+.widget-card.skin-neoglass {
+    background:
+        radial-gradient(120% 80% at 10% 0%, rgba(255, 255, 255, 0.16) 0%, transparent 56%),
+        linear-gradient(148deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.03) 44%, rgba(var(--a1-rgb), 0.10) 100%),
+        var(--bg-glass-1);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    backdrop-filter: blur(36px) saturate(195%);
+    box-shadow:
+        0 26px 56px -14px rgba(0, 0, 0, 0.62),
+        0 4px 12px rgba(0, 0, 0, 0.22),
+        inset 0 1.5px 0 rgba(255, 255, 255, 0.46),
+        inset 1px 0 0 rgba(255, 255, 255, 0.18),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.08);
+}
+body.mode-light .widget-card.skin-acrylic,
+body.mode-light .widget-card.skin-neoglass {
+    background:
+        radial-gradient(120% 80% at 10% 0%, rgba(255, 255, 255, 0.98) 0%, transparent 56%),
+        linear-gradient(150deg, rgba(255, 255, 255, 0.92) 0%, rgba(243, 247, 253, 0.80) 60%, rgba(var(--a1-rgb), 0.09) 100%);
+    border-color: rgba(15, 23, 42, 0.11);
+    box-shadow:
+        0 20px 44px -14px rgba(15, 23, 42, 0.18),
+        0 2px 6px rgba(15, 23, 42, 0.05),
+        inset 0 1.5px 0 #FFFFFF,
+        inset 1px 0 0 rgba(255, 255, 255, 0.85),
+        inset 0 -1px 0 rgba(15, 23, 42, 0.04);
+}
+.widget-card.skin-acrylic::before,
+.widget-card.skin-neoglass::before {
+    content: ''; position: absolute; inset: 0 0 auto 0; height: 1px; pointer-events: none; z-index: 2;
+    background: linear-gradient(90deg, transparent 4%, rgba(255, 255, 255, 0.65) 40%, rgba(var(--a1-rgb), 0.35) 75%, transparent 96%);
+}
+
+/* 3. FRAMELESS WALLPAPER TYPOGRAPHY (Zero Box, Floats Directly Over Wallpaper) */
 .widget-card.skin-frameless {
     background: transparent !important;
     border: 1px solid transparent !important;
     backdrop-filter: none !important;
     box-shadow: none !important;
-    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.52), 0 1px 4px rgba(0, 0, 0, 0.42);
+    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.56), 0 1px 4px rgba(0, 0, 0, 0.44);
     color: #FFFFFF;
 }
 .widget-card.skin-frameless .w-sub,
 .widget-card.skin-frameless .w-title {
-    color: rgba(255, 255, 255, 0.80);
+    color: rgba(255, 255, 255, 0.84);
 }
 .widget-card.skin-frameless .w-btn,
-.widget-card.skin-frameless .w-ibtn {
-    background: rgba(15, 18, 28, 0.42);
+.widget-card.skin-frameless .w-ibtn,
+.widget-card.skin-frameless .db-pill {
+    background: rgba(12, 16, 26, 0.46);
     border-color: rgba(255, 255, 255, 0.22);
     color: #FFFFFF;
-    backdrop-filter: blur(16px);
+    text-shadow: none;
+    backdrop-filter: blur(18px) saturate(150%);
 }
 .widget-card.skin-frameless .w-btn:hover,
-.widget-card.skin-frameless .w-ibtn:hover {
-    background: rgba(15, 18, 28, 0.64);
+.widget-card.skin-frameless .w-ibtn:hover,
+.widget-card.skin-frameless .db-pill:hover {
+    background: rgba(12, 16, 26, 0.66);
+}
+.widget-card.skin-frameless .w-btn.primary,
+.widget-card.skin-frameless .db-pill.active {
+    background: var(--accent-1);
+    color: var(--accent-ink);
+    border-color: transparent;
 }
 .widget-card.skin-frameless .ai-row,
 .widget-card.skin-frameless .mkt-chip,
@@ -167,83 +242,143 @@ body.mode-light .widget-card.skin-glass::before {
 .widget-card.skin-frameless .forecast-slot,
 .widget-card.skin-frameless .weath-cell,
 .widget-card.skin-frameless .td-row,
-.widget-card.skin-frameless .ln-btn {
+.widget-card.skin-frameless .ln-btn,
+.widget-card.skin-frameless .db-chip,
+.widget-card.skin-frameless .db-task,
+.widget-card.skin-frameless .sys-stat-pill {
     background: rgba(12, 16, 26, 0.44);
     border-color: rgba(255, 255, 255, 0.18);
     color: #FFFFFF;
-    backdrop-filter: blur(14px);
+    text-shadow: none;
+    backdrop-filter: blur(16px) saturate(145%);
 }
 .widget-card.skin-frameless .td-inp,
 .widget-card.skin-frameless .note-ta,
 .widget-card.skin-frameless .mkt-conv-inp,
 .widget-card.skin-frameless .mkt-conv-sel {
-    background: rgba(12, 16, 26, 0.52);
+    background: rgba(12, 16, 26, 0.54);
     border-color: rgba(255, 255, 255, 0.22);
     color: #FFFFFF;
+    text-shadow: none;
+}
+body.mode-light .widget-card.skin-frameless .w-btn,
+body.mode-light .widget-card.skin-frameless .w-ibtn,
+body.mode-light .widget-card.skin-frameless .db-pill,
+body.mode-light .widget-card.skin-frameless .ai-row,
+body.mode-light .widget-card.skin-frameless .mkt-chip,
+body.mode-light .widget-card.skin-frameless .mkt-conv,
+body.mode-light .widget-card.skin-frameless .world-cell,
+body.mode-light .widget-card.skin-frameless .forecast-slot,
+body.mode-light .widget-card.skin-frameless .weath-cell,
+body.mode-light .widget-card.skin-frameless .td-row,
+body.mode-light .widget-card.skin-frameless .ln-btn,
+body.mode-light .widget-card.skin-frameless .db-chip,
+body.mode-light .widget-card.skin-frameless .db-task,
+body.mode-light .widget-card.skin-frameless .sys-stat-pill {
+    background: rgba(255, 255, 255, 0.78);
+    border-color: rgba(15, 23, 42, 0.12);
+    color: #111827;
+}
+body.mode-light .widget-card.skin-frameless .w-sub {
+    color: rgba(255, 255, 255, 0.88);
+}
+body.mode-light .widget-card.skin-frameless .db-chip .w-sub,
+body.mode-light .widget-card.skin-frameless .world-cell .w-sub,
+body.mode-light .widget-card.skin-frameless .mkt-chip .w-sub,
+body.mode-light .widget-card.skin-frameless .sys-stat-pill .w-sub {
+    color: #4B5563;
+}
+body.mode-light .widget-card.skin-frameless .w-btn.primary,
+body.mode-light .widget-card.skin-frameless .db-pill.active {
+    background: var(--accent-1);
+    color: var(--accent-ink);
+}
+body.mode-light .widget-card.skin-frameless .w-ms-btn.box,
+body.mode-light .widget-card.skin-frameless .med-vol-pill {
+    background: rgba(255, 255, 255, 0.78);
+    border-color: rgba(15, 23, 42, 0.12);
+    color: #111827;
+    text-shadow: none;
 }
 body.edit-mode .widget-card.skin-frameless {
     border: 1px dashed rgba(var(--a1-rgb), 0.72) !important;
     background: rgba(10, 14, 24, 0.28) !important;
 }
 
-/* 3. BRAUN / DIETER RAMS TACTILE INSTRUMENT */
+/* 4. BRAUN / DIETER RAMS TACTILE INSTRUMENT */
 .widget-card.skin-braun {
     background: var(--braun-bg);
     border: 1px solid var(--braun-border);
     border-radius: 16px;
     box-shadow:
-        0 18px 40px -16px rgba(0, 0, 0, 0.55),
-        inset 0 1px 0 rgba(255, 255, 255, 0.09),
-        inset 0 -1px 0 rgba(0, 0, 0, 0.25);
+        0 20px 44px -16px rgba(0, 0, 0, 0.60),
+        inset 0 1px 0 rgba(255, 255, 255, 0.10),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.34);
 }
 body.mode-light .widget-card.skin-braun {
     box-shadow:
-        0 14px 32px -14px rgba(15, 23, 42, 0.18),
-        inset 0 1px 0 rgba(255, 255, 255, 0.9),
-        inset 0 -1px 0 rgba(0, 0, 0, 0.06);
+        0 16px 34px -14px rgba(15, 23, 42, 0.18),
+        inset 0 1.5px 0 rgba(255, 255, 255, 0.96),
+        inset 0 -1.5px 0 rgba(15, 23, 42, 0.07);
 }
 .widget-card.skin-braun::after {
-    content: ''; position: absolute; top: 11px; right: 12px;
+    content: ''; position: absolute; top: 9px; right: 10px;
     width: 5px; height: 5px; border-radius: 50%;
     background: var(--braun-accent);
-    box-shadow: 0 0 8px rgba(249, 115, 22, 0.55);
-    pointer-events: none;
+    box-shadow: 0 0 8px rgba(249, 115, 22, 0.65);
+    pointer-events: none; z-index: 3;
 }
 .widget-card.skin-braun .w-title {
     font-size: 9.5px; letter-spacing: 0.14em; font-weight: 700;
 }
 
-/* 4. DOT-MATRIX / NOTHING HARDWARE */
+/* 5. DOT-MATRIX / NOTHING HARDWARE */
 .widget-card.skin-matrix {
     background-color: var(--matrix-bg);
     background-image: radial-gradient(var(--matrix-dot) 1.15px, transparent 1.15px);
     background-size: 10px 10px;
     border: 1px solid var(--border-rim);
     border-radius: 18px;
-    backdrop-filter: blur(22px);
-    box-shadow: 0 20px 44px -16px rgba(0, 0, 0, 0.58);
+    backdrop-filter: blur(24px) saturate(140%);
+    box-shadow:
+        0 22px 46px -16px rgba(0, 0, 0, 0.60),
+        inset 0 1px 0 rgba(255, 255, 255, 0.10);
+}
+body.mode-light .widget-card.skin-matrix {
+    box-shadow:
+        0 16px 34px -14px rgba(15, 23, 42, 0.16),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
 }
 .widget-card.skin-matrix::before,
 .widget-card.skin-matrix::after {
-    content: ''; position: absolute; width: 7px; height: 7px; pointer-events: none;
-    border-color: rgba(var(--a1-rgb), 0.55); border-style: solid;
+    content: ''; position: absolute; width: 8px; height: 8px; pointer-events: none; z-index: 3;
+    border-color: rgba(var(--a1-rgb), 0.62); border-style: solid;
 }
-.widget-card.skin-matrix::before { top: 8px; left: 8px; border-width: 1.5px 0 0 1.5px; border-radius: 2px 0 0 0; }
-.widget-card.skin-matrix::after { bottom: 8px; right: 8px; border-width: 0 1.5px 1.5px 0; border-radius: 0 0 2px 0; }
+.widget-card.skin-matrix::before { top: 7px; left: 7px; border-width: 1.5px 0 0 1.5px; border-radius: 2px 0 0 0; }
+.widget-card.skin-matrix::after { bottom: 7px; right: 7px; border-width: 0 1.5px 1.5px 0; border-radius: 0 0 2px 0; }
 .widget-card.skin-matrix .w-title {
     font-family: 'Cascadia Mono', 'Consolas', monospace;
     font-size: 9.5px; letter-spacing: 0.14em;
 }
 
-/* 5. EDITORIAL SWISS MATTE / PORCELAIN */
+/* 6. EDITORIAL SWISS MATTE / PORCELAIN */
 .widget-card.skin-editorial {
     background: var(--editorial-bg);
     border: 1px solid var(--editorial-line);
     border-radius: 14px;
-    box-shadow: 0 14px 34px -14px rgba(0, 0, 0, 0.34);
+    box-shadow:
+        0 16px 38px -14px rgba(0, 0, 0, 0.40),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 body.mode-light .widget-card.skin-editorial {
-    box-shadow: 0 12px 30px -12px rgba(15, 23, 42, 0.13), 0 1px 3px rgba(15, 23, 42, 0.05);
+    box-shadow:
+        0 14px 32px -12px rgba(15, 23, 42, 0.13),
+        0 1px 3px rgba(15, 23, 42, 0.05),
+        inset 0 1px 0 #FFFFFF;
+}
+.widget-card.skin-editorial::before {
+    content: ''; position: absolute; left: 0; top: 14px; bottom: 14px; width: 2.5px; border-radius: 0 3px 3px 0;
+    background: var(--accent-1); opacity: 0.85; pointer-events: none; z-index: 2;
 }
 .widget-card.skin-editorial .w-head {
     padding-bottom: 8px; margin-bottom: 10px;
@@ -263,7 +398,7 @@ body.edit-mode .widget-card.dragging {
 }
 .w-edit-bar {
     display: none;
-    position: absolute; top: 8px; left: 8px; right: 8px;
+    position: absolute; top: 7px; left: 7px; right: 7px;
     justify-content: space-between; align-items: center; gap: 4px;
     padding: 4px 6px; border-radius: 10px;
     background: var(--bg-glass-2);
@@ -282,14 +417,15 @@ body.edit-mode .widget-card.dragging .w-edit-bar { display: flex; }
 .w-title {
     display: inline-flex; align-items: center; gap: 6px;
     font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
-    color: var(--text-2);
+    color: var(--text-2); min-width: 0;
 }
 .w-title svg { width: 13px; height: 13px; flex-shrink: 0; color: var(--accent-1); }
 .w-sub { font-size: 11px; color: var(--text-2); font-weight: 500; }
 .w-badge {
     font-size: 9.5px; font-weight: 700; padding: 2px 7px; border-radius: 999px;
     background: rgba(var(--a1-rgb), 0.14); color: var(--accent-1);
-    border: 1px solid rgba(var(--a1-rgb), 0.25); letter-spacing: 0.02em;
+    border: 1px solid rgba(var(--a1-rgb), 0.26); letter-spacing: 0.02em;
+    white-space: nowrap; flex-shrink: 0;
 }
 .w-btn {
     height: 26px; padding: 0 10px; border-radius: 8px;
@@ -304,17 +440,64 @@ body.edit-mode .widget-card.dragging .w-edit-bar { display: flex; }
 .w-ibtn {
     width: 26px; height: 26px; border-radius: 8px;
     border: 1px solid var(--border-subtle); background: var(--bg-card);
-    color: var(--text-1); cursor: pointer;
+    color: var(--text-1); cursor: pointer; flex-shrink: 0;
     display: inline-flex; align-items: center; justify-content: center;
     transition: background 0.14s, border-color 0.14s, transform 0.12s var(--ease);
 }
 .w-ibtn:hover { background: var(--bg-card-hover); border-color: var(--border-rim); }
 .w-ibtn:active { transform: scale(0.92); }
 .w-ibtn.active { background: rgba(var(--a1-rgb), 0.2); border-color: var(--accent-1); color: var(--accent-1); }
-.w-ibtn.danger:hover { background: rgba(244, 63, 94, 0.22); border-color: rgba(244, 63, 94, 0.55); color: #FB7185; }
+.w-ibtn.danger:hover { background: rgba(244, 63, 94, 0.22); border-color: rgba(244, 63, 94, 0.55); color: var(--danger); }
 .w-ibtn svg, .w-btn svg { width: 13px; height: 13px; }
 
-/* ═══════════ 1. CLOCK WIDGET (7 PRO DESIGNS) ═══════════ */
+/* ═══════════ DAILY BRIEF (GÜNLÜK ÖZET) ═══════════ */
+.db-top {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+}
+.db-greet {
+    font-size: 20px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.08;
+}
+.w-sz-S .db-greet { font-size: 17px; }
+.w-sz-L .db-greet { font-size: 23px; }
+.db-date { font-size: 11px; color: var(--text-2); font-weight: 600; margin-top: 3px; }
+.db-chips {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px;
+}
+.db-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 9px; border-radius: 999px;
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+    font-size: 11px; font-weight: 600; min-width: 0; max-width: 100%;
+}
+.db-chip.focus-on {
+    background: rgba(var(--a1-rgb), 0.16); border-color: rgba(var(--a1-rgb), 0.34); color: var(--accent-1);
+}
+.db-tasks {
+    display: flex; flex-direction: column; gap: 5px; margin-top: 10px;
+}
+.db-task {
+    display: flex; align-items: center; gap: 8px; padding: 6px 9px; border-radius: 10px;
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+    font-size: 11.5px; cursor: pointer;
+    transition: background 0.13s, border-color 0.13s;
+}
+.db-task:hover { background: var(--bg-card-hover); border-color: var(--border-rim); }
+.db-pills {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 10px;
+}
+.db-pill {
+    height: 28px; padding: 0 8px; border-radius: 9px;
+    border: 1px solid var(--border-subtle); background: var(--bg-card);
+    color: var(--text-1); font-size: 11px; font-weight: 700; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+    transition: background 0.14s, border-color 0.14s, transform 0.12s var(--ease);
+}
+.db-pill:hover { background: var(--bg-card-hover); border-color: var(--border-rim); }
+.db-pill:active { transform: scale(0.95); }
+.db-pill.active { background: var(--accent-1); color: var(--accent-ink); border-color: transparent; }
+.db-pill svg { width: 12.5px; height: 12.5px; flex-shrink: 0; }
+
+/* ═══════════ 1. CLOCK WIDGETS ═══════════ */
 .clk-swiss-row { display: flex; align-items: baseline; gap: 4px; line-height: 0.94; }
 .clk-swiss-hh { font-size: 56px; font-weight: 800; letter-spacing: -0.045em; }
 .clk-swiss-sep { font-size: 46px; font-weight: 300; color: var(--accent-1); opacity: 0.85; transform: translateY(-3px); }
@@ -326,13 +509,19 @@ body.edit-mode .widget-card.dragging .w-edit-bar { display: flex; }
 .clk-sec-fill { height: 100%; background: var(--accent-1); transition: width 0.35s linear; }
 .clk-meta-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11.5px; color: var(--text-2); }
 
-/* Hero Frameless Clock */
-.clk-hero { text-align: left; padding: 4px 2px; }
-.clk-hero-time { font-size: 68px; font-weight: 200; letter-spacing: -0.05em; line-height: 0.92; }
-.w-sz-S .clk-hero-time { font-size: 48px; }
-.w-sz-L .clk-hero-time { font-size: 84px; }
-.clk-hero-date { font-size: 13px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.84; margin-top: 8px; }
-.clk-hero-weath { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; opacity: 0.78; margin-top: 4px; }
+/* Editorial Hero Clock */
+.clk-ed-hero {
+    display: flex; align-items: stretch; gap: 14px; padding: 2px 0;
+}
+.clk-ed-rail {
+    width: 3px; border-radius: 99px; flex-shrink: 0;
+    background: linear-gradient(180deg, var(--accent-1), var(--accent-2));
+}
+.clk-ed-time { font-size: 62px; font-weight: 200; letter-spacing: -0.055em; line-height: 0.9; }
+.clk-ed-time strong { font-weight: 800; }
+.w-sz-S .clk-ed-time { font-size: 44px; }
+.w-sz-L .clk-ed-time { font-size: 74px; }
+.clk-ed-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 9px; font-size: 11.5px; }
 
 /* 3D Mechanical Split-Flap */
 .flip-stage { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 4px 0 8px; }
@@ -340,12 +529,12 @@ body.edit-mode .widget-card.dragging .w-edit-bar { display: flex; }
     position: relative; width: 78px; height: 84px; border-radius: 13px;
     background: linear-gradient(180deg, #1E222B 0%, #151820 49%, #11131A 51%, #1A1E28 100%);
     border: 1px solid rgba(255, 255, 255, 0.14);
-    box-shadow: 0 10px 24px -8px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    box-shadow: 0 10px 24px -8px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.14);
     display: flex; align-items: center; justify-content: center;
     font-size: 44px; font-weight: 800; color: #F8FAFC; letter-spacing: -0.03em;
 }
 body.mode-light .widget-card:not(.skin-frameless) .flip-tile {
-    background: linear-gradient(180deg, #FFFFFF 0%, #F4F5F8 49%, #E6E8EE 51%, #F8F9FB 100%);
+    background: linear-gradient(180deg, #FFFFFF 0%, #F4F5F8 49%, #E5E7ED 51%, #F8F9FB 100%);
     color: #111827; border-color: rgba(15, 23, 42, 0.14);
     box-shadow: 0 8px 18px -8px rgba(15, 23, 42, 0.22), inset 0 1px 0 #FFFFFF;
 }
@@ -353,19 +542,23 @@ body.mode-light .widget-card:not(.skin-frameless) .flip-tile {
 .w-sz-L .flip-tile { width: 96px; height: 98px; font-size: 54px; }
 .flip-tile::after {
     content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 2px;
-    background: rgba(0, 0, 0, 0.55); box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.45); box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 .flip-rivet-l, .flip-rivet-r {
     position: absolute; top: calc(50% - 3px); width: 4px; height: 6px; border-radius: 2px;
-    background: rgba(148, 163, 184, 0.45); z-index: 2;
+    background: rgba(148, 163, 184, 0.5); z-index: 2;
 }
 .flip-rivet-l { left: 4px; } .flip-rivet-r { right: 4px; }
 .flip-colon { display: flex; flex-direction: column; gap: 10px; }
-.flip-colon span { width: 5px; height: 5px; border-radius: 50%; background: var(--accent-1); opacity: 0.85; }
+.flip-colon span { width: 5px; height: 5px; border-radius: 50%; background: var(--accent-1); opacity: 0.88; }
 
-/* Braun Chronograph Analog */
-.chrono-wrap { display: flex; align-items: center; gap: 16px; }
-.chrono-dial { width: 112px; height: 112px; flex-shrink: 0; filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.28)); }
+/* Swiss Chronograph Analog */
+.chrono-wrap { display: flex; align-items: center; gap: 14px; }
+.chrono-dial { width: 114px; height: 114px; flex-shrink: 0; filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.28)); }
+.chrono-face { fill: rgba(0, 0, 0, 0.22); }
+.chrono-subface { fill: rgba(0, 0, 0, 0.14); }
+body.mode-light .widget-card:not(.skin-frameless) .chrono-face { fill: rgba(255, 255, 255, 0.82); }
+body.mode-light .widget-card:not(.skin-frameless) .chrono-subface { fill: rgba(15, 23, 42, 0.05); }
 .w-sz-S .chrono-dial { width: 88px; height: 88px; }
 .w-sz-L .chrono-dial { width: 132px; height: 132px; }
 
@@ -392,19 +585,26 @@ body.mode-light .widget-card:not(.skin-frameless) .dm-box {
 .word-clk-min { font-size: 24px; font-weight: 300; line-height: 1.14; color: var(--accent-1); }
 
 /* World Horizon */
-.world-list { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.world-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
 .world-cell {
     padding: 8px 10px; border-radius: 11px;
     background: var(--bg-card); border: 1px solid var(--border-subtle);
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex; align-items: center; justify-content: space-between; gap: 6px; min-width: 0;
 }
+.world-day-pill {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 999px;
+    border: 1px solid transparent; white-space: nowrap;
+}
+.world-day-pill.day { background: rgba(251, 191, 36, 0.16); color: #F59E0B; border-color: rgba(251, 191, 36, 0.28); }
+.world-day-pill.night { background: rgba(129, 140, 248, 0.16); color: #818CF8; border-color: rgba(129, 140, 248, 0.28); }
 
-/* ═══════════ 2. MEDIA WIDGET (4 PRO DESIGNS) ═══════════ */
+/* ═══════════ 2. MEDIA WIDGETS ═══════════ */
 .med-ambient-bg {
     position: absolute; inset: -24px; background-size: cover; background-position: center;
     filter: blur(28px) saturate(145%) brightness(0.55); opacity: 0.38; pointer-events: none; z-index: 0;
 }
-body.mode-light .med-ambient-bg { filter: blur(28px) saturate(135%) brightness(1.1); opacity: 0.24; }
+body.mode-light .med-ambient-bg { filter: blur(28px) saturate(135%) brightness(1.1); opacity: 0.22; }
 .med-fg { position: relative; z-index: 1; }
 .med-row { display: flex; align-items: center; gap: 13px; }
 .med-art {
@@ -414,7 +614,7 @@ body.mode-light .med-ambient-bg { filter: blur(28px) saturate(135%) brightness(1
     display: flex; align-items: center; justify-content: center;
     box-shadow: 0 10px 22px -8px rgba(0, 0, 0, 0.45);
 }
-.med-art img { width: 100%; height: 100%; object-fit: cover; }
+.med-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .med-title { font-size: 13.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .med-artist { font-size: 11.5px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
 .med-ctrls { display: flex; align-items: center; gap: 6px; margin-top: 9px; }
@@ -437,7 +637,7 @@ body.mode-light .med-ambient-bg { filter: blur(28px) saturate(135%) brightness(1
     background: rgba(255, 255, 255, 0.22);
 }
 body.mode-light .widget-card:not(.skin-frameless) .w-seek-rail {
-    background: rgba(15, 23, 42, 0.18);
+    background: rgba(15, 23, 42, 0.16);
 }
 .w-seek-fill {
     position: absolute; left: 0; top: 0; bottom: 0; border-radius: 99px;
@@ -453,6 +653,9 @@ body.mode-light .widget-card:not(.skin-frameless) .w-seek-rail {
 .med-strip-row {
     display: flex; align-items: center; gap: 11px; min-width: 0;
 }
+.med-strip-meta {
+    min-width: 84px; flex: 0 1 148px; overflow: hidden;
+}
 .med-strip-ctrls {
     display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0;
 }
@@ -465,15 +668,16 @@ body.mode-light .widget-card:not(.skin-frameless) .w-seek-rail {
 .w-ms-btn:hover { background: rgba(255,255,255,0.12); opacity: 1; }
 .w-ms-btn.box {
     width: 28px; height: 28px; border-radius: 8px; opacity: 1;
-    background: rgba(255,255,255,0.13); border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.13); border: 1px solid rgba(255,255,255,0.10);
+    backdrop-filter: blur(12px);
 }
 body.mode-light .widget-card:not(.skin-frameless) .w-ms-btn:hover { background: rgba(15,23,42,0.08); }
 body.mode-light .widget-card:not(.skin-frameless) .w-ms-btn.box {
-    background: rgba(15,23,42,0.08); border-color: rgba(15,23,42,0.08);
+    background: rgba(15,23,42,0.07); border-color: rgba(15,23,42,0.10);
 }
 .w-ms-btn svg { width: 13px; height: 13px; }
 
-/* Animated 5-Bar Equalizer */
+/* Animated 4-Bar Equalizer */
 .eq-bars { display: inline-flex; align-items: flex-end; gap: 2.5px; height: 13px; }
 .eq-bars i {
     display: block; width: 2.5px; border-radius: 99px; background: var(--accent-1);
@@ -485,23 +689,25 @@ body.mode-light .widget-card:not(.skin-frameless) .w-ms-btn.box {
 .eq-bars.play i:nth-child(4) { animation: eqWave 0.62s ease-in-out 0.22s infinite alternate; }
 @keyframes eqWave { from { height: 3px; } to { height: 13px; } }
 
-/* Spinning Vinyl Turntable + Tonearm */
-.tt-stage { position: relative; width: 78px; height: 70px; flex-shrink: 0; }
+/* Realistic Vinyl Turntable + Grooves + Tonearm */
+.tt-stage { position: relative; width: 82px; height: 74px; flex-shrink: 0; }
 .tt-disc {
-    width: 68px; height: 68px; border-radius: 50%; overflow: hidden; position: relative;
-    background: radial-gradient(circle at center, #111 0%, #1c1f26 30%, #0d0f14 32%, #181b22 62%, #0c0e13 64%, #151820 100%);
-    border: 1.5px solid rgba(255, 255, 255, 0.16);
-    box-shadow: 0 10px 22px -6px rgba(0, 0, 0, 0.55);
+    width: 72px; height: 72px; border-radius: 50%; overflow: hidden; position: relative;
+    background:
+        conic-gradient(from 35deg, transparent 0deg, rgba(255,255,255,0.12) 22deg, transparent 48deg, transparent 180deg, rgba(255,255,255,0.10) 202deg, transparent 228deg),
+        repeating-radial-gradient(circle at center, #0d0f14 0px, #191d25 1.5px, #0b0d12 3px);
+    border: 1.5px solid rgba(255, 255, 255, 0.20);
+    box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.60), inset 0 0 0 1px rgba(255,255,255,0.06);
     display: flex; align-items: center; justify-content: center;
 }
 .tt-disc.spin { animation: spinSlow 9s linear infinite; }
-.tt-disc img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid #0B0D12; }
+.tt-disc img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid #0B0D12; }
 .tt-spindle { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: #E2E8F0; box-shadow: 0 0 0 1.5px #090B10; }
 .tt-arm {
-    position: absolute; top: 2px; right: 0; width: 22px; height: 54px; pointer-events: none;
-    transform-origin: 14px 8px; transform: rotate(-22deg); transition: transform 0.35s var(--ease);
+    position: absolute; top: 2px; right: 0; width: 22px; height: 56px; pointer-events: none;
+    transform-origin: 15px 8px; transform: rotate(-22deg); transition: transform 0.35s var(--ease);
 }
-.tt-arm.engaged { transform: rotate(8deg); }
+.tt-arm.engaged { transform: rotate(9deg); }
 @keyframes spinSlow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
 /* Hardware Tape Deck */
@@ -511,17 +717,38 @@ body.mode-light .widget-card:not(.skin-frameless) .w-ms-btn.box {
     background: rgba(0, 0, 0, 0.24); border: 1px solid var(--border-subtle);
 }
 body.mode-light .widget-card:not(.skin-frameless) .deck-window { background: rgba(15, 23, 42, 0.05); }
-.deck-reel { width: 24px; height: 24px; color: var(--accent-1); }
+.deck-reel { width: 24px; height: 24px; color: var(--accent-1); flex-shrink: 0; }
 .deck-reel.spin { animation: spinSlow 3.6s linear infinite; }
 
-/* ═══════════ 3. WEATHER WIDGET (VECTOR ART) ═══════════ */
+/* ═══════════ 3. WEATHER WIDGETS (RICH VECTOR) ═══════════ */
 .weath-hero { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .weath-temp { font-size: 44px; font-weight: 800; letter-spacing: -0.04em; line-height: 0.96; }
-.weath-svg { width: 58px; height: 58px; flex-shrink: 0; }
+.weath-svg { width: 60px; height: 60px; flex-shrink: 0; }
 .weath-meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px; }
 .weath-cell { padding: 6px 9px; border-radius: 9px; background: var(--bg-card); border: 1px solid var(--border-subtle); font-size: 10.5px; }
+.weath-sky-card {
+    margin: calc(var(--wp-y) * -1) calc(var(--wp-x) * -1);
+    padding: var(--wp-y) var(--wp-x);
+    min-height: 150px; position: relative; overflow: hidden; color: #FFFFFF;
+}
+.weath-sky-card.sky-day { background: linear-gradient(155deg, #0369A1 0%, #0EA5E9 52%, #38BDF8 100%); }
+.weath-sky-card.sky-night { background: linear-gradient(155deg, #070B1E 0%, #1E1B4B 58%, #312E81 100%); }
+.weath-sky-card.sky-rain { background: linear-gradient(155deg, #1E293B 0%, #334155 55%, #0F172A 100%); }
+.weath-sky-card.sky-sunset { background: linear-gradient(155deg, #7C2D12 0%, #EA580C 52%, #F59E0B 100%); }
+.weath-sky-card.sky-snow { background: linear-gradient(155deg, #334155 0%, #475569 52%, #64748B 100%); }
+.weath-atmo-pills {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px;
+}
+.weath-atmo-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 8px; border-radius: 999px;
+    background: rgba(255, 255, 255, 0.16); border: 1px solid rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(12px);
+    font-size: 10.5px; font-weight: 600; color: #FFFFFF;
+}
+.weath-atmo-pill svg { width: 12px; height: 12px; opacity: 0.9; }
 
-/* ═══════════ 4. AI QUOTA STUDIO (CUSTOM BRAND EMBLEMS) ═══════════ */
+/* ═══════════ 4. AI QUOTA STUDIO ═══════════ */
 .ai-list { display: flex; flex-direction: column; gap: 7px; }
 .ai-row {
     display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px;
@@ -539,16 +766,33 @@ body.mode-light .widget-card:not(.skin-frameless) .ai-emblem {
 .ai-bar { height: 4px; border-radius: 99px; background: var(--border-subtle); overflow: hidden; margin-top: 5px; }
 .ai-fill { height: 100%; border-radius: 99px; transition: width 0.35s var(--ease); }
 
-/* ═══════════ 5. BATTERY & SYSTEM INSTRUMENTS ═══════════ */
-.rings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(72px, 1fr)); gap: 8px; text-align: center; }
-.ring-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.ring-svg { width: 58px; height: 58px; }
-.ring-lbl { font-size: 10.5px; font-weight: 600; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 82px; }
+/* ═══════════ 5. BATTERY MULTI-RING & SYSTEM COCKPIT ═══════════ */
+.rings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(68px, 1fr)); gap: 8px; text-align: center; }
+.ring-item { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
+.ring-svg { width: 60px; height: 60px; }
+.ring-lbl { font-size: 10.5px; font-weight: 600; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 84px; }
 .bar-track { height: 6px; border-radius: 99px; background: var(--border-subtle); overflow: hidden; }
 body.mode-light .widget-card:not(.skin-frameless) .bar-track { background: rgba(15, 23, 42, 0.11); }
 .bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent-1), var(--accent-2)); transition: width 0.35s var(--ease); }
 
-/* ═══════════ 6. OTHER WIDGETS (TODO / MARKET / LAUNCHER / NOTES / POMODORO / ETC.) ═══════════ */
+.cockpit-top {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;
+}
+.cockpit-gauge {
+    display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 12px;
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+}
+.cockpit-net-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    margin-top: 8px; padding: 6px 10px; border-radius: 10px;
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+    font-size: 11px;
+}
+.cockpit-disks {
+    display: flex; flex-direction: column; gap: 5px; margin-top: 8px;
+}
+
+/* ═══════════ 6. OTHER WIDGETS ═══════════ */
 .cal-day-num { font-size: 38px; font-weight: 800; line-height: 1; letter-spacing: -0.04em; color: var(--accent-1); }
 .note-ta {
     width: 100%; min-height: 92px; resize: none; border-radius: 10px;
@@ -574,7 +818,7 @@ body.mode-light .widget-card:not(.skin-frameless) .bar-track { background: rgba(
     color: var(--text-1); font: inherit; font-size: 11.5px; padding: 0 9px; outline: none; user-select: text;
 }
 .td-inp:focus { border-color: var(--accent-1); }
-.td-list { display: flex; flex-direction: column; gap: 5px; max-height: 132px; overflow-y: auto; }
+.td-list { display: flex; flex-direction: column; gap: 5px; max-height: 140px; overflow-y: auto; }
 .td-row {
     display: flex; align-items: center; gap: 7px; padding: 6px 8px; border-radius: 9px;
     background: var(--bg-card); border: 1px solid var(--border-subtle); font-size: 11.5px;
@@ -622,22 +866,46 @@ body.mode-light .widget-card:not(.skin-frameless) .bar-track { background: rgba(
 }
 .quote-body { font-size: 13.5px; font-weight: 500; line-height: 1.5; font-style: italic; }
 
-/* ═══════════ DIRECT RIGHT-CLICK PRO INSPECTOR ═══════════ */
+/* ═══════════ UPGRADED VISUAL STIL / SKIN INSPECTOR ═══════════ */
 #widgetInspector {
     display: none; position: fixed; z-index: 950; pointer-events: auto;
-    width: 288px; padding: 14px; border-radius: 18px;
+    width: 312px; padding: 14px; border-radius: 18px;
     background: var(--bg-glass-2);
     border: 1px solid var(--border-rim);
-    backdrop-filter: blur(30px) saturate(170%);
-    box-shadow: 0 26px 64px -12px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(32px) saturate(175%);
+    box-shadow: 0 28px 68px -12px rgba(0, 0, 0, 0.64), inset 0 1px 0 rgba(255, 255, 255, 0.18);
     color: var(--text-1);
     animation: inspIn 0.16s var(--ease);
 }
 #widgetInspector.open { display: block; }
 @keyframes inspIn { from { opacity: 0; transform: scale(0.95) translateY(4px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 .insp-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 11px; padding-bottom: 8px; border-bottom: 1px solid var(--border-subtle); }
-.insp-sec { margin-bottom: 10px; }
-.insp-lbl { font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-2); margin-bottom: 5px; }
+.insp-sec { margin-bottom: 11px; }
+.insp-lbl { font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-2); margin-bottom: 6px; }
+.insp-skin-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.insp-skin-swatch {
+    padding: 6px 6px 5px; border-radius: 11px; text-align: left;
+    border: 1px solid var(--border-subtle); background: var(--bg-card);
+    color: var(--text-1); cursor: pointer;
+    display: flex; flex-direction: column; gap: 5px;
+    transition: border-color 0.13s, background 0.13s, transform 0.11s var(--ease);
+}
+.insp-skin-swatch:hover { border-color: var(--border-rim); background: var(--bg-card-hover); transform: translateY(-1px); }
+.insp-skin-swatch.active { border-color: var(--accent-1); background: rgba(var(--a1-rgb), 0.14); box-shadow: 0 0 0 1px rgba(var(--a1-rgb), 0.35); }
+.insp-sw-preview {
+    width: 100%; height: 22px; border-radius: 6px; position: relative; overflow: hidden;
+    display: flex; align-items: center; padding: 0 6px; gap: 4px;
+}
+.insp-sw-preview i { display: block; height: 4px; border-radius: 99px; background: currentColor; opacity: 0.72; }
+.insp-sw-preview.sw-frameless { border: 1px dashed rgba(var(--a1-rgb), 0.55); background: transparent; }
+.insp-sw-preview.sw-glass { background: linear-gradient(155deg, rgba(255,255,255,0.22), rgba(255,255,255,0.05)); border: 1px solid rgba(255,255,255,0.28); }
+.insp-sw-preview.sw-acrylic { background: linear-gradient(145deg, rgba(255,255,255,0.30), rgba(var(--a1-rgb),0.22)); border: 1px solid rgba(255,255,255,0.42); box-shadow: inset 0 1px 0 rgba(255,255,255,0.65); }
+.insp-sw-preview.sw-braun { background: var(--braun-solid); border: 1px solid var(--braun-border); }
+.insp-sw-preview.sw-braun::after { content:''; position:absolute; top:4px; right:4px; width:4px; height:4px; border-radius:50%; background: var(--braun-accent); }
+.insp-sw-preview.sw-matrix { background-color: var(--matrix-bg); background-image: radial-gradient(var(--matrix-dot) 1px, transparent 1px); background-size: 5px 5px; border: 1px solid var(--border-rim); }
+.insp-sw-preview.sw-editorial { background: var(--editorial-bg); border: 1px solid var(--editorial-line); border-left: 2.5px solid var(--accent-1); }
+.insp-sw-name { font-size: 10px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
 .insp-chips { display: flex; flex-wrap: wrap; gap: 5px; }
 .insp-chip {
     height: 25px; padding: 0 9px; border-radius: 8px;
@@ -650,34 +918,15 @@ body.mode-light .widget-card:not(.skin-frameless) .bar-track { background: rgba(
 .insp-range { width: 100%; accent-color: var(--accent-1); cursor: pointer; }
 .insp-foot { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding-top: 9px; border-top: 1px solid var(--border-subtle); }
 
-/* ═══════════ v6.0 6TH ARCHETYPE (DERİN CAM) & 22 STUDIO WIDGETS ═══════════ */
-.widget-card.skin-neoglass {
-    background:
-        linear-gradient(165deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.03) 42%, rgba(var(--a1-rgb),0.08) 100%),
-        var(--bg-glass-1);
-    border: 1px solid rgba(255,255,255,0.26);
-    backdrop-filter: blur(34px) saturate(185%);
-    box-shadow:
-        0 24px 54px -12px rgba(0, 0, 0, 0.62),
-        inset 0 1.5px 0 rgba(255, 255, 255, 0.42),
-        inset 0 -1px 0 rgba(255, 255, 255, 0.08);
+/* ═══════════ MEDIA POSTER / TP7 / CASSETTE / PHOTO / MIXER ═══════════ */
+.med-poster-card {
+    position: relative; min-height: 162px; display: flex; flex-direction: column; justify-content: flex-end;
+    margin: calc(var(--wp-y) * -1) calc(var(--wp-x) * -1);
+    padding: 15px 17px; overflow: hidden;
+    background: linear-gradient(145deg, rgba(var(--a1-rgb),0.28), rgba(var(--a2-rgb),0.22), #0F172A);
 }
-body.mode-light .widget-card.skin-neoglass {
-    background:
-        linear-gradient(165deg, rgba(255,255,255,0.92) 0%, rgba(244,247,252,0.82) 100%);
-    border-color: rgba(15, 23, 42, 0.12);
-    box-shadow:
-        0 18px 42px -12px rgba(15, 23, 42, 0.18),
-        0 1px 3px rgba(15, 23, 42, 0.06),
-        inset 0 1.5px 0 #FFFFFF;
-}
-body.mode-light .widget-card:not(.skin-frameless) .cassette-shell {
-    background: rgba(15, 23, 42, 0.045);
-    border-color: rgba(15, 23, 42, 0.12);
-}
-.med-poster-card { position: relative; min-height: 158px; display: flex; flex-direction: column; justify-content: flex-end; margin: -4px; border-radius: 16px; overflow: hidden; padding: 14px; background: linear-gradient(145deg, rgba(var(--a1-rgb),0.28), rgba(var(--a2-rgb),0.22), #0F172A); }
 .med-poster-bg { position: absolute; inset: 0; background-size: cover; background-position: center; }
-.med-poster-scrim { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8,11,18,0.12) 0%, rgba(8,11,18,0.68) 58%, rgba(8,11,18,0.94) 100%); }
+.med-poster-scrim { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8,11,18,0.12) 0%, rgba(8,11,18,0.68) 58%, rgba(8,11,18,0.95) 100%); }
 .med-poster-fg { position: relative; z-index: 2; color: #FFFFFF; }
 .tp7-wrap { display: flex; align-items: center; gap: 14px; }
 .tp7-platter {
@@ -695,13 +944,10 @@ body.mode-light .widget-card:not(.skin-frameless) .cassette-shell {
     background: rgba(15, 18, 25, 0.72); border: 1px solid rgba(255,255,255,0.16);
     margin-bottom: 8px;
 }
-.weath-sky-card {
-    margin: -16px -18px; padding: 16px 18px; min-height: 148px; position: relative; overflow: hidden; color: #FFFFFF;
+body.mode-light .widget-card:not(.skin-frameless) .cassette-shell {
+    background: rgba(15, 23, 42, 0.045);
+    border-color: rgba(15, 23, 42, 0.12);
 }
-.weath-sky-card.sky-day { background: linear-gradient(160deg, #0284C7 0%, #38BDF8 55%, #7DD3FC 100%); }
-.weath-sky-card.sky-night { background: linear-gradient(160deg, #090D1F 0%, #1E1B4B 60%, #312E81 100%); }
-.weath-sky-card.sky-rain { background: linear-gradient(160deg, #1E293B 0%, #334155 55%, #0F172A 100%); }
-.weath-sky-card.sky-sunset { background: linear-gradient(160deg, #7C2D12 0%, #EA580C 52%, #F59E0B 100%); }
 .mix-row { display: flex; align-items: center; gap: 8px; font-size: 11px; }
 .mix-row input[type=range] { flex: 1; accent-color: var(--accent-1); height: 4px; cursor: pointer; }
 .mix-outs { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
@@ -720,9 +966,7 @@ body.mode-light .widget-card:not(.skin-frameless) .cassette-shell {
 .photo-box.polaroid { padding: 8px 8px 26px 8px; background: #FAF9F6; border-radius: 6px; color: #18181B; height: 172px; }
 .photo-box.polaroid img { border-radius: 3px; }
 .photo-box.gallery-mat { padding: 14px; background: #14161D; border: 2px solid rgba(255,255,255,0.16); }
-.photo-pick-btn {
-    position: absolute; bottom: 8px; right: 8px; opacity: 0; transition: opacity 0.16s;
-}
+.photo-pick-btn { position: absolute; bottom: 8px; right: 8px; opacity: 0; transition: opacity 0.16s; }
 .widget-card:hover .photo-pick-btn, .photo-box.empty .photo-pick-btn { opacity: 1; }
 .cal-month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; text-align: center; font-size: 10.5px; }
 .cal-m-dow { font-size: 9px; font-weight: 700; color: var(--text-2); padding: 2px 0; }
@@ -792,6 +1036,9 @@ const IC = {
     laptop: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="4" y="5" width="16" height="11" rx="1.8"/><path d="M2 19h20"/></svg>`,
     sun: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.8 4.8l1.6 1.6M17.6 17.6l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.8 19.2l1.6-1.6M17.6 6.4l1.6-1.6"/></svg>`,
     moon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z"/></svg>`,
+    wind: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 8h11a2.5 2.5 0 1 0-2.5-2.5M3 13h15a2.5 2.5 0 1 1-2.5 2.5M3 18h8a2 2 0 1 1-2 2"/></svg>`,
+    drop: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 3.5s6 6.8 6 11a6 6 0 1 1-12 0c0-4.2 6-11 6-11z"/></svg>`,
+    thermo: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M14 14.76V5a2 2 0 0 0-4 0v9.76a4 4 0 1 0 4 0z"/></svg>`,
     vol: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>`,
     mute: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="m22 9-6 6M16 9l6 6"/></svg>`,
     photo: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m21 15-5-5L5 20"/></svg>`,
@@ -799,135 +1046,115 @@ const IC = {
     scanText: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 9h10M7 12h7M7 15h9"/></svg>`,
     pipette: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="m2 22 1-1h3l9-9M3 21v-3l9-9M15 6l3.4-3.4a2.1 2.1 0 1 1 3 3L18 9"/></svg>`,
     record: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>`,
-    /* Bespoke AI Brand Vector Marks (Zero Emojis!) */
+    brief: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="16" rx="2.5"/><path d="M7.5 9h9M7.5 13h6M7.5 17h4"/></svg>`,
     openai: `<svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2a4.3 4.3 0 0 1 3.7 2.1l3.6 2.1a4.3 4.3 0 0 1 0 7.4l-3.6 2.1a4.3 4.3 0 0 1-7.4 0l-3.6-2.1a4.3 4.3 0 0 1 0-7.4l3.6-2.1A4.3 4.3 0 0 1 12 3.2z"/><circle cx="12" cy="12" r="2.6"/></svg>`,
     gemini: `<svg viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="1.7" stroke-linejoin="round"><path d="M12 2.5C13.2 8.2 15.8 10.8 21.5 12 15.8 13.2 13.2 15.8 12 21.5 10.8 15.8 8.2 13.2 2.5 12 8.2 10.8 10.8 8.2 12 2.5z" fill="rgba(56,189,248,0.18)"/></svg>`,
     claude: `<svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="1.85" stroke-linecap="round"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/><circle cx="12" cy="12" r="2.2" fill="#F59E0B"/></svg>`
 };
 
-function weatherIllustrationSvg(summary) {
+function weatherIllustrationSvg(summary, isNight = false) {
     const s = (summary || '').toLowerCase();
-    if (s.includes('yağmur') || s.includes('sağanak') || s.includes('rain')) {
+    if (s.includes('yağmur') || s.includes('sağanak') || s.includes('rain') || s.includes('fırtına')) {
         return `<svg class="weath-svg" viewBox="0 0 64 64" fill="none">
-            <path d="M19 37h26a10 10 0 0 0 1-19.9A13.5 13.5 0 0 0 19.6 21 8.5 8.5 0 0 0 19 37z" fill="rgba(148,163,184,0.28)" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
-            <path d="M23 44l-2.5 7M33 44l-2.5 7M43 44l-2.5 7" stroke="#38BDF8" stroke-width="2.4" stroke-linecap="round"/>
+            <path d="M18 36h28a9.5 9.5 0 0 0 1-18.9A13 13 0 0 0 20.6 20 8.5 8.5 0 0 0 18 36z" fill="rgba(226,232,240,0.22)" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"/>
+            <path d="M22 42l-2.5 7M32 42l-2.5 7M42 42l-2.5 7" stroke="#7DD3FC" stroke-width="2.4" stroke-linecap="round"/>
         </svg>`;
     }
     if (s.includes('kar') || s.includes('snow')) {
         return `<svg class="weath-svg" viewBox="0 0 64 64" fill="none">
-            <path d="M19 36h26a10 10 0 0 0 1-19.9A13.5 13.5 0 0 0 19.6 20 8.5 8.5 0 0 0 19 36z" fill="rgba(226,232,240,0.26)" stroke="currentColor" stroke-width="2.2"/>
-            <circle cx="24" cy="45" r="2.3" fill="#E0F2FE"/><circle cx="33" cy="49" r="2.3" fill="#E0F2FE"/><circle cx="42" cy="45" r="2.3" fill="#E0F2FE"/>
+            <path d="M18 35h28a9.5 9.5 0 0 0 1-18.9A13 13 0 0 0 20.6 19 8.5 8.5 0 0 0 18 35z" fill="rgba(226,232,240,0.26)" stroke="currentColor" stroke-width="2.1"/>
+            <circle cx="23" cy="44" r="2.3" fill="#E0F2FE"/><circle cx="32" cy="48" r="2.3" fill="#E0F2FE"/><circle cx="41" cy="44" r="2.3" fill="#E0F2FE"/>
         </svg>`;
     }
     if (s.includes('bulut') || s.includes('sis') || s.includes('kapalı') || s.includes('cloud')) {
         return `<svg class="weath-svg" viewBox="0 0 64 64" fill="none">
-            <circle cx="41" cy="21" r="9" fill="rgba(251,191,36,0.32)" stroke="#FBBF24" stroke-width="2"/>
-            <path d="M18 44h28a10 10 0 0 0 1-19.9A13.5 13.5 0 0 0 20.4 27 8.8 8.8 0 0 0 18 44z" fill="rgba(148,163,184,0.28)" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
+            <circle cx="42" cy="21" r="8.5" fill="rgba(251,191,36,0.34)" stroke="#FBBF24" stroke-width="2"/>
+            <path d="M17 44h29a9.5 9.5 0 0 0 1-18.9A13 13 0 0 0 20.4 28 8.5 8.5 0 0 0 17 44z" fill="rgba(226,232,240,0.24)" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"/>
+        </svg>`;
+    }
+    if (isNight || s.includes('gece')) {
+        return `<svg class="weath-svg" viewBox="0 0 64 64" fill="none">
+            <path d="M40 16a16 16 0 1 0 10 26 13 13 0 0 1-10-26z" fill="rgba(199,210,254,0.26)" stroke="#C7D2FE" stroke-width="2.1" stroke-linejoin="round"/>
+            <circle cx="46" cy="18" r="1.6" fill="#E0E7FF"/><circle cx="51" cy="26" r="1.2" fill="#E0E7FF"/>
         </svg>`;
     }
     return `<svg class="weath-svg" viewBox="0 0 64 64" fill="none">
-        <circle cx="32" cy="32" r="12" fill="rgba(251,191,36,0.28)" stroke="#FBBF24" stroke-width="2.4"/>
-        <path d="M32 10v5M32 49v5M10 32h5M49 32h5M16.4 16.4l3.5 3.5M44.1 44.1l3.5 3.5M47.6 16.4l-3.5 3.5M19.9 44.1l-3.5 3.5" stroke="#FBBF24" stroke-width="2.2" stroke-linecap="round"/>
+        <circle cx="32" cy="32" r="12" fill="rgba(251,191,36,0.30)" stroke="#FBBF24" stroke-width="2.3"/>
+        <path d="M32 10v5M32 49v5M10 32h5M49 32h5M16.4 16.4l3.5 3.5M44.1 44.1l3.5 3.5M47.6 16.4l-3.5 3.5M19.9 44.1l-3.5 3.5" stroke="#FBBF24" stroke-width="2.1" stroke-linecap="round"/>
     </svg>`;
 }
 
 const SKIN_META = [
-    { id: 'frameless', name: 'Çerçevesiz' },
-    { id: 'glass',     name: 'Optik Cam' },
-    { id: 'neoglass',  name: 'Derin Cam' },
-    { id: 'braun',     name: 'Braun' },
-    { id: 'matrix',    name: 'Dot-Matrix' },
-    { id: 'editorial', name: 'İsviçre Kart' }
+    { id: 'frameless', name: 'Çerçevesiz', preview: 'sw-frameless' },
+    { id: 'glass',     name: 'Optik Cam',  preview: 'sw-glass' },
+    { id: 'acrylic',   name: 'Akrilik',    preview: 'sw-acrylic' },
+    { id: 'braun',     name: 'Braun',      preview: 'sw-braun' },
+    { id: 'matrix',    name: 'Dot-Matrix', preview: 'sw-matrix' },
+    { id: 'editorial', name: 'Editoryal',  preview: 'sw-editorial' }
 ];
 
 const VARIANT_CATALOG = {
+    'daily-brief': [
+        { id: 'brief', name: 'Günlük Özet' },
+        { id: 'compact', name: 'Kompakt Özet' }
+    ],
     clock: [
+        { id: 'editorial-hero', name: 'Editoryal Hero' },
+        { id: 'swiss-chrono', name: 'İsviçre Krono' },
+        { id: 'split-flap', name: 'Split-Flap' },
+        { id: 'world-clock', name: 'Dünya Saatleri' },
+        { id: 'dot-matrix', name: 'Dot-Matrix LED' },
         { id: 'swiss', name: 'İsviçre Dev' },
         { id: 'solar', name: 'Güneş Yörüngesi' },
-        { id: 'braun-pro', name: 'Braun BN0032' },
-        { id: 'dotmatrix-led', name: 'LED Matris 5×7' },
         { id: 'orbital', name: 'Orbital Halka' },
-        { id: 'editorial-poster', name: 'Editoryal Poster' },
-        { id: 'flip', name: 'Split-Flap' },
         { id: 'dev-hex', name: 'Geliştirici Hex' },
-        { id: 'word', name: 'Yazı Saati' },
-        { id: 'world', name: 'Dünya Saatleri' },
-        { id: 'hero', name: 'Duvar Kağıdı' }
+        { id: 'word', name: 'Yazı Saati' }
     ],
     media: [
-        { id: 'studio-strip', name: 'Stüdyo Cam Şerit' },
-        { id: 'poster', name: 'Tam Kapak Poster' },
-        { id: 'tp7', name: 'TE TP-7 Disk' },
-        { id: 'cassette', name: 'Kaset Deck' },
+        { id: 'studio-strip', name: 'Stüdyo Şerit' },
         { id: 'turntable', name: 'Pikap Plak' },
-        { id: 'waveform', name: 'Ses Dalgası' },
+        { id: 'poster', name: 'Tam Kapak' },
+        { id: 'cassette', name: 'Kaset Deck' },
+        { id: 'tp7', name: 'TE TP-7 Disk' },
         { id: 'ambient', name: 'Ortam Işığı' },
+        { id: 'waveform', name: 'Ses Dalgası' },
         { id: 'minimal', name: 'Minimal Şerit' }
     ],
     weather: [
-        { id: 'dynamic-sky', name: 'Canlı Gökyüzü' },
+        { id: 'atmospheric', name: 'Atmosferik' },
         { id: 'forecast-strip', name: 'Tahmin Şeridi' },
+        { id: 'minimal-studio', name: 'Minimal Stüdyo' },
         { id: 'barometer', name: 'Braun Barometre' },
-        { id: 'telemetry', name: 'Telemetri' },
-        { id: 'minimal', name: 'Sade' }
+        { id: 'telemetry', name: 'Telemetri' }
     ],
     'world-clock': [
         { id: 'cities', name: '4 Şehir Izgara' },
         { id: 'compact', name: 'Kompakt Liste' }
     ],
-    'studio-strip': [
-        { id: 'strip', name: 'Stüdyo Şeridi' }
-    ],
-    'forecast-strip': [
-        { id: 'strip', name: 'Saatlik Şerit' },
-        { id: 'card', name: 'Detay Kart' }
-    ],
-    'ai-quota': [
-        { id: 'cards', name: 'Kartlar' },
-        { id: 'rings', name: 'Halkalar' },
-        { id: 'compact', name: 'Kompakt' }
-    ],
-    battery: [
-        { id: 'rings', name: 'Halkalar' },
-        { id: 'bars', name: 'Çubuklar' }
-    ],
+    'studio-strip': [{ id: 'strip', name: 'Stüdyo Şeridi' }],
+    'forecast-strip': [{ id: 'strip', name: 'Saatlik Şerit' }, { id: 'card', name: 'Detay Kart' }],
+    'ai-quota': [{ id: 'cards', name: 'Kartlar' }, { id: 'rings', name: 'Halkalar' }],
+    battery: [{ id: 'multi-ring', name: 'Çoklu Halka' }, { id: 'bars', name: 'Çubuklar' }],
     system: [
+        { id: 'cockpit', name: 'Kokpit' },
         { id: 'oscilloscope', name: 'Osiloskop' },
         { id: 'rings', name: 'Kadranlar' },
         { id: 'spark', name: 'Canlı Grafik' }
     ],
-    calendar: [
-        { id: 'month', name: 'Aylık Izgara' },
-        { id: 'today', name: 'Bugün' }
-    ],
-    'audio-mixer': [
-        { id: 'mixer', name: 'Canlı Mikser' }
-    ],
-    'focus-rings': [
-        { id: 'rings', name: 'Aktivite Halkaları' }
-    ],
+    calendar: [{ id: 'month', name: 'Aylık Izgara' }, { id: 'today', name: 'Bugün' }],
+    'audio-mixer': [{ id: 'mixer', name: 'Canlı Mikser' }],
+    'focus-rings': [{ id: 'rings', name: 'Aktivite Halkaları' }],
     'photo-frame': [
         { id: 'polaroid', name: 'Polaroid' },
         { id: 'frameless', name: 'Çerçevesiz' },
         { id: 'gallery-mat', name: 'Galeri Paspartu' }
     ],
-    'quick-drop': [
-        { id: 'drop', name: 'Hızlı Pano & Araç' }
-    ],
-    notes: [
-        { id: 'glass', name: 'Not Defteri' },
-        { id: 'minimal', name: 'Sade' }
-    ],
-    pomodoro: [
-        { id: 'ring', name: 'Halka' },
-        { id: 'minimal', name: 'Sade' }
-    ],
-    launcher: [
-        { id: 'grid', name: 'Izgara' },
-        { id: 'list', name: 'Liste' }
-    ],
+    'quick-drop': [{ id: 'drop', name: 'Hızlı Pano & Araç' }],
+    notes: [{ id: 'glass', name: 'Not Defteri' }],
+    pomodoro: [{ id: 'ring', name: 'Halka' }],
+    launcher: [{ id: 'grid', name: 'Izgara' }],
     todo: [{ id: 'list', name: 'Görevler' }],
-    market: [{ id: 'cards', name: 'Kartlar' }, { id: 'ticker', name: 'Şerit' }],
+    market: [{ id: 'cards', name: 'Kartlar' }],
     countdown: [{ id: 'card', name: 'Sayaç' }],
     'storage-net': [{ id: 'bars', name: 'Çubuklar' }],
     quote: [{ id: 'editorial', name: 'Editoryal' }],
@@ -935,9 +1162,10 @@ const VARIANT_CATALOG = {
 };
 
 const KIND_LABELS = {
+    'daily-brief': 'Günlük Özet',
     clock: 'Saat', 'world-clock': 'Dünya Saatleri', media: 'Medya Oynatıcı', 'studio-strip': 'Medya Şeridi',
     weather: 'Hava Durumu', 'forecast-strip': 'Hava Tahmin Şeridi', 'ai-quota': 'AI Kota Stüdyosu',
-    battery: 'Pil & Bluetooth', system: 'Sistem Telemetri', calendar: 'Takvim & Ajanda',
+    battery: 'Pil & Bluetooth', system: 'Sistem Kokpit', calendar: 'Takvim & Ajanda',
     'audio-mixer': 'Ses Mikseri', 'focus-rings': 'Odak Halkaları', 'photo-frame': 'Fotoğraf Çerçevesi', 'quick-drop': 'Hızlı Pano & Araç',
     notes: 'Yapışkan Not', 'quick-note': 'Hızlı Not', pomodoro: 'Odak Zamanlayıcı', 'pomodoro-studio': 'Odak Stüdyo', focus: 'Odak Zamanlayıcı',
     launcher: 'Hızlı Başlatıcı', todo: 'Görev Listesi', market: 'Piyasa & Döviz', 'currency-ticker': 'Döviz Çevirici',
@@ -991,23 +1219,36 @@ function hexLum(hex) {
     if (!m) return 0.5;
     return (0.299 * parseInt(m[1],16) + 0.587 * parseInt(m[2],16) + 0.114 * parseInt(m[3],16)) / 255;
 }
+
 function normalizeVariant(kind, raw) {
+    const r = String(raw || '').trim().toLowerCase();
+    if (kind === 'daily-brief') {
+        return r === 'compact' ? 'compact' : 'brief';
+    }
     if (kind === 'clock') {
-        if (raw === 'minimal' || raw === 'default') return 'swiss';
-        if (raw === 'analog') return 'chronograph';
-        if (raw === 'matrix') return 'dotmatrix';
-        if (raw === 'chronograph') return 'braun-pro';
+        if (!r || r === 'minimal' || r === 'default' || r === 'hero' || r === 'editorial-poster') return 'editorial-hero';
+        if (r === 'analog' || r === 'chronograph' || r === 'braun-pro') return 'swiss-chrono';
+        if (r === 'flip') return 'split-flap';
+        if (r === 'world') return 'world-clock';
+        if (r === 'matrix' || r === 'dotmatrix' || r === 'dotmatrix-led') return 'dot-matrix';
     }
     if (kind === 'media') {
-        if (raw === 'vinyl') return 'turntable';
-        if (raw === 'glass' || raw === 'default') return 'ambient';
-        if (raw === 'compact') return 'minimal';
-        if (raw === 'deck') return 'tp7';
+        if (r === 'vinyl') return 'turntable';
+        if (r === 'glass' || r === 'default') return 'ambient';
+        if (r === 'compact') return 'minimal';
+        if (r === 'deck') return 'tp7';
     }
     if (kind === 'weather') {
-        if (raw === 'compact' || raw === 'default' || raw === 'card' || raw === 'atmospheric') return 'dynamic-sky';
+        if (!r || r === 'compact' || r === 'default' || r === 'card' || r === 'dynamic-sky') return 'atmospheric';
+        if (r === 'minimal') return 'minimal-studio';
     }
-    return raw || (VARIANT_CATALOG[kind]?.[0]?.id || 'default');
+    if (kind === 'battery') {
+        if (!r || r === 'rings' || r === 'default') return 'multi-ring';
+    }
+    if (kind === 'system') {
+        if (!r || r === 'default') return 'cockpit';
+    }
+    return r || (VARIANT_CATALOG[kind]?.[0]?.id || 'default');
 }
 
 const DM_GLYPHS = {
@@ -1030,12 +1271,12 @@ function renderDotMatrix5x7Svg(text, accent) {
         for (let r = 0; r < 7; r++) {
             for (let c = 0; c < 5; c++) {
                 const on = (rows[r] >> (4 - c)) & 1;
-                dots += `<circle cx="${cx + c * 5.2}" cy="${3 + r * 5.2}" r="${on ? 2.1 : 1.3}" fill="${on ? 'currentColor' : 'currentColor'}" opacity="${on ? 0.96 : 0.14}"/>`;
+                dots += `<circle cx="${cx + c * 5.2}" cy="${3 + r * 5.2}" r="${on ? 2.1 : 1.3}" fill="currentColor" opacity="${on ? 0.96 : 0.14}"/>`;
             }
         }
         cx += 31;
     }
-    return `<svg viewBox="0 0 ${cx} 40" style="width:100%;height:56px;display:block;">${dots}</svg>`;
+    return `<svg viewBox="0 0 ${cx} 40" style="width:100%;height:54px;display:block;">${dots}</svg>`;
 }
 function renderOscilloscopeSvg(arr, color, w, h, idSfx) {
     const pts = (Array.isArray(arr) && arr.length > 1) ? arr : [18,22,19,28,24,35,30,26,32,29];
@@ -1095,10 +1336,24 @@ function scheduleHitRects() {
     hitTimer = setTimeout(reportHitRects, 28);
 }
 
+function estimateWidgetWidth(w, variant) {
+    if (w.kind === 'studio-strip' || variant === 'studio-strip') {
+        return w.size === 'S' ? 348 : 456;
+    }
+    if (w.kind === 'forecast-strip' || variant === 'forecast-strip') {
+        return w.size === 'S' ? 296 : 376;
+    }
+    if (w.kind === 'daily-brief') {
+        return w.size === 'S' ? 276 : (w.size === 'L' ? 420 : 356);
+    }
+    return w.size === 'S' ? 248 : (w.size === 'L' ? 404 : 328);
+}
+
 function resolveWidgetXY(w) {
     const vw = window.innerWidth || 1920;
     const vh = window.innerHeight || 1080;
-    const estW = w.size === 'S' ? 236 : (w.size === 'L' ? 392 : 320);
+    const variant = normalizeVariant(w.kind, w.variant);
+    const estW = estimateWidgetWidth(w, variant);
     let left = w.x < 0 ? (vw + w.x) : w.x;
     let top = w.y < 0 ? (vh + w.y) : w.y;
     left = Math.max(12, Math.min(vw - estW - 12, left));
@@ -1114,10 +1369,7 @@ function turkishTimeWords(h, m) {
         const t = Math.floor(n / 10), o = n % 10;
         return o === 0 ? tens[t] : `${tens[t]} ${ones[o]}`;
     };
-    return {
-        hLine: numToTr(h),
-        mLine: m === 0 ? 'Tam' : numToTr(m)
-    };
+    return { hLine: numToTr(h), mLine: m === 0 ? 'Tam' : numToTr(m) };
 }
 
 function buildChronographSvg(now) {
@@ -1128,42 +1380,61 @@ function buildChronographSvg(now) {
     let ticks = '';
     for (let i = 0; i < 60; i++) {
         const major = i % 5 === 0;
-        const y1 = major ? 7 : 9;
-        const y2 = major ? 15 : 12.5;
-        const w = major ? 2 : 0.9;
-        const op = major ? 0.88 : 0.34;
-        ticks += `<line x1="50" y1="${y1}" x2="50" y2="${y2}" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" opacity="${op}" transform="rotate(${i * 6} 50 50)"/>`;
+        const y1 = major ? 6.5 : 8.5;
+        const y2 = major ? 15.5 : 12;
+        const sw = major ? 2.1 : 0.85;
+        const op = major ? 0.92 : 0.34;
+        ticks += `<line x1="50" y1="${y1}" x2="50" y2="${y2}" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" opacity="${op}" transform="rotate(${i * 6} 50 50)"/>`;
+    }
+    let subTicks = '';
+    for (let i = 0; i < 12; i++) {
+        subTicks += `<line x1="50" y1="62" x2="50" y2="64.5" stroke="currentColor" stroke-width="0.7" opacity="0.45" transform="rotate(${i * 30} 50 72)"/>`;
     }
     return `<svg class="chrono-dial" viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r="47" fill="rgba(0,0,0,0.18)" stroke="var(--border-rim)" stroke-width="1.5"/>
-        <circle cx="50" cy="50" r="43.5" fill="none" stroke="var(--border-subtle)" stroke-width="0.6"/>
+        <circle cx="50" cy="50" r="47.5" class="chrono-face" stroke="var(--border-rim)" stroke-width="1.6"/>
+        <circle cx="50" cy="50" r="44" fill="none" stroke="var(--border-subtle)" stroke-width="0.6"/>
         ${ticks}
+        <circle cx="50" cy="72" r="11.5" class="chrono-subface" stroke="var(--border-subtle)" stroke-width="0.7"/>
+        ${subTicks}
+        <line data-chrono-sub-s x1="50" y1="74" x2="50" y2="62.5" stroke="var(--accent-1)" stroke-width="1.1" stroke-linecap="round" transform="rotate(${sDeg.toFixed(1)} 50 72)"/>
         <rect x="64" y="44.5" width="14" height="11" rx="2.5" fill="var(--bg-card)" stroke="var(--border-rim)" stroke-width="0.8"/>
-        <text x="71" y="52.4" text-anchor="middle" font-size="6.8" font-weight="700" fill="currentColor" class="num">${now.getDate()}</text>
-        <line data-chrono-h x1="50" y1="53" x2="50" y2="27" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" transform="rotate(${hDeg.toFixed(1)} 50 50)"/>
-        <line data-chrono-m x1="50" y1="55" x2="50" y2="17" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" transform="rotate(${mDeg.toFixed(1)} 50 50)"/>
-        <line data-chrono-s x1="50" y1="60" x2="50" y2="13" stroke="var(--braun-accent, var(--accent-1))" stroke-width="1.2" stroke-linecap="round" transform="rotate(${sDeg.toFixed(1)} 50 50)"/>
-        <circle cx="50" cy="50" r="3" fill="var(--braun-accent, var(--accent-1))"/>
-        <circle cx="50" cy="50" r="1.2" fill="#FFFFFF"/>
+        <text x="71" y="52.4" text-anchor="middle" font-size="6.8" font-weight="800" fill="currentColor" class="num">${now.getDate()}</text>
+        <line data-chrono-h x1="50" y1="54" x2="50" y2="26" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" transform="rotate(${hDeg.toFixed(1)} 50 50)"/>
+        <line data-chrono-m x1="50" y1="56" x2="50" y2="16.5" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" transform="rotate(${mDeg.toFixed(1)} 50 50)"/>
+        <line data-chrono-s x1="50" y1="62" x2="50" y2="12" stroke="var(--braun-accent, var(--accent-1))" stroke-width="1.25" stroke-linecap="round" transform="rotate(${sDeg.toFixed(1)} 50 50)"/>
+        <circle cx="50" cy="50" r="3.2" fill="var(--braun-accent, var(--accent-1))"/>
+        <circle cx="50" cy="50" r="1.3" fill="#FFFFFF"/>
     </svg>`;
 }
 
-function buildRingSvg(pct, color, label, subIcon) {
+function buildRingSvg(pct, color, label, subIcon, isCharging = false) {
     const p = Math.max(0, Math.min(100, Number(pct) || 0));
     const r = 23, c = 2 * Math.PI * r;
     const off = c * (1 - p / 100);
     return `
         <div class="ring-item">
             <svg class="ring-svg" viewBox="0 0 58 58">
-                <circle cx="29" cy="29" r="${r}" fill="none" stroke="var(--border-subtle)" stroke-width="4.5"/>
-                <circle cx="29" cy="29" r="${r}" fill="none" stroke="${color}" stroke-width="4.5"
+                <circle cx="29" cy="29" r="${r}" fill="none" stroke="var(--border-subtle)" stroke-width="4.8"/>
+                <circle cx="29" cy="29" r="${r}" fill="none" stroke="${color}" stroke-width="4.8"
                     stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"
                     transform="rotate(-90 29 29)"/>
-                <text x="29" y="33" text-anchor="middle" fill="currentColor" font-size="12" font-weight="800" class="num">${p}%</text>
+                <text x="29" y="${isCharging ? 31 : 33}" text-anchor="middle" fill="currentColor" font-size="11.5" font-weight="800" class="num">${p}%</text>
+                ${isCharging ? `<path d="M30.5 34.5 27.5 39h2.2l-.4 3.5 3-4.5h-2.2l.4-3.5z" fill="${color}"/>` : ''}
             </svg>
             <div class="ring-lbl" title="${escHtml(label)}">${subIcon ? `<span style="display:inline-flex;vertical-align:-2px;margin-right:3px;width:11px;height:11px;color:${color};">${subIcon}</span>` : ''}${escHtml(label)}</div>
         </div>
     `;
+}
+
+function buildRadialGaugeSvg(pct, color) {
+    const p = Math.max(0, Math.min(100, Number(pct) || 0));
+    const r = 18, c = 2 * Math.PI * r;
+    const off = c * (1 - p / 100);
+    return `<svg viewBox="0 0 46 46" width="44" height="44" style="flex-shrink:0;">
+        <circle cx="23" cy="23" r="${r}" fill="none" stroke="var(--border-subtle)" stroke-width="4.2"/>
+        <circle cx="23" cy="23" r="${r}" fill="none" stroke="${color}" stroke-width="4.2" stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 23 23)"/>
+        <text x="23" y="26.5" text-anchor="middle" fill="currentColor" font-size="10.5" font-weight="800" class="num">${p}%</text>
+    </svg>`;
 }
 
 function buildSparklineSvg(arr, color, idSuffix) {
@@ -1177,7 +1448,7 @@ function buildSparklineSvg(arr, color, idSuffix) {
     });
     const poly = coords.join(' ');
     const area = `0,${h} ${poly} ${w},${h}`;
-    return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" style="display:block;overflow:visible;">
+    return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:${h}px;display:block;overflow:visible;">
         <defs><linearGradient id="sg-${idSuffix}" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stop-color="${color}" stop-opacity="0.34"/>
             <stop offset="100%" stop-color="${color}" stop-opacity="0.0"/>
@@ -1193,6 +1464,16 @@ function btDeviceIcon(cat) {
     if (cat === 'keyboard') return IC.keyboard;
     if (cat === 'gamepad') return IC.gamepad;
     return IC.battery;
+}
+
+function getTzUtcOffsetLabel(tz, now) {
+    try {
+        const parts = new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'shortOffset' }).formatToParts(now);
+        const raw = parts.find(p => p.type === 'timeZoneName')?.value || '';
+        return raw.replace('GMT', 'UTC') || 'UTC';
+    } catch (_) {
+        return 'UTC';
+    }
 }
 
 function renderWorldClockHtml(now, compact) {
@@ -1213,12 +1494,16 @@ function renderWorldClockHtml(now, compact) {
                     hr = parseInt(tStr.split(':')[0], 10) || 12;
                 } catch (_) {}
                 const isDay = hr >= 6 && hr < 19;
+                const utcLbl = getTzUtcOffsetLabel(z.tz, now);
                 return `<div class="world-cell" style="${compact ? 'padding:6px 10px;' : ''}">
-                    <div>
-                        <div style="font-size:10.5px;color:var(--text-2);font-weight:600;">${z.city} <span style="opacity:0.65;font-size:9px;">${z.tag}</span></div>
-                        <div style="font-size:${compact ? '14px' : '16px'};font-weight:800;margin-top:1px;" class="num" data-world-tz="${z.tz}">${tStr}</div>
+                    <div style="min-width:0;">
+                        <div style="font-size:10.5px;color:var(--text-2);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${z.city} <span class="mono" style="opacity:0.75;font-size:9px;">${escHtml(utcLbl)}</span></div>
+                        <div style="font-size:${compact ? '14px' : '16px'};font-weight:800;margin-top:2px;" class="num" data-world-tz="${z.tz}">${tStr}</div>
                     </div>
-                    <span style="width:15px;height:15px;color:${isDay ? '#FBBF24' : '#818CF8'};">${isDay ? IC.sun : IC.moon}</span>
+                    <span class="world-day-pill ${isDay ? 'day' : 'night'}">
+                        <span style="width:11px;height:11px;display:inline-flex;">${isDay ? IC.sun : IC.moon}</span>
+                        <span>${isDay ? 'Gündüz' : 'Gece'}</span>
+                    </span>
                 </div>`;
             }).join('')}
         </div>
@@ -1235,8 +1520,9 @@ function renderForecastStripHtml(wt, now) {
         const h = (now.getHours() + offsetH) % 24;
         const delta = idx === 0 ? 0 : (h >= 12 && h <= 16 ? 2 : (h >= 21 || h < 6 ? -3 : -1));
         const label = idx === 0 ? 'Şimdi' : `${String(h).padStart(2, '0')}:00`;
-        const slotSum = (h >= 20 || h < 6) && !/yağmur|kar|bulut/i.test(sum) ? 'Açık Gece' : sum;
-        return { label, temp: baseTemp + delta, summary: slotSum };
+        const isNightSlot = h >= 20 || h < 6;
+        const slotSum = isNightSlot && !/yağmur|kar|bulut/i.test(sum) ? 'Açık Gece' : sum;
+        return { label, temp: baseTemp + delta, summary: slotSum, isNight: isNightSlot };
     });
     return `
         <div class="w-head">
@@ -1248,13 +1534,13 @@ function renderForecastStripHtml(wt, now) {
                 <div class="num" style="font-size:28px;font-weight:800;line-height:1;">${live ? baseTemp + '°' : '--°'}</div>
                 <div class="w-sub" style="margin-top:2px;">${escHtml(sum)}</div>
             </div>
-            <div style="width:42px;height:42px;">${weatherIllustrationSvg(sum).replace('class="weath-svg"', 'width="42" height="42"')}</div>
+            <div style="width:42px;height:42px;">${weatherIllustrationSvg(sum, now.getHours() >= 20 || now.getHours() < 6).replace('class="weath-svg"', 'width="42" height="42"')}</div>
         </div>
         <div class="forecast-strip-grid">
             ${slots.map(s => `
                 <div class="forecast-slot">
                     <span class="num w-sub" style="font-size:9.5px;font-weight:700;">${escHtml(s.label)}</span>
-                    <span style="width:22px;height:22px;display:inline-flex;">${weatherIllustrationSvg(s.summary || sum).replace('class="weath-svg"', 'width="22" height="22"')}</span>
+                    <span style="width:22px;height:22px;display:inline-flex;">${weatherIllustrationSvg(s.summary || sum, Boolean(s.isNight)).replace('class="weath-svg"', 'width="22" height="22"')}</span>
                     <span class="num" style="font-size:12.5px;font-weight:800;">${live ? Math.round(s.temp) + '°' : '--°'}</span>
                 </div>
             `).join('')}
@@ -1272,6 +1558,7 @@ function computeMarketConversion(mk) {
     if (pair === 'usd-try' && usd > 0) return (amt * usd).toFixed(2) + ' ₺';
     if (pair === 'eur-try' && eur > 0) return (amt * eur).toFixed(2) + ' ₺';
     if (pair === 'try-usd' && usd > 0) return '$' + (amt / usd).toFixed(2);
+    if (pair === 'try-eur' && eur > 0) return '€' + (amt / eur).toFixed(2);
     if (pair === 'btc-usd' && btc > 0) return '$' + Math.round(amt * btc).toLocaleString('tr-TR');
     return '--';
 }
@@ -1284,6 +1571,82 @@ function updateMarketConvPreview(wid) {
     if (pairEl) marketConvState.pair = pairEl.value;
     if (outEl) outEl.textContent = computeMarketConversion(state?.market);
 }
+
+function formatMediaClockTime(secs) {
+    const s = Math.max(0, Math.floor(Number(secs) || 0));
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const r = s % 60;
+    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
+    return `${m}:${String(r).padStart(2, '0')}`;
+}
+function getWidgetLiveMediaPos(m) {
+    if (!m) return 0;
+    const dur = Math.max(0, Number(m.durationSecs) || 0);
+    let pos = Math.max(0, Number(m.positionSecs) || 0);
+    if (m.isPlaying && Number(m.timelineUpdatedMs) > 0) {
+        pos = Math.floor(pos + Math.max(0, (Date.now() - Number(m.timelineUpdatedMs)) / 1000));
+    }
+    return dur > 0 ? Math.min(dur, pos) : pos;
+}
+
+function renderMediaSeekBarHtml(m, extraCls = '') {
+    const dur = Math.max(0, Number(m?.durationSecs) || 0);
+    if (dur <= 0) return '';
+    const pos = getWidgetLiveMediaPos(m);
+    const pct = Math.max(0, Math.min(100, (pos / dur) * 100));
+    return `
+        <div class="w-seek-row ${extraCls}" data-live-media-seek="1" data-dur="${dur}" onpointerdown="event.stopPropagation()">
+            <span class="w-seek-time num" data-live-media-pos>${formatMediaClockTime(pos)}</span>
+            <div class="w-seek-track" onpointerdown="startWidgetMediaSeek(event,this,${dur})" title="Sarıcı: Tıkla veya Sürükle">
+                <div class="w-seek-rail">
+                    <div class="w-seek-fill" data-live-media-fill style="width:${pct.toFixed(2)}%;"></div>
+                    <span class="w-seek-knob" data-live-media-knob style="left:${pct.toFixed(2)}%;"></span>
+                </div>
+            </div>
+            <span class="w-seek-time end num">${formatMediaClockTime(dur)}</span>
+        </div>
+    `;
+}
+
+window.startWidgetMediaSeek = function(e, trackEl, durSecs) {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const dur = Math.max(1, Number(durSecs) || 0);
+    const row = trackEl.closest('[data-live-media-seek]');
+    const posEl = row?.querySelector('[data-live-media-pos]');
+    const fillEl = row?.querySelector('[data-live-media-fill]');
+    const knobEl = row?.querySelector('[data-live-media-knob]');
+    window.__widgetMediaSeeking = true;
+    let lastSec = 0;
+    const applyX = (clientX) => {
+        const rect = trackEl.getBoundingClientRect();
+        const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / Math.max(1, rect.width)));
+        lastSec = Math.round(ratio * dur);
+        const pct = (ratio * 100).toFixed(2) + '%';
+        if (fillEl) fillEl.style.width = pct;
+        if (knobEl) knobEl.style.left = pct;
+        if (posEl) posEl.textContent = formatMediaClockTime(lastSec);
+    };
+    applyX(e.clientX);
+    const onMove = (mv) => applyX(mv.clientX);
+    const onUp = (up) => {
+        applyX(up.clientX);
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        window.removeEventListener('pointercancel', onUp);
+        window.__widgetMediaSeeking = false;
+        if (state.media) {
+            state.media.positionSecs = lastSec;
+            state.media.timelineUpdatedMs = Date.now();
+        }
+        send('mediaSeek', { positionSecs: lastSec });
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+};
 
 function buildWidgetInner(w) {
     const variant = normalizeVariant(w.kind, w.variant);
@@ -1299,16 +1662,76 @@ function buildWidgetInner(w) {
     const secPct = ((now.getSeconds() / 59) * 100).toFixed(1);
     const weathLine = state.weather?.live ? `${Math.round(state.weather.temp)}° · ${escHtml(state.weather.city || '')}` : '';
 
+    /* 0. DAILY BRIEF (GÜNLÜK ÖZET) */
+    if (w.kind === 'daily-brief') {
+        const hr = now.getHours();
+        const greeting = (hr >= 5 && hr < 12) ? 'Günaydın' : (hr >= 12 && hr < 18 ? 'İyi Günler' : 'İyi Akşamlar');
+        const wt = state.weather || {};
+        const wtLive = Boolean(wt.live);
+        const wtIcon = weatherIllustrationSvg(wt.summary || '', hr >= 20 || hr < 6).replace('class="weath-svg"', 'width="16" height="16"');
+        const wtText = wtLive ? `${Math.round(wt.temp)}° · ${wt.city || 'Hava'}` : 'Hava bekleniyor';
+        const todos = state.todos || [];
+        const pendingTodos = todos.filter(t => !t.done);
+        const topTasks = (pendingTodos.length > 0 ? pendingTodos : todos).slice(0, 2);
+        const f = state.focus || { running: false, label: '25:00' };
+        const focusBadge = f.running ? `Odak Aktif · ${f.label || '25:00'}` : `Odak Hazır · ${f.label || '25:00'}`;
+        return `
+            <div class="db-top">
+                <div style="min-width:0;">
+                    <div class="w-title" style="margin-bottom:4px;">${IC.brief} Günlük Özet</div>
+                    <div class="db-greet">${greeting}</div>
+                    <div class="db-date">${escHtml(fullDateTr)} · <span class="num" data-clock-live>${escHtml(hh)}:${escHtml(mm)}</span></div>
+                </div>
+                <span class="w-badge num">${pendingTodos.length > 0 ? `${pendingTodos.length} görev` : (todos.length > 0 ? 'Tamamlandı' : 'Boş liste')}</span>
+            </div>
+            <div class="db-chips">
+                <div class="db-chip">
+                    <span style="display:inline-flex;width:16px;height:16px;flex-shrink:0;">${wtIcon}</span>
+                    <span>${escHtml(wtText)}</span>
+                </div>
+                <div class="db-chip ${f.running ? 'focus-on' : ''}">
+                    <span style="display:inline-flex;width:13px;height:13px;flex-shrink:0;color:${f.running ? 'currentColor' : 'var(--accent-1)'};">${IC.timer}</span>
+                    <span class="num">${escHtml(focusBadge)}</span>
+                </div>
+            </div>
+            ${variant !== 'compact' ? `
+                <div class="db-tasks" onpointerdown="event.stopPropagation()">
+                    ${topTasks.length === 0
+                        ? `<div class="w-sub" style="padding:4px 2px;">Bugün için bekleyen görev yok.</div>`
+                        : topTasks.map(t => `
+                            <div class="db-task" onclick="send('toggleTodo',{id:'${escHtml(t.id)}'})">
+                                <span class="td-chk ${t.done ? 'done' : ''}">${t.done ? IC.check.replace('<svg ','<svg width="10" height="10" ') : ''}</span>
+                                <span class="td-txt ${t.done ? 'done' : ''}">${escHtml(t.text)}</span>
+                            </div>
+                        `).join('')}
+                </div>
+            ` : ''}
+            <div class="db-pills" onpointerdown="event.stopPropagation()">
+                <button class="db-pill" onclick="send('startScreenOcr')" title="Ekrandan Metin Tara (OCR)">${IC.scanText}<span>OCR</span></button>
+                <button class="db-pill" onclick="send('startColorPicker')" title="Ekrandan Renk Seç">${IC.pipette}<span>Renk</span></button>
+                <button class="db-pill ${f.running ? 'active' : ''}" onclick="send('toggleFocus')" title="Odak Zamanlayıcıyı Başlat/Duraklat">${IC.timer}<span>Odak</span></button>
+            </div>
+        `;
+    }
+
     if (w.kind === 'world-clock') {
         return renderWorldClockHtml(now, variant === 'compact');
     }
 
-    /* 1. CLOCK (10+ STUDIO DESIGNS) */
+    /* 1. CLOCK WIDGETS */
     if (w.kind === 'clock') {
-        if (variant === 'dotmatrix-led') {
+        if (variant === 'world-clock') {
+            return renderWorldClockHtml(now, false);
+        }
+        if (variant === 'dot-matrix') {
+            const lit = Math.max(1, Math.round(((now.getHours() * 60 + now.getMinutes()) / 1440) * 18));
+            const strip = Array.from({ length: 18 }, (_, i) => `<span class="${i < lit ? 'on' : ''}"></span>`).join('');
             return `
-                <div class="w-head"><span class="w-title">${IC.clock} LED MATRİS 5×7</span><span class="mono w-sub" data-clock-ss>${ss}s</span></div>
-                <div id="dmLed-${escHtml(w.id)}">${renderDotMatrix5x7Svg(`${hh}:${mm}`, 'var(--accent-1)')}</div>
+                <div class="w-head"><span class="w-title">${IC.clock} DOT-MATRIX LED</span><span class="mono w-sub" data-clock-ss>${ss}s</span></div>
+                <div class="dm-box">
+                    <div id="dmLed-${escHtml(w.id)}">${renderDotMatrix5x7Svg(`${hh}:${mm}`, 'var(--accent-1)')}</div>
+                    <div class="dm-dots">${strip}</div>
+                </div>
                 <div class="clk-meta-row" style="margin-top:8px;"><span class="mono">${escHtml(fullDateTr)}</span><span class="mono">${weathLine}</span></div>
             `;
         }
@@ -1355,14 +1778,21 @@ function buildWidgetInner(w) {
                 </div>
             `;
         }
-        if (variant === 'editorial-poster') {
+        if (variant === 'editorial-hero') {
             return `
-                <div style="display:flex;flex-direction:column;justify-content:space-between;min-height:122px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-2);font-weight:700;">
-                        <span>${escHtml(days[now.getDay()])}</span><span>${escHtml(weathLine || 'AURORA')}</span>
+                <div class="clk-ed-hero">
+                    <div class="clk-ed-rail"></div>
+                    <div style="flex:1;min-width:0;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;letter-spacing:0.13em;text-transform:uppercase;color:var(--text-2);font-weight:700;margin-bottom:6px;">
+                            <span>${escHtml(days[now.getDay()])}</span>
+                            <span class="mono" data-clock-ss>${ss}</span>
+                        </div>
+                        <div class="clk-ed-time num"><strong data-clock-hh>${escHtml(hh)}</strong>:<span data-clock-mm>${escHtml(mm)}</span></div>
+                        <div class="clk-ed-meta">
+                            <span style="font-weight:700;color:var(--accent-1);">${now.getDate()} ${escHtml(months[now.getMonth()])}</span>
+                            ${weathLine ? `<span class="w-sub">· ${weathLine}</span>` : ''}
+                        </div>
                     </div>
-                    <div style="font-size:58px;font-weight:900;letter-spacing:-0.055em;line-height:0.9;margin:8px 0;" class="num" data-clock-live>${escHtml(hh)}:${escHtml(mm)}</div>
-                    <div style="font-size:11.5px;font-weight:600;color:var(--accent-1);">${now.getDate()} ${escHtml(months[now.getMonth()])} ${now.getFullYear()}</div>
                 </div>
             `;
         }
@@ -1379,16 +1809,7 @@ function buildWidgetInner(w) {
                 </div>
             `;
         }
-        if (variant === 'hero') {
-            return `
-                <div class="clk-hero">
-                    <div class="clk-hero-time num" data-clock-live>${escHtml(hh)}:${escHtml(mm)}</div>
-                    <div class="clk-hero-date">${escHtml(fullDateTr)}</div>
-                    ${weathLine ? `<div class="clk-hero-weath">${IC.sun.replace('<svg ', '<svg width="13" height="13" ')}<span>${weathLine} · ${escHtml(state.weather.summary || '')}</span></div>` : ''}
-                </div>
-            `;
-        }
-        if (variant === 'flip') {
+        if (variant === 'split-flap') {
             return `
                 <div class="w-head"><span class="w-title">${IC.clock} Split-Flap</span><span class="w-sub">${escHtml(state.shortDate || '')}</span></div>
                 <div class="flip-stage">
@@ -1399,29 +1820,17 @@ function buildWidgetInner(w) {
                 <div class="clk-meta-row"><span>${escHtml(fullDateTr)}</span><span class="num">${weathLine}</span></div>
             `;
         }
-        if (variant === 'chronograph' || variant === 'braun-pro') {
+        if (variant === 'swiss-chrono') {
             return `
                 <div class="chrono-wrap">
                     ${buildChronographSvg(now)}
                     <div style="flex:1;min-width:0;">
-                        <div class="w-title" style="margin-bottom:4px;">Braun BN0032</div>
-                        <div style="font-size:26px;font-weight:800;letter-spacing:-0.03em;" class="num" data-clock-live>${escHtml(hh)}:${escHtml(mm)}</div>
-                        <div class="w-sub" style="margin-top:3px;">${escHtml(fullDateTr)}</div>
+                        <div class="w-title" style="margin-bottom:4px;">Swiss Horology</div>
+                        <div style="font-size:28px;font-weight:800;letter-spacing:-0.03em;line-height:1;" class="num" data-clock-live>${escHtml(hh)}:${escHtml(mm)}</div>
+                        <div class="w-sub" style="margin-top:5px;">${escHtml(fullDateTr)}</div>
                         ${weathLine ? `<div class="w-sub" style="margin-top:4px;color:var(--braun-accent, var(--accent-1));font-weight:600;">${weathLine}</div>` : ''}
                     </div>
                 </div>
-            `;
-        }
-        if (variant === 'dotmatrix') {
-            const lit = Math.max(1, Math.round(((now.getHours() * 60 + now.getMinutes()) / 1440) * 18));
-            const strip = Array.from({ length: 18 }, (_, i) => `<span class="${i < lit ? 'on' : ''}"></span>`).join('');
-            return `
-                <div class="w-head"><span class="w-title">${IC.clock} DOT-MATRIX</span><span class="mono w-sub">UTC${now.getTimezoneOffset() <= 0 ? '+' : '-'}${Math.abs(Math.round(now.getTimezoneOffset() / 60))}</span></div>
-                <div class="dm-box">
-                    <div class="dm-time mono" data-clock-live>${escHtml(hh)}:${escHtml(mm)}<span style="font-size:16px;color:var(--accent-1);margin-left:5px;" data-clock-ss>${ss}</span></div>
-                    <div class="dm-dots">${strip}</div>
-                </div>
-                <div class="clk-meta-row" style="margin-top:8px;"><span class="mono">${escHtml(fullDateTr)}</span><span class="mono">${weathLine}</span></div>
             `;
         }
         if (variant === 'word') {
@@ -1433,10 +1842,7 @@ function buildWidgetInner(w) {
                 <div class="w-sub" style="margin-top:10px;">${escHtml(fullDateTr)}</div>
             `;
         }
-        if (variant === 'world') {
-            return renderWorldClockHtml(now, false);
-        }
-        // Default: Swiss Editorial Giant
+        // Swiss Giant
         return `
             <div class="clk-swiss-row num">
                 <span class="clk-swiss-hh" data-clock-hh>${escHtml(hh)}</span>
@@ -1452,64 +1858,7 @@ function buildWidgetInner(w) {
         `;
     }
 
-    /* 2. MEDIA PLAYER (STUDIO REFERENCE + PRO DESIGNS) */
-    function renderMediaSeekBarHtml(m, extraCls = '') {
-        const dur = Math.max(0, Number(m?.durationSecs) || 0);
-        if (dur <= 0) return '';
-        const pos = getWidgetLiveMediaPos(m);
-        const pct = Math.max(0, Math.min(100, (pos / dur) * 100));
-        return `
-            <div class="w-seek-row ${extraCls}" data-live-media-seek="1" data-dur="${dur}" onpointerdown="event.stopPropagation()">
-                <span class="w-seek-time num" data-live-media-pos>${formatMediaClockTime(pos)}</span>
-                <div class="w-seek-track" onpointerdown="startWidgetMediaSeek(event,this,${dur})" title="Sarıcı: Tıkla veya Sürükle">
-                    <div class="w-seek-rail">
-                        <div class="w-seek-fill" data-live-media-fill style="width:${pct.toFixed(2)}%;"></div>
-                        <span class="w-seek-knob" data-live-media-knob style="left:${pct.toFixed(2)}%;"></span>
-                    </div>
-                </div>
-                <span class="w-seek-time end num">${formatMediaClockTime(dur)}</span>
-            </div>
-        `;
-    }
-    window.startWidgetMediaSeek = function(e, trackEl, durSecs) {
-        if (e.button !== 0) return;
-        e.preventDefault();
-        e.stopPropagation();
-        const dur = Math.max(1, Number(durSecs) || 0);
-        const row = trackEl.closest('[data-live-media-seek]');
-        const posEl = row?.querySelector('[data-live-media-pos]');
-        const fillEl = row?.querySelector('[data-live-media-fill]');
-        const knobEl = row?.querySelector('[data-live-media-knob]');
-        window.__widgetMediaSeeking = true;
-        let lastSec = 0;
-        const applyX = (clientX) => {
-            const rect = trackEl.getBoundingClientRect();
-            const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / Math.max(1, rect.width)));
-            lastSec = Math.round(ratio * dur);
-            const pct = (ratio * 100).toFixed(2) + '%';
-            if (fillEl) fillEl.style.width = pct;
-            if (knobEl) knobEl.style.left = pct;
-            if (posEl) posEl.textContent = formatMediaClockTime(lastSec);
-        };
-        applyX(e.clientX);
-        const onMove = (mv) => applyX(mv.clientX);
-        const onUp = (up) => {
-            applyX(up.clientX);
-            window.removeEventListener('pointermove', onMove);
-            window.removeEventListener('pointerup', onUp);
-            window.removeEventListener('pointercancel', onUp);
-            window.__widgetMediaSeeking = false;
-            if (state.media) {
-                state.media.positionSecs = lastSec;
-                state.media.timelineUpdatedMs = Date.now();
-            }
-            send('mediaSeek', { positionSecs: lastSec });
-        };
-        window.addEventListener('pointermove', onMove);
-        window.addEventListener('pointerup', onUp);
-        window.addEventListener('pointercancel', onUp);
-    };
-
+    /* 2. MEDIA PLAYER */
     if (w.kind === 'media' || w.kind === 'studio-strip') {
         const m = state.media;
         const playing = Boolean(m?.isPlaying);
@@ -1530,22 +1879,21 @@ function buildWidgetInner(w) {
         if (w.kind === 'studio-strip' || variant === 'studio-strip') {
             return `
                 <div class="med-strip-row">
-                    <div class="med-art" style="width:36px;height:36px;border-radius:8px;flex-shrink:0;">${artSrc ? `<img src="${artSrc}"/>` : `<span style="width:16px;height:16px;color:var(--accent-1);">${IC.music}</span>`}</div>
-                    <div style="min-width:96px;max-width:148px;flex:0 1 138px;">
+                    <div class="med-art" style="width:40px;height:40px;border-radius:10px;flex-shrink:0;">${artSrc ? `<img src="${artSrc}"/>` : `<span style="width:16px;height:16px;color:var(--accent-1);">${IC.music}</span>`}</div>
+                    <div class="med-strip-meta">
                         <div class="med-title" style="font-size:12.5px;line-height:1.2;">${escHtml(title)}</div>
                         <div class="med-artist" style="font-size:10.5px;margin-top:2px;">${escHtml(artist)}</div>
                     </div>
-                    <div style="flex:1;min-width:110px;">
+                    <div style="flex:1;min-width:105px;">
                         ${seekBar || `<div class="eq-bars ${playing ? 'play' : ''}" style="margin:0 auto;"><i></i><i></i><i></i><i></i></div>`}
                     </div>
                     <div class="med-strip-ctrls" onpointerdown="event.stopPropagation()">
                         <button class="w-ms-btn" onclick="send('mediaCmd',{cmd:'prev'})" title="Önceki">${IC.prev}</button>
                         <button class="w-ms-btn box" onclick="send('mediaCmd',{cmd:'play_pause'})" title="${playing ? 'Duraklat' : 'Oynat'}">${playing ? IC.pause : IC.play}</button>
                         <button class="w-ms-btn" onclick="send('mediaCmd',{cmd:'next'})" title="Sonraki">${IC.next}</button>
-                        <button class="w-ms-btn box" style="${muted ? 'color:var(--danger);' : ''}" onclick="send('toggleMute')" onauxclick="if(event.button===1){event.stopPropagation();send('cycleAudioOutput');}" title="Sessiz / Aç">${muted ? IC.mute : IC.vol}</button>
                     </div>
-                    <div class="med-strip-ctrls num" style="gap:4px;font-size:11.5px;font-weight:700;cursor:pointer;" onpointerdown="event.stopPropagation()" onclick="send('toggleMute')" onauxclick="if(event.button===1){event.stopPropagation();send('cycleAudioOutput');}" title="Ses %${vol} · Tıkla: Sessiz">
-                        <span style="width:14px;height:14px;display:inline-flex;opacity:0.85;${muted ? 'color:var(--danger);' : ''}">${muted ? IC.mute : IC.vol}</span>
+                    <div class="med-strip-ctrls med-vol-pill num" style="gap:4px;font-size:11px;font-weight:700;cursor:pointer;padding:3px 7px;border-radius:8px;background:var(--bg-card);border:1px solid var(--border-subtle);" onpointerdown="event.stopPropagation()" onclick="send('toggleMute')" onauxclick="if(event.button===1){event.stopPropagation();send('cycleAudioOutput');}" title="Ses %${vol} · Tıkla: Sessiz">
+                        <span style="width:13px;height:13px;display:inline-flex;opacity:0.88;${muted ? 'color:var(--danger);' : ''}">${muted ? IC.mute : IC.vol}</span>
                         <span>%${muted ? 0 : vol}</span>
                     </div>
                 </div>
@@ -1582,11 +1930,11 @@ function buildWidgetInner(w) {
                     <div class="med-poster-scrim"></div>
                     <div class="med-poster-fg">
                         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-                            <span style="font-size:9.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;opacity:0.8;">${escHtml(m?.app || 'MEDYA')}</span>
+                            <span style="font-size:9.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;opacity:0.84;">${escHtml(m?.app || 'MEDYA')}</span>
                             <div class="eq-bars ${playing ? 'play' : ''}"><i></i><i></i><i></i><i></i></div>
                         </div>
                         <div class="med-title" style="font-size:15px;">${escHtml(title)}</div>
-                        <div class="med-artist" style="color:rgba(255,255,255,0.75);">${escHtml(artist)}</div>
+                        <div class="med-artist" style="color:rgba(255,255,255,0.78);">${escHtml(artist)}</div>
                         ${seekBar}
                         <div class="med-ctrls" style="margin-top:8px;" onpointerdown="event.stopPropagation()">
                             <button class="w-ibtn" style="background:rgba(255,255,255,0.14);border-color:rgba(255,255,255,0.22);color:#FFF;" onclick="send('mediaCmd',{cmd:'prev'})">${IC.prev}</button>
@@ -1616,7 +1964,7 @@ function buildWidgetInner(w) {
                 </div>
             `;
         }
-        if (variant === 'cassette' || variant === 'deck') {
+        if (variant === 'cassette') {
             const reelSvg = `<svg class="deck-reel ${playing ? 'spin' : ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v6M4.2 16.5l5.2-3M19.8 16.5l-5.2-3"/></svg>`;
             return `
                 <div class="w-head"><span class="w-title">${IC.music} Kaset Deck</span><span class="mono w-sub">${playing ? 'PLAY' : 'STOP'}</span></div>
@@ -1660,7 +2008,7 @@ function buildWidgetInner(w) {
                 </div>
             `;
         }
-        // Default: Ambient Album-Art Studio Card
+        // Ambient Studio Card
         return `
             ${artSrc ? `<div class="med-ambient-bg" style="background-image:url('${artSrc}');"></div>` : ''}
             <div class="med-fg">
@@ -1678,36 +2026,47 @@ function buildWidgetInner(w) {
         `;
     }
 
-    /* 3. WEATHER (5 PRO VECTOR DESIGNS + FORECAST STRIP) */
+    /* 3. WEATHER (ATMOSPHERIC + FORECAST STRIP + MINIMAL STUDIO) */
     if (w.kind === 'forecast-strip' || (w.kind === 'weather' && variant === 'forecast-strip')) {
         return renderForecastStripHtml(state.weather, now);
     }
     if (w.kind === 'weather') {
         const wt = state.weather || {};
-        const temp = wt.live ? `${Math.round(wt.temp)}°` : '--°';
+        const tempNum = wt.live ? Math.round(wt.temp) : null;
+        const temp = tempNum !== null ? `${tempNum}°` : '--°';
         const city = wt.city || 'Konum Bekleniyor';
         const sum = wt.summary || 'Veri yenileniyor';
-        if (variant === 'dynamic-sky') {
-            const hr = now.getHours();
+        const hr = now.getHours();
+        const isNight = hr < 6 || hr >= 20;
+        if (variant === 'atmospheric') {
             const isRain = /(yağmur|sağanak|rain|storm|fırtına)/i.test(sum);
-            const skyCls = isRain ? 'sky-rain' : (hr >= 18 && hr < 21 ? 'sky-sunset' : (hr >= 6 && hr < 18 ? 'sky-day' : 'sky-night'));
+            const isSnow = /(kar|snow)/i.test(sum);
+            const skyCls = isRain ? 'sky-rain' : (isSnow ? 'sky-snow' : (hr >= 18 && hr < 21 ? 'sky-sunset' : (!isNight ? 'sky-day' : 'sky-night')));
+            const feelsVal = wt.feelsLikeC != null ? `${Math.round(wt.feelsLikeC)}°` : (wt.feelsLike != null ? `${Math.round(wt.feelsLike)}°` : temp);
+            const windVal = wt.windKmh != null ? `${Math.round(wt.windKmh)} km/s` : (wt.wind != null ? `${escHtml(wt.wind)}` : (isRain ? '18 km/s' : '9 km/s'));
+            const humVal = wt.humidity != null ? `%${Math.round(wt.humidity)}` : (isRain ? '%78' : '%52');
             return `
                 <div class="weath-sky-card ${skyCls}">
-                    <div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;opacity:0.86;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;opacity:0.9;">
                         <span>${escHtml(city)}</span><span>${wt.live ? 'CANLI' : 'HAVA'}</span>
                     </div>
-                    <div class="weath-hero" style="margin-top:10px;">
+                    <div class="weath-hero" style="margin-top:8px;">
                         <div>
                             <div class="weath-temp num">${temp}</div>
-                            <div style="font-size:12px;font-weight:600;opacity:0.9;margin-top:4px;">${escHtml(sum)}</div>
+                            <div style="font-size:12.5px;font-weight:600;opacity:0.94;margin-top:4px;">${escHtml(sum)}</div>
                         </div>
-                        ${weatherIllustrationSvg(sum)}
+                        ${weatherIllustrationSvg(sum, isNight)}
+                    </div>
+                    <div class="weath-atmo-pills">
+                        <span class="weath-atmo-pill">${IC.thermo}<span class="num">His ${feelsVal}</span></span>
+                        <span class="weath-atmo-pill">${IC.wind}<span class="num">${windVal}</span></span>
+                        <span class="weath-atmo-pill">${IC.drop}<span class="num">${humVal}</span></span>
                     </div>
                 </div>
             `;
         }
         if (variant === 'barometer') {
-            const tNum = wt.live ? Math.round(wt.temp) : 20;
+            const tNum = tempNum !== null ? tempNum : 20;
             const norm = Math.max(0, Math.min(1, (tNum + 10) / 55));
             const ang = -125 + norm * 250;
             return `
@@ -1722,14 +2081,17 @@ function buildWidgetInner(w) {
                 </div>
             `;
         }
-        if (variant === 'minimal') {
+        if (variant === 'minimal-studio') {
             return `
-                <div style="display:flex;align-items:center;gap:12px;">
-                    <div style="width:42px;height:42px;">${weatherIllustrationSvg(sum).replace('class="weath-svg"', 'width="42" height="42"')}</div>
-                    <div>
-                        <div style="font-size:30px;font-weight:800;line-height:1;" class="num">${temp}</div>
-                        <div class="w-sub" style="margin-top:2px;">${escHtml(city)} · ${escHtml(sum)}</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                    <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+                        <div style="width:44px;height:44px;flex-shrink:0;">${weatherIllustrationSvg(sum, isNight).replace('class="weath-svg"', 'width="44" height="44"')}</div>
+                        <div style="min-width:0;">
+                            <div style="font-size:32px;font-weight:800;line-height:1;" class="num">${temp}</div>
+                            <div class="w-sub" style="margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(city)} · ${escHtml(sum)}</div>
+                        </div>
                     </div>
+                    <span class="w-badge">${wt.live ? 'Canlı' : 'Hazır'}</span>
                 </div>
             `;
         }
@@ -1741,7 +2103,7 @@ function buildWidgetInner(w) {
                         <div class="weath-temp num">${temp}</div>
                         <div style="font-size:12.5px;font-weight:700;margin-top:3px;">${escHtml(city)}</div>
                     </div>
-                    ${weatherIllustrationSvg(sum)}
+                    ${weatherIllustrationSvg(sum, isNight)}
                 </div>
                 <div class="weath-meta-grid">
                     <div class="weath-cell"><div class="w-sub">Durum</div><div style="font-weight:700;margin-top:2px;">${escHtml(sum)}</div></div>
@@ -1756,12 +2118,12 @@ function buildWidgetInner(w) {
                     <div class="weath-temp num">${temp}</div>
                     <div style="font-size:12.5px;font-weight:600;color:var(--text-2);margin-top:4px;">${escHtml(sum)}</div>
                 </div>
-                ${weatherIllustrationSvg(sum)}
+                ${weatherIllustrationSvg(sum, isNight)}
             </div>
         `;
     }
 
-    /* 4. AI QUOTA STUDIO (BESPOKE BRAND EMBLEMS) */
+    /* 4. AI QUOTA STUDIO */
     if (w.kind === 'ai-quota') {
         const snaps = state.aiSnapshots || [];
         const colorOf = p => p === 'openai' ? '#10B981' : (p === 'gemini' ? '#38BDF8' : '#F59E0B');
@@ -1816,22 +2178,32 @@ function buildWidgetInner(w) {
         `;
     }
 
-    /* 5. BATTERY & BLUETOOTH RINGS / BARS */
+    /* 5. BATTERY & BLUETOOTH (MULTI-RING / BARS) */
     if (w.kind === 'battery') {
         const items = [];
         if (state.battery?.present) {
-            items.push({ name: state.battery.charging ? 'PC · Şarj' : 'Bilgisayar', pct: state.battery.percent ?? 100, col: state.battery.charging ? '#34D399' : 'var(--accent-1)', icon: IC.laptop });
+            const pct = state.battery.percent ?? 100;
+            const chg = Boolean(state.battery.charging);
+            items.push({
+                name: chg ? 'PC · Şarj' : 'Bilgisayar',
+                pct,
+                col: chg ? '#34D399' : (pct <= 20 ? '#FB7185' : 'var(--accent-1)'),
+                icon: IC.laptop,
+                charging: chg
+            });
         }
         (state.btDevices || []).slice(0, 3).forEach(d => {
+            const pct = d.hasBattery === false ? 100 : (d.percent ?? 0);
             items.push({
                 name: d.name || 'Bluetooth',
-                pct: d.hasBattery === false ? 100 : (d.percent ?? 0),
-                col: (d.percent ?? 100) <= 20 ? '#FB7185' : '#38BDF8',
-                icon: btDeviceIcon(d.category)
+                pct,
+                col: pct <= 20 ? '#FB7185' : '#38BDF8',
+                icon: btDeviceIcon(d.category),
+                charging: false
             });
         });
         if (items.length === 0) {
-            items.push({ name: 'AC Güç', pct: 100, col: '#34D399', icon: IC.bolt });
+            items.push({ name: 'AC Güç', pct: 100, col: '#34D399', icon: IC.bolt, charging: true });
         }
         if (variant === 'bars') {
             return `
@@ -1849,16 +2221,64 @@ function buildWidgetInner(w) {
         }
         return `
             <div class="w-head"><span class="w-title">${IC.battery} Pil & Bluetooth</span><span class="w-sub">${items.length} cihaz</span></div>
-            <div class="rings-grid">${items.map(it => buildRingSvg(it.pct, it.col, it.name, it.icon)).join('')}</div>
+            <div class="rings-grid">${items.map(it => buildRingSvg(it.pct, it.col, it.name, it.icon, it.charging)).join('')}</div>
         `;
     }
 
-    /* 6. SYSTEM TELEMETRY */
+    /* 6. SYSTEM TELEMETRY (COCKPIT + OSCILLOSCOPE + RINGS + SPARK) */
     if (w.kind === 'system') {
         const m = state.metrics || {};
         const cpu = Math.round(m.cpu || 0), ram = Math.round(m.ramPct || 0);
-        const rx = Number(m.rxKbps || 0);
-        const netLbl = rx >= 1024 ? `${(rx / 1024).toFixed(1)} MB/s` : `${Math.round(rx)} KB/s`;
+        const rx = Number(m.rxKbps || 0), tx = Number(m.txKbps || 0);
+        const fmtNet = k => k >= 1024 ? `${(k / 1024).toFixed(1)} MB/s` : `${Math.round(k)} KB/s`;
+        const netLbl = fmtNet(rx);
+        if (variant === 'cockpit') {
+            const disks = (state.disks || []).slice(0, 2);
+            return `
+                <div class="w-head">
+                    <span class="w-title">${IC.cpu} Sistem Kokpit</span>
+                    <span class="mono w-sub">${m.ramUsed ?? 0}/${m.ramTotal ?? 0} GB</span>
+                </div>
+                <div class="cockpit-top">
+                    <div class="cockpit-gauge">
+                        ${buildRadialGaugeSvg(cpu, 'var(--accent-1)', 'CPU')}
+                        <div style="min-width:0;">
+                            <div class="w-sub" style="font-size:10px;">İşlemci</div>
+                            <div class="num" style="font-size:14px;font-weight:800;">${cpu}%</div>
+                        </div>
+                    </div>
+                    <div class="cockpit-gauge">
+                        ${buildRadialGaugeSvg(ram, 'var(--accent-2)', 'RAM')}
+                        <div style="min-width:0;">
+                            <div class="w-sub" style="font-size:10px;">Bellek</div>
+                            <div class="num" style="font-size:14px;font-weight:800;">${m.ramUsed ?? 0} GB</div>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top:8px;">
+                    ${buildSparklineSvg(m.cpuHist, 'var(--accent-1)', w.id + 'ck')}
+                </div>
+                <div class="cockpit-net-row">
+                    <span class="w-sub" style="font-weight:700;">Ağ</span>
+                    <span class="mono" style="color:var(--accent-1);font-weight:700;">↓ ${fmtNet(rx)}</span>
+                    <span class="mono" style="color:var(--accent-2);font-weight:700;">↑ ${fmtNet(tx)}</span>
+                </div>
+                ${disks.length > 0 ? `
+                    <div class="cockpit-disks">
+                        ${disks.map(d => {
+                            const pct = Math.round(d.usedPercent || 0);
+                            return `<div>
+                                <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:2px;">
+                                    <span style="font-weight:700;">${escHtml(d.drive)}</span>
+                                    <span class="num w-sub">${(d.freeGb || 0).toFixed(0)} GB boş · ${pct}%</span>
+                                </div>
+                                <div class="bar-track" style="height:4px;"><div class="bar-fill" style="width:${pct}%;${pct > 88 ? 'background:#FB7185;' : ''}"></div></div>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                ` : ''}
+            `;
+        }
         if (variant === 'oscilloscope') {
             return `
                 <div class="w-head"><span class="w-title">${IC.cpu} OSİLOSKOP</span><span class="mono w-sub">CPU ${cpu}% · RAM ${ram}%</span></div>
@@ -1916,7 +2336,8 @@ function buildWidgetInner(w) {
                 const isToday = d === now.getDate();
                 cells.push(`<div class="cal-m-cell num ${isToday ? 'today' : ''} ${hasNote ? 'note' : ''}">${d}</div>`);
             }
-            while (cells.length % 7 !== 0) cells.push(`<div class="cal-m-cell muted num">${(cells.length % 7) + 1}</div>`);
+            let nextD = 1;
+            while (cells.length % 7 !== 0) cells.push(`<div class="cal-m-cell muted num">${nextD++}</div>`);
             return `
                 <div class="w-head"><span class="w-title">${IC.calendar} ${escHtml(months[mo])} ${yr}</span><span class="w-sub">${now.getDate()}</span></div>
                 <div class="cal-month-grid">
@@ -1979,7 +2400,7 @@ function buildWidgetInner(w) {
         `;
     }
 
-    /* 10. QUICK LAUNCHER (SAFE INDEX-BASED + ICON_CACHE) */
+    /* 10. QUICK LAUNCHER */
     if (w.kind === 'launcher') {
         const pins = (state.pinnedShortcuts || []).slice(0, w.size === 'S' ? 4 : 8);
         return `
@@ -1993,7 +2414,7 @@ function buildWidgetInner(w) {
         `;
     }
 
-    /* 11. TODO LIST (PROGRESS RING + QUICK-ADD) */
+    /* 11. TODO LIST */
     if (w.kind === 'todo') {
         const todos = state.todos || [];
         const doneCnt = todos.filter(t => t.done).length;
@@ -2029,7 +2450,7 @@ function buildWidgetInner(w) {
         `;
     }
 
-    /* 12. MARKET & FX + INLINE CONVERTER */
+    /* 12. MARKET & INLINE CURRENCY CONVERTER */
     if (w.kind === 'market' || w.kind === 'currency-ticker') {
         const mk = state.market || {};
         const btcChg = Number(mk.btcChange24h || 0);
@@ -2062,6 +2483,7 @@ function buildWidgetInner(w) {
                     <option value="usd-try" ${marketConvState.pair==='usd-try'?'selected':''}>USD→TRY</option>
                     <option value="eur-try" ${marketConvState.pair==='eur-try'?'selected':''}>EUR→TRY</option>
                     <option value="try-usd" ${marketConvState.pair==='try-usd'?'selected':''}>TRY→USD</option>
+                    <option value="try-eur" ${marketConvState.pair==='try-eur'?'selected':''}>TRY→EUR</option>
                     <option value="btc-usd" ${marketConvState.pair==='btc-usd'?'selected':''}>BTC→USD</option>
                 </select>
                 <span class="num" id="mktOut-${escHtml(w.id)}" style="margin-left:auto;font-size:12px;font-weight:800;color:var(--accent-1);">${escHtml(convVal)}</span>
@@ -2148,7 +2570,7 @@ function buildWidgetInner(w) {
         `;
     }
 
-    /* 17. AUDIO MIXER (MASTER + OUTPUTS + PER-APP SESSIONS) */
+    /* 17. AUDIO MIXER */
     if (w.kind === 'audio-mixer') {
         const aud = state.audio || { volume: 50, muted: false, device: 'Ses Çıkışı' };
         const outs = (state.audioOutputs || []).slice(0, 3);
@@ -2175,7 +2597,7 @@ function buildWidgetInner(w) {
         `;
     }
 
-    /* 18. FOCUS RINGS (3 ACTIVITY RINGS) */
+    /* 18. FOCUS RINGS */
     if (w.kind === 'focus-rings') {
         const fs = state.focusStats || { completedMins: 0, goalMins: 90 };
         const todos = state.todos || [];
@@ -2279,7 +2701,7 @@ function cycleVariant(id, kind, cur) {
     send('updateDesktopWidget', { id, variant: next });
 }
 
-/* ═══════════ DIRECT RIGHT-CLICK PRO INSPECTOR ═══════════ */
+/* ═══════════ DIRECT RIGHT-CLICK VISUAL STIL / SKIN INSPECTOR ═══════════ */
 function openWidgetInspector(e, wid) {
     e.preventDefault();
     e.stopPropagation();
@@ -2287,8 +2709,8 @@ function openWidgetInspector(e, wid) {
     const vw = window.innerWidth || 1920;
     const vh = window.innerHeight || 1080;
     inspectorPos = {
-        x: Math.max(12, Math.min(vw - 304, e.clientX + 8)),
-        y: Math.max(12, Math.min(vh - 360, e.clientY + 8))
+        x: Math.max(12, Math.min(vw - 328, e.clientX + 8)),
+        y: Math.max(12, Math.min(vh - 420, e.clientY + 8))
     };
     renderInspector();
     scheduleHitRects();
@@ -2314,18 +2736,24 @@ function renderInspector() {
     el.style.top = inspectorPos.y + 'px';
     el.innerHTML = `
         <div class="insp-head">
-            <div style="font-size:12.5px;font-weight:700;">${escHtml(KIND_LABELS[w.kind] || w.kind)} · Pro Stil</div>
+            <div style="font-size:12.5px;font-weight:700;">${escHtml(KIND_LABELS[w.kind] || w.kind)} · Stil</div>
             <button class="w-ibtn" style="width:22px;height:22px;" onclick="closeWidgetInspector()">${IC.close}</button>
         </div>
         <div class="insp-sec">
-            <div class="insp-lbl">Tasarım Arketipi</div>
-            <div class="insp-chips">
-                ${SKIN_META.map(s => `<button class="insp-chip ${curSkin === s.id ? 'active' : ''}" onclick="setWidgetProp('${escHtml(w.id)}',{skin:'${s.id}'})">${s.name}</button>`).join('')}
+            <div class="insp-lbl">Malzeme & Yüzey</div>
+            <div class="insp-skin-grid">
+                ${SKIN_META.map(s => {
+                    const active = curSkin === s.id || (s.id === 'acrylic' && curSkin === 'neoglass');
+                    return `<button class="insp-skin-swatch ${active ? 'active' : ''}" onclick="setWidgetProp('${escHtml(w.id)}',{skin:'${s.id}'})">
+                        <span class="insp-sw-preview ${s.preview}"><i style="width:55%;"></i><i style="width:26%;opacity:0.4;"></i></span>
+                        <span class="insp-sw-name">${s.name}</span>
+                    </button>`;
+                }).join('')}
             </div>
         </div>
         ${vars.length > 1 ? `
         <div class="insp-sec">
-            <div class="insp-lbl">Görünüm Tasarımı</div>
+            <div class="insp-lbl">Canlı Varyant</div>
             <div class="insp-chips">
                 ${vars.map(v => `<button class="insp-chip ${curVar === v.id ? 'active' : ''}" onclick="setWidgetProp('${escHtml(w.id)}',{variant:'${v.id}'})">${v.name}</button>`).join('')}
             </div>
@@ -2333,7 +2761,7 @@ function renderInspector() {
         <div class="insp-sec">
             <div class="insp-lbl">Boyut</div>
             <div class="insp-chips">
-                ${['S','M','L'].map(sz => `<button class="insp-chip ${(w.size || 'M') === sz ? 'active' : ''}" style="min-width:44px;" onclick="setWidgetProp('${escHtml(w.id)}',{size:'${sz}'})">${sz}</button>`).join('')}
+                ${['S','M','L'].map(sz => `<button class="insp-chip ${(w.size || 'M') === sz ? 'active' : ''}" style="min-width:46px;" onclick="setWidgetProp('${escHtml(w.id)}',{size:'${sz}'})">${sz}</button>`).join('')}
             </div>
         </div>
         <div class="insp-sec">
@@ -2387,7 +2815,7 @@ function renderWidgets(force) {
         clips: state.clipboard,
         fstats: state.focusStats,
         photos: Object.keys(state.widgetPhotos || {}).map(k => `${k}:${(state.widgetPhotos[k]||'').length}`),
-        met: state.metrics ? `${state.metrics.cpu}|${state.metrics.ramPct}|${state.metrics.rxKbps}` : null,
+        met: state.metrics ? `${state.metrics.cpu}|${state.metrics.ramPct}|${state.metrics.rxKbps}|${state.metrics.txKbps}` : null,
         weath: state.weather,
         focus: state.focus,
         ai: state.aiSnapshots,
@@ -2414,9 +2842,10 @@ function renderWidgets(force) {
     canvas.innerHTML = widgets.map(w => {
         const pos = resolveWidgetXY(w);
         const skin = w.skin || 'glass';
+        const variant = normalizeVariant(w.kind, w.variant);
         const opStyle = typeof w.opacity === 'number' ? `opacity:${w.opacity.toFixed(2)};` : '';
         return `
-            <div class="widget-card w-sz-${escHtml(w.size || 'M')} w-kind-${escHtml(w.kind || 'clock')} skin-${escHtml(skin)}"
+            <div class="widget-card w-sz-${escHtml(w.size || 'M')} w-kind-${escHtml(w.kind || 'clock')} w-variant-${escHtml(variant)} skin-${escHtml(skin)}"
                  data-wid="${escHtml(w.id)}"
                  style="left:${pos.left}px;top:${pos.top}px;${opStyle}"
                  oncontextmenu="openWidgetInspector(event,'${escHtml(w.id)}')"
@@ -2424,7 +2853,7 @@ function renderWidgets(force) {
                 <div class="w-edit-bar" onpointerdown="event.stopPropagation()">
                     <div style="display:flex;gap:3px;align-items:center;">
                         <button class="w-ibtn" style="width:22px;height:21px;font-size:10px;font-weight:700;" onclick="cycleSize('${escHtml(w.id)}','${escHtml(w.size||'M')}')" title="Boyut: S/M/L">${escHtml(w.size||'M')}</button>
-                        <button class="w-btn" style="height:21px;padding:0 7px;font-size:9.5px;" onclick="openWidgetInspector(event,'${escHtml(w.id)}')" title="Arketip & Stil Denetçisi">${IC.sliders} Stil</button>
+                        <button class="w-btn" style="height:21px;padding:0 7px;font-size:9.5px;" onclick="openWidgetInspector(event,'${escHtml(w.id)}')" title="Stil Denetçisi">${IC.sliders} Stil</button>
                     </div>
                     <div style="display:flex;gap:3px;align-items:center;">
                         <button class="w-ibtn ${w.pinnedTop ? 'active' : ''}" style="width:21px;height:21px;" onclick="send('updateDesktopWidget',{id:'${escHtml(w.id)}',pinnedTop:${!w.pinnedTop}})" title="Her Zaman Üstte">${IC.pin}</button>
@@ -2438,24 +2867,6 @@ function renderWidgets(force) {
 
     if (inspectorWid) renderInspector();
     scheduleHitRects();
-}
-
-function formatMediaClockTime(secs) {
-    const s = Math.max(0, Math.floor(Number(secs) || 0));
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    const r = s % 60;
-    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
-    return `${m}:${String(r).padStart(2, '0')}`;
-}
-function getWidgetLiveMediaPos(m) {
-    if (!m) return 0;
-    const dur = Math.max(0, Number(m.durationSecs) || 0);
-    let pos = Math.max(0, Number(m.positionSecs) || 0);
-    if (m.isPlaying && Number(m.timelineUpdatedMs) > 0) {
-        pos = Math.floor(pos + Math.max(0, (Date.now() - Number(m.timelineUpdatedMs)) / 1000));
-    }
-    return dur > 0 ? Math.min(dur, pos) : pos;
 }
 
 function updateLiveClockDom() {
@@ -2483,6 +2894,7 @@ function updateLiveClockDom() {
     document.querySelectorAll('[data-chrono-h]').forEach(el => el.setAttribute('transform', `rotate(${hDeg} 50 50)`));
     document.querySelectorAll('[data-chrono-m]').forEach(el => el.setAttribute('transform', `rotate(${mDeg} 50 50)`));
     document.querySelectorAll('[data-chrono-s]').forEach(el => el.setAttribute('transform', `rotate(${sDeg} 50 50)`));
+    document.querySelectorAll('[data-chrono-sub-s]').forEach(el => el.setAttribute('transform', `rotate(${sDeg} 50 72)`));
     document.querySelectorAll('[data-world-tz]').forEach(el => {
         const tz = el.getAttribute('data-world-tz');
         if (!tz) return;
@@ -2509,7 +2921,7 @@ function updateLiveClockDom() {
 
 function startWidgetDrag(e, id) {
     if (!state?.widgetEditMode || state?.widgetsLocked || e.button !== 0) return;
-    if (e.target.closest('button, input, textarea, .w-edit-bar')) return;
+    if (e.target.closest('button, input, textarea, select, .w-edit-bar')) return;
     closeWidgetInspector();
     const el = e.currentTarget;
     const r = el.getBoundingClientRect();
