@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use aurora_core::{PinnedShortcut, ShellRuntimePreferences};
+use aurora_core::{DesktopWidgetInstance, DockWidgetConfig, PinnedShortcut, ShellRuntimePreferences};
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 
@@ -87,6 +87,10 @@ pub struct AuroraBackupBundle {
     pub pinned_shortcuts: Vec<PinnedShortcut>,
     pub agenda_notes: HashMap<String, String>,
     pub scratchpad_text: String,
+    #[serde(default)]
+    pub widgets: Vec<DesktopWidgetInstance>,
+    #[serde(default)]
+    pub dock_widgets: Vec<DockWidgetConfig>,
 }
 
 impl AuroraBackupBundle {

@@ -1,9 +1,18 @@
 @echo off
+chcp 65001 >nul
 title Project Aurora Studio
-set "AURORA_EXE=%~dp0src\Aurora.App\bin\x64\Release\net10.0-windows10.0.22621.0\win-x64\Aurora.App.exe"
-if exist "%AURORA_EXE%" (
-    start "" "%AURORA_EXE%" --studio
+set "AURORA_REL=%~dp0aurora-rs\target\release\aurora.exe"
+set "AURORA_INST=%LOCALAPPDATA%\Programs\ProjectAurora\aurora.exe"
+
+if exist "%AURORA_REL%" (
+    start "" "%AURORA_REL%" --studio %*
     exit /b 0
 )
-echo Aurora.App.exe bulunamadi. Once Start-Aurora.cmd calistirin.
+if exist "%AURORA_INST%" (
+    start "" "%AURORA_INST%" --studio %*
+    exit /b 0
+)
+
+echo aurora.exe bulunamadı. Önce Start-Aurora.cmd çalıştırın veya kurulum sihirbazını kullanın.
 pause
+exit /b 1

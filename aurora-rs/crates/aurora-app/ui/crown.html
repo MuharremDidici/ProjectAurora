@@ -987,10 +987,18 @@ textarea.scratchpad:focus { border-color: var(--accent-1); }
 #dropPopup { width: min(480px, calc(100vw - 24px)); }
 #omnibar {
     pointer-events: auto;
-    margin-top: 8px; width: min(740px, calc(100vw - 24px));
+    position: fixed; left: 50%; bottom: 62px; transform: translateX(-50%);
+    margin-top: 0; width: min(740px, calc(100vw - 24px));
+    max-height: min(560px, calc(100vh - 110px)); overflow: hidden;
     border-radius: var(--radius-shell); padding: 15px;
     display: none; flex-direction: column; gap: 11px;
-    animation: flyIn 0.18s var(--spring);
+    z-index: 60;
+    animation: flyUpOmni 0.18s var(--spring);
+}
+body.arch-linear-studio #omnibar { bottom: 50px; }
+@keyframes flyUpOmni {
+    from { opacity: 0; transform: translateX(-50%) translateY(14px) scale(0.97); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
 }
 #omnibar.open { display: flex; }
 
@@ -1770,12 +1778,522 @@ body.style-cyber-prism .cal-day,
 body.style-cyber-prism .clip-card {
     border-radius: 3px;
 }
+
+/* ========== v4.0 12-THEME SIGNATURES, RADIUS PRESETS, QUIET ISLAND & SIDEBAR SETTINGS ========== */
+body.radius-sharp { --radius-shell: 8px; --radius-card: 6px; --radius-item: 6px; --radius-btn: 6px; }
+body.radius-modern { --radius-shell: 20px; --radius-card: 14px; --radius-item: 11px; --radius-btn: 11px; }
+body.radius-capsule { --radius-shell: 28px; --radius-card: 18px; --radius-item: 14px; --radius-btn: 999px; }
+
+body.theme-oled-obsidian-dark .glass-shell {
+    background: rgba(0, 0, 0, 0.96) !important;
+    border: 1px solid rgba(255, 255, 255, 0.13) !important;
+    box-shadow: 0 22px 54px rgba(0, 0, 0, 0.94), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+body.theme-midnight-emerald-dark .glass-shell {
+    background:
+        radial-gradient(ellipse 64% 55% at 20% 0%, rgba(16, 185, 129, 0.16), transparent 64%),
+        linear-gradient(168deg, var(--bg-glass-1), var(--bg-glass-2));
+}
+body.theme-sunset-kyoto-dark .glass-shell {
+    background:
+        radial-gradient(ellipse 68% 58% at 80% 0%, rgba(251, 146, 60, 0.16), transparent 64%),
+        radial-gradient(ellipse 52% 48% at 15% 100%, rgba(244, 114, 182, 0.12), transparent 64%),
+        linear-gradient(168deg, var(--bg-glass-1), var(--bg-glass-2));
+}
+
+#crown.island-hidden { display: none !important; }
+
+/* Apple / Linear 6-Section Sidebar Settings Architecture */
+.settings-shell {
+    display: grid;
+    grid-template-columns: 204px minmax(0, 1fr);
+    gap: 14px;
+    flex: 1;
+    min-height: 0;
+}
+.settings-nav {
+    display: flex; flex-direction: column; gap: 4px;
+    padding-right: 10px;
+    border-right: 1px solid var(--border-subtle);
+    overflow-y: auto;
+}
+.snav-btn {
+    display: flex; align-items: center; gap: 9px;
+    width: 100%; padding: 8px 11px; border-radius: 10px;
+    border: 1px solid transparent; background: transparent;
+    color: var(--text-2); font-family: var(--font); font-size: 12px; font-weight: 600;
+    cursor: pointer; text-align: left;
+    transition: background 0.14s, color 0.14s, border-color 0.14s;
+}
+.snav-btn:hover { background: var(--bg-card-hover); color: var(--text-1); }
+.snav-btn.active {
+    background: var(--accent-soft);
+    border-color: var(--accent-ring);
+    color: var(--accent-1);
+    font-weight: 700;
+}
+.settings-pane {
+    display: flex; flex-direction: column; gap: 11px;
+    overflow-y: auto; padding-right: 5px; min-height: 0;
+}
+.sp-title { font-size: 15px; font-weight: 800; letter-spacing: -0.015em; }
+.sp-sub { font-size: 11.5px; color: var(--text-2); margin-top: 2px; line-height: 1.35; }
+.sp-group {
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-card); padding: 11px 13px;
+    display: flex; flex-direction: column; gap: 9px;
+}
+.sp-group-title {
+    font-size: 10.5px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--text-2);
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.sp-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 4px 0;
+}
+.sp-row + .sp-row { border-top: 1px solid var(--border-subtle); padding-top: 8px; }
+.sp-row-lbl { font-size: 12px; font-weight: 700; color: var(--text-1); }
+.sp-row-desc { font-size: 10.5px; color: var(--text-2); margin-top: 1px; line-height: 1.3; }
+
+/* Animated Toggle Switch */
+.sw {
+    position: relative; width: 40px; height: 22px; border-radius: 99px;
+    border: 1px solid var(--border-rim); background: var(--bg-inset);
+    cursor: pointer; flex-shrink: 0; padding: 0;
+    transition: background 0.16s, border-color 0.16s;
+}
+.sw::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--text-2);
+    transition: transform 0.18s var(--spring), background 0.16s;
+}
+.sw.on { background: var(--accent-1); border-color: var(--accent-1); }
+.sw.on::after { transform: translateX(18px); background: var(--accent-ink); }
+
+/* Segmented Control */
+.seg-group {
+    display: inline-flex; gap: 3px; padding: 3px;
+    border-radius: 10px; background: var(--bg-inset);
+    border: 1px solid var(--border-subtle); flex-wrap: wrap;
+}
+.seg-btn {
+    border: none; background: transparent; color: var(--text-2);
+    font-family: var(--font); font-size: 11px; font-weight: 700;
+    padding: 5px 10px; border-radius: 7px; cursor: pointer;
+    transition: background 0.14s, color 0.14s;
+}
+.seg-btn:hover { color: var(--text-1); }
+.seg-btn.active { background: var(--accent-1); color: var(--accent-ink); }
+
+/* Experience Presets & 4 Hub Style Cards */
+.preset-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+.preset-card {
+    padding: 9px 10px; border-radius: 13px; text-align: left;
+    border: 1px solid var(--border-subtle); background: var(--bg-inset);
+    color: var(--text-1); cursor: pointer; font-family: var(--font);
+    display: flex; flex-direction: column; gap: 3px;
+    transition: border-color 0.14s, background 0.14s, transform 0.12s;
+}
+.preset-card:hover { border-color: var(--accent-1); background: var(--accent-soft); transform: translateY(-1px); }
+.preset-card strong { font-size: 11.5px; font-weight: 800; }
+.preset-card span { font-size: 10px; color: var(--text-2); line-height: 1.28; }
+
+.theme-filter-bar { display: flex; gap: 5px; flex-wrap: wrap; }
+.tf-chip {
+    border: 1px solid var(--border-subtle); background: var(--bg-inset); color: var(--text-2);
+    font-family: var(--font); font-size: 10.5px; font-weight: 700;
+    padding: 4px 9px; border-radius: 99px; cursor: pointer;
+    transition: background 0.13s, color 0.13s, border-color 0.13s;
+}
+.tf-chip:hover { color: var(--text-1); border-color: var(--border-rim); }
+.tf-chip.active { background: var(--accent-soft); border-color: var(--accent-ring); color: var(--accent-1); }
+
+/* v4.1 8 New Theme Ambient Signatures in Crown */
+body.theme-aurora-borealis-dark .glass-shell {
+    background:
+        radial-gradient(ellipse 64% 55% at 18% 0%, rgba(45, 212, 191, 0.17), transparent 64%),
+        radial-gradient(ellipse 56% 52% at 84% 100%, rgba(192, 132, 252, 0.14), transparent 64%),
+        linear-gradient(166deg, var(--bg-glass-1), var(--bg-glass-2));
+}
+body.theme-crystal-sapphire-dark .glass-shell {
+    background: radial-gradient(ellipse 68% 54% at 24% 0%, rgba(96, 165, 250, 0.17), transparent 64%), linear-gradient(166deg, var(--bg-glass-1), var(--bg-glass-2));
+}
+body.theme-tokyo-rain-dark .glass-shell {
+    background:
+        radial-gradient(ellipse 60% 50% at 82% 0%, rgba(251, 113, 133, 0.16), transparent 62%),
+        radial-gradient(ellipse 52% 48% at 18% 100%, rgba(56, 189, 248, 0.13), transparent 62%),
+        linear-gradient(168deg, var(--bg-glass-1), var(--bg-glass-2));
+}
+body.theme-rose-velvet-dark .glass-shell {
+    background: radial-gradient(ellipse 66% 54% at 22% 0%, rgba(249, 168, 212, 0.14), transparent 64%), linear-gradient(166deg, var(--bg-glass-1), var(--bg-glass-2));
+}
+body.theme-desert-dune-dark .glass-shell {
+    background: radial-gradient(ellipse 64% 52% at 78% 0%, rgba(251, 191, 36, 0.13), transparent 64%), linear-gradient(166deg, var(--bg-glass-1), var(--bg-glass-2));
+}
+body.eco-mode .eq span { animation-play-state: paused !important; }
+
+.hub-opt-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.hub-opt-card {
+    padding: 10px 11px; border-radius: 12px; text-align: left;
+    border: 1px solid var(--border-subtle); background: var(--bg-inset);
+    color: var(--text-1); cursor: pointer; font-family: var(--font);
+    display: flex; flex-direction: column; gap: 3px;
+    transition: border-color 0.14s, background 0.14s;
+}
+.hub-opt-card:hover { border-color: var(--border-rim); }
+.hub-opt-card.active { border-color: var(--accent-1); background: var(--accent-soft); }
+.hub-opt-card strong { font-size: 12px; font-weight: 800; }
+.hub-opt-card span { font-size: 10.5px; color: var(--text-2); line-height: 1.3; }
+
+/* v5.0 Visual Widget Gallery, Decluttered Dock Studio & AI Quota Settings */
+.wg-vgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.wg-vcard {
+    display: flex; flex-direction: column; gap: 9px;
+    padding: 10px; border-radius: 14px;
+    background: var(--bg-inset); border: 1px solid var(--border-subtle);
+    transition: border-color 0.16s, transform 0.14s var(--ease), box-shadow 0.16s;
+}
+.wg-vcard:hover {
+    border-color: var(--border-rim);
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px -10px rgba(0, 0, 0, 0.35);
+}
+.wg-thumb {
+    position: relative; height: 74px; border-radius: 11px; padding: 9px 11px;
+    display: flex; flex-direction: column; justify-content: center; overflow: hidden;
+    border: 1px solid var(--border-subtle);
+    background: linear-gradient(155deg, rgba(var(--a1-rgb), 0.10), rgba(var(--a2-rgb), 0.06)), var(--bg-card);
+}
+.wg-thumb.sk-frameless {
+    background: linear-gradient(135deg, #1E293B 0%, #334155 55%, #0F172A 100%);
+    border-color: rgba(255, 255, 255, 0.14); color: #FFFFFF;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
+}
+.wg-thumb.sk-glass {
+    background: linear-gradient(180deg, rgba(255,255,255,0.11), rgba(255,255,255,0.03)), var(--bg-glass-1);
+    border-color: var(--border-rim);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+.wg-thumb.sk-braun {
+    background: #1C1D20; border-color: rgba(255, 255, 255, 0.12); color: #F4F4F5;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+body.mode-light .wg-thumb.sk-braun { background: #F1EFEA; color: #18181B; border-color: rgba(24, 24, 27, 0.14); }
+.wg-thumb.sk-braun::after {
+    content: ''; position: absolute; top: 7px; right: 8px; width: 4.5px; height: 4.5px;
+    border-radius: 50%; background: #F97316;
+}
+.wg-thumb.sk-matrix {
+    background-color: #0B0C10; color: #F8FAFC;
+    background-image: radial-gradient(rgba(255,255,255,0.12) 1px, transparent 1px);
+    background-size: 7px 7px; border-color: rgba(255, 255, 255, 0.16);
+}
+body.mode-light .wg-thumb.sk-matrix {
+    background-color: #F3F4F6; color: #111827;
+    background-image: radial-gradient(rgba(15,23,42,0.14) 1px, transparent 1px);
+}
+.wg-thumb.sk-editorial {
+    background: var(--bg-glass-2); border-color: var(--border-rim);
+}
+.wg-vfoot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.wg-vfoot strong { font-size: 12px; font-weight: 700; display: block; }
+.wg-vfoot span { font-size: 10px; color: var(--text-2); display: block; margin-top: 1px; line-height: 1.25; }
+
+.dw-studio-item {
+    border-radius: 12px; background: var(--bg-inset); border: 1px solid var(--border-subtle);
+    overflow: hidden; transition: border-color 0.14s;
+}
+.dw-studio-item.on { border-color: var(--border-rim); }
+.dw-studio-head {
+    display: flex; align-items: center; gap: 10px; padding: 8px 11px;
+}
+.dw-ic-box {
+    width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+    color: var(--text-2); display: inline-flex; align-items: center; justify-content: center;
+}
+.dw-studio-item.on .dw-ic-box {
+    background: var(--accent-soft); border-color: var(--accent-ring); color: var(--accent-1);
+}
+.dw-meta-tag {
+    display: inline-flex; align-items: center; padding: 1.5px 7px; border-radius: 99px;
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+    font-size: 9.5px; font-weight: 700; color: var(--text-2);
+}
+.dw-studio-drawer {
+    padding: 9px 11px 11px; border-top: 1px solid var(--border-subtle);
+    background: var(--bg-card); display: flex; flex-direction: column; gap: 8px;
+}
+.dw-drawer-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.dw-drawer-lbl { font-size: 10px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.06em; }
+
+.wg-active-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;
+    padding: 8px 10px; border-radius: 11px;
+    background: var(--bg-inset); border: 1px solid var(--border-subtle);
+    font-size: 11.5px;
+}
+.ai-cfg-card {
+    padding: 10px 11px; border-radius: 12px;
+    background: var(--bg-inset); border: 1px solid var(--border-subtle);
+    display: flex; flex-direction: column; gap: 7px;
+}
+.ai-brand-mark { width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ai-brand-mark svg { width: 16px; height: 16px; }
+.ai-key-inp {
+    flex: 1; height: 28px; padding: 0 9px; border-radius: 8px;
+    border: 1px solid var(--border-rim); background: var(--bg-card); color: var(--text-1);
+    font-family: var(--font-mono); font-size: 11px; outline: none; user-select: text;
+}
+.ai-key-inp:focus { border-color: var(--accent-1); }
+
+/* ========== v6.0 DYNAMIC ISLAND FORM FACTORS, DUAL-WING, MICRO-DECK & ARCHITECTURES ========== */
+.crown-row {
+    display: inline-flex; align-items: flex-start; justify-content: center; gap: 10px;
+    pointer-events: none;
+}
+.crown-wing {
+    pointer-events: auto;
+    margin-top: 7px; height: 28px; padding: 0 11px;
+    border-radius: 999px;
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 700; color: var(--text-1);
+    cursor: pointer;
+    box-shadow: 0 10px 26px -6px rgba(0, 0, 0, 0.56);
+    animation: popDown 0.22s var(--spring);
+}
+.crown-wing[hidden] { display: none !important; }
+body.isl-hardware-pod .crown-wing { border-radius: 10px; font-family: var(--font-mono); }
+body.isl-compact-notch .crown-wing { margin-top: 0; border-radius: 0 0 14px 14px; height: 26px; }
+
+/* 6 Dynamic Island Form Factors (Resting + Expanded Live Command Stage) */
+body.isl-liquid-pill #crown.droplet {
+    margin-top: 8px !important; height: 28px !important; min-height: 28px;
+    border-top: 1px solid var(--border-rim) !important;
+    border-radius: 999px !important; padding: 0 14px !important;
+}
+body.isl-liquid-pill #crown.droplet::after { display: none !important; }
+
+body.isl-mac-notch #crown.droplet {
+    margin-top: 0 !important; height: 27px !important; min-width: 176px;
+    background: #06070B !important; color: #F8FAFC !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important; border-top: none !important;
+    border-radius: 0 0 18px 18px !important; padding: 0 16px !important;
+    box-shadow: 0 8px 22px -6px rgba(0, 0, 0, 0.72) !important;
+    position: relative;
+}
+body.isl-mac-notch #crown.droplet::before,
+body.isl-mac-notch #crown.live-stage::before {
+    content: ""; position: absolute; top: 0; left: -12px; width: 12px; height: 12px;
+    background: radial-gradient(circle at 0 100%, transparent 11.5px, #06070B 12px);
+    pointer-events: none;
+}
+body.isl-mac-notch #crown.droplet::after,
+body.isl-mac-notch #crown.live-stage::after {
+    content: ""; position: absolute; top: 0; right: -12px; left: auto !important;
+    width: 12px !important; height: 12px !important; opacity: 1 !important;
+    background: radial-gradient(circle at 100% 100%, transparent 11.5px, #06070B 12px) !important;
+    pointer-events: none;
+}
+body.isl-mac-notch #crown.live-stage {
+    margin-top: 0 !important; border-top: none !important;
+    border-radius: 0 0 26px 26px !important;
+    background: linear-gradient(180deg, #06070B, rgba(12, 16, 28, 0.96)) !important;
+    position: relative;
+}
+
+body.isl-edge-horizon #crown.droplet:not(.osd-active):not(.rec-live):not(.bt-popin):not(.notif-morph):not(.privacy-alert) {
+    margin-top: 0 !important; height: 4px !important; min-width: 126px !important;
+    padding: 0 !important; border-top: none !important; border: none !important;
+    border-radius: 0 0 8px 8px !important;
+    background: linear-gradient(90deg, rgba(var(--a1-rgb),0.55), var(--accent-1), var(--accent-2), rgba(var(--a2-rgb),0.55)) !important;
+    box-shadow: 0 4px 14px var(--accent-glow) !important;
+    opacity: 0.90;
+}
+body.isl-edge-horizon #crown.droplet:not(.osd-active):not(.rec-live):not(.bt-popin):not(.notif-morph):not(.privacy-alert) > * {
+    opacity: 0; pointer-events: none;
+}
+body.isl-edge-horizon #crown.droplet.auto-stealth-idle { opacity: 0.48 !important; }
+body.isl-edge-horizon #crown.live-stage { border-top: 2px solid var(--accent-1) !important; }
+
+body.isl-hardware-pod #crown.droplet {
+    margin-top: 7px !important; height: 28px !important;
+    background: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), #0B0D12 !important;
+    background-size: 8px 8px, 100% 100% !important;
+    border: 1px solid rgba(255,255,255,0.18) !important;
+    border-radius: 9px !important; padding: 0 13px !important;
+    font-family: var(--font-mono);
+}
+body.isl-hardware-pod #crown.droplet::after { display: none !important; }
+body.isl-hardware-pod #crown.live-stage {
+    border-radius: 14px !important; font-family: var(--font-mono);
+    background: radial-gradient(rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(180deg, #101218, #08090D) !important;
+    background-size: 10px 10px, 100% 100% !important;
+}
+
+body.isl-glass-bar #crown.droplet:not(.osd-active):not(.rec-live):not(.bt-popin):not(.notif-morph) {
+    margin-top: 7px !important; height: 30px !important; min-width: 344px;
+    border-radius: 14px !important; padding: 0 13px !important;
+    border-top: 1px solid var(--border-rim) !important;
+    justify-content: space-between; gap: 10px;
+}
+body.isl-glass-bar #crown.droplet::after { display: none !important; }
+
+body.isl-orbital-halo #crown.droplet:not(.osd-active):not(.rec-live):not(.bt-popin):not(.notif-morph):not(.privacy-alert) {
+    margin-top: 7px !important; width: 34px !important; min-width: 34px !important; height: 34px !important;
+    padding: 0 !important; border-radius: 50% !important; justify-content: center;
+    border: 1.5px solid rgba(255, 255, 255, 0.34) !important;
+    box-shadow: 0 10px 26px -6px rgba(0, 0, 0, 0.62), 0 0 18px -4px var(--accent-glow) !important;
+}
+body.isl-orbital-halo #crown.droplet::after { display: none !important; }
+.orb-halo-ring {
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 2px solid var(--accent-1); box-shadow: 0 0 10px var(--accent-glow);
+}
+
+#crown.droplet.auto-stealth-idle { opacity: 0.48; }
+#crown.droplet.auto-stealth-idle:hover { opacity: 1; }
+
+/* Instant 1-Hover Live Command Stage */
+#crown.live-stage {
+    margin-top: 7px;
+    width: min(506px, calc(100vw - 24px));
+    border-radius: 24px; padding: 10px 12px;
+    display: flex; flex-direction: column; gap: 8px;
+    animation: popDown 0.18s var(--spring);
+}
+.stage-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.stage-tabs { display: flex; gap: 3px; background: var(--bg-inset); padding: 2.5px; border-radius: 999px; border: 1px solid var(--border-subtle); }
+.stage-tab {
+    border: none; background: transparent; color: var(--text-2);
+    font-family: var(--font); font-size: 10px; font-weight: 700;
+    padding: 4px 9px; border-radius: 999px; cursor: pointer;
+    transition: background 0.14s, color 0.14s; white-space: nowrap;
+}
+.stage-tab:hover { color: var(--text-1); }
+.stage-tab.active { background: var(--accent-1); color: var(--accent-ink); }
+.stage-actions { display: inline-flex; align-items: center; gap: 4px; }
+.stage-bento { display: grid; grid-template-columns: 1.15fr 1fr; gap: 8px; }
+.stage-card {
+    padding: 9px 10px; border-radius: 15px;
+    background: var(--bg-inset); border: 1px solid var(--border-subtle);
+    display: flex; flex-direction: column; gap: 7px; min-width: 0;
+}
+.stage-act-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; height: 100%; }
+.stage-act-btn {
+    border: 1px solid var(--border-subtle); background: var(--bg-card); color: var(--text-1);
+    border-radius: 10px; padding: 6px 8px; cursor: pointer; font-family: var(--font);
+    font-size: 10.5px; font-weight: 700; display: flex; align-items: center; gap: 6px;
+    transition: background 0.13s, border-color 0.13s, transform 0.12s;
+}
+.stage-act-btn:hover { background: var(--bg-card-hover); border-color: var(--accent-ring); transform: translateY(-0.5px); }
+.stage-act-btn.active { background: var(--accent-soft); border-color: var(--accent-1); color: var(--accent-1); }
+.stage-strip {
+    display: flex; align-items: center; justify-content: space-between; gap: 6px;
+    padding-top: 2px; border-top: 1px solid var(--border-subtle);
+}
+.stage-clip-chip {
+    flex: 1; min-width: 0; height: 24px; padding: 0 8px; border-radius: 8px;
+    border: 1px solid var(--border-subtle); background: var(--bg-card); color: var(--text-2);
+    font-family: var(--font); font-size: 10px; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 5px; cursor: pointer;
+    overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+}
+.stage-clip-chip:hover { color: var(--text-1); border-color: var(--accent-ring); background: var(--bg-card-hover); }
+.stage-scratch {
+    width: 100%; min-height: 62px; resize: none; border-radius: 11px; padding: 8px 10px;
+    border: 1px solid var(--border-subtle); background: var(--bg-inset); color: var(--text-1);
+    font-family: var(--font); font-size: 11px; line-height: 1.38; outline: none; user-select: text;
+}
+.stage-scratch:focus { border-color: var(--accent-1); }
+
+/* Automatic Live Morph Cards inside Droplet */
+#crown.droplet.bt-popin {
+    height: 54px !important; min-width: 296px; padding: 0 15px !important;
+    border-radius: 22px !important; gap: 11px; margin-top: 7px !important;
+    border-top: 1px solid var(--border-rim) !important;
+}
+#crown.droplet.notif-morph {
+    height: 50px !important; max-width: 390px; padding: 0 13px !important;
+    border-radius: 20px !important; gap: 10px; margin-top: 7px !important;
+    border-top: 1px solid var(--accent-ring) !important;
+}
+#crown.droplet.privacy-alert {
+    border-color: rgba(251, 113, 133, 0.55) !important;
+    box-shadow: 0 10px 26px -6px rgba(225, 29, 72, 0.36) !important;
+}
+@keyframes pulseRed { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.28); opacity: 0.65; } }
+.priv-pulse { width: 7px; height: 7px; border-radius: 50%; background: #EF4444; box-shadow: 0 0 8px #EF4444; animation: pulseRed 1.4s ease-in-out infinite; flex-shrink: 0; }
+
+/* 4-Tab Sleek Micro-Deck (468px) */
+#crown.micro-deck {
+    margin-top: 8px;
+    width: min(472px, calc(100vw - 24px));
+    border-radius: 22px; padding: 11px 13px;
+    display: flex; flex-direction: column; gap: 9px;
+}
+.md-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.md-tabs { display: flex; gap: 3px; background: var(--bg-inset); padding: 3px; border-radius: 999px; border: 1px solid var(--border-subtle); }
+.md-tab {
+    border: none; background: transparent; color: var(--text-2);
+    font-family: var(--font); font-size: 10.5px; font-weight: 700;
+    padding: 4px 10px; border-radius: 999px; cursor: pointer;
+    transition: background 0.14s, color 0.14s;
+}
+.md-tab:hover { color: var(--text-1); }
+.md-tab.active { background: var(--accent-1); color: var(--accent-ink); }
+.md-body { display: flex; flex-direction: column; gap: 8px; }
+.md-todo-inp {
+    flex: 1; height: 29px; padding: 0 10px; border-radius: 9px;
+    border: 1px solid var(--border-rim); background: var(--bg-inset);
+    color: var(--text-1); font-family: var(--font); font-size: 11.5px; outline: none; user-select: text;
+}
+.md-todo-inp:focus { border-color: var(--accent-1); }
+
+/* 10 Shell Architecture Cards in Appearance Studio */
+.arch-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.arch-card {
+    padding: 8px 9px; border-radius: 13px; text-align: left;
+    border: 1px solid var(--border-subtle); background: var(--bg-inset);
+    color: var(--text-1); cursor: pointer; font-family: var(--font);
+    display: flex; flex-direction: column; gap: 6px;
+    transition: border-color 0.15s, background 0.15s, transform 0.13s var(--ease);
+}
+.arch-card:hover { border-color: var(--border-rim); transform: translateY(-1px); background: var(--bg-card-hover); }
+.arch-card.active { border-color: var(--accent-1); background: var(--accent-soft); box-shadow: 0 0 0 1px var(--accent-ring); }
+.arch-card strong { font-size: 11.5px; font-weight: 800; display: block; }
+.arch-card span { font-size: 9.8px; color: var(--text-2); line-height: 1.25; display: block; }
+.arch-diag {
+    width: 100%; height: 42px; border-radius: 8px;
+    background: linear-gradient(160deg, rgba(var(--a1-rgb),0.10), rgba(var(--a2-rgb),0.06)), var(--bg-card);
+    border: 1px solid var(--border-subtle); overflow: hidden; display: block;
+}
+
+/* 6-Style Island Form Cards + Curated Bundle Row */
+.isl-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+.bundle-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+.bundle-btn {
+    padding: 8px 10px; border-radius: 11px; text-align: left;
+    border: 1px solid var(--border-subtle); background: var(--bg-inset);
+    color: var(--text-1); cursor: pointer; font-family: var(--font);
+    transition: border-color 0.14s, background 0.14s;
+}
+.bundle-btn:hover { border-color: var(--accent-1); background: var(--accent-soft); }
+.bundle-btn strong { font-size: 11.5px; font-weight: 700; display: block; }
+.bundle-btn span { font-size: 10px; color: var(--text-2); }
+.wg-thumb.sk-neoglass {
+    background: linear-gradient(160deg, rgba(255,255,255,0.16), rgba(var(--a1-rgb),0.10) 55%, rgba(0,0,0,0.22));
+    border-color: rgba(255,255,255,0.26);
+    box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.38), 0 8px 18px -6px rgba(0,0,0,0.4);
+}
         </style>
         </head>
         <body>
         <div class="stage">
             <div id="crownWrap">
-                <div id="crown" class="glass-shell droplet"></div>
+                <div class="crown-row"><div id="crown" class="glass-shell droplet"></div><div id="crownWing" class="glass-shell crown-wing" hidden></div></div>
             </div>
             <div id="osdFloat" class="glass-shell"></div>
             <div id="qrShareCard" class="glass-shell"></div>
@@ -1805,6 +2323,9 @@ body.style-cyber-prism .clip-card {
                 <div id="omniResults" class="omni-list" style="display:none;"></div>
                 <div class="power-strip">
                     <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                        <button class="pill-btn accent" onclick="openSettingsModal('appearance');" id="pwAuroraSettings" title="Aurora Görünüm, Görev Çubuğu ve Widget Ayarları"></button>
+                        <button class="pill-btn" onclick="openSettingsModal('widgets');" id="pwWidgets" title="10 Özelleştirilebilir Masaüstü Widget'ı ve AI Kota"></button>
+                        <button class="pill-btn" onclick="openToolsModal('shelf');" id="pwTools" title="Pano Kasası, Dosya Rafı, OCR ve Sistem Araçları"></button>
                         <button class="pill-btn" onclick="send('showDesktop');closeOmni();" id="pwDesktop"></button>
                         <button class="pill-btn" onclick="closeOmni();send('startScreenOcr');" id="pwOcr" title="Ekrandaki herhangi bir görsel veya videodan metin kopyala (Çevrimdışı OCR)"></button>
                         <button class="pill-btn" onclick="closeOmni();send('startColorPicker');" id="pwColor" title="Ekrandan piksel rengi al (HEX / RGB / HSL)"></button>
@@ -1895,7 +2416,14 @@ body.style-cyber-prism .clip-card {
     mouse: '<svg class="svg-ic sm" viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="6"/><path d="M12 7v4"/></svg>',
     keyboard: '<svg class="svg-ic sm" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M7 13h.01M11 13h.01M15 13h.01M8 16h8"/></svg>',
     zip: '<svg class="svg-ic sm" viewBox="0 0 24 24"><path d="M21 8v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8"/><path d="M23 4H1v4h22V4z"/><path d="M10 12h4"/></svg>',
-    extLink: '<svg class="svg-ic sm" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>'
+    extLink: '<svg class="svg-ic sm" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>',
+    clock: '<svg class="svg-ic sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+    musicSm: '<svg class="svg-ic sm" viewBox="0 0 24 24"><path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>',
+    cpu: '<svg class="svg-ic sm" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/></svg>',
+    market: '<svg class="svg-ic sm" viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M16 7h5v5"/></svg>',
+    openai: '<svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="1.8" stroke-linecap="round"><path d="M12 3.2a4.3 4.3 0 0 1 3.7 2.1l3.6 2.1a4.3 4.3 0 0 1 0 7.4l-3.6 2.1a4.3 4.3 0 0 1-7.4 0l-3.6-2.1a4.3 4.3 0 0 1 0-7.4l3.6-2.1A4.3 4.3 0 0 1 12 3.2z"/><circle cx="12" cy="12" r="2.5"/></svg>',
+    gemini: '<svg viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="1.8" stroke-linejoin="round"><path d="M12 2.5C13.2 8.2 15.8 10.8 21.5 12 15.8 13.2 13.2 15.8 12 21.5 10.8 15.8 8.2 13.2 2.5 12 8.2 10.8 10.8 8.2 12 2.5z" fill="rgba(56,189,248,0.18)"/></svg>',
+    claude: '<svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="1.9" stroke-linecap="round"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/><circle cx="12" cy="12" r="2.1" fill="#F59E0B"/></svg>'
 };
 
         let state = null;
@@ -1912,10 +2440,23 @@ let crownHovered = false;
 let crownPinned = false;
 let hoverLeaveTimer = null;
 let activeTab = 'control';
+let deckMode = 'settings'; // 'settings' | 'tools' | 'control'
+let settingsSection = 'appearance'; // 'appearance' | 'taskbar' | 'widgets' | 'island' | 'windows' | 'system'
+let themeCategoryFilter = 'all'; // 'all' | 'glass' | 'minimal' | 'mood' | 'tech'
+let widgetStudioTab = 'dock'; // 'dock' | 'desktop'
+let expandedDockWidgetKind = null;
+let gallerySkinPreset = 'neoglass'; // 'frameless' | 'glass' | 'neoglass' | 'braun' | 'matrix' | 'editorial'
+let lastThemeIdApplied = '';
+let microDeckOpen = false;
+let microDeckTab = 'live'; // 'live' | 'vault' | 'focus' | 'tools'
+let liveBtPopin = null;
+let btPopinTimer = null;
+let liveNotifMorph = null;
+let notifMorphTimer = null;
 
 function getInstalledApps() { return appCatalog.length ? appCatalog : (state?.installedApps || []); }
 function getThemesList() { return themesCatalog.length ? themesCatalog : (state?.themes || []); }
-function notifyMetricsVisible() { send('setMetricsActive', { active: Boolean(expanded && activeTab === 'metrics') }); }
+function notifyMetricsVisible() { send('setMetricsActive', { active: Boolean(expanded && (activeTab === 'metrics' || (deckMode === 'tools' && activeTab === 'metrics'))) }); }
 let omniOpen = false;
 let trayOpen = false;
 let calOpen = false;
@@ -1950,6 +2491,7 @@ function send(action, payload = {}) {
 }
 
 function closeAllSubPopups() {
+    microDeckOpen = false;
     omniOpen = false;
     trayOpen = false;
     calOpen = false;
@@ -1985,14 +2527,12 @@ function reportHitRects() {
     const rects = [];
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    for (const id of ['crown', 'qrShareCard', 'trayPopup', 'calendarPopup', 'dropPopup', 'notifPopup', 'onboardingCard', 'omnibar', 'toast']) {
+    for (const id of ['crown', 'crownWing', 'qrShareCard', 'trayPopup', 'calendarPopup', 'dropPopup', 'notifPopup', 'onboardingCard', 'omnibar', 'toast']) {
         const el = document.getElementById(id);
-        if (!el || getComputedStyle(el).display === 'none') continue;
+        if (!el || el.hidden || getComputedStyle(el).display === 'none') continue;
         const r = el.getBoundingClientRect();
         if (r.width > 0 && r.height > 0) {
             if (id === 'crown' && expanded) {
-                // Immediately reserve the full CSS target Bento Deck box on Frame 0 of the 0.30s spring
-                // transition so Win32 SetWindowRgn NEVER slices the opening panel horizontally!
                 const targetW = Math.min(900, Math.max(320, vw - 24));
                 const targetH = Math.min(528, Math.max(240, vh - 34));
                 const w = Math.max(r.width, targetW);
@@ -2000,21 +2540,34 @@ function reportHitRects() {
                 const x = Math.min(r.left, (vw - w) * 0.5);
                 const y = Math.min(r.top, 8);
                 rects.push({ x: Math.max(0, x - 4), y: Math.max(0, y - 4), w: w + 8, h: h + 8 });
-            } else if (id === 'crown' && (crownHovered || crownPinned || isAnyPopupOpen())) {
-                // Guarantee full Pill height (margin-top 7px + height 42px) on Frame 0 during Droplet -> Pill transition
-                const h = Math.max(r.bottom, 52);
-                rects.push({ x: Math.max(0, r.left - 8), y: 0, w: r.width + 16, h: h + 6 });
-            } else if (id === 'crown' && activeOsd) {
-                const h = Math.max(r.bottom, 42);
+            } else if (id === 'crown' && (crownHovered || microDeckOpen || crownPinned) && !omniOpen) {
+                const targetW = Math.min(508, Math.max(320, vw - 24));
+                const w = Math.max(r.width, targetW);
+                const h = Math.max(r.bottom, 152);
+                const x = Math.min(r.left, (vw - w) * 0.5);
+                rects.push({ x: Math.max(0, x - 12), y: 0, w: w + 24, h: h + 14 });
+            } else if (id === 'omnibar' && omniOpen) {
+                const w = Math.max(r.width, Math.min(740, vw - 24));
+                const h = Math.max(r.height, 360);
+                const x = Math.min(r.left, (vw - w) * 0.5);
+                const y = Math.min(r.top, Math.max(0, vh - h - 50));
+                rects.push({ x: Math.max(0, x - 8), y: Math.max(0, y - 8), w: w + 16, h: h + 16 });
+            } else if (id === 'crown' && (activeOsd || liveBtPopin || liveNotifMorph)) {
+                const h = Math.max(r.bottom, 58);
                 rects.push({ x: Math.max(0, r.left - 18), y: 0, w: r.width + 36, h: h + 10 });
             } else {
-                const padX = (id === 'crown' && !expanded && !crownHovered) ? 18 : 6;
+                const padX = (id === 'crown' && !expanded && !crownHovered) ? 22 : 6;
                 const padB = (id === 'crown' && !expanded && !crownHovered) ? 10 : 6;
                 const yTop = (id === 'crown' && !expanded) ? 0 : Math.max(0, r.top - 4);
                 const extraTop = Math.max(0, r.top - yTop);
                 rects.push({ x: Math.max(0, r.left - padX), y: yTop, w: r.width + padX * 2, h: r.height + extraTop + padB });
             }
         }
+    }
+    const stageOpen = Boolean((crownHovered || microDeckOpen) && !crownPinned);
+    if (stageOpen !== Boolean(window._lastCrownStageOpen)) {
+        window._lastCrownStageOpen = stageOpen;
+        send('setCrownStageState', { open: stageOpen });
     }
     window.chrome.webview.postMessage({
         type: 'hitRects',
@@ -2025,6 +2578,8 @@ function reportHitRects() {
 }
 
 const ALL_VISUAL_STYLES = ['liquid-glass', 'bento-silk', 'linear-precision', 'mono-matrix', 'spatial-vision', 'cyber-prism', 'high-contrast'];
+const ALL_SHELL_ARCHS = ['tahoe-glass', 'nothing-hardware', 'linear-studio', 'vision-orb', 'arc-split', 'braun-atelier', 'swiss-editorial', 'cockpit-hud', 'fluent-mica', 'zen-ghost'];
+const ALL_ISLAND_STYLES = ['liquid-pill', 'mac-notch', 'edge-horizon', 'hardware-pod', 'glass-bar', 'orbital-halo'];
 const CURATED_ACCENT_PRESETS = [
     { name: 'Buz Mavisi', a1: '#38BDF8', a2: '#818CF8' },
     { name: 'Zümrüt', a1: '#10B981', a2: '#34D399' },
@@ -2068,7 +2623,28 @@ function applyThemeVars(t) {
     for (const s of ALL_VISUAL_STYLES) {
         document.body.classList.toggle('style-' + s, s === styleId);
     }
+    const rawArch = state?.shellArchitecture || 'tahoe-glass';
+    const archId = rawArch === 'fluent-aurora' ? 'fluent-mica' : rawArch;
+    for (const a of ALL_SHELL_ARCHS) {
+        document.body.classList.toggle('arch-' + a, a === archId);
+    }
+    const rawIsl = state?.islandStyle || 'liquid-pill';
+    const islStyle = rawIsl === 'compact-notch' ? 'mac-notch' : rawIsl;
+    for (const is of ALL_ISLAND_STYLES) {
+        document.body.classList.toggle('isl-' + is, is === islStyle);
+    }
     document.body.classList.toggle('mode-light', isLight);
+    if (lastThemeIdApplied && lastThemeIdApplied !== t.id) {
+        document.body.classList.remove('theme-' + lastThemeIdApplied);
+    }
+    if (t.id) {
+        document.body.classList.add('theme-' + t.id);
+        lastThemeIdApplied = t.id;
+    }
+    const rad = state?.cornerRadiusPreset || 'modern';
+    document.body.classList.toggle('radius-sharp', rad === 'sharp');
+    document.body.classList.toggle('radius-modern', rad === 'modern');
+    document.body.classList.toggle('radius-capsule', rad === 'capsule');
 
     const op1 = typeof t.surfaceOpacity === 'number' ? Math.max(0.55, Math.min(1.0, t.surfaceOpacity)) : (isLight ? 0.94 : 0.92);
     const op2 = Math.min(1.0, op1 + 0.04);
@@ -2101,7 +2677,7 @@ function applyThemeVars(t) {
 }
 
 function syncStudioCustomizerReadouts(t) {
-    if (!t || activeTab !== 'studio' || !expanded) return;
+    if (!t || !expanded || !(deckMode === 'settings' && settingsSection === 'appearance')) return;
     const c = t.colors || {};
     const map = {
         cpAccent1: c.accentPrimary,
@@ -2229,7 +2805,8 @@ function openOmni() {
     expanded = false;
     closeAllSubPopups();
     omniOpen = true;
-    crownHovered = true;
+    crownHovered = false;
+    microDeckOpen = false;
     omniIdx = 0;
     omniFilter = 'all';
     latestFileHits = [];
@@ -2260,10 +2837,44 @@ function computeExpandedDeckSignature() {
     // Deliberately excludes state.clock / state.shortDate so 1-second clock ticks NEVER
     // destroy the Expanded Deck DOM or reset scrollTop inside Kalıcı Pano Kasası!
     const core = {
+        deckMode,
+        settingsSection,
         tab: activeTab,
         themeId: state.theme?.id,
         profile: state.profileName
     };
+    if (deckMode === 'settings') {
+        core.themeCategoryFilter = themeCategoryFilter;
+        core.widgetStudioTab = widgetStudioTab;
+        core.settings = [
+            state.shellArchitecture, state.islandStyle, state.islandIdleMode,
+            state.islandBtPopin, state.islandPrivacyGuard,
+            state.dockMagnification, state.nativeTaskbarHidden, state.dockMode,
+            state.dockBarLayout, state.reserveDockWorkArea, state.smartTidy,
+            state.dockDensity, state.dockEdge, state.dockScalePercent, state.dockOffsetPercent,
+            state.crownVisibilityMode, state.showDockStatusCluster, state.dockHubStyle,
+            state.dockHoverStyle, state.cornerRadiusPreset, state.autoDayNightTheme,
+            state.dockStartStyle, state.dockSilhouette, state.dockIndicatorStyle,
+            state.ecoModeAuto, state.ecoModeActive,
+            state.dayThemeId, state.nightThemeId, state.widgetsEnabled, state.widgetsLocked,
+            state.widgetEditMode, state.crownPinned,
+            state.hardwareOsdEnabled, state.altDragEnabled,
+            state.showClockSeconds, state.snapZonesEnabled,
+            state.snapZonePreset, state.perMonitorFilter, state.dwmLivePreview,
+            state.sysNotifBridge, state.winKeyOmni, state.omniHotkeyPreset,
+            state.startupEnabled, state.clipboardAutoPaste,
+            state.dockEditMode, state.dockEmptyWheelAction, state.dockEmptyDblClickAction,
+            state.dockEmptyMidClickAction, state.dockScrubGestures, state.dockPerAppAudio,
+            state.updateStatus, state.updateAvailable, state.updateLatestVersion,
+            state.updateDownloading, state.updateDownloadPercent, state.autoCheckUpdatesEnabled,
+            (state.profiles || []).map(p => `${p.id}:${p.active ? 1 : 0}`),
+            (state.dockWidgets || []).map(w => `${w.kind}:${w.enabled?1:0}:${w.zone||w.slot}:${w.order||0}:${w.variant}:${w.size||'normal'}:${w.styleMode||'pill'}:${w.wheelAction||'default'}`),
+            (state.widgets || []).map(w => `${w.id}:${w.kind}:${w.variant}:${w.size}:${w.pinnedTop?1:0}`),
+            (state.aiConfigs || []).map(c => `${c.provider}:${c.planName}:${c.windowLimit}:${c.windowMinutes}:${c.hasApiKey?1:0}:${c.manualUsed}`),
+            (state.aiSnapshots || []).map(s => `${s.provider}:${s.sourceBadge}:${s.remainingPercent}:${s.primaryLabel}`)
+        ];
+        return JSON.stringify(core);
+    }
     if (activeTab === 'shelf') {
         core.clipFilter = clipFilter;
         core.clipCount = state.clipboardCount;
@@ -2400,6 +3011,154 @@ function getOsdToneClass(osd) {
     return 'osd-' + osd.kind;
 }
 
+function buildMicroDeckHtml() {
+    const m = state.media;
+    const outs = (state.audioOutputs || []).slice(0, 3);
+    const clips = (state.clipboard || []).slice(0, 4);
+    const activeWin = state.activeWindow;
+    const shelf = (state.dropShelf || []).slice(0, 4);
+    const curTab = ['live', 'vault', 'focus', 'tools'].includes(microDeckTab) ? microDeckTab : 'live';
+    const tabs = [
+        ['live', 'Canlı Sahne'],
+        ['vault', 'Pano & Raf'],
+        ['focus', 'Pencere & Odak'],
+        ['tools', 'Hızlı Araç']
+    ];
+    let body = '';
+    if (curTab === 'vault') {
+        body = `
+            <div style="display:flex;gap:5px;">
+                <button class="pill-btn accent" style="flex:1;height:26px;font-size:10.5px;justify-content:center;" onclick="send('pickShelfFile')">${SVG.plus}<span>Dosya Ekle</span></button>
+                <button class="pill-btn" style="flex:1;height:26px;font-size:10.5px;justify-content:center;" onclick="crownHovered=false;microDeckOpen=false;renderAll();syncFocusDemand();send('pickAndShareQr');">${SVG.qr}<span>QR Paylaş</span></button>
+                <button class="pill-btn subtle" style="height:26px;font-size:10px;" onclick="openToolsModal('shelf')">Tüm Pano →</button>
+            </div>
+            ${clips.length > 0 ? `<div style="display:flex;flex-direction:column;gap:4px;">${clips.map(c => `<div class="clip-item" style="margin:0;padding:5px 8px;" onclick="send('copyClipById',{id:${c.id}})">${SVG.copy}<span style="overflow:hidden;text-overflow:ellipsis;">${escHtml(c.preview || c.text || 'Görsel')}</span></div>`).join('')}</div>` : '<div style="font-size:10.5px;color:var(--text-2);">Pano geçmişi boş.</div>'}
+            ${shelf.length > 0 ? `<div style="display:flex;flex-direction:column;gap:4px;">${shelf.slice(0, 2).map((f, idx) => `<div class="clip-item" style="margin:0;padding:4px 8px;justify-content:space-between;" onclick="send('openShelfFile',{index:${idx}})">${SVG.inbox}<span style="flex:1;overflow:hidden;text-overflow:ellipsis;">${escHtml(f.name)}</span><button class="micro-btn" style="width:20px;height:20px;" onclick="event.stopPropagation();crownHovered=false;microDeckOpen=false;renderAll();syncFocusDemand();send('shareShelfFileQr',{index:${idx}})">${SVG.qr}</button></div>`).join('')}</div>` : ''}
+        `;
+    } else if (curTab === 'focus') {
+        body = `
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 9px;border-radius:10px;background:var(--bg-inset);border:1px solid var(--border-subtle);">
+                <span style="font-size:11px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${activeWin ? escHtml(activeWin.title || activeWin.processName) : 'Aktif pencere bekleniyor'}</span>
+                ${activeWin ? `<button class="pill-btn ${activeWin.isTopMost?'accent':''}" style="height:23px;font-size:10px;padding:0 8px;" onclick="send('toggleTopMost',{hwnd:${activeWin.hwnd}})">${SVG.pin}<span>Üstte Tut</span></button>` : ''}
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;">
+                <button class="pill-btn" style="height:26px;font-size:10.5px;justify-content:center;" onclick="send('arrangeActive',{mode:'left'})">${SVG.snapL}<span>Sol %50</span></button>
+                <button class="pill-btn" style="height:26px;font-size:10.5px;justify-content:center;" onclick="send('arrangeActive',{mode:'right'})">${SVG.snapR}<span>Sağ %50</span></button>
+                <button class="pill-btn" style="height:26px;font-size:10.5px;justify-content:center;" onclick="send('arrangeActive',{mode:'center'})">${SVG.snapC}<span>Ortala</span></button>
+            </div>
+            <div style="display:flex;gap:5px;align-items:center;">
+                <button class="pill-btn ${state.focus?.running ? 'accent' : ''}" style="flex:1;height:27px;font-size:10.5px;justify-content:center;" onclick="send('toggleFocus')">${SVG.timer}<span>Odak ${escHtml(state.focus?.label || '25:00')}</span></button>
+                <button class="pill-btn ${state.awake?.active ? 'accent' : ''}" style="flex:1;height:27px;font-size:10.5px;justify-content:center;" onclick="send('cycleAwake')">${SVG.coffee}<span>${state.awake?.active ? escHtml(state.awake.shortLabel) : 'Uyanık Kal'}</span></button>
+            </div>
+            <div style="display:flex;gap:5px;">
+                <input id="mdTodoInp" class="md-todo-inp" placeholder="Hızlı görev ekle (Enter)..." onfocus="send('requestInteractiveFocus')" onblur="if(!isAnyPopupOpen())send('releaseInteractiveFocus')" onkeydown="if(event.key==='Enter'){const v=this.value.trim();if(v){this.value='';send('addTodo',{text:v});}}" />
+                <button class="pill-btn accent" style="height:29px;" onclick="const inp=document.getElementById('mdTodoInp');const v=inp?.value?.trim();if(v){inp.value='';send('addTodo',{text:v});}">Ekle</button>
+            </div>
+        `;
+    } else if (curTab === 'tools') {
+        body = `
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;">
+                <button class="pill-btn" style="height:27px;padding:0 6px;font-size:10px;justify-content:center;" onclick="crownHovered=false;microDeckOpen=false;renderAll();syncFocusDemand();send('startScreenOcr');">${SVG.scanText}<span>OCR</span></button>
+                <button class="pill-btn" style="height:27px;padding:0 6px;font-size:10px;justify-content:center;" onclick="crownHovered=false;microDeckOpen=false;renderAll();syncFocusDemand();send('startColorPicker');">${SVG.pipette}<span>Renk</span></button>
+                <button class="pill-btn" style="height:27px;padding:0 6px;font-size:10px;justify-content:center;" onclick="crownHovered=false;microDeckOpen=false;renderAll();syncFocusDemand();send('startGifRecording');">${SVG.record}<span>GIF</span></button>
+                <button class="pill-btn" style="height:27px;padding:0 6px;font-size:10px;justify-content:center;" onclick="crownHovered=false;microDeckOpen=false;renderAll();syncFocusDemand();send('launchPath',{path:'ms-screenclip:'});">${SVG.scissors}<span>Alıntı</span></button>
+                <button class="pill-btn" style="height:27px;padding:0 6px;font-size:10px;justify-content:center;" onclick="crownHovered=false;microDeckOpen=false;renderAll();syncFocusDemand();send('pickAndShareQr');">${SVG.qr}<span>QR</span></button>
+            </div>
+            <textarea id="stageScratch" class="stage-scratch" placeholder="Hızlı karalama notu (otomatik kaydedilir)..." onfocus="send('requestInteractiveFocus')" onblur="if(!isAnyPopupOpen())send('releaseInteractiveFocus')" oninput="scratchText=this.value;send('saveScratchpad',{text:this.value});">${escHtml(scratchText || state.scratchpad || '')}</textarea>
+        `;
+    } else {
+        body = `
+            <div class="stage-bento">
+                <div class="stage-card">
+                    <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+                        ${m && m.artwork ? `<img src="data:image/jpeg;base64,${m.artwork}" style="width:40px;height:40px;border-radius:10px;object-fit:cover;flex-shrink:0;"/>` : `<div style="width:40px;height:40px;border-radius:10px;background:var(--accent-soft);color:var(--accent-1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">${SVG.music}</div>`}
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-size:11.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m ? escHtml(m.title) : 'Çalan Medya Yok'}</div>
+                            <div style="font-size:10px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m ? escHtml(m.artist || m.app) : 'Spotify veya tarayıcı hazır'}</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:4px;">
+                        <div style="display:inline-flex;gap:4px;">
+                            <button class="micro-btn" style="width:24px;height:24px;" onclick="send('mediaCmd',{cmd:'prev'})" title="Önceki">${SVG.prev}</button>
+                            <button class="micro-btn active" style="width:24px;height:24px;" onclick="send('mediaCmd',{cmd:'playpause'})" title="Oynat / Duraklat">${m?.isPlaying ? SVG.pause : SVG.play}</button>
+                            <button class="micro-btn" style="width:24px;height:24px;" onclick="send('mediaCmd',{cmd:'next'})" title="Sonraki">${SVG.next}</button>
+                        </div>
+                        ${outs.length > 0 ? `<button class="pill-btn subtle" style="height:22px;padding:0 7px;font-size:9.5px;max-width:118px;overflow:hidden;" onclick="selectAudioOutputIdx(${(outs.findIndex(o => o.isDefault) + 1) % outs.length})" title="Ses Çıkış Cihazını Değiştir"><span style="overflow:hidden;text-overflow:ellipsis;">${escHtml(outs.find(o => o.isDefault)?.name || outs[0].name)}</span></button>` : ''}
+                    </div>
+                </div>
+                <div class="stage-act-grid">
+                    <button class="stage-act-btn" onclick="crownHovered=false;microDeckOpen=false;renderAll();syncFocusDemand();send('startScreenOcr');">${SVG.scanText}<span>Metin OCR</span></button>
+                    <button class="stage-act-btn" onclick="crownHovered=false;microDeckOpen=false;renderAll();syncFocusDemand();send('startColorPicker');">${SVG.pipette}<span>Renk Seç</span></button>
+                    <button class="stage-act-btn" onclick="crownHovered=false;microDeckOpen=false;renderAll();syncFocusDemand();send('startGifRecording');">${SVG.record}<span>GIF Kayıt</span></button>
+                    <button class="stage-act-btn ${state.focus?.running ? 'active' : ''}" onclick="send('toggleFocus');">${SVG.timer}<span>${state.focus?.running ? escHtml(state.focus.label) : 'Odak 25d'}</span></button>
+                </div>
+            </div>
+            <div class="stage-strip">
+                ${clips.slice(0, 2).map(c => `<button class="stage-clip-chip" onclick="send('copyClipById',{id:${c.id}})" title="Tıkla → Panoya Kopyala">${SVG.copy}<span style="overflow:hidden;text-overflow:ellipsis;">${escHtml(c.preview || c.text || 'Pano')}</span></button>`).join('') || `<button class="stage-clip-chip" onclick="send('openWindowsNotifications')">${SVG.bell}<span>Windows Bildirimleri</span></button>`}
+                ${activeWin ? `<div style="display:inline-flex;gap:3px;flex-shrink:0;">
+                    <button class="micro-btn" style="width:23px;height:23px;" onclick="send('arrangeActive',{mode:'left'})" title="Sol %50">${SVG.snapL}</button>
+                    <button class="micro-btn" style="width:23px;height:23px;" onclick="send('arrangeActive',{mode:'right'})" title="Sağ %50">${SVG.snapR}</button>
+                    <button class="micro-btn ${activeWin.isTopMost?'active':''}" style="width:23px;height:23px;" onclick="send('toggleTopMost',{hwnd:${activeWin.hwnd}})" title="Üstte Tut">${SVG.pin}</button>
+                </div>` : ''}
+            </div>
+        `;
+    }
+    return `
+        <div class="stage-head">
+            <div class="stage-tabs">${tabs.map(([id, lbl]) => `<button class="stage-tab ${curTab===id?'active':''}" onclick="event.stopPropagation();microDeckTab='${id}';renderAll();">${lbl}</button>`).join('')}</div>
+            <div class="stage-actions">
+                <button class="micro-btn" style="width:25px;height:25px;" onclick="event.stopPropagation();openOmni();" title="Başlat & Ara (Win)">${SVG.search}</button>
+                <button class="micro-btn" style="width:25px;height:25px;" onclick="event.stopPropagation();openSettingsModal('widgets');" title="Widget Stüdyosu">${SVG.grid}</button>
+                <button class="micro-btn" style="width:25px;height:25px;" onclick="event.stopPropagation();openSettingsModal('appearance');" title="Mimari & Ayarlar">${SVG.settings}</button>
+                <button class="micro-btn ${crownPinned?'active':''}" style="width:25px;height:25px;" onclick="event.stopPropagation();send('toggleCrownPinned');" title="${crownPinned?'Sabitlemeyi Kaldır':'Adayı Sabitle'}">${SVG.pin}</button>
+            </div>
+        </div>
+        <div class="md-body">${body}</div>
+    `;
+}
+
+function updateCrownWing(allowWing) {
+    const wing = document.getElementById('crownWing');
+    if (!wing) return;
+    if (!allowWing || !state) {
+        wing.hidden = true;
+        wing.innerHTML = '';
+        return;
+    }
+    const micLive = Boolean(state.privacy?.mic);
+    const camLive = Boolean(state.privacy?.camera);
+    const unread = state.notificationMode === 'aurora-mirror' ? Number(state.unreadNotifCount || 0) : 0;
+    const focusRun = Boolean(state.focus?.running);
+    const shelfCount = (state.dropShelf || []).length;
+    const bt = (state.btDevices || []).find(d => d.connected && d.hasBattery);
+
+    let html = '', action = null;
+    if (state.islandPrivacyGuard !== false && (micLive || camLive)) {
+        html = `<span class="priv-pulse"></span><span>${micLive ? 'Mikrofon' : 'Kamera'}</span>`;
+        action = () => { if (micLive) send('toggleMicMute'); };
+    } else if (focusRun) {
+        html = `${SVG.timer}<span class="num">${escHtml(state.focus.label)}</span>`;
+        action = () => send('toggleFocus');
+    } else if (unread > 0) {
+        html = `${SVG.bell}<span class="num">${unread}</span>`;
+        action = () => send('openNotifications');
+    } else if (bt) {
+        html = `${getBtCategorySvg(bt.category)}<span class="num">${bt.percent}%</span>`;
+        action = () => { crownHovered = true; microDeckOpen = true; microDeckTab = 'live'; renderAll(); syncFocusDemand(); };
+    } else if (shelfCount > 0) {
+        html = `${SVG.inbox}<span class="num">${shelfCount}</span>`;
+        action = () => { crownHovered = true; microDeckOpen = true; microDeckTab = 'vault'; renderAll(); syncFocusDemand(); };
+    }
+    if (!html) {
+        wing.hidden = true;
+        wing.innerHTML = '';
+        return;
+    }
+    wing.hidden = false;
+    wing.innerHTML = html;
+    wing.onclick = action;
+}
+
 function renderAll() {
     if (!state) return;
     applyThemeVars(state.theme);
@@ -2413,7 +3172,7 @@ function renderAll() {
     renderQrShareCard();
 
     const osdFloat = document.getElementById('osdFloat');
-    const restingDroplet = !expanded && !isDraggingFile && !crownHovered && !crownPinned && !isAnyPopupOpen();
+    const restingDroplet = !expanded && !microDeckOpen && !isDraggingFile && !crownHovered && !crownPinned && !isAnyPopupOpen();
     if (osdFloat) {
         if (activeOsd && !restingDroplet && !omniOpen) {
             osdFloat.className = 'glass-shell show ' + getOsdToneClass(activeOsd);
@@ -2425,6 +3184,8 @@ function renderAll() {
 
     const crown = document.getElementById('crown');
     if (expanded) {
+        updateCrownWing(false);
+        crown.onclick = null;
         lastDropletSig = '';
         const sig = computeExpandedDeckSignature();
         if (!crown.classList.contains('expanded') || sig !== lastExpandedSig) {
@@ -2458,6 +3219,8 @@ function renderAll() {
         lastExpandedSig = '';
         const recState = liveGifRec || state.gifRec || { recording: false, elapsed: 0 };
         if (isDraggingFile) {
+        updateCrownWing(false);
+        crown.onclick = null;
         lastDropletSig = '';
         crown.className = 'glass-shell pill drag-over';
         crown.innerHTML = `
@@ -2474,7 +3237,8 @@ function renderAll() {
             </div>
         `;
         } else if (recState.recording && !isAnyPopupOpen()) {
-            // Lock compact recording pill even on hover so the Stop button NEVER shifts sideways (Fitts's Law!)
+            updateCrownWing(false);
+            crown.onclick = null;
             lastDropletSig = '';
             crown.className = 'glass-shell droplet rec-live';
             crown.innerHTML = `
@@ -2482,182 +3246,114 @@ function renderAll() {
                 <span class="num" style="font-size:11.5px;font-weight:800;color:var(--danger);">REC ${formatRecTime(recState.elapsed)}</span>
                 <button class="pill-btn" style="height:22px;padding:0 10px;font-size:10.5px;border-color:var(--danger);color:var(--danger);background:rgba(225,29,72,0.12);" onclick="event.stopPropagation();send('stopGifRecording')">Durdur</button>
             `;
-        } else if (!crownHovered && !crownPinned && !isAnyPopupOpen()) {
-            // LIVE HARDWARE OSD MORPH INSIDE QUIET LIQUID DROPLET ("Damla")
+        } else if ((crownHovered || microDeckOpen || crownPinned) && !omniOpen) {
+            updateCrownWing(false);
+            crown.onclick = null;
+            lastDropletSig = '';
+            document.body.classList.toggle('eco-mode', Boolean(state.ecoModeActive));
+            crown.className = 'glass-shell live-stage';
+            crown.innerHTML = buildMicroDeckHtml();
+        } else if (!isAnyPopupOpen() || omniOpen) {
+            crown.onclick = () => { crownHovered = true; microDeckTab = 'live'; renderAll(); };
+            const islandMode = state.crownVisibilityMode || 'Dynamic';
+            const idleMode = state.islandIdleMode || 'media-ambient';
+            const rawIslStyle = state.islandStyle || 'liquid-pill';
+            const islStyle = rawIslStyle === 'compact-notch' ? 'mac-notch' : rawIslStyle;
+            const media = state.media;
+            const shelfCount = (state.dropShelf || []).length;
+            const unread = state.notificationMode === 'aurora-mirror' ? Number(state.unreadNotifCount || 0) : 0;
+            const awakeOn = Boolean(state.awake?.active);
+            const camLive = Boolean(state.privacy?.camera);
+            const micLive = Boolean(state.privacy?.mic);
+            const privGuard = state.islandPrivacyGuard !== false && (camLive || micLive);
+            const hasLiveActivity = Boolean(activeOsd || liveBtPopin || liveNotifMorph || (media && media.isPlaying) || state.focus.running || awakeOn || privGuard || unread > 0 || shelfCount > 0);
+
             if (activeOsd) {
+                updateCrownWing(false);
                 lastDropletSig = '';
                 crown.className = 'glass-shell droplet osd-active ' + getOsdToneClass(activeOsd);
                 crown.innerHTML = buildOsdInnerHtml(activeOsd);
+            } else if (liveBtPopin) {
+                updateCrownWing(false);
+                lastDropletSig = '';
+                const pct = Math.max(0, Math.min(100, Number(liveBtPopin.percent ?? 100)));
+                const dOff = (87.9 * (1 - pct / 100)).toFixed(1);
+                crown.className = 'glass-shell droplet bt-popin';
+                crown.innerHTML = `
+                    <span style="color:var(--accent-1);display:inline-flex;">${getBtCategorySvg(liveBtPopin.category)}</span>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:12px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(liveBtPopin.name)}</div>
+                        <div style="font-size:10px;color:var(--success);font-weight:700;">Bluetooth Bağlandı</div>
+                    </div>
+                    ${liveBtPopin.hasBattery ? `<svg width="32" height="32" viewBox="0 0 34 34"><circle cx="17" cy="17" r="14" fill="none" stroke="var(--border-subtle)" stroke-width="3"/><circle cx="17" cy="17" r="14" fill="none" stroke="var(--success)" stroke-width="3" stroke-dasharray="87.9" stroke-dashoffset="${dOff}" stroke-linecap="round" transform="rotate(-90 17 17)"/><text x="17" y="20" text-anchor="middle" fill="currentColor" font-size="8.5" font-weight="800" class="num">${pct}%</text></svg>` : ''}
+                `;
+            } else if (liveNotifMorph) {
+                updateCrownWing(false);
+                lastDropletSig = '';
+                crown.className = 'glass-shell droplet notif-morph';
+                crown.innerHTML = `
+                    <span style="color:var(--accent-1);display:inline-flex;">${SVG.bell}</span>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:11.5px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(liveNotifMorph.title)}</div>
+                        <div style="font-size:10px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(liveNotifMorph.body)}</div>
+                    </div>
+                    ${liveNotifMorph.nId ? `<button class="pill-btn accent" style="height:22px;padding:0 8px;font-size:10px;" onclick="event.stopPropagation();const id='${escHtml(liveNotifMorph.nId)}';liveNotifMorph=null;activateNotificationById(id);">Aç</button>` : ''}
+                    <button class="micro-btn" style="width:22px;height:22px;" onclick="event.stopPropagation();liveNotifMorph=null;renderAll();">${SVG.close}</button>
+                `;
+            } else if (islandMode === 'Hidden' || (islandMode === 'AlertsOnly' && !hasLiveActivity)) {
+                updateCrownWing(false);
+                lastDropletSig = 'hidden';
+                crown.className = 'glass-shell droplet island-hidden';
+                crown.innerHTML = '';
             } else {
-                // QUIET LIQUID DROPLET ("Damla") STATE — Fast-path clock updates avoid full DOM rebuilds!
-                const media = state.media;
-                const shelfCount = (state.dropShelf || []).length;
-                const unread = state.unreadNotifCount || 0;
-                const micMuted = Boolean(state.mic?.supported && state.mic?.muted);
-                const awakeOn = Boolean(state.awake?.active);
-                const camLive = Boolean(state.privacy?.camera);
-                const micLive = Boolean(state.privacy?.mic);
-                const batPresent = Boolean(state.battery?.present);
-                const batPct = Number(state.battery?.percent ?? 100);
-                const batChg = Boolean(state.battery?.charging);
-                const dSig = `${Boolean(media && media.isPlaying)}|${state.focus.running ? state.focus.label : ''}|${awakeOn ? state.awake.shortLabel : ''}|${micMuted}|${unread}|${shelfCount}|${camLive}|${micLive}|${batPresent}:${batPct}:${batChg}`;
-                if (crown.classList.contains('droplet') && !crown.classList.contains('osd-active') && !crown.classList.contains('rec-live') && dSig === lastDropletSig) {
+                const useDualWing = islStyle === 'liquid-pill' && (Boolean(media && media.isPlaying) || idleMode === 'glance-weather' || idleMode === 'system-pulse');
+                updateCrownWing(useDualWing);
+                const cpuNow = Math.round(state.metrics?.cpu || 0);
+                const ramNow = Math.round(state.metrics?.ramPct || 0);
+                const wtTemp = state.weather?.live ? `${Math.round(state.weather.temp)}°` : '';
+                const stealthIdle = idleMode === 'auto-stealth' && !hasLiveActivity;
+                const dSig = `${islandMode}|${idleMode}|${islStyle}|${Boolean(media && media.isPlaying)}|${media?.title || ''}|${state.activeWindow?.processName || ''}|${privGuard}|${cpuNow}|${ramNow}|${wtTemp}|${unread}|${shelfCount}|${state.focus.running ? state.focus.label : ''}`;
+                if (crown.classList.contains('droplet') && !crown.classList.contains('osd-active') && !crown.classList.contains('rec-live') && !crown.classList.contains('bt-popin') && !crown.classList.contains('notif-morph') && !crown.classList.contains('island-hidden') && dSig === lastDropletSig) {
                     const tEl = crown.querySelector('.drop-time');
                     if (tEl && tEl.textContent !== state.clock) tEl.textContent = state.clock;
                     return;
                 }
                 lastDropletSig = dSig;
-                crown.className = 'glass-shell droplet';
-                const dropBatCol = batChg ? 'var(--success)' : getBattColor(batPct);
-                crown.innerHTML = `
-                    <span class="drop-dot"></span>
-                    <span class="drop-time num">${escHtml(state.clock)}</span>
-                    ${batPresent ? `<span class="num" style="display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:700;color:${dropBatCol};margin-left:2px;" title="Laptop Pili: %${batPct} · ${escHtml(state.battery.status || '')}">${buildLaptopBatterySvg(batPct, batChg)}%${batPct}</span>` : ''}
-                    ${camLive ? `<span class="priv-dot cam" title="Kamera aktif: ${escHtml((state.privacy.cameraApps||[]).join(', '))}"></span>` : ''}
-                    ${micLive ? `<span class="priv-dot mic" title="Mikrofon aktif: ${escHtml((state.privacy.micApps||[]).join(', '))}"></span>` : ''}
-                    ${media && media.isPlaying ? `<div class="eq"><span></span><span></span><span></span></div>` : ''}
-                    ${state.focus.running ? `<span class="drop-pill-tag num">${escHtml(state.focus.label)}</span>` : ''}
-                    ${awakeOn ? `<span class="drop-pill-tag num" style="color:#F59E0B;background:rgba(245,158,11,0.18);display:inline-flex;align-items:center;gap:3px;">${SVG.coffee}${escHtml(state.awake.shortLabel)}</span>` : ''}
-                    ${micMuted ? `<span class="drop-pill-tag" style="color:var(--danger);background:rgba(251,113,133,0.18);display:inline-flex;align-items:center;">${SVG.micOff}</span>` : ''}
-                    ${unread > 0 ? `<span class="drop-pill-tag num" style="display:inline-flex;align-items:center;gap:3px;">${SVG.bell}${unread}</span>` : ''}
-                    ${shelfCount > 0 ? `<span class="drop-pill-tag num">${shelfCount}</span>` : ''}
+                crown.className = `glass-shell droplet ${stealthIdle ? 'auto-stealth-idle' : ''} ${privGuard ? 'privacy-alert' : ''}`;
+                let mainContent = '';
+                if (islStyle === 'orbital-halo' && !privGuard) {
+                    mainContent = (media && media.isPlaying && media.artwork)
+                        ? `<img src="data:image/jpeg;base64,${media.artwork}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;"/>`
+                        : `<div class="orb-halo-ring"></div>`;
+                } else if (islStyle === 'glass-bar' && !privGuard) {
+                    const leftTxt = (media && media.isPlaying) ? media.title : (state.activeWindow?.processName || 'Aurora');
+                    const midTxt = state.focus.running ? state.focus.label : `CPU ${cpuNow}%`;
+                    mainContent = `
+                        <span style="display:inline-flex;align-items:center;gap:5px;min-width:0;">${(media && media.isPlaying) ? '<div class="eq"><span></span><span></span><span></span></div>' : '<span class="drop-dot"></span>'}<span style="font-size:11px;font-weight:700;max-width:118px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(leftTxt)}</span></span>
+                        <span class="drop-pill-tag num">${escHtml(midTxt)}</span>
+                        <span class="drop-time num">${escHtml(state.clock)}${wtTemp ? ' · ' + wtTemp : ''}</span>
+                    `;
+                } else if (media && media.isPlaying) {
+                    mainContent = `${media.artwork ? `<img src="data:image/jpeg;base64,${media.artwork}" style="width:16px;height:16px;border-radius:50%;object-fit:cover;"/>` : '<div class="eq"><span></span><span></span><span></span></div>'}<span style="font-size:11px;font-weight:700;max-width:136px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(media.title)}</span>`;
+                } else if (privGuard) {
+                    const pApp = (state.privacy.micApps?.[0] || state.privacy.cameraApps?.[0] || 'Aktif');
+                    mainContent = `<span class="priv-pulse"></span><span style="font-size:11px;font-weight:700;">${micLive ? 'Mik' : 'Kamera'} · ${escHtml(pApp)}</span>${micLive ? `<button class="pill-btn" style="height:20px;padding:0 7px;font-size:9.5px;border-color:var(--danger);color:var(--danger);" onclick="event.stopPropagation();send('toggleMicMute')">Sustur</button>` : ''}`;
+                } else if (idleMode === 'glance-weather') {
+                    mainContent = `<span class="drop-dot"></span><span class="drop-time num">${escHtml(state.clock)}</span>${wtTemp ? `<span class="drop-pill-tag num">${wtTemp}</span>` : ''}`;
+                } else if (idleMode === 'system-pulse') {
+                    mainContent = `<span class="drop-dot"></span><span class="num" style="font-size:11px;font-weight:700;">CPU ${cpuNow}% · RAM ${ramNow}%</span>`;
+                } else if (idleMode === 'auto-stealth') {
+                    mainContent = `<span class="drop-dot"></span>`;
+                } else {
+                    mainContent = `<span class="drop-dot"></span><span class="drop-time num">${escHtml(state.clock)}</span><span style="font-size:10px;color:var(--text-2);">${escHtml(state.shortDate || '')}</span>`;
+                }
+                crown.innerHTML = islStyle === 'orbital-halo' || islStyle === 'glass-bar' ? mainContent : `
+                    ${mainContent}
+                    ${!useDualWing && awakeOn ? `<span class="drop-pill-tag num" style="color:#F59E0B;background:rgba(245,158,11,0.18);display:inline-flex;align-items:center;gap:3px;">${SVG.coffee}${escHtml(state.awake.shortLabel)}</span>` : ''}
+                    ${!useDualWing && state.focus.running ? `<span class="drop-pill-tag num">${escHtml(state.focus.label)}</span>` : ''}
+                    ${!useDualWing && unread > 0 ? `<span class="drop-pill-tag num" style="display:inline-flex;align-items:center;gap:3px;">${SVG.bell}${unread}</span>` : ''}
                 `;
             }
-        } else {
-        lastDropletSig = '';
-        // FLUID HOVER-REVEALED ACTION PILL
-        crown.className = 'glass-shell pill';
-        const aw = state.activeWindow;
-        const media = state.media;
-        const volLabel = state.audio.muted ? 'Sessiz' : `%${state.audio.volume}`;
-        const trays = state.trayApps || [];
-        const shelfCount = (state.dropShelf || []).length;
-        const kb = state.keyboard || { code: 'TR', name: 'Türkçe Q' };
-
-        const topTrayIcons = trays.filter(t => t.icon).slice(0, window.innerWidth < 1140 ? 2 : 3);
-        const vd = state.virtualDesktop || { index: 0, count: 1, name: 'Masaüstü 1' };
-        const vdLabel = vd.count > 1 ? `M${vd.index + 1}/${vd.count}` : 'M1';
-        const showSnapBtns = window.innerWidth >= 1180;
-
-        crown.innerHTML = `
-            <button class="pill-btn accent" onclick="openOmni()" title="Tüm Uygulamalar & Evrensel Arama (${escHtml(state.omniHotkeyPreset || 'Alt+Space')})">
-                ${SVG.search}<span>Ara</span>
-            </button>
-            <button id="vdCapsule" class="pill-btn num" onclick="send('switchVirtualDesktopDelta',{delta:1})" oncontextmenu="event.preventDefault();send('openTaskView');" title="${escHtml(vd.name)} • Fare Tekerleği / Tık: Masaüstü Değiştir • Sağ Tık: Görev Görünümü">
-                ${SVG.layers}<span>${escHtml(vdLabel)}</span>
-            </button>
-            <button class="pill-btn" onclick="send('cycleProfile')" title="Çalışma Profilini Değiştir">
-                ${SVG.bolt}<span>${escHtml(state.profileName)}</span>
-            </button>
-            ${aw ? `
-                <div class="sep"></div>
-                <div class="active-win-chip" onclick="toggleCrown(true)" title="${escHtml(aw.title)}">
-                    ${aw.icon ? `<img src="data:image/png;base64,${aw.icon}"/>` : ''}
-                    <span class="txt">${escHtml(aw.processName)}</span>
-                </div>
-                ${showSnapBtns ? `
-                    <button class="micro-btn" onclick="send('arrangeActive',{mode:'left'})" title="Aktif Pencereyi Sola Yasla (%50)">${SVG.snapL}</button>
-                    <button class="micro-btn" onclick="send('arrangeActive',{mode:'right'})" title="Aktif Pencereyi Sağa Yasla (%50)">${SVG.snapR}</button>
-                ` : ''}
-            ` : ''}
-            ${media ? `
-                <div class="sep"></div>
-                <button class="pill-btn" onclick="send('mediaCmd',{cmd:'playpause'})" title="${escHtml(media.title)} — ${escHtml(media.artist)}">
-                    ${media.isPlaying ? '<div class="eq"><span></span><span></span><span></span></div>' : SVG.play}
-                    <span style="max-width:82px;overflow:hidden;text-overflow:ellipsis;">${escHtml(media.title)}</span>
-                </button>
-            ` : ''}
-            ${state.focus.running ? `
-                <button class="pill-btn accent num" onclick="send('toggleFocus')" title="Odak Sayacı Aktif">${SVG.timer}<span>${escHtml(state.focus.label)}</span></button>
-            ` : ''}
-            ${state.awake?.active ? `
-                <button class="pill-btn awake-on num" onclick="send('cycleAwake')" title="${escHtml(state.awake.fullLabel)} • Değiştirmek için tıklayın">${SVG.coffee}<span>${escHtml(state.awake.shortLabel)}</span></button>
-            ` : ''}
-            ${recState.recording ? `
-                <button class="pill-btn num" style="border-color:var(--danger);color:var(--danger);background:rgba(225,29,72,0.12);" onclick="send('stopGifRecording')" title="GIF Ekran Kaydını Durdur ve Kaydet">
-                    <span class="rec-dot"></span><span>${formatRecTime(recState.elapsed)}</span>
-                </button>
-            ` : ''}
-            ${state.privacy?.camera ? `
-                <button class="pill-btn" style="border-color:var(--success);color:var(--success);background:rgba(5,150,105,0.12);" onclick="send('openUri',{uri:'ms-settings:privacy-webcam'})" title="Kamera aktif: ${escHtml((state.privacy.cameraApps||[]).join(', '))}">
-                    <span class="priv-dot cam"></span><span>${escHtml((state.privacy.cameraApps||['Kamera'])[0])}</span>
-                </button>
-            ` : ''}
-            ${state.privacy?.mic ? `
-                <button class="pill-btn" style="border-color:var(--warning);color:var(--warning);background:rgba(217,119,6,0.12);" onclick="send('toggleMicMute')" title="Mikrofon aktif: ${escHtml((state.privacy.micApps||[]).join(', '))} (Susturmak için tıklayın)">
-                    <span class="priv-dot mic"></span><span>${escHtml((state.privacy.micApps||['Mikrofon'])[0])}</span>
-                </button>
-            ` : ''}
-            ${(() => {
-                const liveBt = (state.btDevices || []).filter(d => d.connected !== false);
-                const btWithBatt = liveBt.filter(d => d.hasBattery !== false);
-                if (btWithBatt.length > 0) {
-                    const bt = btWithBatt[0];
-                    const tip = liveBt.map(d => d.hasBattery !== false ? `${d.name}: %${d.percent} (Bağlı)` : `${d.name} (Bağlı)`).join(' · ');
-                    return `<button class="pill-btn num" style="${bt.percent<=15?'border-color:var(--danger);color:var(--danger);':''}" onclick="activeTab='control';toggleCrown(true)" title="Bluetooth · ${escHtml(tip)}">
-                        ${SVG.bluetooth}${getBtCategorySvg(bt.category)}<span>%${bt.percent}</span>
-                    </button>`;
-                }
-                if (liveBt.length > 0) {
-                    const tip = liveBt.map(d => `${d.name} (Bağlı)`).join(' · ');
-                    return `<button class="pill-btn" onclick="activeTab='control';toggleCrown(true)" title="Bluetooth Bağlı · ${escHtml(tip)}">
-                        ${SVG.bluetooth}<span class="num">${liveBt.length}</span>
-                    </button>`;
-                }
-                return '';
-            })()}
-            <div class="sep"></div>
-            <button class="pill-btn ${dropOpen || shelfCount > 0 ? 'accent' : ''}" onclick="toggleDropPopup()" title="Sürükle-Bırak Dosya Rafı (${shelfCount})">
-                ${SVG.inbox}${shelfCount > 0 ? `<span class="num">${shelfCount}</span>` : ''}
-            </button>
-            <div class="mini-tray-strip ${trayOpen ? 'open' : ''}" onclick="toggleTrayPopup()" title="Sistem Tepsisi & Arka Plan Uygulamaları (${trays.length})">
-                ${topTrayIcons.map(t => `<img src="data:image/png;base64,${t.icon}"/>`).join('')}
-                ${SVG.tray}
-                <span class="mini-tray-count num">${trays.length}</span>
-            </div>
-            <button class="pill-btn" onclick="send('cycleKeyboard')" title="Klavye Düzeni: ${escHtml(kb.name)} (Değiştirmek için tıklayın)">
-                ${SVG.globe}<span>${escHtml(kb.code)}</span>
-            </button>
-            <button id="volCapsule" class="pill-btn num" onclick="toggleCrown(true)" oncontextmenu="event.preventDefault();send('toggleMute');" title="Fare Tekerleği: Sesi Aç/Kıs • Sağ Tık: Sessiz">
-                ${state.audio.muted ? SVG.mute : SVG.vol}<span>${volLabel}</span>
-            </button>
-            ${state.battery?.present ? (() => {
-                const bp = Number(state.battery.percent ?? 100);
-                const bc = Boolean(state.battery.charging);
-                const batTone = bc
-                    ? 'border-color:rgba(52,211,153,0.42);color:var(--success);'
-                    : (bp <= 15 ? 'border-color:var(--danger);color:var(--danger);background:rgba(244,63,94,0.14);'
-                        : (bp <= 30 ? 'border-color:rgba(251,191,36,0.45);color:var(--warning);' : ''));
-                return `<button class="pill-btn num" style="${batTone}" onclick="activeTab='control';toggleCrown(true)" oncontextmenu="event.preventDefault();send('openUri',{uri:'ms-settings:powersleep'});" title="Laptop Pili: %${bp} · ${escHtml(state.battery.status || '')} (Sağ Tık: Güç Ayarları)">
-                    ${buildLaptopBatterySvg(bp, bc)}<span>%${bp}</span>
-                </button>`;
-            })() : ''}
-            ${state.mic?.supported && state.mic?.muted ? `
-            <button class="micro-btn danger" style="border-color:var(--danger);color:var(--danger);background:rgba(251,113,133,0.16);" onclick="send('toggleMicMute')" title="Mikrofon Sessiz (Açmak için tıklayın)">${SVG.micOff}</button>` : ''}
-            <button class="pill-btn num ${calOpen ? 'accent' : ''}" onclick="toggleCalendarPopup()" title="Aylık Takvim ve Günlük Ajandayı Aç">
-                ${SVG.calendar}<span id="crownClockPill">${escHtml(state.clock)} • ${escHtml(state.shortDate || '')}</span>
-            </button>
-            <button class="pill-btn num ${(notifOpen || (state.unreadNotifCount || 0) > 0) ? 'accent' : ''}" style="padding:0 9px;" onclick="toggleNotifPopup()" title="Canlı Windows & Aurora Bildirimleri">
-                ${SVG.bell}${(state.unreadNotifCount || 0) > 0 ? `<span>${state.unreadNotifCount}</span>` : ((state.notifications || []).length > 0 ? `<span>${state.notifications.length}</span>` : '')}
-            </button>
-            <button class="micro-btn ${crownPinned ? 'active' : ''}" onclick="send('toggleCrownPinned')" title="${crownPinned ? 'Otomatik Damla Moduna Dön' : 'Üst Çubuğu Açık Sabitle'}">${SVG.pin}</button>
-            <button class="micro-btn" onclick="toggleCrown(true)" title="Aurora Kontrol Güvertesini Aç">${SVG.chevD}</button>
-        `;
-
-        const vc = document.getElementById('volCapsule');
-        if (vc) {
-            vc.addEventListener('wheel', e => {
-                e.preventDefault();
-                send('adjustVolumeDelta', { delta: e.deltaY < 0 ? 4 : -4 });
-            }, { passive: false });
-        }
-        const vdc = document.getElementById('vdCapsule');
-        if (vdc) {
-            vdc.addEventListener('wheel', e => {
-                e.preventDefault();
-                send('switchVirtualDesktopDelta', { delta: e.deltaY > 0 ? 1 : -1 });
-            }, { passive: false });
-        }
         }
     }
 
@@ -2665,35 +3361,1000 @@ function renderAll() {
     scheduleHitRects();
 }
 
-function buildExpandedDeckHtml() {
-    const tabs = [
-        ['control', SVG.sliders, 'Kontrol & Medya'],
-        ['shelf', SVG.layers, 'Süper Raf & Pencere'],
-        ['metrics', SVG.activity, 'Telemetri & Hava'],
-        ['studio', SVG.palette, 'Stüdyo & Ayarlar']
-    ];
+const WIDGET_SKINS = [
+    { id: 'frameless', name: 'Çerçevesiz' },
+    { id: 'glass',     name: 'Optik Cam' },
+    { id: 'neoglass',  name: 'Neo-Cam' },
+    { id: 'braun',     name: 'Braun' },
+    { id: 'matrix',    name: 'Dot-Matrix' },
+    { id: 'editorial', name: 'İsviçre Kart' }
+];
 
-    let body = '';
-    if (activeTab === 'control') body = buildControlTab();
-    else if (activeTab === 'shelf') body = buildShelfTab();
-    else if (activeTab === 'metrics') body = buildMetricsTab();
-    else body = buildStudioTab();
+const WIDGET_GALLERY_ITEMS = [
+    { kind: 'clock', name: 'Saat Stüdyosu (11 Tasarım)', desc: 'LED Dot-Matrix, Solar Orbit, Orbital Chrono, Editoryal Poster, Dev Hex, Braun Pro, Swiss', variant: 'swiss', size: 'M' },
+    { kind: 'media', name: 'Medya Stüdyo (8 Tasarım)', desc: 'Tam Kapak Poster, TP-7 Makara, Kaset Teyp, Spektrum, Pikap Plak ve Donanım Deck', variant: 'poster', size: 'M' },
+    { kind: 'battery', name: 'Pil & Bluetooth Halkaları', desc: 'Laptop ve bağlı BT kulaklık/fare şarj halkaları + vektör cihaz ikonları', variant: 'rings', size: 'M' },
+    { kind: 'ai-quota', name: 'AI Kota Stüdyosu', desc: 'ChatGPT, Gemini ve Claude marka amblemli canlı API / CLI / sayaç kotası', variant: 'cards', size: 'L' },
+    { kind: 'weather', name: 'Vektör Hava Durumu (3)', desc: 'Dinamik Gökyüzü Atmosferi, Barometre & Rüzgar Kadrani veya Minimal Sıcaklık', variant: 'dynamic-sky', size: 'S' },
+    { kind: 'system', name: 'Sistem Telemetri (3)', desc: 'Osiloskop Canlı Akış Grafiği, Hassas Halkalar veya Kompakt Metrikler', variant: 'oscilloscope', size: 'M' },
+    { kind: 'calendar', name: 'Takvim & Ajanda (2)', desc: 'Tam Aylık İnteraktif Takvim Izgarası veya Mimari Gün & Ajanda Kartı', variant: 'month', size: 'M' },
+    { kind: 'audio-mixer', name: 'Uygulama Ses Mikseri', desc: 'Masaüstünden her uygulamanın sesini ayrı kaydırıcıyla anında ayarla ve sustur', variant: 'bars', size: 'M' },
+    { kind: 'focus-rings', name: 'Odak Aktivite Halkaları', desc: 'Günlük odak dakikası, görev tamamlama ve üretkenlik hedefleri (3 halka)', variant: 'rings', size: 'S' },
+    { kind: 'photo-frame', name: 'Sanat Fotoğraf Çerçevesi', desc: 'Seçtiğiniz fotoğrafı ince cam paspartu çerçevede sergiler', variant: 'gallery', size: 'M' },
+    { kind: 'quick-drop', name: 'Masaüstü Pano & Dosya', desc: 'Son kopyalanan metinler ve dosya rafına masaüstünden 1-tık kopyala/aç', variant: 'cards', size: 'M' },
+    { kind: 'notes', name: 'Hızlı Not Defteri', desc: 'Masaüstünde doğrudan yazılabilen otomatik kayıtlı not kartı', variant: 'glass', size: 'M' },
+    { kind: 'pomodoro', name: 'Odak Zamanlayıcı', desc: '25 dk odak seansı, ilerleme çubuğu ve tek tık başlat/sıfırla', variant: 'ring', size: 'S' },
+    { kind: 'launcher', name: 'Hızlı Başlatıcı', desc: 'Sabitli uygulamalara masaüstünden 1 tık güvenli erişim', variant: 'grid', size: 'M' },
+    { kind: 'todo', name: 'Görev Listesi', desc: 'Etkileşimli günlük görev ekleme, tamamlama ve takip kartı', variant: 'list', size: 'M' },
+    { kind: 'market', name: 'Piyasa & Döviz', desc: 'USD/TRY, EUR/TRY, BTC ve ETH canlı takip (opt-in)', variant: 'cards', size: 'M' },
+    { kind: 'countdown', name: 'Geri Sayım', desc: 'Seçilen hedef tarihe kalan gün sayacı', variant: 'card', size: 'S' },
+    { kind: 'storage-net', name: 'Disk & Depolama', desc: 'Sürücü doluluk çubukları ve boş alan göstergesi', variant: 'bars', size: 'M' },
+    { kind: 'quote', name: 'Günün İlhamı', desc: 'Dieter Rams ve tasarım ustalarından editoryal sözler', variant: 'editorial', size: 'M' },
+    { kind: 'local-ai', name: 'Yerel AI Monitör', desc: 'Ollama ve LM Studio çalışma durumu ile aktif model bilgisi', variant: 'status', size: 'M' }
+];
 
-    return `
-        <div class="deck-top">
-            <div style="display:flex;align-items:center;gap:9px;flex-shrink:0;">
-                <div class="orb" onclick="openOmni()" title="Tüm Uygulamalar & Arama (Alt+Space)">✦</div>
-                <div style="white-space:nowrap;">
-                    <div style="font-size:13px;font-weight:800;letter-spacing:-0.01em;">Aurora</div>
-                    <div style="font-size:10.5px;color:var(--text-2);">${escHtml(state.profileName)}</div>
+function buildWidgetMiniPreview(kind) {
+    const clk = (state?.clock || '14:45').slice(0, 5);
+    if (kind === 'clock') {
+        return `<div style="display:flex;align-items:baseline;justify-content:space-between;">
+            <span class="num" style="font-size:28px;font-weight:800;letter-spacing:-0.04em;line-height:1;">${escHtml(clk)}</span>
+            <svg width="34" height="34" viewBox="0 0 40 40" style="opacity:0.85;"><circle cx="20" cy="20" r="17" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.35"/><line x1="20" y1="20" x2="20" y2="11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="20" y1="20" x2="27" y2="20" stroke="var(--accent-1)" stroke-width="1.5" stroke-linecap="round"/><circle cx="20" cy="20" r="1.8" fill="var(--accent-1)"/></svg>
+        </div><div style="height:2px;width:62%;border-radius:99px;background:var(--accent-1);margin-top:7px;opacity:0.8;"></div>`;
+    }
+    if (kind === 'media') {
+        return `<div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:36px;height:36px;border-radius:50%;background:radial-gradient(circle,#111 22%,#27272A 24%,#09090B 65%,#1E293B 100%);border:1px solid var(--border-rim);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><div style="width:10px;height:10px;border-radius:50%;background:var(--accent-1);"></div></div>
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(state?.media?.title || 'Ambient Mix')}</div>
+                <div style="display:flex;gap:3px;align-items:flex-end;height:11px;margin-top:5px;">
+                    <span style="width:3px;height:6px;background:var(--accent-1);border-radius:99px;"></span>
+                    <span style="width:3px;height:11px;background:var(--accent-1);border-radius:99px;"></span>
+                    <span style="width:3px;height:8px;background:var(--accent-2);border-radius:99px;"></span>
+                    <span style="width:3px;height:10px;background:var(--accent-1);border-radius:99px;"></span>
                 </div>
             </div>
-            <div class="tabs">
-                ${tabs.map(([id, ic, label]) => `<button class="tab ${activeTab===id?'active':''}" onclick="activeTab='${id}';notifyMetricsVisible();renderAll()">${ic}<span>${label}</span>${(id==='studio' && state.updateAvailable) ? `<span style="width:7px;height:7px;border-radius:50%;background:var(--success);box-shadow:0 0 8px var(--success);margin-left:2px;"></span>` : ''}</button>`).join('')}
+        </div>`;
+    }
+    if (kind === 'ai-quota') {
+        return `<div style="display:flex;flex-direction:column;gap:5px;">
+            <div style="display:flex;align-items:center;gap:6px;"><span class="ai-brand-mark">${SVG.openai}</span><div style="flex:1;height:4px;border-radius:99px;background:rgba(16,185,129,0.22);overflow:hidden;"><div style="width:82%;height:100%;background:#10B981;"></div></div><span class="num" style="font-size:9.5px;font-weight:800;color:#10B981;">82%</span></div>
+            <div style="display:flex;align-items:center;gap:6px;"><span class="ai-brand-mark">${SVG.gemini}</span><div style="flex:1;height:4px;border-radius:99px;background:rgba(56,189,248,0.22);overflow:hidden;"><div style="width:94%;height:100%;background:#38BDF8;"></div></div><span class="num" style="font-size:9.5px;font-weight:800;color:#38BDF8;">94%</span></div>
+            <div style="display:flex;align-items:center;gap:6px;"><span class="ai-brand-mark">${SVG.claude}</span><div style="flex:1;height:4px;border-radius:99px;background:rgba(245,158,11,0.22);overflow:hidden;"><div style="width:68%;height:100%;background:#F59E0B;"></div></div><span class="num" style="font-size:9.5px;font-weight:800;color:#F59E0B;">68%</span></div>
+        </div>`;
+    }
+    if (kind === 'weather') {
+        const temp = state?.weather?.live ? `${Math.round(state.weather.temp)}°` : '21°';
+        return `<div style="display:flex;align-items:center;justify-content:space-between;">
+            <div><div class="num" style="font-size:26px;font-weight:800;line-height:1;">${temp}</div><div style="font-size:9.5px;opacity:0.75;margin-top:3px;">${escHtml(state?.weather?.city || 'İstanbul')}</div></div>
+            <svg width="36" height="36" viewBox="0 0 64 64" fill="none"><circle cx="38" cy="22" r="10" fill="rgba(251,191,36,0.34)" stroke="#FBBF24" stroke-width="2.4"/><path d="M16 44h28a9 9 0 0 0 1-17.9A12 12 0 0 0 21 29a7.5 7.5 0 0 0-5 15z" fill="rgba(148,163,184,0.28)" stroke="currentColor" stroke-width="2.2"/></svg>
+        </div>`;
+    }
+    if (kind === 'battery' || kind === 'system') {
+        const vals = kind === 'battery' ? [['#34D399', 88, 'PC'], ['#38BDF8', 74, 'BT']] : [['#38BDF8', 24, 'CPU'], ['#818CF8', 58, 'RAM'], ['#34D399', 16, 'AĞ']];
+        return `<div style="display:flex;align-items:center;justify-content:space-around;">
+            ${vals.map(([col, p, lbl]) => `<div style="text-align:center;">
+                <svg width="36" height="36" viewBox="0 0 36 36"><circle cx="18" cy="18" r="13" fill="none" stroke="currentColor" stroke-opacity="0.16" stroke-width="3.2"/><circle cx="18" cy="18" r="13" fill="none" stroke="${col}" stroke-width="3.2" stroke-dasharray="81.6" stroke-dashoffset="${(81.6*(1-p/100)).toFixed(1)}" stroke-linecap="round" transform="rotate(-90 18 18)"/><text x="18" y="21" text-anchor="middle" fill="currentColor" font-size="8.5" font-weight="800">${p}%</text></svg>
+                <div style="font-size:8.5px;opacity:0.72;font-weight:700;">${lbl}</div>
+            </div>`).join('')}
+        </div>`;
+    }
+    if (kind === 'audio-mixer') {
+        return `<div style="display:flex;flex-direction:column;gap:5px;">
+            <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;width:42px;opacity:0.8;">Spotify</span><div style="flex:1;height:4px;border-radius:99px;background:rgba(128,128,128,0.22);overflow:hidden;"><div style="width:78%;height:100%;background:var(--accent-1);"></div></div></div>
+            <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;width:42px;opacity:0.8;">Chrome</span><div style="flex:1;height:4px;border-radius:99px;background:rgba(128,128,128,0.22);overflow:hidden;"><div style="width:52%;height:100%;background:var(--accent-2);"></div></div></div>
+            <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;width:42px;opacity:0.8;">Discord</span><div style="flex:1;height:4px;border-radius:99px;background:rgba(128,128,128,0.22);overflow:hidden;"><div style="width:90%;height:100%;background:#10B981;"></div></div></div>
+        </div>`;
+    }
+    if (kind === 'focus-rings') {
+        return `<div style="display:flex;align-items:center;gap:12px;">
+            <svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="none" stroke="rgba(244,63,94,0.22)" stroke-width="3.5"/><circle cx="20" cy="20" r="16" fill="none" stroke="#F43F5E" stroke-width="3.5" stroke-dasharray="100" stroke-dashoffset="26" stroke-linecap="round" transform="rotate(-90 20 20)"/><circle cx="20" cy="20" r="11" fill="none" stroke="#10B981" stroke-width="3.2" stroke-dasharray="69" stroke-dashoffset="20" stroke-linecap="round" transform="rotate(-90 20 20)"/><circle cx="20" cy="20" r="6" fill="none" stroke="#38BDF8" stroke-width="3" stroke-dasharray="38" stroke-dashoffset="10" stroke-linecap="round" transform="rotate(-90 20 20)"/></svg>
+            <div><div class="num" style="font-size:13px;font-weight:800;">75 dk</div><div style="font-size:9.5px;opacity:0.75;">Odak · 4/6 Görev</div></div>
+        </div>`;
+    }
+    if (kind === 'photo-frame') {
+        return `<div style="height:40px;border-radius:8px;background:linear-gradient(135deg,rgba(var(--a1-rgb),0.28),rgba(var(--a2-rgb),0.24));border:1px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;gap:8px;padding:0 10px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 16l-5-5L5 20"/></svg><span style="font-size:10px;font-weight:700;">Paspartu Çerçeve</span></div>`;
+    }
+    if (kind === 'quick-drop') {
+        return `<div style="display:flex;flex-direction:column;gap:4px;"><div style="padding:3px 7px;border-radius:6px;background:rgba(128,128,128,0.14);font-size:9.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Son Pano Metni...</div><div style="padding:3px 7px;border-radius:6px;background:rgba(var(--a1-rgb),0.16);font-size:9.5px;color:var(--accent-1);font-weight:700;">Dosya Rafı + Pano</div></div>`;
+    }
+    if (kind === 'calendar') {
+        const d = new Date().getDate();
+        return `<div style="display:flex;align-items:center;gap:12px;"><span class="num" style="font-size:30px;font-weight:800;color:var(--accent-1);line-height:1;">${d}</span><div><div style="font-size:11px;font-weight:700;">Bugünkü Plan</div><div style="font-size:9.5px;opacity:0.72;">Takvim & Ajanda</div></div></div>`;
+    }
+    if (kind === 'pomodoro') {
+        return `<div style="display:flex;align-items:center;justify-content:space-between;"><span class="num" style="font-size:24px;font-weight:800;">25:00</span><span style="padding:3px 9px;border-radius:99px;background:var(--accent-1);color:var(--accent-ink);font-size:9.5px;font-weight:800;">Odak</span></div><div style="height:4px;border-radius:99px;background:rgba(var(--a1-rgb),0.2);margin-top:8px;overflow:hidden;"><div style="width:45%;height:100%;background:var(--accent-1);"></div></div>`;
+    }
+    if (kind === 'market') {
+        return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:10.5px;"><div style="padding:5px 7px;border-radius:7px;background:rgba(128,128,128,0.12);"><div style="font-size:8.5px;opacity:0.7;">USD/TRY</div><strong class="num">₺34.8</strong></div><div style="padding:5px 7px;border-radius:7px;background:rgba(128,128,128,0.12);"><div style="font-size:8.5px;opacity:0.7;">BTC</div><strong class="num">$92k</strong></div></div>`;
+    }
+    const icMap = { notes: SVG.note, launcher: SVG.grid, todo: SVG.layers, countdown: SVG.timer, 'storage-net': SVG.activity, quote: SVG.sparkles, 'local-ai': SVG.cpu };
+    return `<div style="display:flex;align-items:center;gap:10px;opacity:0.9;"><span class="dw-ic-box" style="width:32px;height:32px;color:var(--accent-1);">${icMap[kind] || SVG.grid}</span><div style="flex:1;"><div style="height:6px;width:72%;border-radius:99px;background:currentColor;opacity:0.22;margin-bottom:6px;"></div><div style="height:5px;width:48%;border-radius:99px;background:var(--accent-1);opacity:0.62;"></div></div></div>`;
+}
+
+const DOCK_WIDGET_CATALOG = [
+    { kind: 'clock',             icon: SVG.clock,    name: 'Alt Dock Saati',         desc: 'Klasik, 5×7 LED Matrix, Split-Flap, Kronograf veya Dünya saati', variants: [['classic','Klasik'],['dot5x7','5×7 LED'],['flip','Split-Flap'],['analog','Kronograf'],['matrix','Dot-Matrix'],['world','Dünya']] },
+    { kind: 'media',             icon: SVG.musicSm,  name: 'Mini Müzik Çalar',       desc: 'Kapak kapsülü, dönen vinil plak, ekolayzer veya kontrol kapsülü', variants: [['vinyl','Vinil Plak'],['art-pill','Kapak Kapsül'],['eq','Ekolayzer'],['capsule','Kapsül']] },
+    { kind: 'volume-slider',     icon: SVG.vol,      name: 'Anında Ses Kaydırıcı',   desc: 'Tek hareketle sürükle/tekerlek ses · İkon: Sessiz · Orta Tık: Çıkış Değiştir', variants: [['bar','Kaydırıcı'],['mini','Mini']] },
+    { kind: 'brightness-slider', icon: SVG.sun,      name: 'Parlaklık Kaydırıcı',    desc: 'Monitör parlaklığını açılır penceresiz doğrudan çubuktan ayarla', variants: [['bar','Kaydırıcı'],['mini','Mini']] },
+    { kind: 'mic-privacy',       icon: SVG.mic,      name: 'Mikrofon & Gizlilik LED', desc: 'Tek tıkla mikrofonu sustur + canlı kamera/mikrofon kullanım ışığı', variants: [['pill','Kapsül'],['icon','Sadece İkon']] },
+    { kind: 'desktops',          icon: SVG.desktop,  name: 'Sanal Masaüstü Geçici',  desc: '1 · 2 · + hızlı geçiş düğmeleri ve tekerlekle masaüstü değiştirme', variants: [['pills','1·2·+'],['compact','Kompakt']] },
+    { kind: 'weather',           icon: SVG.cloud,    name: 'Hava Durumu Kapsülü',    desc: 'Kompakt vektör hava ikonu, sıcaklık ve şehir özeti', variants: [['pill','Kapsül']] },
+    { kind: 'ai-quota',          icon: SVG.sparkles, name: 'AI Kota Kapsülü',        desc: 'ChatGPT · Gemini · Claude 3-halka veya % ve marka logolu açılır kart', variants: [['dots','3\'lü Durum'],['rings','3 Halka'],['compact','Kompakt']] },
+    { kind: 'battery',           icon: SVG.battery,  name: 'Pil & BT Halka',         desc: 'Laptop + bağlı Bluetooth kulaklık/fare şarj halkası', variants: [['ring','Halka'],['pill','Kapsül']] },
+    { kind: 'system',            icon: SVG.cpu,      name: 'CPU & RAM Mini',         desc: 'Canlı işlemci eğrisi (sparkline), çubuk veya metin', variants: [['bars','Çubuk'],['spark','Canlı Eğri'],['text','Metin']] },
+    { kind: 'network',           icon: SVG.activity, name: 'Ağ Hızı (↓/↑)',          desc: 'Anlık indirme ve yükleme hız göstergesi', variants: [['speed','Canlı Hız']] },
+    { kind: 'pomodoro',          icon: SVG.timer,    name: 'Mini Pomodoro',          desc: 'Tek tıkla başlat/duraklat odak sayacı', variants: [['pill','Sayaç']] },
+    { kind: 'market',            icon: SVG.market,   name: 'Döviz & BTC Kayan',      desc: 'USD/TRY & BTC/USD (yalnızca aktifken 5dk önbellekli)', variants: [['ticker','Kayan Kur']] },
+    { kind: 'clipboard',         icon: SVG.clip,     name: 'Son Pano Özeti',         desc: 'Son kopyalanan metin ve pano kasası kısayolu', variants: [['latest','Özet']] }
+];
+
+function classifyThemeGroup(th) {
+    const id = th.id || '';
+    if (th.isLight) return 'minimal';
+    if (['aurora-glass-dark','aurora-flow-dark','aurora-borealis-dark','crystal-sapphire-dark'].includes(id)) return 'glass';
+    if (['midnight-emerald-dark','sunset-kyoto-dark','rose-velvet-dark','desert-dune-dark','tokyo-rain-dark'].includes(id)) return 'mood';
+    return 'tech';
+}
+
+function openSettingsModal(section) {
+    deckMode = 'settings';
+    settingsSection = section || 'appearance';
+    expanded = true;
+    closeAllSubPopups();
+    crownHovered = true;
+    lastExpandedSig = '';
+    notifyMetricsVisible();
+    renderAll();
+    syncFocusDemand();
+}
+
+function openToolsModal(tab) {
+    deckMode = 'tools';
+    activeTab = (tab === 'metrics') ? 'metrics' : 'shelf';
+    expanded = true;
+    closeAllSubPopups();
+    crownHovered = true;
+    lastExpandedSig = '';
+    notifyMetricsVisible();
+    renderAll();
+    syncFocusDemand();
+}
+
+function saveAiKeyFromInput(provider) {
+    const inp = document.getElementById('aiKey_' + provider);
+    if (!inp) return;
+    send('saveAiApiKey', { provider, apiKey: inp.value.trim() });
+    inp.value = '';
+}
+
+function buildToggleSwitch(isOn, onclickCode) {
+    return `<button class="sw ${isOn ? 'on' : ''}" onclick="${onclickCode}" role="switch" aria-checked="${isOn ? 'true' : 'false'}"></button>`;
+}
+
+function buildExpandedDeckHtml() {
+    if (deckMode === 'tools') {
+        const body = activeTab === 'metrics' ? buildMetricsTab() : buildShelfTab();
+        return `
+            <div class="deck-top">
+                <div style="display:flex;align-items:center;gap:9px;flex-shrink:0;">
+                    <div class="orb" onclick="openOmni()" title="Başlat & Ara">✦</div>
+                    <div>
+                        <div style="font-size:13px;font-weight:800;">Aurora Araçlar Merkezi</div>
+                        <div style="font-size:10.5px;color:var(--text-2);">Pano, dosya rafı, OCR ve sistem izleme</div>
+                    </div>
+                </div>
+                <div class="tabs">
+                    <button class="tab ${activeTab!=='metrics'?'active':''}" onclick="activeTab='shelf';notifyMetricsVisible();renderAll();">${SVG.layers}<span>Pano, Dosya Rafı & Not</span></button>
+                    <button class="tab ${activeTab==='metrics'?'active':''}" onclick="activeTab='metrics';notifyMetricsVisible();renderAll();">${SVG.activity}<span>Sistem Telemetri & Hava</span></button>
+                </div>
+                <div style="display:flex;gap:5px;align-items:center;">
+                    <button class="pill-btn" onclick="openSettingsModal('appearance')">${SVG.settings}<span>Ayarlar</span></button>
+                    <button class="micro-btn" onclick="toggleCrown(false)" title="Kapat">${SVG.close}</button>
+                </div>
             </div>
-            <button class="pill-btn" onclick="toggleCrown(false)">${SVG.chevU}<span>Küçült</span></button>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <button class="pill-btn" onclick="toggleCrown(false);send('startScreenOcr');">${SVG.scanText}<span>Metin OCR</span></button>
+                <button class="pill-btn" onclick="toggleCrown(false);send('startColorPicker');">${SVG.pipette}<span>Renk Damlalığı</span></button>
+                <button class="pill-btn" onclick="toggleCrown(false);send('startGifRecording');">${SVG.record}<span>GIF Kaydet</span></button>
+                <button class="pill-btn" onclick="toggleCrown(false);send('pickAndShareQr');">${SVG.qr}<span>QR Dosya Aktar</span></button>
+                <button class="pill-btn" onclick="openSettingsModal('widgets');">${SVG.grid}<span>Widget Galerisi</span></button>
+            </div>
+            <div class="deck-body">${body}</div>
+        `;
+    }
+
+    if (deckMode === 'control') {
+        return `
+            <div class="deck-top">
+                <div style="display:flex;align-items:center;gap:9px;">
+                    <div class="orb" onclick="openOmni()">✦</div>
+                    <div>
+                        <div style="font-size:13px;font-weight:800;">Kontrol & Ses Mikseri</div>
+                        <div style="font-size:10.5px;color:var(--text-2);">Uygulama bazlı ses, medya ve parlaklık</div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:5px;">
+                    <button class="pill-btn" onclick="openToolsModal('shelf')">${SVG.bolt}<span>Araçlar</span></button>
+                    <button class="pill-btn" onclick="openSettingsModal('appearance')">${SVG.settings}<span>Ayarlar</span></button>
+                    <button class="micro-btn" onclick="toggleCrown(false)">${SVG.close}</button>
+                </div>
+            </div>
+            <div class="deck-body">${buildControlTab()}</div>
+        `;
+    }
+
+    // DEFAULT: Apple / Linear 6-Section Sidebar Settings ("Aurora Ayarlar")
+    const navItems = [
+        ['appearance', SVG.palette, 'Mimari & 20 Tema'],
+        ['taskbar', SVG.layers, 'Görev Çubuğu & Akış'],
+        ['widgets', SVG.grid, 'Widget Stüdyosu'],
+        ['island', SVG.sparkles, 'Dinamik Ada Stüdyosu'],
+        ['windows', SVG.moveWin, 'Pencere & Kısayollar'],
+        ['system', SVG.settings, 'Sistem & Eco Guard']
+    ];
+    return `
+        <div class="deck-top">
+            <div style="display:flex;align-items:center;gap:9px;">
+                <div class="orb" onclick="openOmni()" title="Başlat & Ara">✦</div>
+                <div>
+                    <div style="font-size:13.5px;font-weight:800;letter-spacing:-0.015em;">Aurora Ayarlar <span style="font-size:10.5px;font-weight:700;color:var(--accent-1);">v${escHtml(state.version || '6.0.0')}</span></div>
+                    <div style="font-size:10.5px;color:var(--text-2);">6 Kabuk Mimarisi · Her değişiklik anında canlı uygulanır</div>
+                </div>
+            </div>
+            <div style="display:flex;gap:6px;align-items:center;">
+                <button class="pill-btn" onclick="openToolsModal('shelf')">${SVG.bolt}<span>Araçlar</span></button>
+                <button class="pill-btn accent" onclick="send('setWidgetEditMode',{active:true})">${SVG.moveWin}<span>Widget Düzenle</span></button>
+                <button class="micro-btn" onclick="toggleCrown(false)" title="Kapat">${SVG.close}</button>
+            </div>
         </div>
-        <div class="deck-body">${body}</div>
+        <div class="settings-shell">
+            <div class="settings-nav">
+                ${navItems.map(([id, ic, lbl]) => `
+                    <button class="snav-btn ${settingsSection===id?'active':''}" onclick="settingsSection='${id}';lastExpandedSig='';renderAll();">
+                        ${ic}<span>${lbl}</span>
+                        ${id==='system' && state.updateAvailable ? `<span style="margin-left:auto;width:7px;height:7px;border-radius:50%;background:var(--success);"></span>` : ''}
+                    </button>
+                `).join('')}
+                <div style="margin-top:auto;padding-top:10px;border-top:1px solid var(--border-subtle);display:flex;flex-direction:column;gap:5px;">
+                    <button class="pill-btn" style="width:100%;justify-content:center;" onclick="openOnboardingTour()">${SVG.sparkles}<span>Özellik Turu</span></button>
+                    <button class="pill-btn" style="width:100%;justify-content:center;border-color:var(--danger);color:var(--danger);" onclick="send('exitAurora')">${SVG.power}<span>Aurora'dan Çık</span></button>
+                </div>
+            </div>
+            <div class="settings-pane">${buildSettingsSectionHtml()}</div>
+        </div>
+    `;
+}
+
+function buildSettingsSectionHtml() {
+    const t = state.theme || { colors: {} };
+    const themes = getThemesList();
+    if (settingsSection === 'appearance') {
+        const rawCurArch = state.shellArchitecture || 'tahoe-glass';
+        const curArch = rawCurArch === 'fluent-aurora' ? 'fluent-mica' : rawCurArch;
+        const curRad = state.cornerRadiusPreset || 'modern';
+        const opPct = Math.round((t.surfaceOpacity ?? 0.92) * 100);
+        const wcagRatio = typeof t.contrastRatio === 'number' ? t.contrastRatio.toFixed(1) : '7.0';
+        const c = t.colors || {};
+        const filteredThemes = themeCategoryFilter === 'all'
+            ? themes
+            : themes.filter(th => classifyThemeGroup(th) === themeCategoryFilter);
+        const archCards = [
+            {
+                id: 'tahoe-glass',
+                name: 'macOS Tahoe Spatial',
+                desc: 'Yüzen cam kapsül, ikiz kanatlı Ada ve optik çift kenar ışığı.',
+                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="64" y="4" width="52" height="8" rx="4" fill="var(--accent-1)" opacity="0.88"/><rect x="120" y="4" width="16" height="8" rx="4" fill="currentColor" opacity="0.22"/><rect x="16" y="25" width="148" height="12" rx="6" fill="currentColor" opacity="0.18" stroke="currentColor" stroke-opacity="0.38" stroke-width="0.9"/><circle cx="30" cy="31" r="3" fill="var(--accent-1)"/><rect x="70" y="29" width="40" height="4" rx="2" fill="currentColor" opacity="0.48"/></svg>`
+            },
+            {
+                id: 'nothing-hardware',
+                name: 'Nothing Hardware (3-Ada)',
+                desc: '3 tamamen ayrı dot-matrix ada, monospaced tipografi ve kırmızı LED.',
+                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="66" y="4" width="48" height="8" rx="3" fill="none" stroke="currentColor" stroke-opacity="0.48" stroke-width="1"/><circle cx="73" cy="8" r="2" fill="#EF4444"/><rect x="8" y="26" width="34" height="11" rx="4" fill="currentColor" opacity="0.16" stroke="currentColor" stroke-opacity="0.35" stroke-width="0.8"/><rect x="52" y="26" width="76" height="11" rx="4" fill="currentColor" opacity="0.16" stroke="currentColor" stroke-opacity="0.35" stroke-width="0.8"/><rect x="138" y="26" width="34" height="11" rx="4" fill="currentColor" opacity="0.16" stroke="currentColor" stroke-opacity="0.35" stroke-width="0.8"/></svg>`
+            },
+            {
+                id: 'linear-studio',
+                name: 'Linear Ultra-Craft (40px)',
+                desc: '40px ince kenardan kenara bar, 1px hairline kenarlık ve ufuk çizgisi.',
+                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="54" y="2" width="72" height="3" rx="1.5" fill="var(--accent-1)"/><line x1="0" y1="31" x2="180" y2="31" stroke="currentColor" stroke-opacity="0.34" stroke-width="0.9"/><rect x="0" y="31" width="180" height="11" fill="currentColor" opacity="0.12"/><rect x="70" y="35" width="40" height="3.5" rx="1" fill="currentColor" opacity="0.48"/></svg>`
+            },
+            {
+                id: 'vision-orb',
+                name: 'visionOS Spatial Küre',
+                desc: 'Tam oval stadyum kapsül, yuvarlak cam küre ikonlar ve parlak hale.',
+                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><circle cx="90" cy="8" r="5" fill="var(--accent-1)" opacity="0.85"/><rect x="20" y="24" width="140" height="14" rx="7" fill="currentColor" opacity="0.18" stroke="#FFF" stroke-opacity="0.45" stroke-width="0.9"/><circle cx="64" cy="31" r="3.8" fill="currentColor" opacity="0.45"/><circle cx="80" cy="31" r="3.8" fill="var(--accent-1)"/><circle cx="96" cy="31" r="3.8" fill="currentColor" opacity="0.45"/><circle cx="112" cy="31" r="3.8" fill="currentColor" opacity="0.45"/></svg>`
+            },
+            {
+                id: 'arc-split',
+                name: 'Arc Çift Bölümlü Dock',
+                desc: 'Solda birleşik Ara+Uygulamalar kartı, sağda ayrı yüzen araç podu.',
+                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="64" y="4" width="52" height="8" rx="4" fill="var(--accent-1)" opacity="0.78"/><rect x="8" y="25" width="24" height="12" rx="4" fill="var(--accent-1)" opacity="0.28" stroke="var(--accent-1)" stroke-opacity="0.55" stroke-width="0.8"/><rect x="33" y="25" width="76" height="12" rx="4" fill="currentColor" opacity="0.16" stroke="currentColor" stroke-opacity="0.35" stroke-width="0.8"/><rect x="134" y="25" width="38" height="12" rx="4" fill="currentColor" opacity="0.18" stroke="currentColor" stroke-opacity="0.38" stroke-width="0.8"/></svg>`
+            },
+            {
+                id: 'braun-atelier',
+                name: 'Braun Atelier Konsol',
+                desc: 'Mat anodize seramik/metal gövde, içe gömülü yuvalar ve #EA580C turuncu.',
+                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="62" y="4" width="56" height="8" rx="2" fill="currentColor" opacity="0.22" stroke="currentColor" stroke-opacity="0.45" stroke-width="1"/><circle cx="70" cy="8" r="2" fill="#EA580C"/><rect x="10" y="25" width="160" height="12" rx="3" fill="currentColor" opacity="0.18" stroke="currentColor" stroke-opacity="0.48" stroke-width="1"/><rect x="18" y="29" width="18" height="4" fill="#EA580C"/><rect x="66" y="29" width="48" height="4" fill="currentColor" opacity="0.45"/></svg>`
+            },
+            {
+                id: 'swiss-editorial',
+                name: 'İsviçre Editoryal Izgara',
+                desc: '2px kalın üst mürekkep çizgisi, net hücre çerçeveleri ve sıfır gölge.',
+                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="46" y="4" width="88" height="8" rx="2" fill="currentColor" opacity="0.2" stroke="var(--accent-1)" stroke-width="0.8"/><line x1="0" y1="27" x2="180" y2="27" stroke="var(--accent-1)" stroke-width="1.8"/><rect x="0" y="27" width="180" height="15" fill="currentColor" opacity="0.10"/><rect x="12" y="30" width="24" height="9" fill="none" stroke="currentColor" stroke-opacity="0.45" stroke-width="0.8"/><rect x="136" y="30" width="32" height="9" fill="none" stroke="currentColor" stroke-opacity="0.45" stroke-width="0.8"/></svg>`
+            },
+            {
+                id: 'cockpit-hud',
+                name: 'Aero Kokpit HUD',
+                desc: '45° pahlı köşeler, teknik ızgara dokusu ve üst lazer aktif çizgisi.',
+                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><path d="M58 5 L64 5 L64 11 M122 5 L116 5 L116 11" fill="none" stroke="var(--accent-1)" stroke-width="1.2"/><rect x="66" y="5" width="48" height="6" fill="var(--accent-1)" opacity="0.22"/><polygon points="14,25 166,25 174,31 166,38 14,38 6,31" fill="currentColor" opacity="0.14" stroke="var(--accent-1)" stroke-opacity="0.7" stroke-width="1"/><line x1="18" y1="26" x2="48" y2="26" stroke="var(--accent-1)" stroke-width="2"/></svg>`
+            },
+            {
+                id: 'fluent-mica',
+                name: 'Windows 11 Fluent Pro',
+                desc: 'Tam genişlikte porselen Mica bar, üst ışık kenarı ve çentikli Ada.',
+                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><path d="M64 0 H116 L112 9 Q110 12 106 12 H74 Q70 12 68 9 Z" fill="var(--accent-1)" opacity="0.72"/><rect x="0" y="26" width="180" height="16" fill="currentColor" opacity="0.16" stroke="currentColor" stroke-opacity="0.35" stroke-width="0.8"/><rect x="64" y="31" width="52" height="5" rx="2" fill="currentColor" opacity="0.45"/></svg>`
+            },
+            {
+                id: 'zen-ghost',
+                name: 'Zen Şeffaf Hayalet',
+                desc: 'Tamamen çerçevesiz yüzen ikonlar — duvar kağıdı üzerinde saf sadelik.',
+                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="66" y="2" width="48" height="2.5" rx="1" fill="var(--accent-1)" opacity="0.7"/><circle cx="70" cy="32" r="3.5" fill="currentColor" opacity="0.55"/><circle cx="84" cy="32" r="3.5" fill="var(--accent-1)"/><circle cx="98" cy="32" r="3.5" fill="currentColor" opacity="0.55"/><circle cx="112" cy="32" r="3.5" fill="currentColor" opacity="0.55"/></svg>`
+            }
+        ];
+        return `
+            <div>
+                <div class="sp-title">10 Kabuk Tasarım Mimarisi & 20 Tema</div>
+                <div class="sp-sub">Her biri gerçek yerleşim, köşe geometrisi ve yüzey yapısıyla ayrışan 10 kabuk mimarisini 20 renk paletiyle özgürce birleştirin.</div>
+            </div>
+            <div class="sp-group">
+                <div class="sp-group-title">
+                    <span>Kabuk Tasarım Mimarisi (10 Amiral Mimari)</span>
+                    <span style="color:var(--accent-1);">${escHtml(archCards.find(a => a.id === curArch)?.name || 'macOS Tahoe Spatial')}</span>
+                </div>
+                <div class="arch-grid">
+                    ${archCards.map(a => `
+                        <button class="arch-card ${curArch===a.id?'active':''}" onclick="send('setShellArchitecture',{arch:'${a.id}'})">
+                            <div class="arch-diag">${a.svg}</div>
+                            <strong>${a.name}</strong>
+                            <span>${a.desc}</span>
+                        </button>
+                    `).join('')}
+                </div>
+            </div>
+            <div class="sp-group">
+                <div class="sp-group-title">
+                    <span>20 Tasarım Teması (${filteredThemes.length} gösteriliyor)</span>
+                    <span style="color:var(--accent-1);">${escHtml(t.displayName || '')}</span>
+                </div>
+                <div class="theme-filter-bar">
+                    <button class="tf-chip ${themeCategoryFilter==='all'?'active':''}" onclick="themeCategoryFilter='all';lastExpandedSig='';renderAll();">Tümü (20)</button>
+                    <button class="tf-chip ${themeCategoryFilter==='glass'?'active':''}" onclick="themeCategoryFilter='glass';lastExpandedSig='';renderAll();">Cam & Uzamsal</button>
+                    <button class="tf-chip ${themeCategoryFilter==='minimal'?'active':''}" onclick="themeCategoryFilter='minimal';lastExpandedSig='';renderAll();">Aydınlık & Kağıt</button>
+                    <button class="tf-chip ${themeCategoryFilter==='mood'?'active':''}" onclick="themeCategoryFilter='mood';lastExpandedSig='';renderAll();">Atmosfer & Estetik</button>
+                    <button class="tf-chip ${themeCategoryFilter==='tech'?'active':''}" onclick="themeCategoryFilter='tech';lastExpandedSig='';renderAll();">Teknik & OLED</button>
+                </div>
+                <div class="theme-gallery" style="grid-template-columns:repeat(4,minmax(0,1fr));">
+                    ${filteredThemes.map(th => `
+                        <div class="theme-card ${th.id===t.id?'active':''}" onclick="send('applyTheme',{id:'${th.id}'})" title="${escHtml(th.desc)}">
+                            <div class="theme-mini tm-${th.visualStyle || 'liquid-glass'}" style="background:linear-gradient(155deg,${th.surface1},${th.surface2});${th.visualStyle==='cyber-prism'?`border-top-color:${th.accent};`:''}">
+                                <div class="theme-mini-crown" style="background:${th.accent};"></div>
+                                <div class="theme-mini-dock" style="background:${th.isLight?'rgba(255,255,255,0.88)':'rgba(255,255,255,0.08)'};${th.visualStyle==='cyber-prism'?`border-top-color:${th.accent};`:''}">
+                                    <span class="theme-mini-dot" style="background:${th.accent};"></span>
+                                    <span class="theme-mini-dot" style="background:${th.accent2};"></span>
+                                    <span class="theme-mini-dot" style="background:${th.isLight?'#1E293B':'#E2E8F0'};opacity:0.7;"></span>
+                                </div>
+                            </div>
+                            <div class="theme-card-meta">
+                                <span class="theme-card-name">${escHtml(th.name)}</span>
+                                <span class="theme-card-tag">${escHtml(th.mode)}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+            <div class="sp-group">
+                <div class="sp-row">
+                    <div>
+                        <div class="sp-row-lbl">Köşe Yuvarlaklığı</div>
+                        <div class="sp-row-desc">Tüm çubuk, kart ve masaüstü widget köşelerini anında değiştirir.</div>
+                    </div>
+                    <div class="seg-group">
+                        <button class="seg-btn ${curRad==='sharp'?'active':''}" onclick="send('setCornerRadiusPreset',{preset:'sharp'})">Keskin</button>
+                        <button class="seg-btn ${curRad==='modern'?'active':''}" onclick="send('setCornerRadiusPreset',{preset:'modern'})">Modern</button>
+                        <button class="seg-btn ${curRad==='capsule'?'active':''}" onclick="send('setCornerRadiusPreset',{preset:'capsule'})">Kapsül</button>
+                    </div>
+                </div>
+                <div class="sp-row">
+                    <div>
+                        <div class="sp-row-lbl">Otomatik Gündüz / Gece Teması</div>
+                        <div class="sp-row-desc">07:00–19:00 arası açık tema, akşam otomatik koyu temaya geçer.</div>
+                    </div>
+                    ${buildToggleSwitch(Boolean(state.autoDayNightTheme), "send('toggleAutoDayNight')")}
+                </div>
+            </div>
+            <div class="sp-group">
+                <div class="sp-group-title">
+                    <span>Canlı Renk & Cam Stüdyosu</span>
+                    <div style="display:flex;gap:5px;align-items:center;">
+                        <button class="pill-btn accent" style="height:22px;font-size:10px;padding:0 9px;" onclick="send('syncWallpaperAccent')" title="Masaüstü duvar kağıdından WCAG AA+ uyumlu vurgu renkleri çıkar">${SVG.palette}<span>Duvar Kağıdından Renk Al</span></button>
+                        <span id="cpWcagBadge" class="wcag-pill num ${t.meetsWcagAA===false?'warn':''}">${wcagRatio}:1 ${t.meetsWcagAA===false?'Düşük':'AA✓'}</span>
+                        <button id="cpResetBtn" class="pill-btn" style="height:21px;font-size:10px;display:${t.hasCustomColors?'inline-flex':'none'};" onclick="send('resetThemeColors',{themeId:'${t.id}'})">Sıfırla</button>
+                    </div>
+                </div>
+                <div class="swatch-row">
+                    ${CURATED_ACCENT_PRESETS.map(p => `<button class="swatch-btn" style="background:linear-gradient(135deg,${p.a1},${p.a2});" title="${p.name}" onclick="applyAccentPreset('${p.a1}','${p.a2}')"></button>`).join('')}
+                </div>
+                <div class="color-pickers-grid">
+                    <label class="cp-slot"><input id="cpAccent1" type="color" value="${(c.accentPrimary||'#38BDF8').slice(0,7)}" oninput="queueThemeColorPatch({accentPrimary:this.value})"/><span class="cp-lbl">Ana Vurgu</span></label>
+                    <label class="cp-slot"><input id="cpAccent2" type="color" value="${(c.accentSecondary||'#818CF8').slice(0,7)}" oninput="queueThemeColorPatch({accentSecondary:this.value})"/><span class="cp-lbl">İkinci</span></label>
+                    <label class="cp-slot"><input id="cpSurface1" type="color" value="${(c.surface1||'#0F172A').slice(0,7)}" oninput="queueThemeColorPatch({surface1:this.value})"/><span class="cp-lbl">Yüzey 1</span></label>
+                    <label class="cp-slot"><input id="cpSurface2" type="color" value="${(c.surface2||'#162038').slice(0,7)}" oninput="queueThemeColorPatch({surface2:this.value})"/><span class="cp-lbl">Yüzey 2</span></label>
+                    <label class="cp-slot"><input id="cpText1" type="color" value="${(c.textPrimary||'#F8FAFC').slice(0,7)}" oninput="queueThemeColorPatch({textPrimary:this.value})"/><span class="cp-lbl">Metin</span></label>
+                </div>
+                <div class="slider-row" style="margin-bottom:0;">
+                    <span style="font-size:11px;font-weight:700;color:var(--text-2);">Cam Opaklığı</span>
+                    <input id="cpOpacityRange" type="range" min="55" max="100" value="${opPct}" oninput="onThemeOpacitySlide(this.value)"/>
+                    <span id="cpOpacityLbl" class="num" style="width:36px;text-align:right;font-size:11px;font-weight:700;">%${opPct}</span>
+                </div>
+            </div>
+        `;
+    }
+
+    if (settingsSection === 'taskbar') {
+        const mode = state.dockMode || 'AlwaysVisible';
+        const hubStyle = state.dockHubStyle || 'dendritic';
+        const hovStyle = state.dockHoverStyle || 'lift';
+        const sil = state.dockSilhouette || 'fixed';
+        const ind = state.dockIndicatorStyle || 'pill';
+        const startSty = state.dockStartStyle || 'icon';
+        const edge = state.dockEdge || 'Bottom';
+        const dens = state.dockDensity || 'Standard';
+        const layout = state.dockBarLayout || 'Split3Zone';
+        return `
+            <div>
+                <div class="sp-title">Görev Çubuğu, 5 Silüet & Pencere Dallanma</div>
+                <div class="sp-sub">Ayrık Adalar dahil 5 çubuk silüeti, 4 aktif gösterge ve 4 çoklu pencere dallanma stilini canlı seçin.</div>
+            </div>
+            <div class="sp-group">
+                <div class="sp-row">
+                    <div><div class="sp-row-lbl">Alt Dock Silüeti (5 Tasarım)</div><div class="sp-row-desc">Ayrık Adalar modunda Sol, Orta ve Sağ cam kapsüller arasında açık duvar kağıdı görünür.</div></div>
+                    <div class="seg-group">
+                        <button class="seg-btn ${sil==='fixed'?'active':''}" onclick="send('setDockSilhouette',{silhouette:'fixed'})">Sabit Çubuk</button>
+                        <button class="seg-btn ${sil==='islands'?'active':''}" onclick="send('setDockSilhouette',{silhouette:'islands'})">Ayrık Adalar</button>
+                        <button class="seg-btn ${sil==='floating'?'active':''}" onclick="send('setDockSilhouette',{silhouette:'floating'})">Yüzen Cam</button>
+                        <button class="seg-btn ${sil==='minimal-rail'?'active':''}" onclick="send('setDockSilhouette',{silhouette:'minimal-rail'})">Minimal Şerit</button>
+                        <button class="seg-btn ${sil==='compact'?'active':''}" onclick="send('setDockSilhouette',{silhouette:'compact'})">Kompakt</button>
+                    </div>
+                </div>
+                <div class="sp-row">
+                    <div><div class="sp-row-lbl">Aktif Uygulama Göstergesi</div><div class="sp-row-desc">Çalışan ve odaklanan uygulamaların altındaki görsel işaret stili.</div></div>
+                    <div class="seg-group">
+                        <button class="seg-btn ${ind==='pill'?'active':''}" onclick="send('setDockIndicatorStyle',{style:'pill'})">Çubuk</button>
+                        <button class="seg-btn ${ind==='dot'?'active':''}" onclick="send('setDockIndicatorStyle',{style:'dot'})">Nokta</button>
+                        <button class="seg-btn ${ind==='frame'?'active':''}" onclick="send('setDockIndicatorStyle',{style:'frame'})">Çerçeve</button>
+                        <button class="seg-btn ${ind==='glow'?'active':''}" onclick="send('setDockIndicatorStyle',{style:'glow'})">Parıltı</button>
+                    </div>
+                </div>
+                <div class="sp-row">
+                    <div><div class="sp-row-lbl">Birleşik Başlat Butonu</div><div class="sp-row-desc">Tek bir Başlat & Ara düğmesi (çift buton yok).</div></div>
+                    <div class="seg-group">
+                        <button class="seg-btn ${startSty==='icon'?'active':''}" onclick="send('setDockStartStyle',{style:'icon'})">Tek ✦ İkon</button>
+                        <button class="seg-btn ${startSty==='capsule'?'active':''}" onclick="send('setDockStartStyle',{style:'capsule'})">✦ Ara Kapsülü</button>
+                    </div>
+                </div>
+            </div>
+            <div class="sp-group">
+                <div class="sp-group-title"><span>Çoklu Pencere Dallanma Stili (4 Seçenek)</span></div>
+                <div class="hub-opt-grid">
+                    <button class="hub-opt-card ${hubStyle==='dendritic'?'active':''}" onclick="send('setDockHubStyle',{style:'dendritic'})">
+                        <strong>✦ Dairesel Dallanan Küre</strong>
+                        <span>Kıvrımlı ışık dallarıyla bağlanan optik cam küreler ve üst kontrol barı.</span>
+                    </button>
+                    <button class="hub-opt-card ${hubStyle==='fan3d'?'active':''}" onclick="send('setDockHubStyle',{style:'fan3d'})">
+                        <strong>◈ 3D Yelpaze Kartlar</strong>
+                        <span>Perspektifli açılan yelpaze kartları, üstüne gelince öne yükselir.</span>
+                    </button>
+                    <button class="hub-opt-card ${hubStyle==='cards'?'active':''}" onclick="send('setDockHubStyle',{style:'cards'})">
+                        <strong>▭ Win11 Modern Kartlar</strong>
+                        <span>Tanıdık yatay pencere kartları, hızlı 50/50 yaslama ve kapatma.</span>
+                    </button>
+                    <button class="hub-opt-card ${hubStyle==='radial'?'active':''}" onclick="send('setDockHubStyle',{style:'radial'})">
+                        <strong>◠ Yay Çemberi (Prism Arc)</strong>
+                        <span>İkon etrafında yarım daire yörüngede açılan akıcı pencere düğümleri.</span>
+                    </button>
+                </div>
+            </div>
+            <div class="sp-group">
+                <div class="sp-row">
+                    <div><div class="sp-row-lbl">Görev Çubuğu Modu</div><div class="sp-row-desc">Sabit çubuk tam ekranı daraltır; Yüzen mod pencerelerden otomatik kaçar.</div></div>
+                    <div class="seg-group">
+                        <button class="seg-btn ${mode==='AlwaysVisible'?'active':''}" onclick="send('setDockMode',{mode:'AlwaysVisible'})">Sabit Çubuk</button>
+                        <button class="seg-btn ${mode==='SmartDodge'?'active':''}" onclick="send('setDockMode',{mode:'SmartDodge'})">Yüzen Akıllı</button>
+                        <button class="seg-btn ${mode==='AutoHide'?'active':''}" onclick="send('setDockMode',{mode:'AutoHide'})">Oto-Gizle</button>
+                    </div>
+                </div>
+                <div class="sp-row">
+                    <div><div class="sp-row-lbl">İkon Üzerine Gelme Efekti</div><div class="sp-row-desc">Sıfır hedef kaymalı fare tepkisi seçin.</div></div>
+                    <div class="seg-group">
+                        <button class="seg-btn ${hovStyle==='lift'?'active':''}" onclick="send('setDockHoverStyle',{style:'lift'})">Hafif Yükselme</button>
+                        <button class="seg-btn ${hovStyle==='wave'?'active':''}" onclick="send('setDockHoverStyle',{style:'wave'})">Dalga</button>
+                        <button class="seg-btn ${hovStyle==='glow'?'active':''}" onclick="send('setDockHoverStyle',{style:'glow'})">Işıltı</button>
+                    </div>
+                </div>
+                <div class="sp-row">
+                    <div><div class="sp-row-lbl">Konum & Boyut</div><div class="sp-row-desc">Ekran kenarı ve çubuk yüksekliği.</div></div>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                        <div class="seg-group">
+                            <button class="seg-btn ${edge==='Bottom'?'active':''}" onclick="send('setDockEdge',{edge:'Bottom'})">Alt</button>
+                            <button class="seg-btn ${edge==='Left'?'active':''}" onclick="send('setDockEdge',{edge:'Left'})">Sol</button>
+                            <button class="seg-btn ${edge==='Right'?'active':''}" onclick="send('setDockEdge',{edge:'Right'})">Sağ</button>
+                        </div>
+                        <div class="seg-group">
+                            <button class="seg-btn ${dens==='Compact'?'active':''}" onclick="send('setDockDensity',{density:'Compact'})">Kompakt</button>
+                            <button class="seg-btn ${dens==='Standard'?'active':''}" onclick="send('setDockDensity',{density:'Standard'})">Standart</button>
+                            <button class="seg-btn ${dens==='Cozy'?'active':''}" onclick="send('setDockDensity',{density:'Cozy'})">Geniş</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="sp-group">
+                <div class="sp-row">
+                    <div><div class="sp-row-lbl">Sağ Alt Saat, Ses, Wi-Fi & Pil Kontrolleri</div><div class="sp-row-desc">Windows 11 alışkanlığıyla hızlı kontroller ve takvim sağ alt köşede açılır.</div></div>
+                    ${buildToggleSwitch(state.showDockStatusCluster !== false, "send('toggleShowDockStatus')")}
+                </div>
+                <div class="sp-row">
+                    <div><div class="sp-row-lbl">3 Bölgeli Geniş Çubuk Düzeni</div><div class="sp-row-desc">Solda Başlat & Ara, ortada uygulamalar, sağda saat ve durum simgeleri.</div></div>
+                    ${buildToggleSwitch(layout === 'Split3Zone', "send('toggleDockBarLayout')")}
+                </div>
+                <div class="sp-row">
+                    <div><div class="sp-row-lbl">Klasik Windows Çubuğunu Gizle</div><div class="sp-row-desc">Aurora açıkken çift görev çubuğu görünmesini engeller; çıkınca geri gelir.</div></div>
+                    ${buildToggleSwitch(Boolean(state.nativeTaskbarHidden), "send('toggleHideNativeTaskbar')")}
+                </div>
+                <div class="sp-row">
+                    <div><div class="sp-row-lbl">Canlı 60 FPS Pencere Önizlemesi (DWM)</div><div class="sp-row-desc">Dallanma menüsünde gezerken pencerelerin canlı görüntüsünü gösterir.</div></div>
+                    ${buildToggleSwitch(state.dwmLivePreview !== false, "send('toggleDwmLivePreview')")}
+                </div>
+                <div class="sp-row">
+                    <div><div class="sp-row-lbl">Akıllı Kategori Gruplama (SmartTidy)</div><div class="sp-row-desc">Sabitlenmemiş açık uygulamaları Web / Geliştirme / İletişim klasörlerinde toplar.</div></div>
+                    ${buildToggleSwitch(Boolean(state.smartTidy), "send('toggleSmartTidy')")}
+                </div>
+                <div class="sp-row">
+                    <div><div class="sp-row-lbl">Monitör Bazlı Pencere Filtresi</div><div class="sp-row-desc">Çoklu monitörde her görev çubuğu yalnızca kendi ekranındaki pencereleri gösterir.</div></div>
+                    ${buildToggleSwitch(Boolean(state.perMonitorFilter), "send('togglePerMonitorFilter')")}
+                </div>
+            </div>
+            <div class="sp-group">
+                <div class="sp-group-title">
+                    <span>Akıcı Sıfır-Tık Kontroller & Sürükleme (Pro UX)</span>
+                    <button class="pill-btn accent" style="height:23px;font-size:10px;padding:0 9px;" onclick="send('setDockEditMode',{active:${!state.dockEditMode}})">${SVG.moveWin}<span>${state.dockEditMode ? '✓ Düzenlemeyi Bitir' : 'Dock\'u Sürükle-Düzenle'}</span></button>
+                </div>
+                <div style="font-size:10.5px;color:var(--text-2);line-height:1.38;">
+                    Sabitlenen ve açık tüm uygulama ikonlarını sürükleyerek elinizle sıralayabilirsiniz — tıklamayla yer değiştirmez. Sabitlenmemiş açık bir uygulamayı sabit alana sürüklerseniz tam o sıraya sabitlenir.
+                </div>
+                <div class="sp-row">
+                    <div><div class="sp-row-lbl">Ses / Parlaklık Sürükle-Ayarla (Scrub)</div><div class="sp-row-desc">Sağ alt durum hapında sağa/sola basılı sürükle → Ses (Shift ile → Parlaklık). Normal tık yine Hızlı Kontrolleri açar.</div></div>
+                    ${buildToggleSwitch(state.dockScrubGestures !== false, `send('setDockGesturePrefs',{scrubGestures:${state.dockScrubGestures === false}})`)}
+                </div>
+                <div class="sp-row">
+                    <div><div class="sp-row-lbl">Uygulama İkonunda Canlı Ses Rozeti & Alt+Tekerlek</div><div class="sp-row-desc">Ses çıkaran uygulamanın ikonunda 1-tık susturma rozeti çıkar; Alt+Tekerlek o uygulamanın sesini ayarlar.</div></div>
+                    ${buildToggleSwitch(state.dockPerAppAudio !== false, `send('setDockGesturePrefs',{perAppAudio:${state.dockPerAppAudio === false}})`)}
+                </div>
+                <div class="sp-row">
+                    <div><div class="sp-row-lbl">Boş Çubuk Alanında Fare Tekerleği</div><div class="sp-row-desc">Dock'taki boş alan üzerinde tekerleği çevirince yapılacak işlem.</div></div>
+                    <div class="seg-group">
+                        ${[['volume','Ses'],['brightness','Parlaklık'],['desktop','Masaüstü'],['media','Medya'],['none','Yok']].map(([k,l]) => `<button class="seg-btn ${(state.dockEmptyWheelAction||'volume')===k?'active':''}" onclick="send('setDockGesturePrefs',{emptyWheel:'${k}'})">${l}</button>`).join('')}
+                    </div>
+                </div>
+                <div class="sp-row">
+                    <div><div class="sp-row-lbl">Boş Çubuk Alanına Çift Tık</div><div class="sp-row-desc">Görev çubuğundaki boş bir yere çift tıklayınca çalışacak kısayol.</div></div>
+                    <div class="seg-group">
+                        ${[['show-desktop','Masaüstü'],['quick-wheel','Hızlı Çember'],['omni','Arama'],['task-view','Görevler'],['none','Yok']].map(([k,l]) => `<button class="seg-btn ${(state.dockEmptyDblClickAction||'show-desktop')===k?'active':''}" onclick="send('setDockGesturePrefs',{emptyDblClick:'${k}'})">${l}</button>`).join('')}
+                    </div>
+                </div>
+                <div class="sp-row">
+                    <div><div class="sp-row-lbl">Boş Çubuk Alanına Orta Tık</div><div class="sp-row-desc">Tekerlek (orta) tuşla anında tetiklenen aksiyon.</div></div>
+                    <div class="seg-group">
+                        ${[['media-play','Medya'],['mute','Sessiz'],['quick-wheel','Hızlı Çember'],['show-desktop','Masaüstü'],['none','Yok']].map(([k,l]) => `<button class="seg-btn ${(state.dockEmptyMidClickAction||'media-play')===k?'active':''}" onclick="send('setDockGesturePrefs',{emptyMidClick:'${k}'})">${l}</button>`).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    if (settingsSection === 'widgets') {
+        const activeW = state.widgets || [];
+        const dockW = state.dockWidgets || [];
+        const activeDockCnt = dockW.filter(w => w.enabled).length;
+        const aiCfgs = state.aiConfigs || [];
+        const aiSnaps = state.aiSnapshots || [];
+        const zoneLblMap = { 'far-left': 'En Sol', 'before-apps': 'Uyg. Solu', 'after-apps': 'Uyg. Sağı', 'far-right': 'En Sağ' };
+        const styleLblMap = { pill: 'Kapsül', glass: 'Optik Cam', hardware: 'Donanım', clean: 'Çerçevesiz', tinted: 'Vurgulu' };
+        const aiBrandMap = { openai: SVG.openai, gemini: SVG.gemini, claude: SVG.claude };
+        return `
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+                <div>
+                    <div class="sp-title">Widget Stüdyosu · 6 Endüstriyel Arketip</div>
+                    <div class="sp-sub">Alt Dock'a modüller ekleyin veya canlı önizlemeli 20 Pro masaüstü widget'ını kurun (Widget üzerinde sağ tık → anında stil denetçisi).</div>
+                </div>
+                <div class="seg-group">
+                    <button class="seg-btn ${widgetStudioTab==='dock'?'active':''}" onclick="widgetStudioTab='dock';lastExpandedSig='';renderAll();">Alt Dock (${activeDockCnt}/14)</button>
+                    <button class="seg-btn ${widgetStudioTab==='desktop'?'active':''}" onclick="widgetStudioTab='desktop';lastExpandedSig='';renderAll();">Masaüstü (${activeW.length}/20)</button>
+                </div>
+            </div>
+            ${widgetStudioTab === 'dock' ? `
+                <div class="sp-group">
+                    <div class="sp-group-title">
+                        <span>Alt Dock Mikro-Widget'ları (4 Bölge · Sürükle & Sağ Tık Denetçi)</span>
+                        <div style="display:flex;gap:5px;align-items:center;">
+                            <button class="pill-btn accent" style="height:24px;font-size:10.5px;" onclick="send('setDockEditMode',{active:${!state.dockEditMode}})">${SVG.moveWin}<span>${state.dockEditMode ? 'Bitir' : 'Dock\'ta Sürükle'}</span></button>
+                            <button class="pill-btn subtle" style="height:24px;font-size:10.5px;" onclick="send('resetDockWidgets')">${SVG.refresh}<span>Sıfırla</span></button>
+                        </div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:6px;">
+                        ${DOCK_WIDGET_CATALOG.map(cat => {
+                            const cur = dockW.find(w => w.kind === cat.kind) || { kind: cat.kind, zone: 'before-apps', slot: 'left', variant: cat.variants[0][0], size: 'normal', styleMode: 'pill', enabled: false };
+                            const curZone = (cur.zone === 'far-left' || cur.zone === 'before-apps' || cur.zone === 'after-apps' || cur.zone === 'far-right')
+                                ? cur.zone : (cur.slot === 'left' ? 'before-apps' : 'after-apps');
+                            const curSz = cur.size || 'normal';
+                            const curSt = cur.styleMode || 'pill';
+                            const isOpen = expandedDockWidgetKind === cat.kind;
+                            return `
+                            <div class="dw-studio-item ${cur.enabled ? 'on' : ''}">
+                                <div class="dw-studio-head">
+                                    <span class="dw-ic-box">${cat.icon}</span>
+                                    <div style="flex:1;min-width:0;">
+                                        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                                            <strong style="font-size:12px;">${escHtml(cat.name)}</strong>
+                                            ${cur.enabled ? `<span class="dw-meta-tag">${zoneLblMap[curZone] || curZone}</span><span class="dw-meta-tag">${styleLblMap[curSt] || curSt}</span>` : ''}
+                                        </div>
+                                        <div style="font-size:10px;color:var(--text-2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(cat.desc)}</div>
+                                    </div>
+                                    <button class="pill-btn ${isOpen ? 'accent' : 'subtle'}" style="height:24px;padding:0 9px;font-size:10px;" onclick="expandedDockWidgetKind=(expandedDockWidgetKind==='${cat.kind}'?null:'${cat.kind}');lastExpandedSig='';renderAll();">${SVG.sliders}<span>${isOpen ? 'Kapat' : 'Özelleştir'}</span></button>
+                                    ${buildToggleSwitch(Boolean(cur.enabled), `send('toggleDockWidget',{kind:'${cat.kind}'})`)}
+                                </div>
+                                ${isOpen ? `
+                                <div class="dw-studio-drawer">
+                                    ${cat.variants.length > 1 ? `
+                                    <div class="dw-drawer-row">
+                                        <span class="dw-drawer-lbl">Tasarım</span>
+                                        <div class="seg-group" style="padding:2px;">
+                                            ${cat.variants.map(([vid, vlbl]) => `<button class="seg-btn ${cur.variant===vid?'active':''}" style="padding:3px 8px;font-size:10px;" onclick="send('updateDockWidget',{kind:'${cat.kind}',variant:'${vid}',enabled:true})">${escHtml(vlbl)}</button>`).join('')}
+                                        </div>
+                                    </div>` : ''}
+                                    <div class="dw-drawer-row">
+                                        <span class="dw-drawer-lbl">Bölge</span>
+                                        <div class="seg-group" style="padding:2px;">
+                                            ${[['far-left','En Sol'],['before-apps','Uyg. Solu'],['after-apps','Uyg. Sağı'],['far-right','En Sağ']].map(([zk, zl]) => `<button class="seg-btn ${curZone===zk?'active':''}" style="padding:3px 8px;font-size:10px;" onclick="send('moveDockWidget',{kind:'${cat.kind}',targetZone:'${zk}',targetIndex:99})">${zl}</button>`).join('')}
+                                        </div>
+                                    </div>
+                                    <div class="dw-drawer-row">
+                                        <span class="dw-drawer-lbl">Yüzey & Boyut</span>
+                                        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                                            <div class="seg-group" style="padding:2px;">
+                                                ${[['pill','Kapsül'],['glass','Optik Cam'],['hardware','Donanım'],['clean','Çerçevesiz'],['tinted','Vurgulu']].map(([mk, ml]) => `<button class="seg-btn ${curSt===mk?'active':''}" style="padding:3px 7px;font-size:10px;" onclick="send('updateDockWidget',{kind:'${cat.kind}',styleMode:'${mk}'})">${ml}</button>`).join('')}
+                                            </div>
+                                            <div class="seg-group" style="padding:2px;">
+                                                ${[['compact','K'],['normal','N'],['wide','G']].map(([sk, sl]) => `<button class="seg-btn ${curSz===sk?'active':''}" style="padding:3px 7px;font-size:10px;" onclick="send('updateDockWidget',{kind:'${cat.kind}',size:'${sk}'})">${sl}</button>`).join('')}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>` : ''}
+                            </div>`;
+                        }).join('')}
+                    </div>
+                </div>
+            ` : `
+                <div class="sp-group">
+                    <div class="sp-row">
+                        <div><div class="sp-row-lbl">Masaüstü Widget'ları Aktif</div><div class="sp-row-desc">Kapattığınızda widget yüzeyi tamamen kapanır (0 MB RAM / %0 CPU).</div></div>
+                        ${buildToggleSwitch(state.widgetsEnabled !== false, "send('toggleWidgetsEnabled')")}
+                    </div>
+                    <div class="sp-row">
+                        <div><div class="sp-row-lbl">Yerleşimi Kilitle</div><div class="sp-row-desc">Widget'ların yanlışlıkla sürüklenmesini engeller. Sağ tık ile stil yine değişir.</div></div>
+                        ${buildToggleSwitch(Boolean(state.widgetsLocked), "send('toggleWidgetsLocked')")}
+                    </div>
+                    <div style="display:flex;gap:7px;flex-wrap:wrap;padding-top:4px;">
+                        <button class="pill-btn accent" onclick="send('setWidgetEditMode',{active:true})">${SVG.moveWin}<span>Masaüstünde Sürükle & Düzenle</span></button>
+                        <button class="pill-btn" onclick="send('resetDesktopWidgets')">${SVG.refresh}<span>Varsayılana Sıfırla (Saat + Pil)</span></button>
+                    </div>
+                </div>
+                <div class="sp-group">
+                    <div class="sp-group-title"><span>Küratörlü Masaüstü Paketleri (4 Profesyonel Set)</span></div>
+                    <div class="bundle-row">
+                        <button class="bundle-btn" onclick="send('applyWidgetBundle',{bundle:'editorial-minimal'})">
+                            <strong>İsviçre Editoryal</strong>
+                            <span>Poster saat, takvim ayı, sanat fotoğrafı ve alıntı (4 widget)</span>
+                        </button>
+                        <button class="bundle-btn" onclick="send('applyWidgetBundle',{bundle:'nothing-hardware'})">
+                            <strong>Nothing Hardware Pack</strong>
+                            <span>5×7 LED saat, TP-7 makara, dot-matrix pil ve osiloskop</span>
+                        </button>
+                        <button class="bundle-btn" onclick="send('applyWidgetBundle',{bundle:'productivity-studio'})">
+                            <strong>Üretkenlik Stüdyosu</strong>
+                            <span>Odak halkaları, ses mikseri, görev listesi ve hızlı pano</span>
+                        </button>
+                        <button class="bundle-btn" onclick="send('applyWidgetBundle',{bundle:'dev-cockpit'})">
+                            <strong>Geliştirici Kokpiti</strong>
+                            <span>Dev Hex saat, osiloskop, AI kotası, disk ve yerel AI</span>
+                        </button>
+                    </div>
+                </div>
+                ${activeW.length > 0 ? `
+                <div class="sp-group">
+                    <div class="sp-group-title"><span>Masaüstündeki Aktif Widget'lar (${activeW.length}) — Arketip & Boyut</span></div>
+                    ${activeW.map(w => {
+                        const meta = WIDGET_GALLERY_ITEMS.find(x => x.kind === w.kind);
+                        const curSkin = w.skin || 'glass';
+                        return `
+                        <div class="wg-active-row">
+                            <div style="min-width:120px;">
+                                <strong>${escHtml(meta?.name || w.kind)}</strong>
+                                <span style="color:var(--text-2);font-size:10px;"> · ${escHtml(w.variant)}</span>
+                            </div>
+                            <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;">
+                                <div class="seg-group" style="padding:2px;">
+                                    ${WIDGET_SKINS.map(sk => `<button class="seg-btn ${curSkin===sk.id?'active':''}" style="padding:2px 6px;font-size:9.5px;" onclick="send('updateDesktopWidget',{id:'${w.id}',skin:'${sk.id}'})">${sk.name}</button>`).join('')}
+                                </div>
+                                <div class="seg-group" style="padding:2px;">
+                                    ${['S','M','L'].map(sz => `<button class="seg-btn ${w.size===sz?'active':''}" style="padding:2px 6px;font-size:9.5px;" onclick="send('updateDesktopWidget',{id:'${w.id}',size:'${sz}'})">${sz}</button>`).join('')}
+                                </div>
+                                ${w.kind === 'photo-frame' ? `<button class="pill-btn accent" style="height:24px;padding:0 8px;font-size:9.5px;" onclick="send('pickWidgetPhoto',{id:'${w.id}'})">Fotoğraf</button>` : ''}
+                                <button class="micro-btn ${w.pinnedTop?'active':''}" style="width:24px;height:24px;" title="Her Zaman Üstte" onclick="send('updateDesktopWidget',{id:'${w.id}',pinnedTop:${!w.pinnedTop}})">${SVG.pin}</button>
+                                <button class="micro-btn danger" style="width:24px;height:24px;" title="Masaüstünden Kaldır" onclick="send('removeDesktopWidget',{id:'${w.id}'})">${SVG.trash}</button>
+                            </div>
+                        </div>`;
+                    }).join('')}
+                </div>` : ''}
+                <div class="sp-group">
+                    <div class="sp-group-title" style="flex-wrap:wrap;">
+                        <span>Görsel Widget Galerisi (${WIDGET_GALLERY_ITEMS.length} Pro Widget · 6 Arketip)</span>
+                        <div class="seg-group" style="padding:2px;" title="Yeni eklenecek widget tasarım arketipi">
+                            ${WIDGET_SKINS.map(sk => `<button class="seg-btn ${gallerySkinPreset===sk.id?'active':''}" style="padding:3px 7px;font-size:10px;" onclick="gallerySkinPreset='${sk.id}';lastExpandedSig='';renderAll();">${sk.name}</button>`).join('')}
+                        </div>
+                    </div>
+                    <div class="wg-vgrid">
+                        ${WIDGET_GALLERY_ITEMS.map(item => `
+                            <div class="wg-vcard">
+                                <div class="wg-thumb sk-${gallerySkinPreset}">${buildWidgetMiniPreview(item.kind)}</div>
+                                <div class="wg-vfoot">
+                                    <div style="min-width:0;">
+                                        <strong>${escHtml(item.name)}</strong>
+                                        <span>${escHtml(item.desc)}</span>
+                                    </div>
+                                    <button class="pill-btn accent" style="height:26px;padding:0 10px;font-size:10.5px;flex-shrink:0;" onclick="send('addDesktopWidget',{kind:'${item.kind}',variant:'${item.variant}',skin:'${gallerySkinPreset}',size:'${item.size}'})">+ Ekle</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `}
+            <div class="sp-group">
+                <div class="sp-group-title">
+                    <span>AI Kota Motoru (ChatGPT · Gemini · Claude)</span>
+                    <button class="pill-btn" style="height:22px;font-size:10px;" onclick="send('refreshAiQuota')">${SVG.refresh}<span>Şimdi Tara</span></button>
+                </div>
+                <div style="font-size:10.5px;color:var(--text-2);line-height:1.35;">
+                    API anahtarı girdiğinizde Windows <strong>DPAPI</strong> ile şifrelenir (asla düz metin kaydedilmez). Anahtar yoksa yerel Claude/Codex/Gemini CLI loglarını otomatik okur veya web abonelik sayacı kullanır.
+                </div>
+                ${aiCfgs.map(cfg => {
+                    const snap = aiSnaps.find(s => s.provider === cfg.provider);
+                    const nameMap = { openai: 'ChatGPT / OpenAI', gemini: 'Google Gemini', claude: 'Anthropic Claude' };
+                    return `
+                    <div class="ai-cfg-card">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                            <div style="display:flex;align-items:center;gap:7px;">
+                                <span class="ai-brand-mark">${aiBrandMap[cfg.provider] || SVG.sparkles}</span>
+                                <strong style="font-size:12px;">${nameMap[cfg.provider] || cfg.provider}</strong>
+                                <span style="font-size:10.5px;color:var(--accent-1);font-weight:700;">${escHtml(snap?.sourceBadge || (cfg.hasApiKey ? 'API Hazır' : 'CLI / Sayaç'))}</span>
+                            </div>
+                            <div style="display:flex;gap:5px;align-items:center;">
+                                <span class="num" style="font-size:10.5px;color:var(--text-2);">Limit: ${cfg.windowLimit} / ${Math.round(cfg.windowMinutes/60)}s</span>
+                                <button class="pill-btn" style="height:22px;font-size:10px;padding:0 7px;" onclick="send('bumpAiManualUsage',{provider:'${cfg.provider}',delta:1})">+1</button>
+                                <button class="pill-btn subtle" style="height:22px;font-size:10px;padding:0 7px;" onclick="send('resetAiManualUsage',{provider:'${cfg.provider}'})">Sıfırla</button>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:6px;align-items:center;">
+                            <input id="aiKey_${cfg.provider}" class="ai-key-inp" type="password" placeholder="${cfg.hasApiKey ? 'DPAPI Şifreli Anahtar Kayıtlı (Güncellemek için yazın)' : 'İsteğe bağlı API anahtarı (sk-... / AIza...)'}"/>
+                            <button class="pill-btn accent" style="height:28px;font-size:10.5px;" onclick="saveAiKeyFromInput('${cfg.provider}')">Kaydet</button>
+                            ${cfg.hasApiKey ? `<button class="pill-btn" style="height:28px;font-size:10.5px;color:var(--danger);border-color:var(--danger);" onclick="send('saveAiApiKey',{provider:'${cfg.provider}',apiKey:''})">Sil</button>` : ''}
+                        </div>
+                    </div>`;
+                }).join('')}
+            </div>
+        `;
+    }
+
+    if (settingsSection === 'island') {
+        const cm = state.crownVisibilityMode || 'Dynamic';
+        const rawIsl = state.islandStyle || 'liquid-pill';
+        const islSty = rawIsl === 'compact-notch' ? 'mac-notch' : rawIsl;
+        const idleM = state.islandIdleMode || 'media-ambient';
+        const notifMode = state.notificationMode || 'windows-native';
+        const islCards = [
+            {
+                id: 'liquid-pill',
+                name: 'Sıvı Ada + İkiz Kanat',
+                desc: 'Yüzen cam kapsül; müzik veya odak aktifken sağda akıllı kanat açılır.',
+                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="48" y="13" width="64" height="16" rx="8" fill="var(--accent-1)" opacity="0.85"/><rect x="118" y="13" width="22" height="16" rx="8" fill="currentColor" opacity="0.22" stroke="currentColor" stroke-opacity="0.35" stroke-width="0.8"/></svg>`
+            },
+            {
+                id: 'mac-notch',
+                name: 'MacBook / iPhone Çentik',
+                desc: 'Ekranın üstüne kulaklı ters kıvrımlarla oturan mat obsidian çentik.',
+                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><path d="M52 0 H128 Q122 0 120 7 L118 16 Q116 20 110 20 H70 Q64 20 62 16 L60 7 Q58 0 52 0 Z" fill="currentColor" opacity="0.28" stroke="var(--accent-1)" stroke-opacity="0.65" stroke-width="0.9"/><circle cx="90" cy="10" r="2.2" fill="var(--accent-1)"/></svg>`
+            },
+            {
+                id: 'edge-horizon',
+                name: 'Ufuk Çizgisi (Oto-Gizli)',
+                desc: 'Boştayken üst kenarda ince 4px çizgi; fare gelince tam Komuta Sahnesi açılır.',
+                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="44" y="3" width="92" height="4" rx="2" fill="var(--accent-1)"/><rect x="52" y="16" width="76" height="14" rx="7" fill="currentColor" opacity="0.16" stroke="var(--accent-1)" stroke-opacity="0.45" stroke-width="0.8"/></svg>`
+            },
+            {
+                id: 'hardware-pod',
+                name: 'Donanım Pod (Matrix)',
+                desc: 'Dot-matrix mat gövde, kırmızı durum LED’i ve monospaced telemetri.',
+                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="50" y="12" width="80" height="18" rx="5" fill="currentColor" opacity="0.18" stroke="currentColor" stroke-opacity="0.55" stroke-width="1"/><circle cx="60" cy="21" r="2.5" fill="#EF4444"/><rect x="70" y="19" width="46" height="4" rx="1" fill="currentColor" opacity="0.5"/></svg>`
+            },
+            {
+                id: 'glass-bar',
+                name: 'Geniş Canlı Durum Barı',
+                desc: '344px geniş kapsül: üzerine gelmeden medya, CPU/odak ve saat görünür.',
+                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="18" y="12" width="144" height="18" rx="8" fill="currentColor" opacity="0.16" stroke="var(--accent-1)" stroke-opacity="0.5" stroke-width="0.9"/><rect x="28" y="18" width="42" height="6" rx="3" fill="var(--accent-1)" opacity="0.75"/><rect x="78" y="18" width="24" height="6" rx="3" fill="currentColor" opacity="0.35"/><rect x="114" y="18" width="38" height="6" rx="3" fill="currentColor" opacity="0.45"/></svg>`
+            },
+            {
+                id: 'orbital-halo',
+                name: 'Yörünge Küresi (Orb)',
+                desc: '34px minimal cam küre; müzikte albüm kapağı döner, dokununca sahneye açılır.',
+                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><circle cx="90" cy="21" r="12" fill="currentColor" opacity="0.18" stroke="var(--accent-1)" stroke-width="1.4"/><circle cx="90" cy="21" r="5" fill="var(--accent-1)" opacity="0.85"/></svg>`
+            }
+        ];
+        return `
+            <div>
+                <div class="sp-title">Dinamik Ada Stüdyosu (Aurora Crown)</div>
+                <div class="sp-sub">Üzerine gelince anında 4 sekmeli Canlı Komuta Sahnesi açılır. Ses kontrolü Alt Dock’a bırakılmıştır; çakışmasız Windows bildirimleri varsayılandır.</div>
+            </div>
+            <div class="sp-group">
+                <div class="sp-group-title"><span>Ada Tasarım Tarzı (6 Farklı Form Faktörü)</span></div>
+                <div class="isl-grid">
+                    ${islCards.map(ic => `
+                        <button class="arch-card ${islSty===ic.id?'active':''}" onclick="send('setIslandConfig',{style:'${ic.id}'})">
+                            <div class="arch-diag">${ic.svg}</div>
+                            <strong>${ic.name}</strong>
+                            <span>${ic.desc}</span>
+                        </button>
+                    `).join('')}
+                </div>
+            </div>
+            <div class="sp-group">
+                <div class="sp-row">
+                    <div><div class="sp-row-lbl">Boşta Davranış (5 Mod)</div><div class="sp-row-desc">İsterseniz neredeyse görünmez Oto-Gizli, isterseniz canlı saat, hava veya CPU nabzı kapsülü seçin.</div></div>
+                    <div class="seg-group" style="flex-wrap:wrap;">
+                        ${[['auto-stealth','Oto-Gizli'],['media-ambient','Sıvı Kapsül'],['glance-weather','Saat + Hava'],['system-pulse','CPU / RAM'],['minimal-brand','Minimal']].map(([k,l]) => `<button class="seg-btn ${idleM===k?'active':''}" onclick="send('setIslandConfig',{idleMode:'${k}'})">${l}</button>`).join('')}
+                    </div>
+                </div>
+                <div class="sp-row">
+                    <div><div class="sp-row-lbl">Bildirim Yönetimi (Çift Bildirimsiz)</div><div class="sp-row-desc">Windows Yerel modunda tüm uygulama bildirimleri doğrudan Windows’ta sorunsuz görünür (sağ alt takvimden Win+N 1 tık).</div></div>
+                    <div class="seg-group">
+                        <button class="seg-btn ${notifMode==='windows-native'?'active':''}" onclick="send('setNotificationMode',{mode:'windows-native'})">Windows Yerel (Önerilen)</button>
+                        <button class="seg-btn ${notifMode==='aurora-mirror'?'active':''}" onclick="send('setNotificationMode',{mode:'aurora-mirror'})">Aurora Yansıtma</button>
+                    </div>
+                </div>
+                <div class="sp-row">
+                    <div><div class="sp-row-lbl">Bluetooth Cihaz Bağlantı Pop-in</div><div class="sp-row-desc">Kulaklık veya fare bağlandığında ada içinde pil halkasıyla akıllı kart açılır.</div></div>
+                    ${buildToggleSwitch(state.islandBtPopin !== false, `send('setIslandConfig',{btPopin:${state.islandBtPopin === false}})`)}
+                </div>
+                <div class="sp-row">
+                    <div><div class="sp-row-lbl">Canlı Gizlilik Koruması & Mik Sustur</div><div class="sp-row-desc">Kamera veya mikrofon kullanıldığında canlı LED göstergesi ve 1-tık mikrofon susturma butonu çıkar.</div></div>
+                    ${buildToggleSwitch(state.islandPrivacyGuard !== false, `send('setIslandConfig',{privacyGuard:${state.islandPrivacyGuard === false}})`)}
+                </div>
+                <div class="sp-row">
+                    <div><div class="sp-row-lbl">Görünüm Modu</div><div class="sp-row-desc">İsterseniz sadece medya/bildirim anında çıkmasını sağlayabilir veya gizleyebilirsiniz.</div></div>
+                    <div class="seg-group">
+                        <button class="seg-btn ${cm==='Dynamic'?'active':''}" onclick="send('setCrownVisibilityMode',{mode:'Dynamic'})">Dinamik Ada</button>
+                        <button class="seg-btn ${cm==='AlertsOnly'?'active':''}" onclick="send('setCrownVisibilityMode',{mode:'AlertsOnly'})">Sadece OSD & Medya</button>
+                        <button class="seg-btn ${cm==='Hidden'?'active':''}" onclick="send('setCrownVisibilityMode',{mode:'Hidden'})">Gizli</button>
+                    </div>
+                </div>
+                <div class="sp-row">
+                    <div><div class="sp-row-lbl">Canlı Donanım OSD</div><div class="sp-row-desc">Donanım tuşlarıyla ses, parlaklık, Caps Lock ve Num Lock anında üst göstergede görünür.</div></div>
+                    ${buildToggleSwitch(state.hardwareOsdEnabled !== false, "send('toggleHardwareOsd')")}
+                </div>
+                <div class="sp-row">
+                    <div><div class="sp-row-lbl">Saatte Saniyeyi Göster</div><div class="sp-row-desc">Görev çubuğu ve saat widget'ında HH:MM:SS formatı.</div></div>
+                    ${buildToggleSwitch(Boolean(state.showClockSeconds), "send('toggleClockSeconds')")}
+                </div>
+                <div class="sp-row">
+                    <div><div class="sp-row-lbl">Üst Sahneyi Açık Sabitle</div><div class="sp-row-desc">Fare çekilince Canlı Komuta Sahnesi'nin daralmamasını sağlar.</div></div>
+                    ${buildToggleSwitch(Boolean(state.crownPinned), "send('toggleCrownPinned')")}
+                </div>
+            </div>
+        `;
+    }
+
+    if (settingsSection === 'windows') {
+        const sp = state.snapZonePreset || 'code6535';
+        return `
+            <div>
+                <div class="sp-title">Pencere Yönetimi & Kısayollar</div>
+                <div class="sp-sub">Pencereleri klavye ve fare hareketleriyle anında hizalayın; çalışma profilleri arasında geçiş yapın.</div>
+            </div>
+            <div class="sp-group">
+                <div class="sp-row">
+                    <div><div class="sp-row-lbl">Windows Tuşu Başlat & Arama'yı Açsın</div><div class="sp-row-desc">Win+D, Win+E, Win+L gibi sistem kısayolları aynen korunur.</div></div>
+                    ${buildToggleSwitch(Boolean(state.winKeyOmni), "send('toggleWinKeyOmni')")}
+                </div>
+                <div class="sp-row">
+                    <div><div class="sp-row-lbl">Başlat & Arama Kısayol Tuşu</div><div class="sp-row-desc">Klavyeden anında arama penceresini açar.</div></div>
+                    <button class="pill-btn" onclick="send('cycleOmniHotkey')">${SVG.bolt}<span>${escHtml(state.omniHotkeyPreset || 'Alt+Space')}</span></button>
+                </div>
+                <div class="sp-row">
+                    <div><div class="sp-row-lbl">Sol Alt + Sürükle Pencere Taşı / Boyutlandır</div><div class="sp-row-desc">Türkçe AltGr (@, €) ve Alt+Tab kesinlikle korunur.</div></div>
+                    ${buildToggleSwitch(state.altDragEnabled !== false, "send('toggleAltDrag')")}
+                </div>
+                <div class="sp-row">
+                    <div><div class="sp-row-lbl">Shift + Sürükle Cam Snap Bölgeleri</div><div class="sp-row-desc">Pencere taşırken Shift'e basılı tutarak ekrana yaslayın.</div></div>
+                    ${buildToggleSwitch(state.snapZonesEnabled !== false, "send('toggleSnapZones')")}
+                </div>
+                <div class="sp-row">
+                    <div><div class="sp-row-lbl">Snap Bölge Şablonu</div><div class="sp-row-desc">Shift+Sürükle için varsayılan bölme düzeni.</div></div>
+                    <div class="seg-group">
+                        <button class="seg-btn ${sp==='code6535'?'active':''}" onclick="send('setSnapZonePreset',{preset:'code6535'})">65/35</button>
+                        <button class="seg-btn ${sp==='studio3'?'active':''}" onclick="send('setSnapZonePreset',{preset:'studio3'})">Üçlü</button>
+                        <button class="seg-btn ${sp==='cols3'?'active':''}" onclick="send('setSnapZonePreset',{preset:'cols3'})">3 Sütun</button>
+                        <button class="seg-btn ${sp==='grid2x2'?'active':''}" onclick="send('setSnapZonePreset',{preset:'grid2x2'})">2×2</button>
+                    </div>
+                </div>
+            </div>
+            <div class="sp-group">
+                <div class="sp-group-title"><span>Çalışma Profilleri</span></div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                    ${(state.profiles || []).map(p => `
+                        <button class="pill-btn ${p.active?'accent':''}" onclick="send('switchProfile',{id:'${p.id}'})">${SVG.bolt}<span>${escHtml(p.name)}</span></button>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    // Section 6: System & Updates
+    return `
+        <div>
+            <div class="sp-title">Sistem, Eco Guard & Güncelleme</div>
+            <div class="sp-sub">Project Aurora v${escHtml(state.version || '5.0.0')} — Saf Rust + Tek Paylaşımlı WebView2 Motoru.</div>
+        </div>
+        <div class="sp-group">
+            <div class="sp-row">
+                <div><div class="sp-row-lbl">Akıllı Pil Ekonomisi (Eco Guard) ${state.ecoModeActive ? '<span style="color:var(--success);font-size:10px;">● Aktif</span>' : ''}</div><div class="sp-row-desc">Pil %20 ve altına düştüğünde dönen vinil/ekolayzer gibi dekoratif animasyonları otomatik duraklatır.</div></div>
+                ${buildToggleSwitch(state.ecoModeAuto !== false, "send('toggleEcoAuto')")}
+            </div>
+            <div class="sp-row">
+                <div><div class="sp-row-lbl">Windows Açılışında Otomatik Başlat</div><div class="sp-row-desc">Yönetici izni istemeden kullanıcı oturumuyla başlar.</div></div>
+                ${buildToggleSwitch(Boolean(state.startupEnabled), "send('toggleStartup')")}
+            </div>
+            <div class="sp-row">
+                <div><div class="sp-row-lbl">Pano Kasası Oto-Yapıştır</div><div class="sp-row-desc">Pano geçmişinden öğe seçtiğinizde önceki pencereye doğrudan Ctrl+V yapar.</div></div>
+                ${buildToggleSwitch(Boolean(state.clipboardAutoPaste), "send('toggleClipboardAutoPaste')")}
+            </div>
+            <div class="sp-row">
+                <div><div class="sp-row-lbl">Otomatik Güncelleme Kontrolü</div><div class="sp-row-desc">GitHub Releases üzerinden SHA-256 doğrulamalı yeni sürümleri kontrol eder.</div></div>
+                ${buildToggleSwitch(state.autoCheckUpdatesEnabled !== false, "send('toggleAutoCheckUpdates')")}
+            </div>
+        </div>
+        <div class="sp-group">
+            <div class="sp-group-title"><span>Yedekleme & Güncelleme</span></div>
+            <div style="display:flex;gap:7px;flex-wrap:wrap;">
+                <button class="pill-btn" onclick="send('exportBackup')">${SVG.exportPkg}<span>Tüm Ayar & Widget'ları Yedekle</span></button>
+                <button class="pill-btn" onclick="send('importBackup')">${SVG.inbox}<span>Yedekten Geri Yükle</span></button>
+                <button class="pill-btn" ${state.updateDownloading?'disabled':''} onclick="send('checkForUpdates')">${SVG.refresh}<span>${escHtml(state.updateStatus || 'Güncelleme Kontrol Et')}</span></button>
+                ${state.updateAvailable ? `<button class="pill-btn accent" onclick="send('installAvailableUpdate')">İndir ve Güncelle (v${escHtml(state.updateLatestVersion||'')})</button>` : ''}
+                ${state.repoUrl ? `<button class="pill-btn subtle" onclick="send('openUri',{uri:state.repoUrl})">GitHub ↗</button>` : ''}
+            </div>
+        </div>
+        <div class="sp-group" style="border-color:rgba(251,113,133,0.34);">
+            <div class="sp-row">
+                <div><div class="sp-row-lbl">Aurora'dan Güvenli Çıkış</div><div class="sp-row-desc">Orijinal Windows görev çubuğu anında eksiksiz geri getirilir.</div></div>
+                <button class="pill-btn" style="border-color:var(--danger);color:var(--danger);" onclick="send('exitAurora')">${SVG.power}<span>Çıkış Yap</span></button>
+            </div>
+        </div>
     `;
 }
 
@@ -3595,6 +5256,10 @@ function renderOmniList(query, skipFileDispatch = false) {
     // G. Built-In Aurora Quick Commands
     if (omniFilter === 'all' || omniFilter === 'setting') {
         const quickCmds = [
+            { badge: 'Widget', title: 'Widget Stüdyosunu Aç (14 Alt Dock + 16 Masaüstü)', sub: '4 bölgeli Pro Dock widgetları, Ses/Parlaklık kaydırıcı, AI Kota', kw: 'widget galeri saat muzik ai kota chatgpt gemini claude masaustu ses parlaklik', run: () => openSettingsModal('widgets') },
+            { badge: 'Dock', title: 'Alt Dock Widget\'larını Sürükle ve Düzenle', sub: '4 bölge arasında sürükle-bırak düzenleme modu', kw: 'dock duzenle widget tasi surukle edit bolge', run: () => send('setDockEditMode', { active: true }) },
+            { badge: 'Widget', title: 'Masaüstü Widget\'larını Sürükle ve Düzenle', sub: '16px manyetik ızgara düzenleme modu', kw: 'widget duzenle tasi surukle edit', run: () => send('setWidgetEditMode', { active: true }) },
+            { badge: 'Ayarlar', title: 'Aurora Ayarlar & 12 Tema Stüdyosunu Aç', sub: 'Görünüm, Görev Çubuğu Dallanma, Widget\'lar', kw: 'aurora ayarlar tema dallanma studio settings', run: () => openSettingsModal('appearance') },
             { badge: 'Düzen', title: 'Kodlama Düzeni Uygula (Sol %65 + Sağ %35)', sub: '2 pencereyi akıllı yerleştir', kw: 'kodlama duzen tiling layout 65 35', run: () => send('applyWindowLayout', { preset: 'code6535' }) },
             { badge: 'Düzen', title: 'Eşit İkili Düzen Uygula (50 / 50)', sub: '2 pencereyi yan yana yasla', kw: 'ikili duzen split 50 50 tiling', run: () => send('applyWindowLayout', { preset: 'split5050' }) },
             { badge: 'Düzen', title: 'Üçlü Stüdyo Düzeni (50 / 25 / 25)', sub: '3 pencereyi tek tıkla yerleştir', kw: 'uclu studyo duzen 3 pencere tiling', run: () => send('applyWindowLayout', { preset: 'studio3' }) },
@@ -4408,23 +6073,26 @@ function cycleSnapZonePreset() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('pwDesktop').innerHTML = SVG.desktop + '<span>Masaüstü</span>';
-    document.getElementById('pwOcr').innerHTML = SVG.scanText + '<span>Metin OCR</span>';
-    document.getElementById('pwColor').innerHTML = SVG.pipette + '<span>Renk Seç</span>';
-    document.getElementById('pwGif').innerHTML = SVG.record + '<span>GIF Kaydet</span>';
-    document.getElementById('pwSnip').innerHTML = SVG.scissors + '<span>Alıntı</span>';
-    document.getElementById('pwTask').innerHTML = SVG.activity + '<span>Görev Yön.</span>';
-    document.getElementById('pwTrash').innerHTML = SVG.trash + '<span>Çöp</span>';
-    document.getElementById('pwSettings').innerHTML = SVG.settings + '<span>Ayarlar</span>';
-    document.getElementById('pwSleep').innerHTML = SVG.sleep + '<span>Uyku</span>';
-    document.getElementById('pwLock').innerHTML = SVG.lock + '<span>Kilitle</span>';
+    const setBtn = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+    setBtn('pwAuroraSettings', SVG.settings + '<span>Aurora Ayarları</span>');
+    setBtn('pwWidgets', SVG.grid + '<span>Widget\'lar</span>');
+    setBtn('pwTools', SVG.bolt + '<span>Araçlar</span>');
+    setBtn('pwDesktop', SVG.desktop + '<span>Masaüstü</span>');
+    setBtn('pwOcr', SVG.scanText + '<span>Metin OCR</span>');
+    setBtn('pwColor', SVG.pipette + '<span>Renk Seç</span>');
+    setBtn('pwGif', SVG.record + '<span>GIF Kaydet</span>');
+    setBtn('pwTask', SVG.activity + '<span>Görev Yön.</span>');
+    setBtn('pwTrash', SVG.trash + '<span>Çöp</span>');
+    setBtn('pwSettings', SVG.sliders + '<span>Win Ayarları</span>');
+    setBtn('pwSleep', SVG.sleep + '<span>Uyku</span>');
+    setBtn('pwLock', SVG.lock + '<span>Kilitle</span>');
     resetPowerButtonsUi();
 
     // Liquid Droplet Hover Wake & Grace Recede
     const wrap = document.getElementById('crownWrap');
     wrap.addEventListener('mouseenter', () => {
         clearTimeout(hoverLeaveTimer);
-        if (!crownHovered) {
+        if (!crownHovered && !omniOpen) {
             crownHovered = true;
             renderAll();
         }
@@ -4432,11 +6100,14 @@ document.addEventListener('DOMContentLoaded', () => {
     wrap.addEventListener('mouseleave', () => {
         clearTimeout(hoverLeaveTimer);
         hoverLeaveTimer = setTimeout(() => {
-            if (!isAnyPopupOpen() && !crownPinned && !isDraggingFile) {
+            const ae = document.activeElement;
+            const editingStage = ae && (ae.id === 'mdTodoInp' || ae.id === 'stageScratch');
+            if (!isAnyPopupOpen() && !crownPinned && !isDraggingFile && !editingStage) {
                 crownHovered = false;
+                microDeckOpen = false;
                 renderAll();
             }
-        }, 460);
+        }, 520);
     });
 
     const inp = document.getElementById('omniInput');
@@ -4458,6 +6129,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     window.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && microDeckOpen && !isOnboardingVisible()) {
+            e.preventDefault();
+            microDeckOpen = false;
+            renderAll();
+            syncFocusDemand();
+            return;
+        }
         if (!isOnboardingVisible()) return;
         if (e.key === 'Escape') { e.preventDefault(); finishOnboarding(); }
         else if (e.key === 'ArrowRight') { e.preventDefault(); stepTour(1); }
@@ -4467,7 +6145,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('resize', scheduleHitRects);
     if (typeof ResizeObserver !== 'undefined') {
         const ro = new ResizeObserver(scheduleHitRects);
-        for (const id of ['crown', 'qrShareCard', 'trayPopup', 'calendarPopup', 'dropPopup', 'notifPopup', 'onboardingCard', 'omnibar', 'toast']) {
+        for (const id of ['crown', 'crownWing', 'qrShareCard', 'trayPopup', 'calendarPopup', 'dropPopup', 'notifPopup', 'onboardingCard', 'omnibar', 'toast']) {
             const el = document.getElementById(id);
             if (el) ro.observe(el);
         }
@@ -4561,12 +6239,16 @@ window.chrome.webview.addEventListener('message', e => {
         state = msg.payload;
         if (typeof state.crownPinned === 'boolean') crownPinned = state.crownPinned;
         const activeEl = document.activeElement;
-        const editingText = activeEl && (activeEl.id === 'agendaInput' || activeEl.id === 'scratchArea' || activeEl.id === 'clipSearchInput');
+        const editingText = activeEl && (activeEl.id === 'agendaInput' || activeEl.id === 'scratchArea' || activeEl.id === 'clipSearchInput' || activeEl.id === 'mdTodoInp' || activeEl.id === 'stageScratch' || activeEl.classList?.contains('ai-key-inp'));
         if (!editingText && !omniOpen) {
             renderAll();
         }
     } else if (msg.type === 'syncLayout') {
         reportHitRects();
+    } else if (msg.type === 'openSettings') {
+        openSettingsModal(msg.section || 'appearance');
+    } else if (msg.type === 'openTools') {
+        openToolsModal(msg.tab || 'shelf');
     } else if (msg.type === 'toggleOmni') {
         if (omniOpen) closeOmni(); else openOmni();
     } else if (msg.type === 'toggleTray') {
@@ -4579,16 +6261,30 @@ window.chrome.webview.addEventListener('message', e => {
         crownHovered = Boolean(msg.hovered);
         renderAll();
     } else if (msg.type === 'toggleDeck') {
-        activeTab = msg.tab || 'control';
-        toggleCrown(!expanded);
+        const t = msg.tab || 'control';
+        if (t === 'studio') {
+            if (expanded && deckMode === 'settings') toggleCrown(false);
+            else openSettingsModal('appearance');
+        } else if (t === 'shelf' || t === 'metrics') {
+            if (expanded && deckMode === 'tools' && activeTab === t) toggleCrown(false);
+            else openToolsModal(t);
+        } else {
+            deckMode = 'control';
+            activeTab = 'control';
+            toggleCrown(!expanded);
+        }
     } else if (msg.type === 'openTour') {
         openOnboardingTour(msg.step || 0);
     } else if (msg.type === 'outsideDeactivate') {
-        if (isAnyPopupOpen()) {
+        const hadStage = crownHovered || microDeckOpen;
+        if (isAnyPopupOpen() || hadStage) {
             expanded = false;
             closeAllSubPopups();
             notifyMetricsVisible();
-            if (!crownPinned) crownHovered = false;
+            if (!crownPinned) {
+                crownHovered = false;
+                microDeckOpen = false;
+            }
             renderAll();
         }
     } else if (msg.type === 'osdHud') {
@@ -4609,10 +6305,37 @@ window.chrome.webview.addEventListener('message', e => {
             activeOsd = null;
             renderAll();
         }, Math.max(700, msg.durationMs || 1450));
+    } else if (msg.type === 'btPopin') {
+        liveBtPopin = {
+            name: msg.name || 'Bluetooth',
+            percent: msg.percent ?? 100,
+            hasBattery: Boolean(msg.hasBattery),
+            category: msg.category || 'audio'
+        };
+        renderAll();
+        clearTimeout(btPopinTimer);
+        btPopinTimer = setTimeout(() => {
+            liveBtPopin = null;
+            renderAll();
+        }, 4600);
     } else if (msg.type === 'toast') {
-        const t = document.getElementById('toast');
         const nId = msg.notificationId || '';
-        t.innerHTML = `<span style="color:var(--accent-1);font-size:15px;font-weight:800;">✦</span><div style="min-width:0;flex:1;"><strong>${escHtml(msg.title)}</strong><div style="font-size:11.5px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${escHtml(msg.body)}</div></div>${nId ? '<span class="toast-open-pill">Aç ↗</span>' : ''}`;
+        if (nId && state?.notificationMode === 'aurora-mirror' && !expanded && !crownHovered && !microDeckOpen && !omniOpen) {
+            liveNotifMorph = {
+                title: msg.title || '',
+                body: msg.body || '',
+                nId
+            };
+            renderAll();
+            clearTimeout(notifMorphTimer);
+            notifMorphTimer = setTimeout(() => {
+                liveNotifMorph = null;
+                renderAll();
+            }, 5200);
+            return;
+        }
+        const t = document.getElementById('toast');
+        t.innerHTML = `<span style="color:var(--accent-1);font-size:15px;font-weight:800;">✦</span><div style="min-width:0;flex:1;"><strong>${escHtml(msg.title)}</strong><div style="font-size:11.5px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${escHtml(msg.body)}</div></div>${nId ? '<span class="toast-open-pill">Aç ↗</span>' : ''}`;
         t.onclick = nId ? () => {
             t.className = 'glass-shell';
             t.onclick = null;

@@ -5,7 +5,7 @@
     [string]$PfxPassword = "",
     [string]$TimestampUrl = "http://timestamp.digicert.com",
     [string]$ReleaseDownloadBaseUrl = "https://github.com/MuharremDidici/ProjectAurora/releases/latest/download",
-    [string]$ReleaseNotes = "Project Aurora v3.0.0: Saf Rust Win32 motoru + tek paylasimli WebView2 renderer (sifir .NET 10, ~3.4 MB tek dosya UAC'siz kurulum), Dairesel Dallanan Pencere Kuresi, canli laptop & Bluetooth pil gostergesi, olay-tabanli sifir-sorgulu pano, endustriyel kilitlenmez girdi/odak mimarisi ve 7 modern 2026 gorsel tema."
+    [string]$ReleaseNotes = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -24,12 +24,30 @@ if ([string]::IsNullOrWhiteSpace($Version) -and (Test-Path $manifestCargo)) {
         $Version = $Matches[1].Trim()
     }
 }
-if ([string]::IsNullOrWhiteSpace($Version)) { $Version = "3.0.0" }
+if ([string]::IsNullOrWhiteSpace($Version)) { $Version = "7.2.0" }
 
 $semver = $Version.Trim().TrimStart('v', 'V')
 $parts  = $semver.Split('.')
 if ($parts.Length -eq 2) { $semver = "$semver.0"; $parts = $semver.Split('.') }
 $setupBaseName = "Aurora-Kurulum-v$semver-x64"
+
+if ([string]::IsNullOrWhiteSpace($ReleaseNotes)) {
+    $notesFile = Join-Path $root "RELEASE_NOTES.md"
+    if (Test-Path $notesFile) {
+        $rawNotes = [System.IO.File]::ReadAllText($notesFile, [System.Text.UTF8Encoding]::new($false))
+        $secPat = "(?ms)^##\s+v" + [Regex]::Escape($semver) + "\s*\r?\n(.*?)(?=^##\s+v|\z)"
+        $sm = [Regex]::Match($rawNotes, $secPat)
+        if ($sm.Success) {
+            $sumMatch = [Regex]::Match($sm.Groups[1].Value, "(?m)^>\s*Summary:\s*(.+)$")
+            if ($sumMatch.Success) {
+                $ReleaseNotes = $sumMatch.Groups[1].Value.Trim()
+            }
+        }
+    }
+}
+if ([string]::IsNullOrWhiteSpace($ReleaseNotes)) {
+    $ReleaseNotes = "Project Aurora v$semver — Saf Rust Win32 + Tek Paylaşımlı WebView2 masaüstü kabuğu: 10 kabuk mimarisi, 6 Dinamik Ada stili, Alt+Tab odak bütünlüğü, tüm açılır menüler için tek tık dış kapatma ve v2.x/v3.x+ sorunsuz otomatik yükseltme."
+}
 
 $distDir = Join-Path $root "dist"
 New-Item -ItemType Directory -Force -Path $distDir | Out-Null
@@ -103,15 +121,16 @@ $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
 [System.IO.File]::WriteAllText($manifestPath, ($manifestObj | ConvertTo-Json -Depth 4), $utf8NoBom)
 
 Write-Host "[4/4] Paylasim paketi (.zip) ve BENIOKU hazirlaniyor..." -ForegroundColor Cyan
+$actualSizeMb = [math]::Round((Get-Item $setupExe).Length / 1MB, 2).ToString("0.00", [System.Globalization.CultureInfo]::InvariantCulture)
 $readmeTxt = Join-Path $distDir "BENIOKU-Kurulum.txt"
 @"
 PROJECT AURORA v$semver — SAF RUST KURULUM KILAVUZU (Windows 11 x64)
 ====================================================================
 
-1. "$setupBaseName.exe" dosyasina cift tiklayin (~3.4 MB tek dosya, sifir .NET 10, sifir harici DLL!).
+1. "$setupBaseName.exe" dosyasina cift tiklayin (~$actualSizeMb MB tek dosya, sifir .NET 10, sifir harici DLL!).
    (Not: Imzasiz yerel derlemelerde SmartScreen uyarisi cikarsa "Ek bilgi" -> "Yine de calistir" secin.)
 2. "Kurulumu Baslat" butonuna basin.
-   Yonetici izni (UAC) gerekmez; onceki v2.x ayarlariniz, pano gecmisiniz ve notlariniz %100 korunur.
+   Yonetici izni (UAC) gerekmez; onceki v2.x / v3.x+ ayarlariniz, pano gecmisiniz ve notlariniz %100 korunur.
 3. Tum guncellemeler GitHub uzerinden SHA-256 dogrulamasiyla uygulama icinden tek tikla kurulabilir.
 
 GitHub Deposu:

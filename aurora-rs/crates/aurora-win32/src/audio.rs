@@ -234,9 +234,81 @@ impl CoreAudioController {
                 if ctrl2.GetProcessId().unwrap_or(0) == target_pid {
                     if let Ok(sav) = ctrl.cast::<ISimpleAudioVolume>() {
                         let _ = sav.SetMasterVolume((pct.min(100) as f32) / 100.0, std::ptr::null());
+                        if pct > 0 {
+                            let _ = sav.SetMute(false, std::ptr::null());
+                        }
                     }
                 }
             }
+        }
+    }
+
+    pub fn toggle_app_mute(&self, target_pid: u32) -> Option<bool> {
+        unsafe {
+            let enumerator: IMMDeviceEnumerator =
+                CoCreateInstance(&MMDeviceEnumerator, None, CLSCTX_INPROC_SERVER).ok()?;
+            let dev = enumerator.GetDefaultAudioEndpoint(eRender, eMultimedia).ok()?;
+            let mgr = dev.Activate::<IAudioSessionManager2>(CLSCTX_ALL, None).ok()?;
+            let sess_enum = mgr.GetSessionEnumerator().ok()?;
+            let count = sess_enum.GetCount().unwrap_or(0);
+            let mut result = None;
+            for i in 0..count {
+                let Ok(ctrl) = sess_enum.GetSession(i) else { continue };
+                let Ok(ctrl2) = ctrl.cast::<IAudioSessionControl2>() else { continue };
+                if ctrl2.GetProcessId().unwrap_or(0) == target_pid {
+                    if let Ok(sav) = ctrl.cast::<ISimpleAudioVolume>() {
+                        let next = !sav.GetMute().map(|m| m.as_bool()).unwrap_or(false);
+                        let _ = sav.SetMute(next, std::ptr::null());
+                        result = Some(next);
+                    }
+                }
+            }
+            result
+        }
+    }
+
+    pub fn adjust_app_volume(&self, target_pid: u32, delta: i8) -> Option<(u8, bool)> {
+        unsafe {
+            let enumerator: IMMDeviceEnumerator =
+                CoCreateInstance(&MMDeviceEnumerator, None, CLSCTX_INPROC_SERVER).ok()?;
+            let dev = enumerator.GetDefaultAudioEndpoint(eRender, eMultimedia).ok()?;
+            let mgr = dev.Activate::<IAudioSessionManager2>(CLSCTX_ALL, None).ok()?;
+            let sess_enum = mgr.GetSessionEnumerator().ok()?;
+            let count = sess_enum.GetCount().unwrap_or(0);
+            let mut result = None;
+            for i in 0..count {
+                let Ok(ctrl) = sess_enum.GetSession(i) else { continue };
+                let Ok(ctrl2) = ctrl.cast::<IAudioSessionControl2>() else { continue };
+                if ctrl2.GetProcessId().unwrap_or(0) == target_pid {
+                    if let Ok(sav) = ctrl.cast::<ISimpleAudioVolume>() {
+                        let cur = (sav.GetMasterVolume().unwrap_or(1.0).clamp(0.0, 1.0) * 100.0).round() as i16;
+                        let next = (cur + delta as i16).clamp(0, 100) as u8;
+                        let _ = sav.SetMasterVolume(next as f32 / 100.0, std::ptr::null());
+                        let muted = if next > 0 {
+                            let _ = sav.SetMute(false, std::ptr::null());
+                            false
+                        } else {
+                            sav.GetMute().map(|m| m.as_bool()).unwrap_or(false)
+                        };
+                        result = Some((next, muted));
+                    }
+                }
+            }
+            result
+        }
+    }
+
+    pub fn cycle_default_output_device(&self) -> Option<String> {
+        let snap = self.get_snapshot();
+        if snap.outputs.len() < 2 {
+            return None;
+        }
+        let cur = snap.outputs.iter().position(|o| o.is_default).unwrap_or(0);
+        let next = &snap.outputs[(cur + 1) % snap.outputs.len()];
+        if self.set_default_output_device(&next.id) {
+            Some(next.name.clone())
+        } else {
+            None
         }
     }
 

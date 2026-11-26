@@ -4,7 +4,7 @@ use std::rc::Rc;
 
 use anyhow::{anyhow, Context, Result};
 use aurora_core::PhysicalRect;
-use aurora_win32::{force_foreground_window, post_wake_ui, WM_AURORA_WAKE};
+use aurora_win32::{force_foreground_window, is_window_owned_by, post_wake_ui, WM_AURORA_WAKE};
 use crossbeam_channel::Sender;
 use serde_json::Value;
 use webview2_com::Microsoft::Web::WebView2::Win32::{
@@ -37,13 +37,14 @@ use windows::Win32::System::LibraryLoader::GetModuleHandleW;
 use windows::Win32::System::WinRT::EventRegistrationToken;
 use windows::Win32::UI::Controls::MARGINS;
 use windows::Win32::UI::WindowsAndMessaging::{
-    CreateWindowExW, DefWindowProcW, DestroyWindow, GetWindowLongPtrW, LoadCursorW,
-    RegisterClassW, RegisterWindowMessageW, SetWindowLongPtrW, SetWindowPos, ShowWindow,
-    GWLP_USERDATA, GWL_EXSTYLE, HWND_TOPMOST, IDC_ARROW, MA_NOACTIVATE, SWP_FRAMECHANGED,
-    SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_NOZORDER, SWP_SHOWWINDOW, SW_HIDE,
-    SW_SHOWNOACTIVATE, WA_INACTIVE, WM_ACTIVATE, WM_DISPLAYCHANGE, WM_DPICHANGED, WM_ERASEBKGND,
-    WM_HOTKEY, WM_MOUSEACTIVATE, WNDCLASSW, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW, WS_EX_TOPMOST,
-    WS_POPUP,
+    CreateWindowExW, DefWindowProcW, DestroyWindow, GetForegroundWindow, GetWindowLongPtrW, IsIconic,
+    IsWindow, IsWindowVisible, LoadCursorW, RegisterClassW, RegisterWindowMessageW, SetForegroundWindow,
+    SetWindowLongPtrW, SetWindowPos, ShowWindow,
+    GWLP_USERDATA, GWL_EXSTYLE, HWND_BOTTOM, HWND_NOTOPMOST, HWND_TOPMOST, IDC_ARROW,
+    MA_NOACTIVATE, SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_NOZORDER,
+    SWP_SHOWWINDOW, SW_HIDE, SW_SHOWNOACTIVATE, WA_INACTIVE, WINDOWPOS, WM_ACTIVATE,
+    WM_DISPLAYCHANGE, WM_DPICHANGED, WM_ERASEBKGND, WM_HOTKEY, WM_MOUSEACTIVATE,
+    WM_WINDOWPOSCHANGING, WNDCLASSW, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW, WS_EX_TOPMOST, WS_POPUP,
 };
 
 #[derive(Debug, Clone)]
@@ -85,11 +86,12 @@ struct HitState {
     bounds_px: PhysicalRect,
     dpi_scale: f32,
     is_crown: bool,
+    is_desktop_layer: bool,
     force_interactive: bool,
     viewport_w: f64,
     viewport_h: f64,
     rects: Vec<DipRect>,
-    last_rgn: Vec<(i32, i32, i32, i32)>,
+    last_rgn: Option<Vec<(i32, i32, i32, i32)>>,
 }
 
 impl HitState {
@@ -102,8 +104,13 @@ impl HitState {
         // through the OS kernel to underlying apps so clicking outside NEVER feels blocked and
         // immediately triggers WM_ACTIVATE(WA_INACTIVE) to close the popup cleanly!
         let target: Vec<(i32, i32, i32, i32)> = if self.rects.is_empty() {
-            // Keep a minimal 1x1 non-intrusive region until first DOM hitRects arrives
-            vec![(0, 0, 1, 1)]
+            if self.is_desktop_layer {
+                // Desktop widget layer uses exact empty region when no widgets are visible -> 0% desktop blocking!
+                Vec::new()
+            } else {
+                // Keep a minimal 1x1 non-intrusive region until first DOM hitRects arrives
+                vec![(0, 0, 1, 1)]
+            }
         } else {
             let sx = if self.viewport_w > 10.0 {
                 max_w as f64 / self.viewport_w
@@ -134,9 +141,13 @@ impl HitState {
                     }
                     // Edge-to-edge Fixed Bar gets 0px extra top/side padding so WhatsApp / Antigravity
                     // typing boxes right above the 44/52/60px bar are NEVER covered!
-                    let is_edge_bar = !self.is_crown && (r.w >= vw - 4.0 || r.h >= vh - 4.0);
+                    let is_edge_bar =
+                        !self.is_crown && !self.is_desktop_layer && (r.w >= vw - 4.0 || r.h >= vh - 4.0);
                     let (pad_l, pad_t, pad_r, pad_b) = if is_edge_bar {
                         (0.0, 0.0, 0.0, 0.0)
+                    } else if self.is_desktop_layer {
+                        // Tight 10 DIP halo around desktop widgets keeps adjacent desktop icons 100% clickable!
+                        (10.0 * sx, 10.0 * sy, 10.0 * sx, 12.0 * sy)
                     } else {
                         // Generous 24 DIP shadow halo around floating pills/cards keeps CSS drop-shadows unclipped!
                         (24.0 * sx, 20.0 * sy, 24.0 * sx, 26.0 * sy)
@@ -154,17 +165,16 @@ impl HitState {
                 .collect()
         };
 
-        if target == self.last_rgn {
+        if self.last_rgn.as_ref() == Some(&target) {
             return;
         }
-        self.last_rgn = target;
         unsafe {
-            let combined: HRGN = if self.last_rgn.is_empty() {
+            let combined: HRGN = if target.is_empty() {
                 CreateRectRgn(0, 0, 0, 0)
             } else {
-                let (x0, y0, x1, y1) = self.last_rgn[0];
+                let (x0, y0, x1, y1) = target[0];
                 let base = CreateRectRgn(x0, y0, x1, y1);
-                for &(ax0, ay0, ax1, ay1) in &self.last_rgn[1..] {
+                for &(ax0, ay0, ax1, ay1) in &target[1..] {
                     let next = CreateRectRgn(ax0, ay0, ax1, ay1);
                     let _ = CombineRgn(base, base, next, RGN_OR);
                     let _ = DeleteObject(next);
@@ -173,12 +183,14 @@ impl HitState {
             };
             let _ = SetWindowRgn(hwnd, combined, true);
         }
+        self.last_rgn = Some(target);
     }
 }
 
 struct HostBridge {
     surface_id: usize,
     allow_activate: bool,
+    pin_to_bottom: bool,
     taskbar_created_msg: u32,
     tx: Sender<SurfaceMessage>,
     wake_hwnd: isize,
@@ -231,6 +243,8 @@ pub struct WebViewOverlaySurface {
     pub bounds_px: PhysicalRect,
     pub dpi_scale: f32,
     pub suppressed_fullscreen: bool,
+    pub is_desktop_layer: bool,
+    desktop_elevated: bool,
     target_url: String,
     controller: ICoreWebView2Controller,
     webview: ICoreWebView2,
@@ -253,12 +267,74 @@ impl WebViewOverlaySurface {
         wake_hwnd_override: Option<isize>,
         defer_navigate: bool,
     ) -> Result<Self> {
-        let hwnd = create_transparent_host_hwnd(bounds_px)?;
+        Self::create_internal(
+            surface_id,
+            monitor_id,
+            is_crown,
+            false,
+            env,
+            ui_dir,
+            page_file,
+            bounds_px,
+            dpi_scale,
+            tx,
+            wake_hwnd_override,
+            defer_navigate,
+        )
+    }
+
+    /// Creates a desktop-layer (`HWND_BOTTOM`) shared WebView2 surface for customizable Desktop Widgets.
+    /// Strictly stays behind normal windows and uses kernel `SetWindowRgn` so empty desktop stays 100% native!
+    #[allow(clippy::too_many_arguments)]
+    pub fn create_desktop_widgets(
+        surface_id: usize,
+        monitor_id: String,
+        env: &ICoreWebView2Environment,
+        ui_dir: &Path,
+        bounds_px: PhysicalRect,
+        dpi_scale: f32,
+        tx: Sender<SurfaceMessage>,
+        wake_hwnd_override: Option<isize>,
+        defer_navigate: bool,
+    ) -> Result<Self> {
+        Self::create_internal(
+            surface_id,
+            monitor_id,
+            false,
+            true,
+            env,
+            ui_dir,
+            "widgets.html",
+            bounds_px,
+            dpi_scale,
+            tx,
+            wake_hwnd_override,
+            defer_navigate,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn create_internal(
+        surface_id: usize,
+        monitor_id: String,
+        is_crown: bool,
+        is_desktop_layer: bool,
+        env: &ICoreWebView2Environment,
+        ui_dir: &Path,
+        page_file: &str,
+        bounds_px: PhysicalRect,
+        dpi_scale: f32,
+        tx: Sender<SurfaceMessage>,
+        wake_hwnd_override: Option<isize>,
+        defer_navigate: bool,
+    ) -> Result<Self> {
+        let hwnd = create_transparent_host_hwnd(bounds_px, is_desktop_layer)?;
         let wake_hwnd = wake_hwnd_override.unwrap_or(hwnd.0 as isize);
         let tb_msg = unsafe { RegisterWindowMessageW(w!("TaskbarCreated")) };
         let bridge = Box::new(HostBridge {
             surface_id,
             allow_activate: false,
+            pin_to_bottom: is_desktop_layer,
             taskbar_created_msg: tb_msg,
             tx: tx.clone(),
             wake_hwnd,
@@ -339,11 +415,12 @@ impl WebViewOverlaySurface {
             bounds_px,
             dpi_scale: dpi_scale.max(1.0),
             is_crown,
+            is_desktop_layer,
             force_interactive: false,
             viewport_w: 0.0,
             viewport_h: 0.0,
             rects: Vec::new(),
-            last_rgn: Vec::new(),
+            last_rgn: None,
         }));
 
         // Wire JS -> Rust message handler (+ native WebView2 File Drag-and-Drop!)
@@ -416,7 +493,9 @@ impl WebViewOverlaySurface {
             }
             if val.get("type").and_then(|v| v.as_str()) == Some("hitRects") {
                 let mut hs = hs_cb.borrow_mut();
-                let first_hit = hs.last_rgn.is_empty() || hs.last_rgn == [(0, 0, 1, 1)];
+                let first_hit = hs.last_rgn.is_none()
+                    || hs.last_rgn.as_deref() == Some(&[(0, 0, 1, 1)])
+                    || hs.last_rgn.as_deref() == Some(&[]);
                 if let Some(vw) = val.get("vw").and_then(|v| v.as_f64()) {
                     hs.viewport_w = vw;
                 }
@@ -506,15 +585,20 @@ impl WebViewOverlaySurface {
                 let _ = webview.Navigate(&url);
             }
             let _ = ShowWindow(hwnd, SW_SHOWNOACTIVATE);
+            let z_after = if is_desktop_layer { HWND_BOTTOM } else { HWND_TOPMOST };
             let _ = SetWindowPos(
                 hwnd,
-                HWND_TOPMOST,
+                z_after,
                 bounds_px.x,
                 bounds_px.y,
                 bounds_px.width.max(4),
                 bounds_px.height.max(4),
                 SWP_NOACTIVATE | SWP_SHOWWINDOW,
             );
+            if is_desktop_layer {
+                // Start with an empty region until widgets report their exact boxes!
+                hit_state.borrow_mut().sync_rgn(hwnd);
+            }
 
             Ok(Self {
                 surface_id,
@@ -523,6 +607,8 @@ impl WebViewOverlaySurface {
                 bounds_px,
                 dpi_scale: dpi_scale.max(1.0),
                 suppressed_fullscreen: false,
+                is_desktop_layer,
+                desktop_elevated: false,
                 target_url,
                 controller,
                 webview,
@@ -553,10 +639,15 @@ impl WebViewOverlaySurface {
         }
         self.bounds_px = new_bounds;
         self.dpi_scale = scale;
+        let z_after = if self.is_desktop_layer && !self.desktop_elevated {
+            HWND_BOTTOM
+        } else {
+            HWND_TOPMOST
+        };
         unsafe {
             let _ = SetWindowPos(
                 self.hwnd,
-                HWND_TOPMOST,
+                z_after,
                 new_bounds.x,
                 new_bounds.y,
                 new_bounds.width.max(4),
@@ -576,10 +667,38 @@ impl WebViewOverlaySurface {
             let mut hs = self.hit_state.borrow_mut();
             hs.bounds_px = new_bounds;
             hs.dpi_scale = scale;
-            hs.last_rgn.clear();
+            hs.last_rgn = None;
             hs.sync_rgn(self.hwnd);
         }
         self.post_json(r#"{"type":"syncLayout"}"#);
+    }
+
+    /// Toggles desktop-layer widget canvas between strictly behind apps (`HWND_BOTTOM`)
+    /// and temporarily elevated (`HWND_TOPMOST`) during Edit Mode or pinned-top widgets.
+    pub fn set_desktop_elevated(&mut self, elevated: bool) {
+        if !self.is_desktop_layer || self.desktop_elevated == elevated {
+            return;
+        }
+        self.desktop_elevated = elevated;
+        unsafe {
+            if !self.bridge_ptr.is_null() {
+                (*self.bridge_ptr).pin_to_bottom = !elevated;
+            }
+            let z = if elevated { HWND_TOPMOST } else { HWND_NOTOPMOST };
+            let _ = SetWindowPos(self.hwnd, z, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+            if !elevated {
+                let _ = SetWindowPos(
+                    self.hwnd,
+                    HWND_BOTTOM,
+                    0,
+                    0,
+                    0,
+                    0,
+                    SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE,
+                );
+            }
+        }
+        self.set_allow_activate(elevated);
     }
 
     pub fn set_suppressed_fullscreen(&mut self, suppressed: bool) {
@@ -590,6 +709,11 @@ impl WebViewOverlaySurface {
             return;
         }
         self.suppressed_fullscreen = suppressed;
+        let z_after = if self.is_desktop_layer && !self.desktop_elevated {
+            HWND_BOTTOM
+        } else {
+            HWND_TOPMOST
+        };
         unsafe {
             if suppressed {
                 let _ = ShowWindow(self.hwnd, SW_HIDE);
@@ -597,7 +721,7 @@ impl WebViewOverlaySurface {
                 let _ = ShowWindow(self.hwnd, SW_SHOWNOACTIVATE);
                 let _ = SetWindowPos(
                     self.hwnd,
-                    HWND_TOPMOST,
+                    z_after,
                     0,
                     0,
                     0,
@@ -606,6 +730,51 @@ impl WebViewOverlaySurface {
                 );
             }
         }
+    }
+
+    /// Enables keyboard input on a Dock popover or Desktop Sticky Note without breaking Z-order.
+    pub fn focus_for_inline_input(&mut self) {
+        self.set_allow_activate(true);
+        force_foreground_window(self.hwnd);
+        unsafe {
+            let _ = self.controller.MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
+        }
+    }
+
+    /// Restores non-activating (`WS_EX_NOACTIVATE`) state after inline input finishes.
+    pub fn release_inline_input(&mut self) {
+        if self.is_desktop_layer && self.desktop_elevated {
+            return;
+        }
+        self.set_allow_activate(false);
+    }
+
+    /// If this surface (or an owned WebView2 popup) still owns foreground focus,
+    /// cleanly restores keyboard focus to `restore_hwnd` (the last active user window).
+    pub fn yield_focus_if_owned(&self, restore_hwnd: isize) {
+        if restore_hwnd == 0 {
+            return;
+        }
+        unsafe {
+            let fg = GetForegroundWindow();
+            if fg.0.is_null() || !is_window_owned_by(fg.0 as isize, self.hwnd) {
+                return;
+            }
+            let target = HWND(restore_hwnd as *mut _);
+            if target != self.hwnd
+                && !is_window_owned_by(restore_hwnd, self.hwnd)
+                && IsWindow(target).as_bool()
+                && IsWindowVisible(target).as_bool()
+                && !IsIconic(target).as_bool()
+            {
+                let _ = SetForegroundWindow(target);
+            }
+        }
+    }
+
+    pub fn release_inline_input_to(&mut self, restore_hwnd: isize) {
+        self.release_inline_input();
+        self.yield_focus_if_owned(restore_hwnd);
     }
 
     /// Gives full reliable keyboard focus to OmniSearch / Bento Deck / Calendar / Tour!
@@ -638,6 +807,11 @@ impl WebViewOverlaySurface {
         hs.sync_rgn(self.hwnd);
     }
 
+    pub fn release_interactive_to(&mut self, restore_hwnd: isize) {
+        self.release_interactive();
+        self.yield_focus_if_owned(restore_hwnd);
+    }
+
     pub fn is_interactive(&self) -> bool {
         self.hit_state.borrow().force_interactive
     }
@@ -646,7 +820,7 @@ impl WebViewOverlaySurface {
     pub fn force_resync_region(&mut self) {
         {
             let mut hs = self.hit_state.borrow_mut();
-            hs.last_rgn.clear();
+            hs.last_rgn = None;
             hs.sync_rgn(self.hwnd);
         }
         self.post_json(r#"{"type":"syncLayout"}"#);
@@ -699,7 +873,7 @@ impl Drop for WebViewOverlaySurface {
     }
 }
 
-fn create_transparent_host_hwnd(bounds_px: PhysicalRect) -> Result<HWND> {
+fn create_transparent_host_hwnd(bounds_px: PhysicalRect, is_desktop_layer: bool) -> Result<HWND> {
     unsafe {
         let hinst = GetModuleHandleW(None)?;
         let cls = w!("ProjectAuroraWebViewHostV3");
@@ -712,8 +886,13 @@ fn create_transparent_host_hwnd(bounds_px: PhysicalRect) -> Result<HWND> {
         };
         let _ = RegisterClassW(&wc);
 
+        let ex_style = if is_desktop_layer {
+            WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE
+        } else {
+            WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE
+        };
         let hwnd = CreateWindowExW(
-            WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
+            ex_style,
             cls,
             w!("Project Aurora"),
             WS_POPUP,
@@ -784,6 +963,13 @@ unsafe extern "system" fn host_wnd_proc(
     match msg {
         WM_AURORA_WAKE => return LRESULT(0),
         WM_ERASEBKGND => return LRESULT(1),
+        WM_WINDOWPOSCHANGING => {
+            if bridge.pin_to_bottom && lparam.0 != 0 {
+                let wp = &mut *(lparam.0 as *mut WINDOWPOS);
+                wp.hwndInsertAfter = HWND_BOTTOM;
+                wp.flags &= !SWP_NOZORDER;
+            }
+        }
         WM_MOUSEACTIVATE => {
             if !bridge.allow_activate {
                 return LRESULT(MA_NOACTIVATE as isize);

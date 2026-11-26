@@ -568,6 +568,10 @@ impl ShellState {
                 has_active: false,
                 needs_attention: false,
                 progress_percent: None,
+                aumid: None,
+                audio_pid: None,
+                audio_volume: None,
+                audio_muted: false,
                 windows: vec![],
             },
             DockAppGroup {
@@ -579,6 +583,10 @@ impl ShellState {
                 has_active: true,
                 needs_attention: false,
                 progress_percent: None,
+                aumid: None,
+                audio_pid: None,
+                audio_volume: None,
+                audio_muted: false,
                 windows: vec![
                     AppWindowEntry {
                         hwnd: 101,
@@ -592,6 +600,7 @@ impl ShellState {
                         is_top_most: false,
                         needs_attention: false,
                         progress_percent: None,
+                        aumid: None,
                     },
                     AppWindowEntry {
                         hwnd: 102,
@@ -605,6 +614,7 @@ impl ShellState {
                         is_top_most: false,
                         needs_attention: false,
                         progress_percent: None,
+                        aumid: None,
                     },
                 ],
             },
@@ -617,6 +627,10 @@ impl ShellState {
                 has_active: false,
                 needs_attention: false,
                 progress_percent: None,
+                aumid: None,
+                audio_pid: None,
+                audio_volume: None,
+                audio_muted: false,
                 windows: vec![AppWindowEntry {
                     hwnd: 103,
                     process_id: 4200,
@@ -629,6 +643,7 @@ impl ShellState {
                     is_top_most: false,
                     needs_attention: false,
                     progress_percent: None,
+                    aumid: None,
                 }],
             },
             DockAppGroup {
@@ -640,6 +655,10 @@ impl ShellState {
                 has_active: false,
                 needs_attention: false,
                 progress_percent: None,
+                aumid: None,
+                audio_pid: None,
+                audio_volume: None,
+                audio_muted: false,
                 windows: vec![AppWindowEntry {
                     hwnd: 104,
                     process_id: 5510,
@@ -652,6 +671,7 @@ impl ShellState {
                     is_top_most: false,
                     needs_attention: false,
                     progress_percent: None,
+                    aumid: None,
                 }],
             },
             DockAppGroup {
@@ -663,6 +683,10 @@ impl ShellState {
                 has_active: false,
                 needs_attention: true,
                 progress_percent: None,
+                aumid: None,
+                audio_pid: None,
+                audio_volume: None,
+                audio_muted: false,
                 windows: vec![AppWindowEntry {
                     hwnd: 105,
                     process_id: 6012,
@@ -675,6 +699,7 @@ impl ShellState {
                     is_top_most: false,
                     needs_attention: true,
                     progress_percent: None,
+                    aumid: None,
                 }],
             },
             DockAppGroup {
@@ -686,6 +711,10 @@ impl ShellState {
                 has_active: false,
                 needs_attention: false,
                 progress_percent: None,
+                aumid: None,
+                audio_pid: None,
+                audio_volume: None,
+                audio_muted: false,
                 windows: vec![AppWindowEntry {
                     hwnd: 106,
                     process_id: 7020,
@@ -698,6 +727,7 @@ impl ShellState {
                     is_top_most: false,
                     needs_attention: false,
                     progress_percent: None,
+                    aumid: None,
                 }],
             },
         ];

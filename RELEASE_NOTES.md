@@ -1,5 +1,57 @@
 # Project Aurora — Sürüm Notları
 
+## v7.2.0
+> Summary: Alt+Tab & tam ekran odak bütünlüğü, tüm Dock/Crown açılır menüleri için tek tıkla boşluğa basınca kapanma, v2.x (.NET) ve v3.x+ kurulumlarından sorunsuz tek tık otomatik yükseltme, GitHub Releases API yedekli güncelleyici ve dinamik PE sürüm bilgisi.
+
+### Öne Çıkan Yenilikler
+- **Alt+Tab Odak Bütünlüğü & Tam Ekran Koruması:** `Alt` (`VK_MENU`) basılıyken Windows 11 kabuk bastırma ve Explorer gizleme çağrıları duraklatılır; `hide_tray_window` içindeki senkron `ShowWindow` blokajı kaldırıldı, `analyze_fullscreen_and_dodge` içinden `XamlExplorerHostIslandWindow`/`MultitaskingViewFrame` dışlandı ve Aurora içi odaklar kapandığında klavye odağı son aktif kullanıcı penceresine (`last_external_hwnd`) geri verilir.
+- **Tüm Açılır Menüler İçin Tek Tık Dış Kapanma:** Alt Tepsi, Hızlı Kontroller, Takvim/Bildirim, Widget Seçici, Dairesel Küre, Klasör Yığını ve üst Canlı Sahne için evrensel dış tıklama izleme (`setDockPopoverState`, `setCrownStageState`, `want_watch_clicks`) + Dock içi boş alan `pointerdown` kapatması eklendi.
+- **Eski Sürümlerden (`v2.x` & `v3.x+`) Kesintisiz Otomatik Yükseltme:** `aurora-setup` artık eski `v2.x` güncelleyicisinin gönderdiği `--update --wait-pid=<PID>` parametrelerini tam olarak işleyip atomik kurulum ve yeniden başlatma yapar; `aurora-storage::updater` GitHub Releases API JSON yedeği içerir ve tüm PE sürüm kaynakları dinamik olarak `Cargo.toml` sürümüne bağlandı.
+
+## v7.1.0
+> Summary: Gerçek Windows 11 sistem tepsisi keşfi (NotifyIconSettings + 32 uygulama + akıllı pencere/AUMID açılışı) ve alt Dock üzerinden üst Dinamik Ada'yı açmadan yukarı doğru açılan OmniSearch.
+
+### Öne Çıkan Yenilikler
+- **Gerçek Windows 11 Sistem Tepsisi Keşfi:** Canlı `HKCU\Control Panel\NotifyIconSettings` kayıt defteri + çalışan süreç anlık görüntüsü eşleştirilerek `GlobalProtect`, `MuMuPlayer`, `RustWTM`, `WhatsApp`, `Spotify`, `Teams`, `Docker Desktop` dahil 32 arka plan tepsi uygulaması gerçek ikonlarıyla gösterilir ve önce açık pencereye odaklanır, yoksa AUMID/EXE üzerinden başlatılır.
+- **Alt Dock Üzerinde Açılan OmniSearch:** Başlat / Ara düğmesine tıklandığında arama penceresi üst Dinamik Ada'yı tetiklemeden doğrudan alt Dock'un hemen üzerinde açılır.
+
+## v7.0.0
+> Summary: 10 özgün kabuk tasarım mimarisi, 6 Dinamik Ada stili + 3 boşta davranışı + 4 sekmeli Canlı Sahne, sadeleştirilmiş yerel Windows / Aurora Yansıtma bildirim seçici, 20 WCAG AA+ tema ve duvar kağıdı vurgu rengi.
+
+### Öne Çıkan Yenilikler
+- **10 Kabuk Tasarım Mimarisi:** `Tahoe Cam`, `Nothing Donanım`, `Linear Stüdyo`, `Vision Küre`, `Arc Bölünmüş`, `Braun Atölye`, `Swiss Editoryal`, `Cockpit HUD`, `Fluent Mica` ve `Zen Hayalet` birbirinden bağımsız geometri, ızgara ve yerleşim kurallarıyla çalışır.
+- **Yeni Nesil Dinamik Ada & 4 Sekmeli Canlı Sahne:** 6 görsel ada stili (`Sıvı Hap`, `Mac Çentik`, `Ufuk Çizgisi`, `Nothing Kapsül`, `Cam Şerit`, `Yörünge Halka`) + 3 boşta modu (`Sıvı Kapsül`, `Ufuk Çizgisi`, `Akış`) ve `Canlı Sahne · Hızlı Kontrol · Araçlar · Telemetri` sekmeleri; gereksiz ada ses kontrolü kaldırılıp çift Windows bildirimi engellendi.
+- **20 WCAG AA+ Tema + Duvar Kağıdı Otomatik Vurgu:** Duvar kağıdından çıkarılan baskın renkler WCAG AA kontrastına göre dengelenir.
+
+## v6.0.0
+> Summary: Tam ekran video/oyun algılama iyileştirmeleri, 5 yüzey stiliyle geliştirilmiş masaüstü widget motoru ve yeni nesil görsel kalite güncellemesi.
+
+### Öne Çıkan Yenilikler
+- **Tam Ekran Medya Koruması & Widget Stilleri:** Video tam ekran yapıldığında Dock/Crown otomatik gizlenir; saat, müzik, AI kota, pil ve sistem widget'ları 5 yüzey kaplaması ve 3 boyut seçeneğiyle genişletildi.
+
+## v5.0.0
+> Summary: Java/Swing/Electron/UWP pencere odaklama & simge durumuna küçültme güvenilirliği, tam ekran gizleme doğruluk düzeltmeleri ve endüstriyel tasarım dili yenilemesi.
+
+### Öne Çıkan Yenilikler
+- **Endüstriyel Pencere Aktivasyonu (`focus_window`):** Java/Swing, Electron ve çoklu monitör pencerelerinde Z-sırası ve öne getirme güvenilirliği güçlendirildi; Dock üzerinden açık pencereye tekrar tıklandığında simge durumuna küçültme/geri getirme dengelendi.
+
+## v4.2.0
+> Summary: Sabit zıplamayan uygulama sıralaması + elle sürükle-bırak sabitleme, 4 bölgeli 14 Pro Dock widget'ı, uygulama bazlı canlı ses rozeti & Alt+Tekerlek ve 6 dilimli Hızlı Aksiyon Çemberi.
+
+## v4.0.0
+> Summary: Aurora OS Studio & Masaüstü Widget Motoru — Windows 11 tanıdık alt görev çubuğu ve sağ alt Hızlı Kontroller/Takvim, 4 seçilebilir çoklu pencere dallanma stili, 12 WCAG AA+ tema + otomatik gündüz/gece geçişi, pencerelerin arkasında çalışan 10 özelleştirilebilir masaüstü widget'ı (Saat, Vinil Müzik, Bluetooth/Laptop Pil Halkaları, Windows DPAPI şifreli ChatGPT/Gemini/Claude AI Kota Takibi), sakin üst Dinamik Ada ve Apple/Linear kenar çubuklu ayarlar.
+
+### Öne Çıkan Yenilikler
+- **Windows 11 Tanıdık Alt Çubuk + Sağ Alt Hızlı Kontroller & Takvim:**
+  - Solda net `✦` Başlat & Ara + klasörler, ortada sabitli/açık uygulamalar, sağda gizli simgeler, `Wi-Fi · Ses · Pil %` (fare tekerleğiyle ses ayarı + tıklayınca sağ alt Hızlı Kontroller), `Saat · Tarih · 🔔` (tıklayınca sağ alt Bildirimler & Takvim/Ajanda) ve boş çubuğa sağ tık menüsü.
+- **4 Seçilebilir Çoklu Pencere Dallanma Stili & 3 İkon Hover Efekti:**
+  - `Dairesel Dallanan Küre (Dendritic)`, `3D Yelpaze Kartlar`, `Win11 Modern Kartlar` ve `Yay Çemberi (Prism Arc)` + `Hafif Yükselme / Dalga / Işıltı` ikon efektleri.
+- **10 Özelleştirilebilir Masaüstü Widget Motoru (`HWND_BOTTOM`, Tek Paylaşımlı WebView2):**
+  - Pencerelerin arkasında yaşar, boş masaüstünde `%100` tıklama geçirgendir (`SetWindowRgn`), tam ekran oyun/videoda animasyonları `%0` CPU için durdurur, kapalıyken `0 MB` yüzey RAM'i harcar.
+  - 10 widget: **Saat Stüdyosu** (5 stil), **Müzik Çalar** (Vinil/Cam/Şerit), **Bluetooth & Laptop Pil Halkaları**, **AI Kota Takibi** (ChatGPT/Gemini/Claude — Windows DPAPI şifreli API canlı sorgusu + yerel CLI log tarayıcı + abonelik sayacı), **Hava Durumu**, **Sistem Telemetri**, **Takvim & Ajanda**, **Yapışkan Cam Not**, **Pomodoro Odak**, **Hızlı Başlatıcı** + 16px manyetik ızgaralı Düzenleme Modu.
+- **12 WCAG AA+ Tema + 3 Deneyim Şablonu + Kenar Çubuklu Ayarlar:**
+  - 5 yeni tema (`Nordic Frost`, `Warm Latte`, `Midnight Emerald`, `Sunset Kyoto`, `True OLED`), 3 köşe yuvarlaklığı (`Keskin / Modern / Kapsül`), otomatik gündüz/gece teması ve Apple/Linear tarzı 6 bölümlü sade Türkçe ayarlar.
+
 ## v3.0.0
 > Summary: Saf Rust Win32 çekirdek motoru + tek paylaşımlı ultra-hafif WebView2 renderer (sıfır .NET 10, sıfır harici DLL, 3.39 MB tek dosya kurulum), Dairesel Dallanan Pencere Küresi, canlı laptop + bağlı Bluetooth pil göstergesi, olay-tabanlı sıfır-sorgulu pano, endüstriyel kilitlenmez girdi/odak mimarisi ve boşta 53 MB WorkingSet / %0.05 CPU yükü.
 

@@ -7,13 +7,13 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Yayınlanacak SemVer sürümü (ör. 3.0.0)'
+        description: 'Yayınlanacak SemVer sürümü (ör. 7.2.0)'
         required: true
-        default: '3.0.0'
+        default: '7.2.0'
       release_notes:
         description: 'Sürüm notları (isteğe bağlı)'
         required: false
-        default: 'Saf Rust Win32 motoru + tek paylaşımlı WebView2 renderer (sıfır .NET 10), Dairesel Dallanan Pencere Küresi, canlı pil/Bluetooth, endüstriyel kilitlenmez girdi ve 7 görsel mimari.'
+        default: 'Project Aurora v7.2.0: Saf Rust Win32 + Tek Paylaşımlı WebView2 masaüstü kabuğu, 10 kabuk mimarisi, 6 Dinamik Ada stili, Alt Dock OmniSearch, gerçek Win11 sistem tepsisi, Alt+Tab odak bütünlüğü ve v2.x/v3.x+ tek tık otomatik yükseltme.'
 
 permissions:
   contents: write
@@ -78,9 +78,9 @@ jobs:
             [void]$bodySb.AppendLine($sectionMarkdown)
           }
           [void]$bodySb.AppendLine("")
-          [void]$bodySb.AppendLine("### Tek Tık Kurulum (Windows 11 x64 — ~3.4 MB)")
+          [void]$bodySb.AppendLine("### Tek Tık Kurulum (Windows 11 x64 — ~3.7 MB)")
           [void]$bodySb.AppendLine("- Aşağıdaki **`Aurora-Kurulum-v*-x64.exe`** dosyasını indirip çalıştırın (sıfır .NET 10, sıfır harici DLL, sıfır UAC).")
-          [void]$bodySb.AppendLine("- Mevcut v2.x / v3.x kullanıcıları tüm ayarlarını, pano kasasını ve ajandasını kaybetmeden tek tıkla yükseltebilir.")
+          [void]$bodySb.AppendLine("- Mevcut v2.x (.NET) ve v3.x–v7.x (Rust) kullanıcıları tüm ayarlarını, pano kasasını ve ajandasını kaybetmeden uygulama içi güncelleme veya tek tık kurulumla doğrudan yükseltebilir.")
           [System.IO.File]::WriteAllText($releaseBodyPath, $bodySb.ToString(), [System.Text.UTF8Encoding]::new($false))
 
           Add-Content -Path $env:GITHUB_OUTPUT -Value "version=$v" -Encoding utf8NoBOM

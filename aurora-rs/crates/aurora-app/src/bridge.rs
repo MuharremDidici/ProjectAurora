@@ -4,33 +4,42 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 use aurora_core::{
-    built_in_themes, contrast_ratio, default_workspace_profiles, theme_by_id, AppWindowEntry,
-    AudioStateSnapshot, BackgroundTrayApp, BluetoothBatteryDevice, ClipboardVaultEntry,
-    ColorMode, DockAppGroup, ExternalMonitorBrightness, InstalledAppEntry, LanQrShareInfo,
-    MediaSessionSnapshot, PhysicalRect, PinnedShortcut, PrivacySnapshot, ReleaseManifest,
-    ShellRuntimePreferences, SystemMetricsSnapshot, SystemToastNotification,
-    ThemeColorCustomization, ThemeTokens, WeatherSnapshot, WorkspaceProfile,
+    built_in_themes, contrast_ratio, default_dock_widgets, default_starter_widgets,
+    default_workspace_profiles, theme_by_id, AiProviderQuotaConfig, AiProviderQuotaSnapshot,
+    AppWindowEntry, AudioStateSnapshot, BackgroundTrayApp, BluetoothBatteryDevice,
+    ClipboardVaultEntry, ColorMode, CountdownConfig, DesktopWidgetInstance, DiskUsageEntry,
+    DockAppGroup, DockWidgetConfig, ExternalMonitorBrightness, InstalledAppEntry, LanQrShareInfo,
+    LocalAiStatusSnapshot, MarketSnapshot, MediaSessionSnapshot, PhysicalRect, PinnedShortcut,
+    PrivacySnapshot, ReleaseManifest, ShellRuntimePreferences, SystemMetricsSnapshot,
+    SystemToastNotification, ThemeColorCustomization, ThemeTokens, TodoItem, WeatherSnapshot,
+    WorkspaceProfile, AURORA_VERSION,
 };
 use aurora_storage::{
     AuroraBackupBundle, AuroraDb, AuxiliaryStateStore, ClipboardVaultDb, PrivacySafeLogger,
-    ShellPreferencesStore, UserPreferencesRecord,
+    ShellPreferencesStore, UserPreferencesRecord, WidgetsLayoutStore, WidgetsPersistenceDoc,
 };
 use aurora_surfaces::SnipMode;
 use aurora_win32::{
     activate_notification, activate_or_toggle_window, arrange_window, close_window,
     compute_next_volume_step, convert_image_file, create_virtual_desktop, cycle_keyboard_layout,
     effective_dock_folders, extract_title_progress_percent, focus_window, format_size,
-    friendly_folder_name, is_startup_enabled, launch_target, minimize_window, open_recycle_bin,
-    open_task_view, render_qr_svg, send_ctrl_v_paste, send_media_command, set_alt_drag_enabled,
-    set_awake_keep_alive, set_clipboard_text, set_snap_zones_enabled, set_startup_enabled,
-    terminate_user_process_safe, toggle_always_on_top, trigger_lock_workstation,
-    trigger_power_command, trigger_sleep, zip_shelf_files, BrightnessController,
-    CoreAudioController, DwmLivePreviewWindow, LanQrShareServer, NativeAppBarManager,
+    friendly_folder_name, is_startup_enabled, is_windows_apps_sandbox_path, launch_target,
+    launch_target_with_args, minimize_window, open_recycle_bin, open_task_view,
+    open_windows_notification_center, render_qr_svg, repair_corrupted_windows_path,
+    save_ai_api_key, send_ctrl_v_paste, send_media_command,
+    set_alt_drag_enabled, set_awake_keep_alive, set_clipboard_text, set_snap_zones_enabled,
+    set_startup_enabled, terminate_user_process_safe, toggle_always_on_top,
+    trigger_lock_workstation, trigger_power_command, trigger_sleep, zip_shelf_files,
+    BrightnessController, CoreAudioController, DwmLivePreviewWindow, LanQrShareServer,
+    NativeAppBarManager,
 };
 use crossbeam_channel::Sender;
 use serde_json::{json, Value};
 
-use crate::actions::{build_dock_groups, user_known_folder};
+use crate::actions::{
+    build_dock_groups_ordered, normalize_group_key, reorder_running_group, update_stable_orders,
+    user_known_folder,
+};
 use crate::webview_host::WebViewOverlaySurface;
 
 /// Background async worker requests dispatched off the UI thread.
@@ -41,12 +50,18 @@ pub enum BgCommand {
     SearchFiles { query: String, seq: u64 },
     RunOcr(PhysicalRect),
     StartGifRecord { rect: PhysicalRect, stop_flag: Arc<AtomicBool> },
-    ExtractIconPng { key: String, hwnd: Option<isize>, exe_path: String },
+    ExtractIconPng { key: String, hwnd: Option<isize>, exe_path: String, aumid: Option<String> },
     PickDockFolder,
     PickShelfFile { share_qr_after: bool },
+    PickWidgetPhoto { widget_id: String },
+    LoadWidgetPhoto { widget_id: String, path: String },
     ReadFolderStack { monitor_id: String, path: String },
     RefreshSlowHardware,
     RefreshWeather,
+    RefreshAiQuota(Vec<AiProviderQuotaConfig>),
+    RefreshMarket,
+    RefreshLocalAiAndDisks,
+    SyncWallpaperAccent(String),
     CheckClipboard,
 }
 
@@ -58,9 +73,22 @@ pub struct RuntimeState {
     pub prefs: ShellRuntimePreferences,
     pub profiles: Vec<WorkspaceProfile>,
     pub pinned_shortcuts: Vec<PinnedShortcut>,
+    pub widgets: Vec<DesktopWidgetInstance>,
+    pub dock_widgets: Vec<DockWidgetConfig>,
+    pub todos: Vec<TodoItem>,
+    pub countdown: CountdownConfig,
+    pub ai_configs: Vec<AiProviderQuotaConfig>,
+    pub ai_snapshots: Vec<AiProviderQuotaSnapshot>,
+    pub market: MarketSnapshot,
+    pub local_ai: LocalAiStatusSnapshot,
+    pub disks: Vec<DiskUsageEntry>,
+    pub widget_edit_mode: bool,
+    pub dock_edit_mode: bool,
 
     pub open_windows: Vec<AppWindowEntry>,
     pub dock_groups: Vec<DockAppGroup>,
+    pub running_group_order: Vec<String>,
+    pub window_seen_order: Vec<isize>,
     pub icon_png_b64: HashMap<String, String>,
     pub icon_requested: HashSet<String>,
     pub installed_apps: Vec<InstalledAppEntry>,
@@ -114,6 +142,13 @@ pub struct RuntimeState {
     pub snap_overlay_active: bool,
     pub snap_hover_idx: Option<usize>,
     pub active_snap_hwnd: isize,
+    pub widget_photos: HashMap<String, String>,
+    pub bt_boot_initialized: bool,
+    pub focus_completed_mins: u32,
+    pub focus_goal_mins: u32,
+    pub dock_popover_open_mons: HashSet<String>,
+    pub dock_popover_opened_at_ms: u64,
+    pub crown_stage_open: bool,
 }
 
 impl RuntimeState {
@@ -123,6 +158,11 @@ impl RuntimeState {
         prefs: ShellRuntimePreferences,
         profiles: Vec<WorkspaceProfile>,
         pinned: Vec<PinnedShortcut>,
+        widgets: Vec<DesktopWidgetInstance>,
+        dock_widgets: Vec<DockWidgetConfig>,
+        todos: Vec<TodoItem>,
+        countdown: CountdownConfig,
+        ai_configs: Vec<AiProviderQuotaConfig>,
         clips: Vec<ClipboardVaultEntry>,
         drop_shelf: Vec<String>,
         agenda: HashMap<String, String>,
@@ -135,15 +175,28 @@ impl RuntimeState {
             profiles
         };
         Self {
-            version: "3.0.0".into(),
+            version: AURORA_VERSION.into(),
             theme_id: theme_by_id(&user_prefs.active_theme_id).id,
             active_profile_id: user_prefs.active_profile_id,
             focus_mode_enabled: user_prefs.focus_mode_enabled,
             prefs,
             profiles,
             pinned_shortcuts: pinned,
+            widgets,
+            dock_widgets,
+            todos,
+            countdown,
+            ai_configs,
+            ai_snapshots: Vec::new(),
+            market: MarketSnapshot::default(),
+            local_ai: LocalAiStatusSnapshot::default(),
+            disks: Vec::new(),
+            widget_edit_mode: false,
+            dock_edit_mode: false,
             open_windows: Vec::new(),
             dock_groups: Vec::new(),
+            running_group_order: Vec::new(),
+            window_seen_order: Vec::new(),
             icon_png_b64: HashMap::new(),
             icon_requested: HashSet::new(),
             installed_apps: Vec::new(),
@@ -186,7 +239,7 @@ impl RuntimeState {
             virtual_desktop_index: 1,
             virtual_desktop_count: 2,
             latest_update: None,
-            update_status: "Güncel (v3.0.0)".into(),
+            update_status: format!("Güncel (v{AURORA_VERSION})"),
             update_downloading: false,
             update_download_pct: 0,
             last_external_hwnd: 0,
@@ -195,6 +248,13 @@ impl RuntimeState {
             snap_overlay_active: false,
             snap_hover_idx: None,
             active_snap_hwnd: 0,
+            widget_photos: HashMap::new(),
+            bt_boot_initialized: false,
+            focus_completed_mins: 0,
+            focus_goal_mins: 90,
+            dock_popover_open_mons: HashSet::new(),
+            dock_popover_opened_at_ms: 0,
+            crown_stage_open: false,
         }
     }
 
@@ -204,6 +264,146 @@ impl RuntimeState {
         let has_custom = custom.is_some_and(|c| c.has_any_override());
         let eff = base.with_customization(custom);
         (eff, base, has_custom)
+    }
+
+    pub fn eco_mode_active(&self) -> bool {
+        self.prefs.eco_mode_auto_on_low_battery
+            && self.metrics.battery_present
+            && !self.metrics.is_charging
+            && self.metrics.battery_percent <= 20
+    }
+
+    pub fn needs_ai_quota_poll(&self) -> bool {
+        self.dock_widgets.iter().any(|w| w.enabled && w.kind == "ai-quota")
+            || (self.prefs.widgets_enabled && self.widgets.iter().any(|w| w.kind == "ai-quota"))
+    }
+
+    pub fn needs_market_poll(&self) -> bool {
+        self.dock_widgets.iter().any(|w| w.enabled && w.kind == "market")
+            || (self.prefs.widgets_enabled && self.widgets.iter().any(|w| w.kind == "market"))
+    }
+
+    pub fn needs_local_ai_or_disks_poll(&self) -> bool {
+        self.prefs.widgets_enabled
+            && self.widgets.iter().any(|w| w.kind == "local-ai" || w.kind == "storage-net")
+    }
+
+    pub fn dock_needs_live_metrics(&self) -> bool {
+        self.prefs.effective_island_idle_mode() == "system-pulse"
+            || self
+                .dock_widgets
+                .iter()
+                .any(|w| w.enabled && (w.kind == "system" || w.kind == "network"))
+            || (self.prefs.widgets_enabled
+                && self
+                    .widgets
+                    .iter()
+                    .any(|w| w.kind == "system" || w.kind == "storage-net"))
+    }
+
+    /// Resolves a broken, stale, or WindowsApps-sandboxed shortcut path against the live
+    /// filesystem reconstructor AND the `installed_apps` COM AppsFolder + Start Menu catalog.
+    pub fn resolve_launch_fallback(
+        &self,
+        raw_path: &str,
+        display_name: &str,
+        aumid: Option<&str>,
+    ) -> Option<String> {
+        let trimmed = raw_path.trim();
+        let is_sandbox = is_windows_apps_sandbox_path(trimmed);
+
+        // 1. If we already know the exact MSIX/Store AUMID and the target is sandbox-blocked or empty, use COM AUMID!
+        if let Some(au) = aumid.map(str::trim).filter(|s| !s.is_empty()) {
+            if trimmed.is_empty() || is_sandbox {
+                return Some(format!("appsfolder:{au}"));
+            }
+        }
+
+        // 2. Deterministic filesystem reconstruction for backslash-stripped paths (e.g. `C:UsersLenovo...`)
+        if !trimmed.is_empty() && !is_sandbox {
+            if let Some(repaired) = repair_corrupted_windows_path(trimmed) {
+                if !is_windows_apps_sandbox_path(&repaired) {
+                    return Some(repaired);
+                }
+            }
+        }
+
+        // 3. Cross-match against the 300-item installed apps catalog (preferring appsfolder:<AUMID> for Store apps)
+        let norm_key = normalize_group_key(trimmed, display_name);
+        let disp_low = display_name.trim().to_ascii_lowercase();
+        let stripped_raw = trimmed.replace(['\\', '/'], "").to_ascii_lowercase();
+
+        let mut best: Option<(u8, String)> = None;
+        for app in &self.installed_apps {
+            let lp = app.launch_path.trim();
+            if lp.is_empty() || is_windows_apps_sandbox_path(lp) {
+                continue;
+            }
+            let an = app.name.trim().to_ascii_lowercase();
+            let lp_low = lp.to_ascii_lowercase();
+            let lp_stripped = lp.replace(['\\', '/'], "").to_ascii_lowercase();
+
+            let mut score = 0u8;
+            if !stripped_raw.is_empty() && stripped_raw.len() >= 10 && lp_stripped == stripped_raw {
+                score = 100;
+            } else if !disp_low.is_empty() && an == disp_low {
+                score = if lp_low.starts_with("appsfolder:") { 96 } else { 94 };
+            } else if !norm_key.is_empty() && norm_key.len() >= 3 {
+                let app_key = normalize_group_key(lp, &app.name);
+                if app_key == norm_key {
+                    score = if lp_low.starts_with("appsfolder:") { 88 } else { 85 };
+                } else if an.contains(&norm_key) || (!disp_low.is_empty() && an.contains(&disp_low)) {
+                    score = 72;
+                }
+            }
+            if score > 0 {
+                let is_better = best.as_ref().is_none_or(|(bs, _)| score > *bs);
+                if is_better {
+                    best = Some((score, lp.to_string()));
+                }
+            }
+        }
+        best.map(|(_, path)| path)
+    }
+
+    /// Startup & catalog-load self-healer for `PinnedShortcuts` in `aurora.db`.
+    /// Repairs backslash-stripped paths (like `C:UsersLenovo...`) and upgrades sandbox-blocked
+    /// `\WindowsApps\...\*.exe` pins to native COM `appsfolder:<AUMID>` targets automatically!
+    pub fn heal_pinned_shortcuts(&mut self) -> Vec<(String, String, String)> {
+        let mut repaired = Vec::new();
+        let snapshot = self.pinned_shortcuts.clone();
+        for (idx, pin) in snapshot.iter().enumerate() {
+            let cur = pin.executable_path.trim();
+            let is_protocol = cur.starts_with("appsfolder:")
+                || cur.starts_with("APPSFOLDER:")
+                || cur.starts_with("cmdrun:")
+                || cur.starts_with("reveal:")
+                || cur.starts_with("shell:")
+                || cur.starts_with("ms-")
+                || cur.starts_with("http://")
+                || cur.starts_with("https://");
+            if is_protocol {
+                continue;
+            }
+            let is_bare_cmd = !cur.is_empty() && !cur.contains(':') && !cur.contains('\\') && !cur.contains('/');
+            if is_bare_cmd {
+                continue;
+            }
+            let exe_part = cur.split('|').next().unwrap_or(cur).trim();
+            let needs_heal = exe_part.is_empty()
+                || is_windows_apps_sandbox_path(exe_part)
+                || !Path::new(exe_part).exists();
+            if !needs_heal {
+                continue;
+            }
+            if let Some(fixed) = self.resolve_launch_fallback(exe_part, &pin.display_name, None) {
+                if !fixed.eq_ignore_ascii_case(cur) {
+                    repaired.push((pin.display_name.clone(), cur.to_string(), fixed.clone()));
+                    self.pinned_shortcuts[idx].executable_path = fixed;
+                }
+            }
+        }
+        repaired
     }
 
     pub fn build_catalog_json(&self) -> String {
@@ -288,13 +488,21 @@ impl RuntimeState {
         })
     }
 
-    fn resolve_icon(&self, key: &str, display_name: &str, exe_path: &str) -> Option<&str> {
+    fn resolve_icon(
+        &self,
+        key: &str,
+        display_name: &str,
+        exe_path: &str,
+        aumid: Option<&str>,
+    ) -> Option<&str> {
         if let Some(b64) = self.icon_png_b64.get(key) {
             return Some(b64.as_str());
         }
         let k_low = key.to_ascii_lowercase();
         let d_low = display_name.to_ascii_lowercase();
         let e_low = exe_path.to_ascii_lowercase();
+        let au_low = aumid.map(|s| s.trim().to_ascii_lowercase()).unwrap_or_default();
+        let pfn_low = au_low.split('!').next().unwrap_or("").to_string();
         // Fast cross-match against the 300-item COM AppsFolder + StartMenu catalog!
         for app in &self.installed_apps {
             let Some(ref ic) = app.icon_base64 else {
@@ -302,15 +510,21 @@ impl RuntimeState {
             };
             let lp = app.launch_path.to_ascii_lowercase();
             let an = app.name.to_ascii_lowercase();
-            if (!e_low.is_empty() && lp == e_low)
+            if (!au_low.is_empty() && (lp == format!("appsfolder:{au_low}") || lp.contains(&au_low)))
+                || (!pfn_low.is_empty() && pfn_low.len() >= 8 && lp.contains(&pfn_low))
+                || (!e_low.is_empty() && lp == e_low)
                 || (!d_low.is_empty() && (an == d_low || an.contains(&d_low) || d_low.contains(&an)))
                 || (!k_low.is_empty()
-                    && ((k_low == "wt" || k_low == "windowsterminal") && an.contains("terminal"))
-                    || (k_low == "msedge" && an.contains("edge"))
-                    || (k_low == "explorer" && (an.contains("dosya gezgini") || an.contains("file explorer")))
-                    || (k_low == "powershell" && an.contains("powershell"))
-                    || (k_low == "code" && an.contains("visual studio code"))
-                    || (k_low.len() >= 4 && (an.contains(&k_low) || lp.contains(&k_low))))
+                    && (((k_low == "wt" || k_low == "windowsterminal") && an.contains("terminal"))
+                        || (k_low == "msedge" && an.contains("edge"))
+                        || (k_low == "whatsapp" && an.contains("whatsapp"))
+                        || (k_low == "ms-teams" && an.contains("teams"))
+                        || (k_low == "calculator" && (an.contains("hesap makinesi") || an.contains("calculator")))
+                        || (k_low == "store" && an.contains("microsoft store"))
+                        || (k_low == "explorer" && (an.contains("dosya gezgini") || an.contains("file explorer")))
+                        || (k_low == "powershell" && an.contains("powershell"))
+                        || (k_low == "code" && an.contains("visual studio code"))
+                        || (k_low.len() >= 4 && (an.contains(&k_low) || lp.contains(&k_low)))))
             {
                 return Some(ic.as_str());
             }
@@ -320,7 +534,13 @@ impl RuntimeState {
 
     fn map_groups_dto(&self, filter_monitor_id: Option<&str>) -> Vec<Value> {
         let groups = if let Some(mid) = filter_monitor_id {
-            build_dock_groups(&self.pinned_shortcuts, &self.open_windows, Some(mid))
+            build_dock_groups_ordered(
+                &self.pinned_shortcuts,
+                &self.open_windows,
+                Some(mid),
+                &self.running_group_order,
+                &self.window_seen_order,
+            )
         } else {
             self.dock_groups.clone()
         };
@@ -346,25 +566,274 @@ impl RuntimeState {
                         })
                     })
                     .collect();
-                let icon = self.resolve_icon(&g.group_key, &g.display_name, &g.executable_path);
+                let icon = self.resolve_icon(
+                    &g.group_key,
+                    &g.display_name,
+                    &g.executable_path,
+                    g.aumid.as_deref(),
+                );
+                let matched_audio = if !g.windows.is_empty() {
+                    self.audio.app_sessions.iter().find(|s| {
+                        g.windows.iter().any(|w| w.process_id == s.process_id)
+                            || (!s.process_name.is_empty()
+                                && normalize_group_key(&s.process_name, "") == g.group_key)
+                    })
+                } else {
+                    None
+                };
                 json!({
                     "key": g.group_key,
+                    "pinId": g.pin_id,
                     "displayName": g.display_name,
                     "executablePath": g.executable_path,
+                    "aumid": g.aumid,
                     "isPinned": g.is_pinned,
                     "hasActive": g.has_active,
                     "hasAttention": g.needs_attention,
                     "progress": progress,
                     "icon": icon,
+                    "audioPid": matched_audio.map(|s| s.process_id),
+                    "audioVolume": matched_audio.map(|s| s.volume_percent),
+                    "audioMuted": matched_audio.is_some_and(|s| s.is_muted),
                     "windows": wins,
                 })
             })
             .collect()
     }
 
-    pub fn build_dock_state_json(&self, mon_id: &str) -> String {
+    fn clock_and_short_date(&self) -> (String, String) {
+        use chrono::Datelike;
+        let now = chrono::Local::now();
+        let clock_str = if self.prefs.show_clock_seconds {
+            now.format("%H:%M:%S").to_string()
+        } else {
+            now.format("%H:%M").to_string()
+        };
+        let months = [
+            "Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara",
+        ];
+        let short_date = format!(
+            "{:02} {}",
+            now.day(),
+            months[(now.month().saturating_sub(1) as usize).min(11)]
+        );
+        (clock_str, short_date)
+    }
+
+    fn build_media_dto(&self) -> Option<Value> {
+        if self.media.has_session && !self.media.title.is_empty() {
+            let art = self.media.thumbnail_bytes.as_ref().map(|b| {
+                use base64::Engine;
+                base64::engine::general_purpose::STANDARD.encode(b)
+            });
+            Some(json!({
+                "app": self.media.app_name,
+                "title": self.media.title,
+                "artist": self.media.artist,
+                "isPlaying": self.media.is_playing,
+                "artwork": art,
+            }))
+        } else {
+            None
+        }
+    }
+
+    fn build_battery_dto(&self) -> Value {
+        json!({
+            "present": self.metrics.battery_present,
+            "percent": self.metrics.battery_percent,
+            "charging": self.metrics.is_charging,
+            "status": if !self.metrics.battery_present {
+                "AC Güç"
+            } else if self.metrics.is_charging {
+                "Şarj Oluyor"
+            } else {
+                "Pil Modu"
+            },
+        })
+    }
+
+    fn build_bt_devices_dto(&self) -> Vec<Value> {
+        self.bluetooth_devices
+            .iter()
+            .take(6)
+            .map(|d| {
+                json!({
+                    "id": d.id,
+                    "name": d.name,
+                    "percent": d.battery_percent,
+                    "hasBattery": d.has_battery,
+                    "connected": d.is_connected,
+                    "category": d.category,
+                    "source": "Bluetooth",
+                })
+            })
+            .collect()
+    }
+
+    fn build_monitor_brightness_dto(&self) -> Vec<Value> {
+        self.monitors_brightness
+            .iter()
+            .take(5)
+            .enumerate()
+            .map(|(i, m)| {
+                json!({
+                    "id": m.id,
+                    "name": m.name,
+                    "percent": m.brightness_percent,
+                    "isInternal": m.is_internal,
+                    "isPrimary": i == 0,
+                })
+            })
+            .collect()
+    }
+
+    fn build_audio_outputs_dto(&self) -> Vec<Value> {
+        self.audio
+            .outputs
+            .iter()
+            .take(6)
+            .map(|o| {
+                let short: String = if o.name.chars().count() > 26 {
+                    format!("{}…", o.name.chars().take(25).collect::<String>())
+                } else {
+                    o.name.clone()
+                };
+                json!({
+                    "id": o.id,
+                    "name": short,
+                    "fullName": o.name,
+                    "isDefault": o.is_default,
+                })
+            })
+            .collect()
+    }
+
+    fn build_audio_sessions_dto(&self) -> Vec<Value> {
+        self.audio
+            .app_sessions
+            .iter()
+            .take(5)
+            .map(|s| {
+                json!({
+                    "pid": s.process_id,
+                    "name": s.display_name,
+                    "volume": s.volume_percent,
+                    "muted": s.is_muted,
+                    "routedDeviceId": s.routed_device_id.as_deref().unwrap_or(""),
+                })
+            })
+            .collect()
+    }
+
+    fn build_desktop_clipboard_dto(&self) -> Vec<Value> {
+        self.clipboard_items
+            .iter()
+            .take(5)
+            .map(|c| {
+                let short_text: String = if c.kind == "text" {
+                    c.text_content.chars().take(200).collect()
+                } else {
+                    String::new()
+                };
+                json!({
+                    "id": c.id,
+                    "kind": c.kind,
+                    "preview": c.preview_text,
+                    "text": short_text,
+                })
+            })
+            .collect()
+    }
+
+    fn build_notifications_dto(&self, limit: usize) -> Vec<Value> {
+        self.notifications
+            .iter()
+            .filter(|n| !self.dismissed_sys_notif_ids.contains(&n.notification_id))
+            .take(limit)
+            .map(|n| {
+                json!({
+                    "id": format!("sys-{}", n.notification_id),
+                    "app": n.app_name,
+                    "title": n.title,
+                    "body": n.body,
+                    "time": n.arrived_at_utc,
+                    "isSystem": true,
+                })
+            })
+            .collect()
+    }
+
+    fn build_trays_dto(&self, limit: usize) -> Vec<Value> {
+        self.tray_apps
+            .iter()
+            .take(limit)
+            .map(|a| {
+                let stem = Path::new(&a.executable_path)
+                    .file_stem()
+                    .and_then(|s| s.to_str())
+                    .map(|s| s.to_ascii_lowercase())
+                    .unwrap_or_default();
+                let icon_key = if stem.is_empty() { a.id.as_str() } else { stem.as_str() };
+                let aumid = if is_windows_apps_sandbox_path(&a.executable_path) {
+                    self.installed_apps
+                        .iter()
+                        .find(|inst| {
+                            let lt = inst.launch_path.to_ascii_lowercase();
+                            lt.starts_with("appsfolder:")
+                                && (inst.name.eq_ignore_ascii_case(&a.name)
+                                    || (!stem.is_empty() && lt.contains(&stem)))
+                        })
+                        .and_then(|inst| {
+                            inst.launch_path
+                                .strip_prefix("appsfolder:")
+                                .or_else(|| inst.launch_path.strip_prefix("APPSFOLDER:"))
+                        })
+                } else {
+                    None
+                };
+                let icon = self.resolve_icon(icon_key, &a.name, &a.executable_path, aumid);
+                json!({
+                    "key": a.id,
+                    "name": a.name,
+                    "subtitle": if a.subtitle.is_empty() { "Arka Plan" } else { a.subtitle.as_str() },
+                    "memoryMb": a.memory_mb,
+                    "canQuit": true,
+                    "icon": icon,
+                })
+            })
+            .collect()
+    }
+
+    fn build_pinned_shortcuts_dto(&self, limit: usize) -> Vec<Value> {
+        self.pinned_shortcuts
+            .iter()
+            .take(limit)
+            .map(|p| {
+                let stem = Path::new(&p.executable_path)
+                    .file_stem()
+                    .and_then(|s| s.to_str())
+                    .unwrap_or(&p.display_name)
+                    .to_ascii_lowercase();
+                let aumid = p
+                    .executable_path
+                    .strip_prefix("appsfolder:")
+                    .or_else(|| p.executable_path.strip_prefix("APPSFOLDER:"));
+                let icon = self.resolve_icon(&stem, &p.display_name, &p.executable_path, aumid);
+                json!({
+                    "id": p.id,
+                    "name": p.display_name,
+                    "path": p.executable_path,
+                    "icon": icon,
+                })
+            })
+            .collect()
+    }
+
+    pub fn build_dock_state_json(&self, mon_id: &str, is_primary: bool, now_ms: u64) -> String {
         let mode = self.prefs.effective_dock_mode();
         let filter = self.prefs.per_monitor_window_filter.then_some(mon_id);
+        let (clock_str, short_date) = self.clock_and_short_date();
         let folders: Vec<Value> = effective_dock_folders(self.prefs.dock_folder_paths.as_deref())
             .into_iter()
             .map(|p| {
@@ -374,8 +843,21 @@ impl RuntimeState {
                 })
             })
             .collect();
+        let awake_active = self.awake_mode != "off";
+        let awake_short = match self.awake_mode.as_str() {
+            "indefinite" => "Süresiz".to_string(),
+            "30m" | "60m" => {
+                let rem = self.awake_until_ms.map(|u| u.saturating_sub(now_ms) / 60_000 + 1).unwrap_or(30);
+                format!("{rem} dk")
+            }
+            _ => "Kapalı".to_string(),
+        };
         let payload = json!({
             "monitorId": mon_id,
+            "isPrimary": is_primary,
+            "clock": clock_str,
+            "shortDate": short_date,
+            "showClockSeconds": self.prefs.show_clock_seconds,
             "dockAutoHide": mode == "AutoHide",
             "dockMode": mode,
             "dockBarLayout": self.prefs.effective_dock_bar_layout(),
@@ -388,10 +870,174 @@ impl RuntimeState {
             "smartTidy": self.prefs.smart_tidy_enabled,
             "dockMagnification": self.prefs.dock_magnification_percent,
             "dwmLivePreview": self.prefs.dwm_live_preview_enabled,
+            "showDockStatusCluster": self.prefs.effective_show_dock_status(),
+            "dockHubStyle": self.prefs.effective_dock_hub_style(),
+            "dockHoverStyle": self.prefs.effective_dock_hover_style(),
+            "cornerRadiusPreset": self.prefs.effective_corner_radius_preset(),
+            "dockStartStyle": self.prefs.effective_dock_start_style(),
+            "dockSilhouette": self.prefs.effective_dock_silhouette(),
+            "dockIndicatorStyle": self.prefs.effective_dock_indicator_style(),
+            "shellArchitecture": self.prefs.effective_shell_architecture(),
+            "islandStyle": self.prefs.effective_island_style(),
+            "islandIdleMode": self.prefs.effective_island_idle_mode(),
+            "islandBtPopin": self.prefs.island_bt_popin,
+            "islandPrivacyGuard": self.prefs.island_privacy_guard,
+            "notificationMode": self.prefs.effective_notification_mode(),
+            "focusStats": {
+                "completedMins": self.focus_completed_mins,
+                "goalMins": self.focus_goal_mins,
+            },
+            "ecoModeAuto": self.prefs.eco_mode_auto_on_low_battery,
+            "ecoModeActive": self.eco_mode_active(),
+            "dockWidgets": self.dock_widgets,
+            "dockEditMode": self.dock_edit_mode,
+            "dockEmptyWheelAction": self.prefs.effective_empty_wheel_action(),
+            "dockEmptyDblClickAction": self.prefs.effective_empty_dblclick_action(),
+            "dockEmptyMidClickAction": self.prefs.effective_empty_midclick_action(),
+            "dockScrubGestures": self.prefs.dock_scrub_gestures_enabled,
+            "dockPerAppAudio": self.prefs.dock_per_app_audio_enabled,
+            "widgetsEnabled": self.prefs.widgets_enabled,
+            "widgetEditMode": self.widget_edit_mode,
+            "crownVisibilityMode": self.prefs.effective_crown_visibility_mode(),
+            "privacy": {
+                "camera": self.privacy.camera_active,
+                "mic": self.privacy.mic_active,
+                "cameraApps": self.privacy.camera_apps,
+                "micApps": self.privacy.mic_apps,
+            },
+            "virtualDesktop": {
+                "index": self.virtual_desktop_index,
+                "count": self.virtual_desktop_count,
+                "name": format!("Masaüstü {}", self.virtual_desktop_index),
+            },
+            "aiSnapshots": self.ai_snapshots,
+            "aiConfigs": self.ai_configs,
+            "weather": {
+                "live": self.weather.valid && self.weather_net_enabled,
+                "city": self.weather.city,
+                "temp": self.weather.temp_c.round(),
+                "summary": self.weather.condition_tr,
+            },
+            "metrics": {
+                "cpu": self.metrics.cpu_percent.round(),
+                "ramPct": self.metrics.ram_percent.round(),
+                "rxKbps": (self.metrics.net_down_mbps * 125.0).round(),
+                "txKbps": (self.metrics.net_up_mbps * 125.0).round(),
+                "cpuHist": self.cpu_history.iter().rev().take(12).rev().copied().collect::<Vec<_>>(),
+                "ramHist": self.ram_history.iter().rev().take(12).rev().copied().collect::<Vec<_>>(),
+            },
+            "focus": {
+                "running": self.focus_running,
+                "seconds": self.focus_seconds,
+                "label": format!("{:02}:{:02}", self.focus_seconds / 60, self.focus_seconds % 60),
+            },
+            "market": self.market,
+            "latestClip": self.clipboard_items.first().map(|c| json!({
+                "id": c.id,
+                "kind": c.kind,
+                "preview": c.preview_text,
+            })),
             "trayCount": self.tray_apps.len(),
+            "trayApps": self.build_trays_dto(32),
             "dockFolders": folders,
+            "audio": {
+                "volume": self.audio.master_volume_percent,
+                "muted": self.audio.is_master_muted,
+                "device": self.audio.default_output_name,
+            },
+            "audioOutputs": self.build_audio_outputs_dto(),
+            "mic": {
+                "supported": self.audio.mic_supported,
+                "muted": self.audio.is_mic_muted,
+            },
+            "wifi": {
+                "on": self.wifi_enabled,
+                "status": if self.wifi_enabled { "Bağlı" } else { "Kapalı" },
+            },
+            "bluetooth": {
+                "on": self.bluetooth_enabled,
+                "status": if self.bluetooth_enabled { "Aktif" } else { "Kapalı" },
+            },
+            "quietHours": self.focus_mode_enabled,
+            "awake": {
+                "active": awake_active,
+                "mode": self.awake_mode,
+                "shortLabel": awake_short,
+            },
+            "battery": self.build_battery_dto(),
+            "btDevices": self.build_bt_devices_dto(),
+            "monitorBrightness": self.build_monitor_brightness_dto(),
+            "media": self.build_media_dto(),
+            "unreadNotifCount": self.unread_notif_count,
+            "notifications": self.build_notifications_dto(8),
+            "agendaNotes": self.agenda_notes,
             "theme": self.build_theme_dto(),
             "groups": self.map_groups_dto(filter),
+        });
+        json!({ "type": "state", "payload": payload }).to_string()
+    }
+
+    pub fn build_widgets_state_json(&self) -> String {
+        let (clock_str, short_date) = self.clock_and_short_date();
+        let payload = json!({
+            "theme": self.build_theme_dto(),
+            "shellArchitecture": self.prefs.effective_shell_architecture(),
+            "cornerRadiusPreset": self.prefs.effective_corner_radius_preset(),
+            "clock": clock_str,
+            "shortDate": short_date,
+            "showClockSeconds": self.prefs.show_clock_seconds,
+            "media": self.build_media_dto(),
+            "battery": self.build_battery_dto(),
+            "btDevices": self.build_bt_devices_dto(),
+            "audio": {
+                "volume": self.audio.master_volume_percent,
+                "muted": self.audio.is_master_muted,
+                "device": self.audio.default_output_name,
+            },
+            "audioOutputs": self.build_audio_outputs_dto(),
+            "audioSessions": self.build_audio_sessions_dto(),
+            "clipboard": self.build_desktop_clipboard_dto(),
+            "focusStats": {
+                "completedMins": self.focus_completed_mins,
+                "goalMins": self.focus_goal_mins,
+            },
+            "widgetPhotos": self.widget_photos,
+            "metrics": {
+                "cpu": self.metrics.cpu_percent.round(),
+                "ramPct": self.metrics.ram_percent.round(),
+                "ramUsed": (self.metrics.ram_used_gb * 10.0).round() / 10.0,
+                "ramTotal": self.metrics.ram_total_gb.round(),
+                "rxKbps": (self.metrics.net_down_mbps * 125.0).round(),
+                "txKbps": (self.metrics.net_up_mbps * 125.0).round(),
+                "cpuHist": self.cpu_history,
+                "ramHist": self.ram_history,
+                "netHist": self.net_history,
+            },
+            "weather": {
+                "live": self.weather.valid && self.weather_net_enabled,
+                "city": self.weather.city,
+                "temp": self.weather.temp_c.round(),
+                "summary": self.weather.condition_tr,
+            },
+            "agendaNotes": self.agenda_notes,
+            "scratchpad": self.scratchpad_text,
+            "focus": {
+                "running": self.focus_running,
+                "seconds": self.focus_seconds,
+                "label": format!("{:02}:{:02}", self.focus_seconds / 60, self.focus_seconds % 60),
+            },
+            "pinnedShortcuts": self.build_pinned_shortcuts_dto(12),
+            "widgets": self.widgets,
+            "widgetsLocked": self.prefs.widgets_locked,
+            "widgetEditMode": self.widget_edit_mode,
+            "ecoModeActive": self.eco_mode_active(),
+            "aiConfigs": self.ai_configs,
+            "aiSnapshots": self.ai_snapshots,
+            "todos": self.todos,
+            "countdown": self.countdown,
+            "market": self.market,
+            "localAi": self.local_ai,
+            "disks": self.disks,
         });
         json!({ "type": "state", "payload": payload }).to_string()
     }
@@ -526,7 +1172,7 @@ impl RuntimeState {
             .tray_apps
             .iter()
             .map(|a| {
-                let icon = self.resolve_icon(&a.id, &a.name, &a.executable_path);
+                let icon = self.resolve_icon(&a.id, &a.name, &a.executable_path, None);
                 json!({
                     "key": a.id,
                     "name": a.name,
@@ -711,6 +1357,47 @@ impl RuntimeState {
             "dockScalePercent": self.prefs.dock_scale_percent,
             "dockOffsetPercent": self.prefs.dock_offset_percent,
             "reserveDockWorkArea": self.prefs.effective_reserve_pref(),
+            "crownVisibilityMode": self.prefs.effective_crown_visibility_mode(),
+            "showDockStatusCluster": self.prefs.effective_show_dock_status(),
+            "dockHubStyle": self.prefs.effective_dock_hub_style(),
+            "dockHoverStyle": self.prefs.effective_dock_hover_style(),
+            "cornerRadiusPreset": self.prefs.effective_corner_radius_preset(),
+            "dockStartStyle": self.prefs.effective_dock_start_style(),
+            "dockSilhouette": self.prefs.effective_dock_silhouette(),
+            "dockIndicatorStyle": self.prefs.effective_dock_indicator_style(),
+            "shellArchitecture": self.prefs.effective_shell_architecture(),
+            "islandStyle": self.prefs.effective_island_style(),
+            "islandIdleMode": self.prefs.effective_island_idle_mode(),
+            "islandBtPopin": self.prefs.island_bt_popin,
+            "islandPrivacyGuard": self.prefs.island_privacy_guard,
+            "focusStats": {
+                "completedMins": self.focus_completed_mins,
+                "goalMins": self.focus_goal_mins,
+            },
+            "ecoModeAuto": self.prefs.eco_mode_auto_on_low_battery,
+            "ecoModeActive": self.eco_mode_active(),
+            "dockWidgets": self.dock_widgets,
+            "dockEditMode": self.dock_edit_mode,
+            "dockEmptyWheelAction": self.prefs.effective_empty_wheel_action(),
+            "dockEmptyDblClickAction": self.prefs.effective_empty_dblclick_action(),
+            "dockEmptyMidClickAction": self.prefs.effective_empty_midclick_action(),
+            "dockScrubGestures": self.prefs.dock_scrub_gestures_enabled,
+            "dockPerAppAudio": self.prefs.dock_per_app_audio_enabled,
+            "autoDayNightTheme": self.prefs.auto_day_night_theme,
+            "dayThemeId": self.prefs.day_theme_id,
+            "nightThemeId": self.prefs.night_theme_id,
+            "widgetsEnabled": self.prefs.widgets_enabled,
+            "widgetsLocked": self.prefs.widgets_locked,
+            "widgetEditMode": self.widget_edit_mode,
+            "widgets": self.widgets,
+            "todos": self.todos,
+            "countdown": self.countdown,
+            "market": self.market,
+            "localAi": self.local_ai,
+            "disks": self.disks,
+            "aiConfigs": self.ai_configs,
+            "aiSnapshots": self.ai_snapshots,
+            "pinnedShortcuts": self.build_pinned_shortcuts_dto(18),
             "hardwareOsdEnabled": self.prefs.hardware_osd_enabled,
             "altDragEnabled": self.prefs.alt_drag_enabled,
             "showClockSeconds": self.prefs.show_clock_seconds,
@@ -742,6 +1429,7 @@ impl RuntimeState {
             "crownPinned": self.prefs.crown_pinned,
             "dwmLivePreview": self.prefs.dwm_live_preview_enabled,
             "sysNotifBridge": self.prefs.system_notification_bridge_enabled,
+            "notificationMode": self.prefs.effective_notification_mode(),
             "winKeyOmni": self.prefs.win_key_opens_omni_search,
             "omniHotkeyPreset": self.prefs.omni_hotkey_preset,
             "quietHours": self.focus_mode_enabled,
@@ -842,7 +1530,9 @@ pub struct BridgeEnv<'a> {
     pub state: &'a mut RuntimeState,
     pub crown: &'a mut WebViewOverlaySurface,
     pub docks: &'a mut [WebViewOverlaySurface],
+    pub widgets_surface: &'a mut Option<WebViewOverlaySurface>,
     pub prefs_store: &'a ShellPreferencesStore,
+    pub widgets_store: &'a WidgetsLayoutStore,
     pub aurora_db: &'a AuroraDb,
     pub clip_db: &'a ClipboardVaultDb,
     pub aux_store: &'a AuxiliaryStateStore,
@@ -858,6 +1548,7 @@ pub struct BridgeEnv<'a> {
     pub needs_taskbar_sync: &'a mut bool,
     pub needs_bounds_sync: &'a mut bool,
     pub needs_hotkey_sync: &'a mut bool,
+    pub needs_widgets_sync: &'a mut bool,
     pub needs_state_push: &'a mut bool,
     pub popup_opened_at_ms: &'a mut u64,
     pub peek_tray_until_ms: &'a mut u64,
@@ -897,6 +1588,16 @@ impl<'a> BridgeEnv<'a> {
         self.prefs_store.save(&self.state.prefs);
     }
 
+    fn save_widgets(&self) {
+        self.widgets_store.save(&WidgetsPersistenceDoc {
+            widgets: self.state.widgets.clone(),
+            ai_configs: self.state.ai_configs.clone(),
+            dock_widgets: self.state.dock_widgets.clone(),
+            todos: self.state.todos.clone(),
+            countdown: self.state.countdown.clone(),
+        });
+    }
+
     fn save_user_prefs(&self) {
         self.aurora_db.save_user_preferences(&UserPreferencesRecord {
             active_theme_id: self.state.theme_id.clone(),
@@ -923,6 +1624,85 @@ fn f64_prop(v: &Value, key: &str, def: f64) -> f64 {
 
 fn bool_prop(v: &Value, key: &str) -> bool {
     v.get(key).and_then(|x| x.as_bool()).unwrap_or(false)
+}
+
+/// Bulletproof Dock app launcher (v5.0):
+/// - Prefers native COM `appsfolder:<AUMID>` for Store/MSIX/WindowsApps apps.
+/// - Passes saved `PinnedShortcut.arguments`.
+/// - Falls back to filesystem backslash-reconstruction + `installed_apps` catalog lookup
+///   and automatically heals corrupted DB pins in-place!
+/// - Logs & shows an actionable toast if a target genuinely no longer exists.
+fn launch_dock_group_reliably(env: &mut BridgeEnv<'_>, g: &DockAppGroup) {
+    let saved_args = g
+        .pin_id
+        .as_deref()
+        .and_then(|pid| env.state.pinned_shortcuts.iter().find(|p| p.id == pid))
+        .or_else(|| {
+            env.state
+                .pinned_shortcuts
+                .iter()
+                .find(|p| normalize_group_key(&p.executable_path, &p.display_name) == g.group_key)
+        })
+        .map(|p| p.arguments.clone())
+        .unwrap_or_default();
+
+    let primary_target = if (g.executable_path.trim().is_empty()
+        || is_windows_apps_sandbox_path(&g.executable_path))
+        && g.aumid.as_deref().is_some_and(|a| !a.trim().is_empty())
+    {
+        format!("appsfolder:{}", g.aumid.as_deref().unwrap_or("").trim())
+    } else {
+        g.executable_path.trim().to_string()
+    };
+
+    if !primary_target.is_empty() && launch_target_with_args(&primary_target, &saved_args).is_ok() {
+        return;
+    }
+
+    // Automatic fallback + live pin self-healing
+    if let Some(resolved) = env.state.resolve_launch_fallback(
+        &g.executable_path,
+        &g.display_name,
+        g.aumid.as_deref(),
+    ) {
+        if launch_target_with_args(&resolved, &saved_args).is_ok() {
+            let mut db_dirty = false;
+            for p in &mut env.state.pinned_shortcuts {
+                let matches = g.pin_id.as_deref() == Some(p.id.as_str())
+                    || normalize_group_key(&p.executable_path, &p.display_name) == g.group_key;
+                if matches && !p.executable_path.eq_ignore_ascii_case(&resolved) {
+                    p.executable_path = resolved.clone();
+                    db_dirty = true;
+                }
+            }
+            if db_dirty {
+                env.aurora_db.save_pinned_shortcuts(&env.state.pinned_shortcuts);
+                env.logger.info(
+                    "LAUNCH",
+                    "PIN_HEALED_ON_CLICK",
+                    &format!("Repaired pin '{}' -> {}", g.display_name, resolved),
+                );
+            }
+            return;
+        }
+    }
+
+    env.logger.warn(
+        "LAUNCH",
+        "LAUNCH_FAILED",
+        &format!(
+            "Failed to launch '{}' (target='{}', aumid={:?})",
+            g.display_name, g.executable_path, g.aumid
+        ),
+    );
+    env.post_toast(
+        "Uygulama Açılamadı",
+        &format!(
+            "{} başlatılamadı. Kısayol taşınmış olabilir; sağ tıklayıp yeniden sabitleyebilirsiniz.",
+            g.display_name
+        ),
+        None,
+    );
 }
 
 /// Complete 128-action command router matching `Coordinator.MessageRouter.cs` 1:1!
@@ -1000,7 +1780,23 @@ pub fn handle_bridge_action(
             env.crown.focus_and_activate();
         }
         "releaseInteractiveFocus" => {
-            env.crown.release_interactive();
+            env.crown.release_interactive_to(env.state.last_external_hwnd);
+        }
+        "setDockPopoverState" => {
+            let open = bool_prop(msg, "open");
+            if open {
+                if env.state.dock_popover_open_mons.is_empty() {
+                    env.state.dock_popover_opened_at_ms = env.now_ms;
+                }
+                env.state
+                    .dock_popover_open_mons
+                    .insert(source_mon_id.to_string());
+            } else {
+                env.state.dock_popover_open_mons.remove(source_mon_id);
+            }
+        }
+        "setCrownStageState" => {
+            env.state.crown_stage_open = bool_prop(msg, "open");
         }
         "openOmni" => {
             *env.popup_opened_at_ms = env.now_ms;
@@ -1020,13 +1816,1044 @@ pub fn handle_bridge_action(
             env.save_prefs();
             *env.needs_state_push = true;
         }
+        "requestDockFocus" => {
+            if let Some(d) = env.docks.iter_mut().find(|d| d.monitor_id.eq_ignore_ascii_case(source_mon_id)) {
+                d.focus_for_inline_input();
+            }
+        }
+        "releaseDockFocus" => {
+            if let Some(d) = env.docks.iter_mut().find(|d| d.monitor_id.eq_ignore_ascii_case(source_mon_id)) {
+                d.release_inline_input_to(env.state.last_external_hwnd);
+            }
+        }
+        "requestWidgetFocus" => {
+            if let Some(ws) = env.widgets_surface.as_mut() {
+                ws.focus_for_inline_input();
+            }
+        }
+        "releaseWidgetFocus" => {
+            if let Some(ws) = env.widgets_surface.as_mut() {
+                ws.release_inline_input();
+            }
+        }
+
+        // ── v4.0 Panel Routing (Start, Quick Controls, Calendar/Notifications, Tools, Settings, Widget Gallery) ──
+        "openStartHub" => {
+            *env.popup_opened_at_ms = env.now_ms;
+            env.crown.focus_and_activate();
+            env.crown.post_json(r#"{"type":"toggleOmni"}"#);
+        }
+        "openQuickControls" => {
+            if env.state.prefs.effective_show_dock_status() && !env.docks.is_empty() && str_prop(msg, "target") != "crown" {
+                env.crown.release_interactive();
+                env.docks[0].post_json(r#"{"type":"toggleQuickControls"}"#);
+            } else {
+                *env.popup_opened_at_ms = env.now_ms;
+                env.crown.focus_and_activate();
+                env.crown.post_json(r#"{"type":"openSettings","section":"appearance"}"#);
+            }
+        }
+        "openCalendar" => {
+            if env.state.prefs.effective_show_dock_status() && !env.docks.is_empty() {
+                env.crown.release_interactive();
+                env.docks[0].post_json(r#"{"type":"toggleCalNotif","tab":"calendar"}"#);
+            } else {
+                *env.popup_opened_at_ms = env.now_ms;
+                env.crown.focus_and_activate();
+                env.crown.post_json(r#"{"type":"toggleCalendar"}"#);
+            }
+        }
+        "openNotifications" => {
+            if env.state.prefs.effective_notification_mode() != "aurora-mirror" {
+                env.crown.release_interactive();
+                open_windows_notification_center();
+            } else if env.state.prefs.effective_show_dock_status() && !env.docks.is_empty() {
+                env.crown.release_interactive();
+                env.docks[0].post_json(r#"{"type":"toggleCalNotif","tab":"notifications"}"#);
+            } else {
+                *env.popup_opened_at_ms = env.now_ms;
+                env.crown.focus_and_activate();
+                env.crown.post_json(r#"{"type":"toggleCalendar"}"#);
+            }
+        }
+        "openWindowsNotifications" => {
+            env.crown.release_interactive();
+            open_windows_notification_center();
+        }
+        "setNotificationMode" => {
+            let mode = if str_prop(msg, "mode") == "aurora-mirror" {
+                "aurora-mirror"
+            } else {
+                "windows-native"
+            };
+            env.state.prefs.notification_mode = mode.into();
+            env.state.prefs.system_notification_bridge_enabled = mode == "aurora-mirror";
+            if mode == "windows-native" {
+                env.state.unread_notif_count = 0;
+            }
+            env.save_prefs();
+            *env.needs_state_push = true;
+            let desc = if mode == "aurora-mirror" {
+                "Aurora Bildirim Yansıtma Açık"
+            } else {
+                "Windows 11 Yerel Bildirimler (Çift Bildirim Yok)"
+            };
+            env.post_toast("Bildirim Yönetimi", desc, None);
+        }
+        "openToolsHub" => {
+            *env.popup_opened_at_ms = env.now_ms;
+            env.crown.focus_and_activate();
+            let tab = str_prop(msg, "tab");
+            let j = json!({ "type": "openTools", "tab": if tab.is_empty() { "shelf" } else { tab } }).to_string();
+            env.crown.post_json(&j);
+        }
+        "openSettings" => {
+            *env.popup_opened_at_ms = env.now_ms;
+            env.crown.focus_and_activate();
+            let sec = str_prop(msg, "section");
+            let j = json!({ "type": "openSettings", "section": if sec.is_empty() { "appearance" } else { sec } }).to_string();
+            env.crown.post_json(&j);
+        }
+        "openWidgetGallery" => {
+            *env.popup_opened_at_ms = env.now_ms;
+            env.crown.focus_and_activate();
+            env.crown.post_json(r#"{"type":"openSettings","section":"widgets"}"#);
+        }
+
+        // ── v4.0 1-Click Experience Presets & Fine-Grained Customization ──
+        "applyExperiencePreset" => {
+            let preset = str_prop(msg, "preset");
+            match preset {
+                "windows-familiar" => {
+                    env.state.prefs.dock_visibility_mode = Some("AlwaysVisible".into());
+                    env.state.prefs.dock_auto_hide = false;
+                    env.state.prefs.reserve_dock_work_area = Some(true);
+                    env.state.prefs.dock_bar_layout = "Split3Zone".into();
+                    env.state.prefs.dock_density = "Standard".into();
+                    env.state.prefs.dock_edge = "Bottom".into();
+                    env.state.prefs.smart_tidy_enabled = false;
+                    env.state.prefs.show_dock_status_cluster = Some(true);
+                    env.state.prefs.crown_visibility_mode = "Dynamic".into();
+                    env.state.prefs.dock_hub_style = "cards".into();
+                    env.state.prefs.dock_hover_style = "lift".into();
+                    env.state.prefs.corner_radius_preset = "modern".into();
+                    env.state.prefs.dock_silhouette = "fixed".into();
+                    env.state.prefs.dock_start_style = "icon".into();
+                    env.state.prefs.dock_indicator_style = "pill".into();
+                    env.state.prefs.win_key_opens_omni_search = true;
+                    env.post_toast("Windows 11 Tanıdık", "Sabit alt çubuk, sağ alt kontroller ve modern pencere kartları etkin.", None);
+                }
+                "floating-dock" => {
+                    env.state.prefs.dock_visibility_mode = Some("SmartDodge".into());
+                    env.state.prefs.dock_auto_hide = false;
+                    env.state.prefs.reserve_dock_work_area = Some(false);
+                    env.state.prefs.dock_bar_layout = "Centered".into();
+                    env.state.prefs.dock_density = "Standard".into();
+                    env.state.prefs.dock_edge = "Bottom".into();
+                    env.state.prefs.smart_tidy_enabled = false;
+                    env.state.prefs.show_dock_status_cluster = Some(true);
+                    env.state.prefs.crown_visibility_mode = "Dynamic".into();
+                    env.state.prefs.dock_hub_style = "dendritic".into();
+                    env.state.prefs.dock_hover_style = "wave".into();
+                    env.state.prefs.corner_radius_preset = "capsule".into();
+                    env.state.prefs.dock_silhouette = "floating".into();
+                    env.state.prefs.dock_indicator_style = "dot".into();
+                    env.post_toast("macOS Tahoe Cam", "Yüzen optik cam kapsül, dalga efekti ve dallanan küre etkin.", None);
+                }
+                "split-islands" => {
+                    env.state.prefs.dock_visibility_mode = Some("AlwaysVisible".into());
+                    env.state.prefs.dock_auto_hide = false;
+                    env.state.prefs.reserve_dock_work_area = Some(true);
+                    env.state.prefs.dock_bar_layout = "Split3Zone".into();
+                    env.state.prefs.dock_density = "Standard".into();
+                    env.state.prefs.dock_edge = "Bottom".into();
+                    env.state.prefs.show_dock_status_cluster = Some(true);
+                    env.state.prefs.crown_visibility_mode = "Dynamic".into();
+                    env.state.prefs.dock_hub_style = "fan3d".into();
+                    env.state.prefs.dock_hover_style = "lift".into();
+                    env.state.prefs.corner_radius_preset = "capsule".into();
+                    env.state.prefs.dock_silhouette = "islands".into();
+                    env.state.prefs.dock_indicator_style = "glow".into();
+                    env.post_toast("Ayrık Adalar 2026", "3 bağımsız yüzen cam ada, 3D Yelpaze ve parlak gösterge etkin.", None);
+                }
+                "developer-pro" => {
+                    env.state.prefs.dock_visibility_mode = Some("AlwaysVisible".into());
+                    env.state.prefs.dock_auto_hide = false;
+                    env.state.prefs.reserve_dock_work_area = Some(true);
+                    env.state.prefs.dock_bar_layout = "Split3Zone".into();
+                    env.state.prefs.dock_density = "Compact".into();
+                    env.state.prefs.dock_edge = "Bottom".into();
+                    env.state.prefs.smart_tidy_enabled = false;
+                    env.state.prefs.show_dock_status_cluster = Some(true);
+                    env.state.prefs.crown_visibility_mode = "Dynamic".into();
+                    env.state.prefs.dock_hub_style = "dendritic".into();
+                    env.state.prefs.dock_hover_style = "glow".into();
+                    env.state.prefs.corner_radius_preset = "sharp".into();
+                    env.state.prefs.dock_silhouette = "fixed".into();
+                    env.state.prefs.dock_indicator_style = "frame".into();
+                    env.state.prefs.show_clock_seconds = true;
+                    env.post_toast("Geliştirici Pro", "Kompakt çubuk, hassas köşeler, saniyeli saat ve hızlı araçlar etkin.", None);
+                }
+                "minimalist-zen" => {
+                    env.state.prefs.dock_visibility_mode = Some("AlwaysVisible".into());
+                    env.state.prefs.dock_auto_hide = false;
+                    env.state.prefs.reserve_dock_work_area = Some(false);
+                    env.state.prefs.dock_bar_layout = "Centered".into();
+                    env.state.prefs.dock_density = "Compact".into();
+                    env.state.prefs.dock_edge = "Bottom".into();
+                    env.state.prefs.show_dock_status_cluster = Some(true);
+                    env.state.prefs.crown_visibility_mode = "AlertsOnly".into();
+                    env.state.prefs.dock_hub_style = "cards".into();
+                    env.state.prefs.dock_hover_style = "lift".into();
+                    env.state.prefs.corner_radius_preset = "modern".into();
+                    env.state.prefs.dock_silhouette = "minimal-rail".into();
+                    env.state.prefs.dock_indicator_style = "dot".into();
+                    env.post_toast("Minimalist Zen", "İnce alt şerit, sakin üst ada ve sıfır görsel kalabalık etkin.", None);
+                }
+                _ => {}
+            }
+            env.save_prefs();
+            *env.needs_taskbar_sync = true;
+            *env.needs_bounds_sync = true;
+            *env.needs_hotkey_sync = true;
+            *env.needs_state_push = true;
+        }
+        "setCrownVisibilityMode" => {
+            let m = match str_prop(msg, "mode") {
+                "AlertsOnly" => "AlertsOnly",
+                "Hidden" => "Hidden",
+                _ => "Dynamic",
+            };
+            env.state.prefs.crown_visibility_mode = m.into();
+            env.save_prefs();
+            *env.needs_state_push = true;
+        }
+        "toggleShowDockStatus" => {
+            let next = !env.state.prefs.effective_show_dock_status();
+            env.state.prefs.show_dock_status_cluster = Some(next);
+            env.save_prefs();
+            *env.needs_state_push = true;
+        }
+        "setDockHubStyle" => {
+            let style = match str_prop(msg, "style") {
+                "fan3d" => "fan3d",
+                "cards" => "cards",
+                "radial" => "radial",
+                _ => "dendritic",
+            };
+            env.state.prefs.dock_hub_style = style.into();
+            env.save_prefs();
+            *env.needs_state_push = true;
+        }
+        "setDockHoverStyle" => {
+            let style = match str_prop(msg, "style") {
+                "wave" => "wave",
+                "glow" => "glow",
+                _ => "lift",
+            };
+            env.state.prefs.dock_hover_style = style.into();
+            env.save_prefs();
+            *env.needs_state_push = true;
+        }
+        "setCornerRadiusPreset" => {
+            let p = match str_prop(msg, "preset") {
+                "sharp" => "sharp",
+                "capsule" => "capsule",
+                _ => "modern",
+            };
+            env.state.prefs.corner_radius_preset = p.into();
+            env.save_prefs();
+            *env.needs_state_push = true;
+        }
+        "setDockStartStyle" => {
+            let s = match str_prop(msg, "style") {
+                "capsule" => "capsule",
+                _ => "icon",
+            };
+            env.state.prefs.dock_start_style = s.into();
+            env.save_prefs();
+            *env.needs_state_push = true;
+        }
+        "setDockSilhouette" => {
+            let s = match str_prop(msg, "silhouette") {
+                "floating" => "floating",
+                "islands" => "islands",
+                "minimal-rail" => "minimal-rail",
+                "compact" => "compact",
+                _ => "fixed",
+            };
+            env.state.prefs.dock_silhouette = s.into();
+            env.save_prefs();
+            *env.needs_state_push = true;
+        }
+        "setDockIndicatorStyle" => {
+            let s = match str_prop(msg, "style") {
+                "dot" => "dot",
+                "frame" => "frame",
+                "glow" => "glow",
+                _ => "pill",
+            };
+            env.state.prefs.dock_indicator_style = s.into();
+            env.save_prefs();
+            *env.needs_state_push = true;
+        }
+        // ── v7.0 Next-Gen Shell Architectures (10 Distinct Styles) & Live Dynamic Island (6 Styles) ──
+        "setShellArchitecture" => {
+            let raw = str_prop(msg, "arch");
+            let arch = match raw {
+                "nothing-hardware" => "nothing-hardware",
+                "linear-studio" => "linear-studio",
+                "vision-orb" => "vision-orb",
+                "arc-split" => "arc-split",
+                "braun-atelier" => "braun-atelier",
+                "swiss-editorial" => "swiss-editorial",
+                "cockpit-hud" => "cockpit-hud",
+                "fluent-mica" | "fluent-aurora" => "fluent-mica",
+                "zen-ghost" => "zen-ghost",
+                _ => "tahoe-glass",
+            };
+            env.state.prefs.shell_architecture = arch.into();
+            env.state.prefs.dock_silhouette = match arch {
+                "tahoe-glass" | "vision-orb" | "braun-atelier" | "cockpit-hud" => "floating",
+                "nothing-hardware" | "arc-split" | "zen-ghost" => "islands",
+                "linear-studio" => "minimal-rail",
+                _ => "fixed",
+            }
+            .into();
+            env.state.prefs.island_style = match arch {
+                "nothing-hardware" | "braun-atelier" => "hardware-pod",
+                "linear-studio" | "cockpit-hud" | "zen-ghost" => "edge-horizon",
+                "vision-orb" => "orbital-halo",
+                "swiss-editorial" => "glass-bar",
+                "fluent-mica" => "mac-notch",
+                _ => "liquid-pill",
+            }
+            .into();
+            let toast_name = match arch {
+                "nothing-hardware" => "Nothing 3-Ada Donanım Mimarisi",
+                "linear-studio" => "Linear Ultra-Craft (40px)",
+                "vision-orb" => "visionOS Spatial Küre Mimarisi",
+                "arc-split" => "Arc Çift Bölümlü Mimari",
+                "braun-atelier" => "Braun Dieter Rams Konsol",
+                "swiss-editorial" => "İsviçre Editoryal Izgara",
+                "cockpit-hud" => "Aero Kokpit HUD Mimarisi",
+                "fluent-mica" => "Windows 11 Fluent Pro",
+                "zen-ghost" => "Zen Şeffaf Hayalet Şerit",
+                _ => "macOS Tahoe Spatial Mimarisi",
+            };
+            env.save_prefs();
+            *env.needs_taskbar_sync = true;
+            *env.needs_bounds_sync = true;
+            *env.needs_state_push = true;
+            env.post_toast("Kabuk Mimarisi Değişti", toast_name, None);
+        }
+        "setIslandConfig" => {
+            if let Some(st) = msg.get("style").and_then(|v| v.as_str()) {
+                env.state.prefs.island_style = match st {
+                    "mac-notch" | "compact-notch" => "mac-notch",
+                    "edge-horizon" => "edge-horizon",
+                    "hardware-pod" => "hardware-pod",
+                    "glass-bar" => "glass-bar",
+                    "orbital-halo" => "orbital-halo",
+                    _ => "liquid-pill",
+                }
+                .into();
+            }
+            if let Some(im) = msg.get("idleMode").and_then(|v| v.as_str()) {
+                env.state.prefs.island_idle_mode = match im {
+                    "auto-stealth" => "auto-stealth",
+                    "glance-weather" => "glance-weather",
+                    "system-pulse" => "system-pulse",
+                    "minimal-brand" => "minimal-brand",
+                    _ => "media-ambient",
+                }
+                .into();
+            }
+            if let Some(vm) = msg.get("visibilityMode").and_then(|v| v.as_str()) {
+                env.state.prefs.crown_visibility_mode = match vm {
+                    "AlertsOnly" => "AlertsOnly",
+                    "Hidden" => "Hidden",
+                    _ => "Dynamic",
+                }
+                .into();
+            }
+            if let Some(bt) = msg.get("btPopin").and_then(|v| v.as_bool()) {
+                env.state.prefs.island_bt_popin = bt;
+            }
+            if let Some(pg) = msg.get("privacyGuard").and_then(|v| v.as_bool()) {
+                env.state.prefs.island_privacy_guard = pg;
+            }
+            env.save_prefs();
+            *env.needs_state_push = true;
+        }
+        "toggleEcoAuto" => {
+            env.state.prefs.eco_mode_auto_on_low_battery = !env.state.prefs.eco_mode_auto_on_low_battery;
+            env.save_prefs();
+            *env.needs_state_push = true;
+        }
+        "syncWallpaperAccent" => {
+            let (eff, _, _) = env.state.effective_theme();
+            let _ = env.bg_tx.try_send(BgCommand::SyncWallpaperAccent(eff.colors.surface1));
+            env.post_toast("Duvar Kağıdı Taranıyor", "Baskın WCAG AA+ vurgu renkleri çıkarılıyor...", None);
+        }
+        "toggleDockWidget" => {
+            let kind = str_prop(msg, "kind");
+            let id = str_prop(msg, "id");
+            let mut activated_kind: Option<String> = None;
+            if let Some(dw) = env.state.dock_widgets.iter_mut().find(|w| (!id.is_empty() && w.id == id) || (!kind.is_empty() && w.kind == kind)) {
+                dw.enabled = !dw.enabled;
+                if dw.enabled {
+                    activated_kind = Some(dw.kind.clone());
+                }
+                env.save_widgets();
+                *env.needs_state_push = true;
+            }
+            if let Some(k) = activated_kind {
+                if k == "ai-quota" {
+                    let _ = env.bg_tx.try_send(BgCommand::RefreshAiQuota(env.state.ai_configs.clone()));
+                } else if k == "market" {
+                    let _ = env.bg_tx.try_send(BgCommand::RefreshMarket);
+                }
+            }
+        }
+        "updateDockWidget" => {
+            let kind = str_prop(msg, "kind");
+            let id = str_prop(msg, "id");
+            let mut activated_kind: Option<String> = None;
+            let mut next_zone_order: Option<i32> = None;
+            if let Some(z) = msg.get("zone").and_then(|v| v.as_str()) {
+                if matches!(z, "far-left" | "before-apps" | "after-apps" | "far-right")
+                    && msg.get("order").is_none()
+                {
+                    let max_ord = env
+                        .state
+                        .dock_widgets
+                        .iter()
+                        .filter(|w| w.effective_zone() == z)
+                        .map(|w| w.order)
+                        .max()
+                        .map(|m| m + 1)
+                        .unwrap_or(0);
+                    next_zone_order = Some(max_ord);
+                }
+            }
+            if let Some(dw) = env.state.dock_widgets.iter_mut().find(|w| (!id.is_empty() && w.id == id) || (!kind.is_empty() && w.kind == kind)) {
+                if let Some(en) = msg.get("enabled").and_then(|v| v.as_bool()) {
+                    dw.enabled = en;
+                    if en {
+                        activated_kind = Some(dw.kind.clone());
+                    }
+                }
+                if let Some(sl) = msg.get("slot").and_then(|v| v.as_str()) {
+                    if matches!(sl, "left" | "right") {
+                        dw.slot = sl.into();
+                        if msg.get("zone").is_none() {
+                            dw.zone = if sl == "left" { "before-apps".into() } else { "after-apps".into() };
+                        }
+                    }
+                }
+                if let Some(z) = msg.get("zone").and_then(|v| v.as_str()) {
+                    if matches!(z, "far-left" | "before-apps" | "after-apps" | "far-right") {
+                        dw.zone = z.into();
+                        dw.slot = if matches!(z, "far-left" | "before-apps") { "left".into() } else { "right".into() };
+                        if let Some(ord) = next_zone_order {
+                            dw.order = ord;
+                        }
+                    }
+                }
+                if let Some(ord) = msg.get("order").and_then(|v| v.as_i64()) {
+                    dw.order = ord.clamp(0, 999) as i32;
+                }
+                if let Some(var) = msg.get("variant").and_then(|v| v.as_str()) {
+                    if !var.is_empty() {
+                        dw.variant = var.into();
+                    }
+                }
+                if let Some(sz) = msg.get("size").and_then(|v| v.as_str()) {
+                    if matches!(sz, "compact" | "normal" | "wide") {
+                        dw.size = sz.into();
+                    }
+                }
+                if let Some(sm) = msg.get("styleMode").and_then(|v| v.as_str()) {
+                    if matches!(sm, "pill" | "clean" | "tinted" | "glass" | "hardware") {
+                        dw.style_mode = sm.into();
+                    }
+                }
+                if let Some(wa) = msg.get("wheelAction").and_then(|v| v.as_str()) {
+                    if matches!(wa, "default" | "volume" | "brightness" | "desktop" | "media" | "none") {
+                        dw.wheel_action = wa.into();
+                    }
+                }
+                dw.normalize();
+                env.save_widgets();
+                *env.needs_state_push = true;
+            }
+            if let Some(k) = activated_kind {
+                if k == "ai-quota" {
+                    let _ = env.bg_tx.try_send(BgCommand::RefreshAiQuota(env.state.ai_configs.clone()));
+                } else if k == "market" {
+                    let _ = env.bg_tx.try_send(BgCommand::RefreshMarket);
+                }
+            }
+        }
+        "moveDockWidget" => {
+            let kind = str_prop(msg, "kind");
+            let id = str_prop(msg, "id");
+            let target_zone = match str_prop(msg, "targetZone") {
+                "far-left" => "far-left",
+                "before-apps" => "before-apps",
+                "after-apps" => "after-apps",
+                "far-right" => "far-right",
+                _ => "",
+            };
+            let target_idx = i64_prop(msg, "targetIndex", 999).max(0) as usize;
+            if !target_zone.is_empty() {
+                if let Some(moved_pos) = env.state.dock_widgets.iter().position(|w| {
+                    (!id.is_empty() && w.id == id) || (!kind.is_empty() && w.kind == kind)
+                }) {
+                    let moved_id = env.state.dock_widgets[moved_pos].id.clone();
+                    let moved_kind = env.state.dock_widgets[moved_pos].kind.clone();
+                    {
+                        let dw = &mut env.state.dock_widgets[moved_pos];
+                        dw.zone = target_zone.into();
+                        dw.slot = if matches!(target_zone, "far-left" | "before-apps") {
+                            "left".into()
+                        } else {
+                            "right".into()
+                        };
+                        dw.enabled = true;
+                        dw.normalize();
+                    }
+                    let mut zone_members: Vec<(usize, i32)> = env
+                        .state
+                        .dock_widgets
+                        .iter()
+                        .enumerate()
+                        .filter(|&(i, w)| i != moved_pos && w.effective_zone() == target_zone)
+                        .map(|(i, w)| (i, w.order))
+                        .collect();
+                    zone_members.sort_by_key(|&(i, ord)| (ord, i));
+                    let mut ordered_indices: Vec<usize> =
+                        zone_members.into_iter().map(|(i, _)| i).collect();
+                    let dst = target_idx.min(ordered_indices.len());
+                    ordered_indices.insert(dst, moved_pos);
+                    for (ord, idx) in ordered_indices.into_iter().enumerate() {
+                        env.state.dock_widgets[idx].order = ord as i32;
+                    }
+                    let _ = moved_id;
+                    if moved_kind == "ai-quota" {
+                        let _ = env.bg_tx.try_send(BgCommand::RefreshAiQuota(env.state.ai_configs.clone()));
+                    } else if moved_kind == "market" {
+                        let _ = env.bg_tx.try_send(BgCommand::RefreshMarket);
+                    }
+                    env.save_widgets();
+                    *env.needs_state_push = true;
+                }
+            }
+        }
+        "setDockEditMode" => {
+            let active = bool_prop(msg, "active");
+            env.state.dock_edit_mode = active;
+            if active {
+                env.crown.release_interactive();
+                env.crown.post_json(r#"{"type":"outsideDeactivate"}"#);
+                env.post_toast(
+                    "Alt Dock Düzenleme Modu",
+                    "Widget'ları 4 bölge arasında sürükleyin veya sağ tıklayın. Bitince ESC / Tamam'a basın.",
+                    None,
+                );
+            }
+            *env.needs_state_push = true;
+        }
+        "setDockGesturePrefs" => {
+            if let Some(s) = msg.get("emptyWheel").and_then(|v| v.as_str()) {
+                if matches!(s, "volume" | "brightness" | "desktop" | "media" | "none") {
+                    env.state.prefs.dock_empty_wheel_action = s.into();
+                }
+            }
+            if let Some(s) = msg.get("emptyDblClick").and_then(|v| v.as_str()) {
+                if matches!(s, "show-desktop" | "omni" | "quick-wheel" | "task-view" | "lock" | "none") {
+                    env.state.prefs.dock_empty_dblclick_action = s.into();
+                }
+            }
+            if let Some(s) = msg.get("emptyMidClick").and_then(|v| v.as_str()) {
+                if matches!(s, "media-play" | "mute" | "quick-wheel" | "show-desktop" | "none") {
+                    env.state.prefs.dock_empty_midclick_action = s.into();
+                }
+            }
+            if let Some(b) = msg.get("scrubGestures").and_then(|v| v.as_bool()) {
+                env.state.prefs.dock_scrub_gestures_enabled = b;
+            }
+            if let Some(b) = msg.get("perAppAudio").and_then(|v| v.as_bool()) {
+                env.state.prefs.dock_per_app_audio_enabled = b;
+            }
+            env.save_prefs();
+            *env.needs_state_push = true;
+        }
+        "runEmptyDockAction" => {
+            match str_prop(msg, "actionKind") {
+                "show-desktop" => send_win_d(),
+                "omni" => {
+                    *env.popup_opened_at_ms = env.now_ms;
+                    env.crown.focus_and_activate();
+                    env.crown.post_json(r#"{"type":"toggleOmni"}"#);
+                }
+                "media-play" => {
+                    send_media_command("play_pause");
+                    env.state.media.is_playing = !env.state.media.is_playing;
+                    *env.needs_state_push = true;
+                }
+                "mute" => {
+                    let muted = env.audio.toggle_master_mute();
+                    env.state.audio.is_master_muted = muted;
+                    let pct = env.state.audio.master_volume_percent;
+                    let vol_str = format!("%{pct}");
+                    env.post_osd(
+                        if muted { "mute" } else { "volume" },
+                        "Ses",
+                        if muted { "Sessiz" } else { &vol_str },
+                        Some(if muted { 0 } else { pct }),
+                        !muted,
+                        1400,
+                    );
+                    *env.needs_state_push = true;
+                }
+                "task-view" => open_task_view(),
+                "lock" => trigger_lock_workstation(),
+                _ => {}
+            }
+        }
+        "resetDockWidgets" => {
+            env.state.dock_widgets = default_dock_widgets();
+            env.save_widgets();
+            env.post_toast("Alt Dock Widget'ları Sıfırlandı", "Varsayılan Müzik, Hava ve Saat kapsülleri geri yüklendi.", None);
+            *env.needs_state_push = true;
+        }
+        "addTodo" => {
+            let txt = str_prop(msg, "text").trim();
+            if !txt.is_empty() {
+                env.state.todos.insert(
+                    0,
+                    TodoItem {
+                        id: format!("td-{:x}", env.now_ms ^ (env.state.todos.len() as u64 + 17)),
+                        text: txt.chars().take(120).collect(),
+                        done: false,
+                    },
+                );
+                env.state.todos.truncate(24);
+                env.save_widgets();
+                *env.needs_state_push = true;
+            }
+        }
+        "toggleTodo" => {
+            let id = str_prop(msg, "id");
+            if let Some(t) = env.state.todos.iter_mut().find(|t| t.id == id) {
+                t.done = !t.done;
+                env.save_widgets();
+                *env.needs_state_push = true;
+            }
+        }
+        "removeTodo" => {
+            let id = str_prop(msg, "id");
+            let before = env.state.todos.len();
+            env.state.todos.retain(|t| t.id != id);
+            if env.state.todos.len() != before {
+                env.save_widgets();
+                *env.needs_state_push = true;
+            }
+        }
+        "saveCountdown" => {
+            let title = str_prop(msg, "title").trim();
+            let date = str_prop(msg, "targetDate").trim();
+            if !title.is_empty() {
+                env.state.countdown.title = title.chars().take(48).collect();
+            }
+            if date.len() == 10 && date.chars().nth(4) == Some('-') && date.chars().nth(7) == Some('-') {
+                env.state.countdown.target_date = date.into();
+            }
+            env.save_widgets();
+            *env.needs_state_push = true;
+        }
+        "refreshMarket" => {
+            let _ = env.bg_tx.try_send(BgCommand::RefreshMarket);
+        }
+        "refreshLocalAi" => {
+            let _ = env.bg_tx.try_send(BgCommand::RefreshLocalAiAndDisks);
+        }
+        "toggleAutoDayNight" => {
+            env.state.prefs.auto_day_night_theme = !env.state.prefs.auto_day_night_theme;
+            if env.state.prefs.auto_day_night_theme {
+                use chrono::Timelike;
+                let hr = chrono::Local::now().hour();
+                let tid = if (7..19).contains(&hr) {
+                    env.state.prefs.day_theme_id.clone()
+                } else {
+                    env.state.prefs.night_theme_id.clone()
+                };
+                env.state.theme_id = theme_by_id(&tid).id;
+                env.save_user_prefs();
+            }
+            env.save_prefs();
+            *env.needs_state_push = true;
+        }
+        "setDayNightThemes" => {
+            let day = str_prop(msg, "dayThemeId");
+            let night = str_prop(msg, "nightThemeId");
+            if !day.is_empty() {
+                env.state.prefs.day_theme_id = theme_by_id(day).id;
+            }
+            if !night.is_empty() {
+                env.state.prefs.night_theme_id = theme_by_id(night).id;
+            }
+            env.save_prefs();
+            *env.needs_state_push = true;
+        }
+
+        // ── v4.0 Desktop Widget Engine Actions ──
+        "toggleWidgetsEnabled" => {
+            env.state.prefs.widgets_enabled = !env.state.prefs.widgets_enabled;
+            if !env.state.prefs.widgets_enabled {
+                env.state.widget_edit_mode = false;
+            }
+            env.save_prefs();
+            *env.needs_widgets_sync = true;
+            *env.needs_state_push = true;
+        }
+        "toggleWidgetsLocked" => {
+            env.state.prefs.widgets_locked = !env.state.prefs.widgets_locked;
+            if env.state.prefs.widgets_locked {
+                env.state.widget_edit_mode = false;
+            }
+            env.save_prefs();
+            *env.needs_widgets_sync = true;
+            *env.needs_state_push = true;
+        }
+        "setWidgetEditMode" => {
+            let active = bool_prop(msg, "active");
+            env.state.widget_edit_mode = active;
+            if active {
+                env.state.prefs.widgets_enabled = true;
+                env.state.prefs.widgets_locked = false;
+                env.save_prefs();
+                env.crown.release_interactive();
+                env.crown.post_json(r#"{"type":"outsideDeactivate"}"#);
+            }
+            *env.needs_widgets_sync = true;
+            *env.needs_state_push = true;
+        }
+        "addDesktopWidget" => {
+            let kind = str_prop(msg, "kind").trim();
+            if !kind.is_empty() {
+                let def_variant = match kind {
+                    "clock" => "swiss",
+                    "media" => "ambient",
+                    "battery" => "rings",
+                    "ai-quota" => "cards",
+                    "weather" => "atmospheric",
+                    "system" => "rings",
+                    "calendar" => "today",
+                    "notes" => "glass",
+                    "pomodoro" => "ring",
+                    "launcher" => "grid",
+                    "todo" => "list",
+                    "market" => "cards",
+                    "countdown" => "card",
+                    "storage-net" => "bars",
+                    "quote" => "editorial",
+                    "local-ai" => "status",
+                    _ => "default",
+                };
+                let variant_in = str_prop(msg, "variant");
+                let variant = if variant_in.is_empty() {
+                    match kind {
+                        "audio-mixer" => "mixer",
+                        "focus-rings" => "rings",
+                        "photo-frame" => "polaroid",
+                        "quick-drop" => "drop",
+                        _ => def_variant,
+                    }
+                } else {
+                    variant_in
+                };
+                let skin_in = str_prop(msg, "skin");
+                let skin = match skin_in {
+                    "frameless" | "glass" | "neoglass" | "braun" | "matrix" | "editorial" => skin_in,
+                    _ => if kind == "clock" { "frameless" } else { "neoglass" },
+                };
+                let size_in = str_prop(msg, "size");
+                let size = match size_in {
+                    "S" | "M" | "L" => size_in,
+                    _ => if kind == "ai-quota" { "L" } else { "M" },
+                };
+                let idx = env.state.widgets.len() as i32;
+                let col = (idx / 3) % 3;
+                let row = idx % 3;
+                let x = -344 - col * 336;
+                let y = 48 + row * 196;
+                let id = format!("w-{}-{:x}", kind, env.now_ms ^ ((idx as u64 + 1) * 131));
+                env.state.widgets.push(DesktopWidgetInstance {
+                    id,
+                    kind: kind.into(),
+                    variant: variant.into(),
+                    skin: skin.into(),
+                    size: size.into(),
+                    x,
+                    y,
+                    opacity: None,
+                    accent_hex: None,
+                    pinned_top: false,
+                    note_text: (kind == "notes").then(|| "Bugünkü notlarım...".into()),
+                    photo_path: None,
+                });
+                env.state.prefs.widgets_enabled = true;
+                env.save_prefs();
+                env.save_widgets();
+                if kind == "ai-quota" {
+                    let _ = env.bg_tx.try_send(BgCommand::RefreshAiQuota(env.state.ai_configs.clone()));
+                } else if kind == "market" {
+                    let _ = env.bg_tx.try_send(BgCommand::RefreshMarket);
+                } else if kind == "local-ai" || kind == "storage-net" {
+                    let _ = env.bg_tx.try_send(BgCommand::RefreshLocalAiAndDisks);
+                }
+                env.post_toast("Widget Eklendi", "Masaüstünüze yerleştirildi. Düzenle ile taşıyabilirsiniz.", None);
+                *env.needs_widgets_sync = true;
+                *env.needs_state_push = true;
+            }
+        }
+        "updateDesktopWidget" => {
+            let id = str_prop(msg, "id");
+            let mut pin_changed = false;
+            if let Some(w) = env.state.widgets.iter_mut().find(|w| w.id == id) {
+                if let Some(v) = msg.get("x").and_then(|x| x.as_i64().or_else(|| x.as_f64().map(|f| f.round() as i64))) {
+                    w.x = v.clamp(-3800, 3800) as i32;
+                }
+                if let Some(v) = msg.get("y").and_then(|y| y.as_i64().or_else(|| y.as_f64().map(|f| f.round() as i64))) {
+                    w.y = v.clamp(8, 2200) as i32;
+                }
+                if let Some(s) = msg.get("size").and_then(|v| v.as_str()) {
+                    if matches!(s, "S" | "M" | "L") {
+                        w.size = s.into();
+                    }
+                }
+                if let Some(var) = msg.get("variant").and_then(|v| v.as_str()) {
+                    if !var.is_empty() {
+                        w.variant = var.into();
+                    }
+                }
+                if let Some(sk) = msg.get("skin").and_then(|v| v.as_str()) {
+                    if matches!(sk, "frameless" | "glass" | "neoglass" | "braun" | "matrix" | "editorial") {
+                        w.skin = sk.into();
+                    }
+                }
+                if let Some(op) = msg.get("opacity").and_then(|v| v.as_f64()) {
+                    w.opacity = Some((op as f32).clamp(0.45, 1.0));
+                }
+                if let Some(acc) = msg.get("accentHex").and_then(|v| v.as_str()) {
+                    w.accent_hex = if acc.is_empty() { None } else { Some(acc.into()) };
+                }
+                if let Some(pt) = msg.get("pinnedTop").and_then(|v| v.as_bool()) {
+                    if w.pinned_top != pt {
+                        w.pinned_top = pt;
+                        pin_changed = true;
+                    }
+                }
+                if let Some(nt) = msg.get("noteText").and_then(|v| v.as_str()) {
+                    w.note_text = Some(nt.chars().take(1200).collect());
+                }
+                env.save_widgets();
+                if pin_changed {
+                    *env.needs_widgets_sync = true;
+                }
+                *env.needs_state_push = true;
+            }
+        }
+        "pickWidgetPhoto" => {
+            let id = str_prop(msg, "id");
+            if !id.is_empty() {
+                let _ = env.bg_tx.try_send(BgCommand::PickWidgetPhoto {
+                    widget_id: id.into(),
+                });
+            }
+        }
+        "logFocusMinutes" => {
+            let delta = i64_prop(msg, "delta", 15).clamp(1, 180) as u32;
+            env.state.focus_completed_mins = env.state.focus_completed_mins.saturating_add(delta);
+            *env.needs_state_push = true;
+        }
+        "applyWidgetBundle" => {
+            let bundle = str_prop(msg, "bundle");
+            let mk = |idx: usize, kind: &str, variant: &str, skin: &str, size: &str, x: i32, y: i32| DesktopWidgetInstance {
+                id: format!("w-b-{kind}-{idx}"),
+                kind: kind.into(),
+                variant: variant.into(),
+                skin: skin.into(),
+                size: size.into(),
+                x,
+                y,
+                opacity: None,
+                accent_hex: None,
+                pinned_top: false,
+                note_text: None,
+                photo_path: None,
+            };
+            let (label, list) = match bundle {
+                "nothing-hardware" => (
+                    "Nothing Donanım Paketi",
+                    vec![
+                        mk(0, "clock", "dotmatrix-led", "matrix", "M", -348, 48),
+                        mk(1, "system", "oscilloscope", "matrix", "M", -348, 224),
+                        mk(2, "media", "tp7", "matrix", "M", -348, 412),
+                        mk(3, "battery", "rings", "matrix", "S", -348, 594),
+                    ],
+                ),
+                "productivity-studio" => (
+                    "Üretkenlik Stüdyosu Paketi",
+                    vec![
+                        mk(0, "focus-rings", "rings", "neoglass", "M", -348, 48),
+                        mk(1, "calendar", "month", "glass", "M", -348, 240),
+                        mk(2, "audio-mixer", "mixer", "glass", "M", -348, 478),
+                        mk(3, "quick-drop", "drop", "glass", "M", -692, 48),
+                    ],
+                ),
+                "dev-cockpit" => (
+                    "Geliştirici Kokpit Paketi",
+                    vec![
+                        mk(0, "clock", "dev-hex", "braun", "M", -348, 48),
+                        mk(1, "system", "oscilloscope", "braun", "M", -348, 220),
+                        mk(2, "ai-quota", "cards", "braun", "M", -348, 410),
+                        mk(3, "local-ai", "models", "braun", "M", -692, 48),
+                    ],
+                ),
+                _ => (
+                    "Editoryal Minimal Paketi",
+                    vec![
+                        mk(0, "clock", "editorial-poster", "editorial", "M", -348, 48),
+                        mk(1, "weather", "dynamic-sky", "neoglass", "M", -348, 250),
+                        mk(2, "media", "poster", "neoglass", "M", -348, 430),
+                    ],
+                ),
+            };
+            env.state.widgets = list;
+            env.state.prefs.widgets_enabled = true;
+            env.state.prefs.widgets_locked = false;
+            env.save_prefs();
+            env.save_widgets();
+            let _ = env.bg_tx.try_send(BgCommand::RefreshWeather);
+            let _ = env.bg_tx.try_send(BgCommand::RefreshAiQuota(env.state.ai_configs.clone()));
+            let _ = env.bg_tx.try_send(BgCommand::RefreshLocalAiAndDisks);
+            env.post_toast("Masaüstü Paketi Uygulandı", label, None);
+            *env.needs_widgets_sync = true;
+            *env.needs_state_push = true;
+        }
+        "removeDesktopWidget" => {
+            let id = str_prop(msg, "id");
+            let before = env.state.widgets.len();
+            env.state.widgets.retain(|w| w.id != id);
+            if env.state.widgets.len() != before {
+                env.save_widgets();
+                *env.needs_widgets_sync = true;
+                *env.needs_state_push = true;
+            }
+        }
+        "resetDesktopWidgets" => {
+            env.state.widgets = default_starter_widgets();
+            env.state.prefs.widgets_enabled = true;
+            env.state.prefs.widgets_locked = false;
+            env.state.widget_edit_mode = false;
+            env.save_prefs();
+            env.save_widgets();
+            env.post_toast("Widget'lar Sıfırlandı", "Varsayılan Saat ve Pil widget'ları geri yüklendi.", None);
+            *env.needs_widgets_sync = true;
+            *env.needs_state_push = true;
+        }
+
+        // ── v4.0 AI Quota Engine (DPAPI Encrypted API Keys + Local CLI Logs + Manual Rolling Tracker) ──
+        "saveAiProviderConfig" => {
+            let prov = str_prop(msg, "provider");
+            if let Some(cfg) = env.state.ai_configs.iter_mut().find(|c| c.provider == prov) {
+                if let Some(p) = msg.get("planName").and_then(|v| v.as_str()) {
+                    if !p.trim().is_empty() {
+                        cfg.plan_name = p.trim().chars().take(24).collect();
+                    }
+                }
+                if let Some(lim) = msg.get("windowLimit").and_then(|v| v.as_u64()) {
+                    cfg.window_limit = (lim as u32).clamp(1, 100_000);
+                }
+                if let Some(mins) = msg.get("windowMinutes").and_then(|v| v.as_u64()) {
+                    cfg.window_minutes = (mins as u32).clamp(15, 43_200);
+                }
+                if let Some(b) = msg.get("monthlyBudgetUsd").and_then(|v| v.as_f64()) {
+                    cfg.monthly_budget_usd = b.clamp(1.0, 10_000.0);
+                }
+                env.save_widgets();
+                let _ = env.bg_tx.try_send(BgCommand::RefreshAiQuota(env.state.ai_configs.clone()));
+                *env.needs_state_push = true;
+            }
+        }
+        "saveAiApiKey" => {
+            let prov = str_prop(msg, "provider");
+            let key = str_prop(msg, "apiKey");
+            if matches!(prov, "openai" | "gemini" | "claude")
+                && save_ai_api_key(prov, key, None)
+            {
+                if let Some(cfg) = env.state.ai_configs.iter_mut().find(|c| c.provider == prov) {
+                    cfg.has_api_key = !key.trim().is_empty();
+                }
+                env.save_widgets();
+                let _ = env.bg_tx.try_send(BgCommand::RefreshAiQuota(env.state.ai_configs.clone()));
+                env.post_toast(
+                    if key.trim().is_empty() { "API Anahtarı Kaldırıldı" } else { "DPAPI Kasasına Kaydedildi" },
+                    if key.trim().is_empty() {
+                        "Yerel CLI / Sayaç moduna dönüldü."
+                    } else {
+                        "Anahtar Windows DPAPI ile şifrelendi. Canlı sorgu başlatılıyor."
+                    },
+                    None,
+                );
+                *env.needs_state_push = true;
+            }
+        }
+        "bumpAiManualUsage" => {
+            let prov = str_prop(msg, "provider");
+            let delta = i64_prop(msg, "delta", 1);
+            if let Some(cfg) = env.state.ai_configs.iter_mut().find(|c| c.provider == prov) {
+                let now_epoch = chrono::Utc::now().timestamp();
+                let win_secs = (cfg.window_minutes.max(15) as i64) * 60;
+                if cfg.window_started_epoch == 0 || (now_epoch - cfg.window_started_epoch) >= win_secs {
+                    cfg.manual_used = 0;
+                    cfg.window_started_epoch = now_epoch;
+                }
+                if delta >= 0 {
+                    cfg.manual_used = cfg.manual_used.saturating_add(delta as u32);
+                } else {
+                    cfg.manual_used = cfg.manual_used.saturating_sub(delta.unsigned_abs() as u32);
+                }
+                env.save_widgets();
+                let _ = env.bg_tx.try_send(BgCommand::RefreshAiQuota(env.state.ai_configs.clone()));
+                *env.needs_state_push = true;
+            }
+        }
+        "resetAiManualUsage" => {
+            let prov = str_prop(msg, "provider");
+            if let Some(cfg) = env.state.ai_configs.iter_mut().find(|c| c.provider == prov) {
+                cfg.manual_used = 0;
+                cfg.window_started_epoch = chrono::Utc::now().timestamp();
+                env.save_widgets();
+                let _ = env.bg_tx.try_send(BgCommand::RefreshAiQuota(env.state.ai_configs.clone()));
+                *env.needs_state_push = true;
+            }
+        }
+        "refreshAiQuota" => {
+            let _ = env.bg_tx.try_send(BgCommand::RefreshAiQuota(env.state.ai_configs.clone()));
+            env.post_toast("AI Kotaları Yenileniyor", "API / Yerel CLI günlükleri taranıyor...", None);
+        }
 
         // ── Dock & Window Management ──
         "invokeGroup" => {
             let key = str_prop(msg, "key");
             if let Some(g) = env.state.dock_groups.iter().find(|g| g.group_key == key).cloned() {
                 if g.windows.is_empty() {
-                    let _ = launch_target(&g.executable_path);
+                    launch_dock_group_reliably(env, &g);
                 } else {
                     activate_or_toggle_window(g.windows[0].hwnd);
                 }
@@ -1047,7 +2874,7 @@ pub fn handle_bridge_action(
                     wins = g.windows.iter().collect();
                 }
                 if wins.is_empty() {
-                    let _ = launch_target(&g.executable_path);
+                    launch_dock_group_reliably(env, &g);
                 } else if wins.len() == 1 {
                     if from_wheel {
                         focus_window(wins[0].hwnd);
@@ -1181,15 +3008,28 @@ pub fn handle_bridge_action(
         }
         "togglePin" => {
             let name = str_prop(msg, "name").trim();
-            let path = str_prop(msg, "path").trim();
+            let raw_path = str_prop(msg, "path").trim();
+            let aumid = str_prop(msg, "aumid").trim();
+            let safe_path = if !aumid.is_empty()
+                && (raw_path.is_empty() || is_windows_apps_sandbox_path(raw_path))
+            {
+                format!("appsfolder:{aumid}")
+            } else if is_windows_apps_sandbox_path(raw_path) {
+                env.state
+                    .resolve_launch_fallback(raw_path, name, if aumid.is_empty() { None } else { Some(aumid) })
+                    .unwrap_or_else(|| raw_path.to_string())
+            } else if let Some(repaired) = repair_corrupted_windows_path(raw_path) {
+                repaired
+            } else {
+                raw_path.to_string()
+            };
+            let path = safe_path.as_str();
             if !path.is_empty() {
-                let norm = Path::new(path).file_stem().and_then(|s| s.to_str()).unwrap_or(path).to_ascii_lowercase();
+                let norm = normalize_group_key(path, name);
                 if let Some(pos) = env.state.pinned_shortcuts.iter().position(|p| {
                     p.executable_path.eq_ignore_ascii_case(path)
-                        || Path::new(&p.executable_path)
-                            .file_stem()
-                            .and_then(|s| s.to_str())
-                            .is_some_and(|s| s.eq_ignore_ascii_case(&norm))
+                        || p.executable_path.eq_ignore_ascii_case(raw_path)
+                        || normalize_group_key(&p.executable_path, &p.display_name) == norm
                 }) {
                     let removed = env.state.pinned_shortcuts.remove(pos);
                     env.post_toast("Sabitleme Kaldırıldı", &format!("{} Dock'tan kaldırıldı.", removed.display_name), None);
@@ -1206,32 +3046,144 @@ pub fn handle_bridge_action(
                     env.post_toast("Dock'a Sabitlendi", &format!("{disp} alt çubuğa eklendi."), None);
                 }
                 env.aurora_db.save_pinned_shortcuts(&env.state.pinned_shortcuts);
+                update_stable_orders(
+                    &env.state.open_windows,
+                    &env.state.pinned_shortcuts,
+                    &mut env.state.running_group_order,
+                    &mut env.state.window_seen_order,
+                );
+                env.state.dock_groups = build_dock_groups_ordered(
+                    &env.state.pinned_shortcuts,
+                    &env.state.open_windows,
+                    None,
+                    &env.state.running_group_order,
+                    &env.state.window_seen_order,
+                );
                 *env.needs_state_push = true;
             }
         }
         "reorderPin" => {
             let id_or_key = str_prop(msg, "id");
+            let key_low = id_or_key.trim().to_ascii_lowercase();
             let target_idx = i64_prop(msg, "targetIndex", 0).max(0) as usize;
             if let Some(cur) = env.state.pinned_shortcuts.iter().position(|p| {
                 p.id == id_or_key
-                    || Path::new(&p.executable_path)
-                        .file_stem()
-                        .and_then(|s| s.to_str())
-                        .is_some_and(|s| s.eq_ignore_ascii_case(id_or_key))
+                    || normalize_group_key(&p.executable_path, &p.display_name) == key_low
             }) {
                 let item = env.state.pinned_shortcuts.remove(cur);
                 let dst = target_idx.min(env.state.pinned_shortcuts.len());
                 env.state.pinned_shortcuts.insert(dst, item);
                 env.aurora_db.save_pinned_shortcuts(&env.state.pinned_shortcuts);
+                env.state.dock_groups = build_dock_groups_ordered(
+                    &env.state.pinned_shortcuts,
+                    &env.state.open_windows,
+                    None,
+                    &env.state.running_group_order,
+                    &env.state.window_seen_order,
+                );
+                *env.needs_state_push = true;
+            }
+        }
+        "reorderDockApp" => {
+            let key = str_prop(msg, "key").trim();
+            let key_low = key.to_ascii_lowercase();
+            let is_pinned = bool_prop(msg, "isPinned");
+            let target_pinned = bool_prop(msg, "targetPinned");
+            let target_idx = i64_prop(msg, "targetIndex", 0).max(0) as usize;
+            let mut changed = false;
+
+            if is_pinned {
+                // Always keep pinned apps inside pinned zone so users never lose a pin accidentally
+                if let Some(cur) = env.state.pinned_shortcuts.iter().position(|p| {
+                    p.id == key
+                        || normalize_group_key(&p.executable_path, &p.display_name) == key_low
+                }) {
+                    let item = env.state.pinned_shortcuts.remove(cur);
+                    let dst = if target_pinned {
+                        target_idx.min(env.state.pinned_shortcuts.len())
+                    } else {
+                        env.state.pinned_shortcuts.len()
+                    };
+                    env.state.pinned_shortcuts.insert(dst, item);
+                    env.aurora_db.save_pinned_shortcuts(&env.state.pinned_shortcuts);
+                    changed = true;
+                }
+            } else if target_pinned {
+                // Dragging an unpinned running app into the pinned zone auto-pins it at that exact slot!
+                if let Some(grp) = env
+                    .state
+                    .dock_groups
+                    .iter()
+                    .find(|g| g.group_key == key_low)
+                    .cloned()
+                {
+                    let launch_path = if let Some(au) = grp.aumid.as_ref().filter(|a| !a.trim().is_empty()) {
+                        if grp.executable_path.is_empty() || is_windows_apps_sandbox_path(&grp.executable_path) {
+                            format!("appsfolder:{}", au.trim())
+                        } else {
+                            grp.executable_path.clone()
+                        }
+                    } else if is_windows_apps_sandbox_path(&grp.executable_path) {
+                        env.state
+                            .resolve_launch_fallback(&grp.executable_path, &grp.display_name, None)
+                            .unwrap_or_else(|| grp.executable_path.clone())
+                    } else if !grp.executable_path.is_empty() {
+                        grp.executable_path.clone()
+                    } else {
+                        String::new()
+                    };
+                    if !launch_path.is_empty() {
+                        let id = format!(
+                            "pin-{:x}",
+                            env.now_ms ^ (env.state.pinned_shortcuts.len() as u64 * 131 + 7)
+                        );
+                        let dst = target_idx.min(env.state.pinned_shortcuts.len());
+                        env.state.pinned_shortcuts.insert(
+                            dst,
+                            PinnedShortcut {
+                                id,
+                                display_name: grp.display_name.clone(),
+                                executable_path: launch_path,
+                                arguments: String::new(),
+                                icon_key: None,
+                            },
+                        );
+                        env.state.running_group_order.retain(|k| k != &key_low);
+                        env.aurora_db.save_pinned_shortcuts(&env.state.pinned_shortcuts);
+                        env.post_toast(
+                            "Dock'a Sabitlendi",
+                            &format!("{} seçtiğiniz sıraya sabitlendi.", grp.display_name),
+                            None,
+                        );
+                        changed = true;
+                    }
+                }
+            } else if reorder_running_group(&mut env.state.running_group_order, &key_low, target_idx)
+            {
+                changed = true;
+            }
+
+            if changed {
+                update_stable_orders(
+                    &env.state.open_windows,
+                    &env.state.pinned_shortcuts,
+                    &mut env.state.running_group_order,
+                    &mut env.state.window_seen_order,
+                );
+                env.state.dock_groups = build_dock_groups_ordered(
+                    &env.state.pinned_shortcuts,
+                    &env.state.open_windows,
+                    None,
+                    &env.state.running_group_order,
+                    &env.state.window_seen_order,
+                );
                 *env.needs_state_push = true;
             }
         }
         "launchNewInstance" => {
             let key = str_prop(msg, "key");
-            if let Some(g) = env.state.dock_groups.iter().find(|g| g.group_key == key) {
-                if !g.executable_path.is_empty() {
-                    let _ = launch_target(&g.executable_path);
-                }
+            if let Some(g) = env.state.dock_groups.iter().find(|g| g.group_key == key).cloned() {
+                launch_dock_group_reliably(env, &g);
             }
         }
         "closeAllGroupWindows" => {
@@ -1308,7 +3260,17 @@ pub fn handle_bridge_action(
             if !p.is_empty() {
                 *env.state.frecency.entry(p.to_string()).or_insert(0) += 1;
                 env.aux_store.save_frecency(&env.state.frecency);
-                let _ = launch_target(p);
+                let ok = if launch_target_with_args(p, "").is_ok() {
+                    true
+                } else if let Some(fallback) = env.state.resolve_launch_fallback(p, "", None) {
+                    launch_target_with_args(&fallback, "").is_ok()
+                } else {
+                    false
+                };
+                if !ok {
+                    env.logger.warn("LAUNCH", "LAUNCH_PATH_FAILED", &format!("Failed path='{p}'"));
+                    env.post_toast("Hedef Açılamadı", "Seçilen uygulama veya dosya yolu bulunamadı.", None);
+                }
                 let j = json!({ "type": "frecency", "frecency": env.state.frecency }).to_string();
                 env.crown.post_json(&j);
             }
@@ -1493,7 +3455,14 @@ pub fn handle_bridge_action(
             *env.needs_state_push = true;
         }
         "toggleSysNotifBridge" => {
-            env.state.prefs.system_notification_bridge_enabled = !env.state.prefs.system_notification_bridge_enabled;
+            let next = env.state.prefs.effective_notification_mode() != "aurora-mirror";
+            env.state.prefs.system_notification_bridge_enabled = next;
+            env.state.prefs.notification_mode = if next {
+                "aurora-mirror".into()
+            } else {
+                env.state.unread_notif_count = 0;
+                "windows-native".into()
+            };
             env.save_prefs();
             *env.needs_state_push = true;
         }
@@ -1619,8 +3588,92 @@ pub fn handle_bridge_action(
             env.audio.set_app_volume(pid, val);
             if let Some(s) = env.state.audio.app_sessions.iter_mut().find(|a| a.process_id == pid) {
                 s.volume_percent = val;
+                if val > 0 {
+                    s.is_muted = false;
+                }
             }
             *env.needs_state_push = true;
+        }
+        "toggleAppMute" => {
+            let req_pid = i64_prop(msg, "pid", 0).max(0) as u32;
+            let gkey = str_prop(msg, "groupKey").trim().to_ascii_lowercase();
+            let resolved_pid = if req_pid > 0 {
+                Some(req_pid)
+            } else {
+                env.state
+                    .audio
+                    .app_sessions
+                    .iter()
+                    .find(|s| normalize_group_key(&s.process_name, "") == gkey)
+                    .map(|s| s.process_id)
+            };
+            if let Some(pid) = resolved_pid {
+                if let Some(muted) = env.audio.toggle_app_mute(pid) {
+                    let mut app_label = "Uygulama Sesi".to_string();
+                    let mut vol_pct = 100u8;
+                    if let Some(s) = env.state.audio.app_sessions.iter_mut().find(|a| a.process_id == pid) {
+                        s.is_muted = muted;
+                        app_label = s.display_name.clone();
+                        vol_pct = s.volume_percent;
+                    }
+                    let val_str = if muted { "Sessiz".into() } else { format!("%{vol_pct}") };
+                    env.post_osd(
+                        if muted { "mute" } else { "volume" },
+                        &app_label,
+                        &val_str,
+                        Some(if muted { 0 } else { vol_pct }),
+                        !muted,
+                        1300,
+                    );
+                    *env.needs_state_push = true;
+                }
+            }
+        }
+        "adjustAppVolumeDelta" => {
+            let req_pid = i64_prop(msg, "pid", 0).max(0) as u32;
+            let gkey = str_prop(msg, "groupKey").trim().to_ascii_lowercase();
+            let delta = i64_prop(msg, "delta", 5).clamp(-25, 25) as i8;
+            let resolved_pid = if req_pid > 0 {
+                Some(req_pid)
+            } else {
+                env.state
+                    .audio
+                    .app_sessions
+                    .iter()
+                    .find(|s| normalize_group_key(&s.process_name, "") == gkey)
+                    .map(|s| s.process_id)
+            };
+            if let Some(pid) = resolved_pid {
+                if let Some((next_vol, muted)) = env.audio.adjust_app_volume(pid, delta) {
+                    let mut app_label = "Uygulama Sesi".to_string();
+                    if let Some(s) = env.state.audio.app_sessions.iter_mut().find(|a| a.process_id == pid) {
+                        s.volume_percent = next_vol;
+                        s.is_muted = muted;
+                        app_label = s.display_name.clone();
+                    }
+                    let val_str = format!("%{next_vol}");
+                    env.post_osd("volume", &app_label, &val_str, Some(next_vol), !muted, 1200);
+                    *env.needs_state_push = true;
+                }
+            }
+        }
+        "cycleAudioOutput" => {
+            if let Some(dev_name) = env.audio.cycle_default_output_device() {
+                env.state.audio = env.audio.get_snapshot();
+                env.post_toast("Ses Çıkışı Değişti", &dev_name, None);
+                *env.needs_state_push = true;
+            }
+        }
+        "adjustBrightnessDelta" => {
+            let delta = i64_prop(msg, "delta", 5).clamp(-30, 30);
+            if let Some(m) = env.state.monitors_brightness.first_mut() {
+                let next = (m.brightness_percent as i64 + delta).clamp(5, 100) as u8;
+                let id = m.id.clone();
+                m.brightness_percent = next;
+                env.brightness.set_brightness(&id, next);
+                env.post_osd("brightness", "Parlaklık", &format!("%{next}"), Some(next), true, 1200);
+                *env.needs_state_push = true;
+            }
         }
         "setAppAudioOutput" => {
             let dev_id = str_prop(msg, "deviceId");
@@ -1962,14 +4015,14 @@ pub fn handle_bridge_action(
         "showDesktop" => send_win_d(),
         "openTrayApp" => {
             let idx = i64_prop(msg, "index", 0).max(0) as usize;
-            if let Some(app) = env.state.tray_apps.get(idx) {
-                let _ = launch_target(&app.executable_path);
+            if let Some(app) = env.state.tray_apps.get(idx).cloned() {
+                activate_tray_app(env.state, &app);
             }
         }
         "openTrayAppByKey" => {
             let key = str_prop(msg, "key");
-            if let Some(app) = env.state.tray_apps.iter().find(|a| a.id == key) {
-                let _ = launch_target(&app.executable_path);
+            if let Some(app) = env.state.tray_apps.iter().find(|a| a.id == key).cloned() {
+                activate_tray_app(env.state, &app);
             }
         }
         "quitTrayApp" => {
@@ -2015,6 +4068,8 @@ pub fn handle_bridge_action(
                 pinned_shortcuts: env.state.pinned_shortcuts.clone(),
                 agenda_notes: env.state.agenda_notes.clone(),
                 scratchpad_text: env.state.scratchpad_text.clone(),
+                widgets: env.state.widgets.clone(),
+                dock_widgets: env.state.dock_widgets.clone(),
             };
             let dest = user_known_folder("Desktop").join("ProjectAurora-Yedek.json");
             if bundle.export_to_file(&dest).is_ok() {
@@ -2030,6 +4085,17 @@ pub fn handle_bridge_action(
                 env.state.pinned_shortcuts = bundle.pinned_shortcuts;
                 env.state.agenda_notes = bundle.agenda_notes;
                 env.state.scratchpad_text = bundle.scratchpad_text;
+                if !bundle.widgets.is_empty() {
+                    env.state.widgets = bundle.widgets;
+                    if !bundle.dock_widgets.is_empty() {
+                        env.state.dock_widgets = bundle.dock_widgets;
+                    }
+                    env.save_widgets();
+                    *env.needs_widgets_sync = true;
+                } else if !bundle.dock_widgets.is_empty() {
+                    env.state.dock_widgets = bundle.dock_widgets;
+                    env.save_widgets();
+                }
                 env.save_prefs();
                 env.save_user_prefs();
                 env.aurora_db.save_pinned_shortcuts(&env.state.pinned_shortcuts);
@@ -2169,4 +4235,37 @@ fn send_win_d() {
     };
     let seq = [key(VK_LWIN, false), key(vk_d, false), key(vk_d, true), key(VK_LWIN, true)];
     unsafe { let _ = SendInput(&seq, std::mem::size_of::<INPUT>() as i32); }
+}
+
+fn activate_tray_app(state: &RuntimeState, app: &BackgroundTrayApp) {
+    let stem = Path::new(&app.executable_path)
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .map(|s| s.to_ascii_lowercase())
+        .unwrap_or_default();
+    let app_low = app.name.to_ascii_lowercase();
+
+    if let Some(win) = state.open_windows.iter().find(|w| {
+        w.process_id == app.process_id
+            || (!stem.is_empty() && w.process_name.eq_ignore_ascii_case(&stem))
+            || (!app_low.is_empty() && w.title.to_ascii_lowercase().contains(&app_low))
+    }) {
+        focus_window(win.hwnd);
+        return;
+    }
+
+    if !app.executable_path.is_empty() && is_windows_apps_sandbox_path(&app.executable_path) {
+        if let Some(inst) = state.installed_apps.iter().find(|a| {
+            let lt = a.launch_path.to_ascii_lowercase();
+            lt.starts_with("appsfolder:")
+                && (a.name.eq_ignore_ascii_case(&app.name) || (!stem.is_empty() && lt.contains(&stem)))
+        }) {
+            let _ = launch_target(&inst.launch_path);
+            return;
+        }
+    }
+
+    if !app.executable_path.is_empty() {
+        let _ = launch_target(&app.executable_path);
+    }
 }

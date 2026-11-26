@@ -1,15 +1,14 @@
-# Project Aurora — Theme Package Security & Privacy Boundary
+# Project Aurora — Security, Secrets & Privacy Boundary (`v7.2.0`)
 
-## 1. Theme Package Threat Model (`R-009`)
-Imported `.auroratheme` files are untrusted user inputs. `ThemePackageValidator` enforces:
-1. **Data-Only Contract:** Only declarative token JSON (`schemaVersion: "1.0"`) and optional approved raster images (`.png`, `.jpg`, `.jpeg`, `.webp`).
-2. **Executable & Script Denylist:** Any entry ending in `.exe`, `.dll`, `.ps1`, `.bat`, `.cmd`, `.vbs`, `.js`, `.msi`, `.scr`, `.com`, `.xaml`, or `.cs` is immediately rejected.
-3. **Path Traversal Protection:** Rejects archive entries containing `..`, leading `/` or `\`, drive letters (`:`), or control characters; validates normalized full path stays strictly within staging sandbox.
-4. **Zip Bomb & Resource Caps:** Max 16 entries, max 2 MB per asset, max 8 MB uncompressed total archive size, max 1,024 KB `manifest.json`.
-5. **External Reference Rejection:** Rejects `http://`, `https://`, `ftp://`, `file://`, and UNC (`\\`) references in manifest fields.
-6. **Sandboxed Preview First:** Imported themes enter `Preview` state first and are never persisted as the active startup theme until the user clicks **Apply Theme**.
+## 1. Zero-Privilege Execution (`asInvoker`)
+- Both `aurora.exe` and `aurora-setup` run with `requestedExecutionLevel level="asInvoker"` (zero UAC elevation, zero system-wide services, zero kernel drivers, zero `explorer.exe` injection).
+- Keyboard/mouse hooks (`WH_KEYBOARD_LL`, `WH_MOUSE_LL`) never block system keys (`Alt+Tab`, Turkish `AltGr`, `Ctrl`) or modify input streams across foreign windows without user initiation.
 
-## 2. Privacy & Telemetry Boundary (`NFR-012`, `ADR-007`)
-- **Default Telemetry:** Disabled (zero cloud endpoints, zero analytics SDKs).
-- **Sensitive Data Redaction in Local Logs:** Local diagnostic logs in `%LOCALAPPDATA%\ProjectAurora\logs\` record module lifecycle events, adapter capability codes, latency metrics, and sanitized exception types—never window titles, notification message text, media track names, or network SSIDs.
-- **Weather Widget Network Disclosure (`WG-003`):** Operates in **Offline Local Simulation / Disabled Network Mode** by default until the user explicitly opts in to network weather lookup in Widget Settings.
+## 2. DPAPI Secret Protection & Local Data (`aurora-storage`)
+- AI provider API tokens for the Desktop AI Quota widget (ChatGPT / Gemini / Claude) are encrypted at rest using Windows DPAPI (`CryptProtectData` / `CryptUnprotectData` bound to current user credentials).
+- Application preferences (`shell_settings.json`), pinned items/todos (`aurora.db`), and clipboard vault (`clipboard_vault.db`) reside exclusively under `%LOCALAPPDATA%\ProjectAurora\data\`.
+
+## 3. Privacy & Telemetry Boundary (`PrivacySafeLogger`)
+- **Zero Cloud Telemetry:** No analytics SDKs or background telemetry endpoints exist.
+- **Sanitized Diagnostics:** Logs under `%LOCALAPPDATA%\ProjectAurora\logs\aurora-YYYYMMDD.jsonl` store lifecycle events, DPI/WorkArea geometry, and sanitized errors—never clipboard text contents, notification message bodies, or personal filenames.
+- **SHA-256 Verified Auto-Update:** Updates require HTTPS transport (`https://github.com/MuharremDidici/ProjectAurora/...`) and verify cryptographic `SHA-256` digests before executing the installer.

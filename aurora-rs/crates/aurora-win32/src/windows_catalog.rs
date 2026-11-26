@@ -1,14 +1,16 @@
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
+use std::sync::atomic::{AtomicIsize, Ordering};
 use aurora_core::{AppWindowEntry, MonitorDescriptor, PhysicalRect};
 use windows::core::{PCWSTR, PWSTR};
-use windows::Win32::Foundation::{BOOL, HWND, LPARAM, RECT, WPARAM};
+use windows::Win32::Foundation::{BOOL, ERROR_SUCCESS, HWND, LPARAM, RECT, WPARAM};
 use windows::Win32::Graphics::Dwm::{DwmGetWindowAttribute, DWMWA_CLOAKED, DWMWA_EXTENDED_FRAME_BOUNDS};
 use windows::Win32::Graphics::Gdi::{
     CreateCompatibleDC, DeleteDC, DeleteObject, GetDIBits, GetMonitorInfoW, MonitorFromWindow,
     SelectObject, BITMAPINFO, BITMAPINFOHEADER, BI_RGB, DIB_RGB_COLORS, MONITORINFOEXW,
     MONITOR_DEFAULTTONEAREST,
 };
+use windows::Win32::Storage::Packaging::Appx::GetApplicationUserModelId;
 use windows::Win32::System::Threading::{
     OpenProcess, QueryFullProcessImageNameW, PROCESS_NAME_WIN32, PROCESS_QUERY_LIMITED_INFORMATION,
 };
@@ -17,7 +19,7 @@ use windows::Win32::UI::WindowsAndMessaging::{
     DestroyIcon, EnumWindows, GetAncestor, GetClassNameW, GetForegroundWindow, GetIconInfo,
     GetLastActivePopup, GetWindowLongPtrW, GetWindowRect, GetWindowTextW, GetWindowThreadProcessId,
     IsIconic, IsWindowVisible, IsZoomed, PostMessageW, SendMessageTimeoutW,
-    SetWindowPos, ShowWindowAsync, GA_ROOTOWNER, GCLP_HICON, GCLP_HICONSM, GWL_EXSTYLE, GWL_STYLE,
+    SetWindowPos, ShowWindowAsync, GA_ROOTOWNER, GCLP_HICON, GCLP_HICONSM, GWL_EXSTYLE,
     HICON, HWND_NOTOPMOST, HWND_TOPMOST, ICON_BIG, ICON_SMALL, ICON_SMALL2, SMTO_ABORTIFHUNG,
     SWP_ASYNCWINDOWPOS, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_NOZORDER, SW_MAXIMIZE,
     SW_MINIMIZE, SW_RESTORE, WM_CLOSE, WM_GETICON, WS_EX_APPWINDOW, WS_EX_NOACTIVATE,
@@ -40,7 +42,7 @@ pub fn enumerate_open_windows(
         owned: &'a HashSet<isize>,
         attention: &'a HashSet<String>,
         out: Vec<AppWindowEntry>,
-        pid_exe_cache: HashMap<u32, (String, String)>,
+        pid_exe_cache: HashMap<u32, (String, String, Option<String>)>,
     }
 
     let mut ctx = Ctx {
@@ -73,11 +75,17 @@ pub fn enumerate_open_windows(
             return BOOL(1);
         }
 
-        // Standard Alt-Tab root owner check
+        // Standard Alt-Tab root owner check — hardened for Java Swing/AWT (`SunAwtFrame` + `SunAwtDialog`):
+        // Only skip `hwnd` in favor of `last_popup` when `last_popup` is ALSO a real, titled, non-tool window!
         let root = GetAncestor(hwnd, GA_ROOTOWNER);
         let last_popup = GetLastActivePopup(root);
         if last_popup != hwnd && IsWindowVisible(last_popup).as_bool() {
-            return BOOL(1);
+            let lp_ex = GetWindowLongPtrW(last_popup, GWL_EXSTYLE) as u32;
+            let lp_is_tool = (lp_ex & WS_EX_TOOLWINDOW.0) != 0 && (lp_ex & WS_EX_APPWINDOW.0) == 0;
+            let lp_title_len = GetWindowTextW(last_popup, &mut [0u16; 4]);
+            if !lp_is_tool && lp_title_len > 0 {
+                return BOOL(1);
+            }
         }
 
         let mut title_buf = [0u16; 256];
@@ -103,23 +111,24 @@ pub fn enumerate_open_windows(
             return BOOL(1);
         }
 
-        let (mut proc_name, mut exe_path) = ctx
+        let (mut proc_name, mut exe_path, mut aumid) = ctx
             .pid_exe_cache
             .entry(pid)
-            .or_insert_with(|| query_process_image(pid))
+            .or_insert_with(|| query_process_meta(pid))
             .clone();
         // Resolve real UWP / Store app process hosted inside ApplicationFrameHost.exe (WhatsApp, Settings, Teams, etc.)
         if proc_name.eq_ignore_ascii_case("ApplicationFrameHost") {
             if let Some(real_pid) = find_uwp_child_pid(hwnd, pid) {
-                let (rp, re) = ctx
+                let (rp, re, ra) = ctx
                     .pid_exe_cache
                     .entry(real_pid)
-                    .or_insert_with(|| query_process_image(real_pid))
+                    .or_insert_with(|| query_process_meta(real_pid))
                     .clone();
                 if !rp.is_empty() && !rp.eq_ignore_ascii_case("ApplicationFrameHost") {
                     pid = real_pid;
                     proc_name = rp;
                     exe_path = re;
+                    aumid = ra;
                 }
             }
         }
@@ -137,7 +146,10 @@ pub fn enumerate_open_windows(
             "DISPLAY_1".into()
         };
 
-        let is_active = raw_h == ctx.fg_hwnd;
+        let is_active = raw_h == ctx.fg_hwnd
+            || (ctx.fg_hwnd != 0
+                && !root.0.is_null()
+                && GetAncestor(HWND(ctx.fg_hwnd as *mut _), GA_ROOTOWNER) == root);
         let is_minimized = IsIconic(hwnd).as_bool();
         let is_top_most = (ex & WS_EX_TOPMOST.0) != 0;
         let needs_attention = !is_active && ctx.attention.contains(&proc_name.to_ascii_lowercase());
@@ -154,6 +166,7 @@ pub fn enumerate_open_windows(
             is_top_most,
             needs_attention,
             progress_percent: None,
+            aumid,
         });
         BOOL(1)
     }
@@ -189,16 +202,40 @@ unsafe fn find_uwp_child_pid(parent: HWND, host_pid: u32) -> Option<u32> {
 }
 
 pub fn query_process_image(pid: u32) -> (String, String) {
+    let (stem, path, _) = query_process_meta(pid);
+    (stem, path)
+}
+
+/// Queries executable stem, full image path, AND native MSIX/UWP `AUMID` via `GetApplicationUserModelId`.
+/// Resolves Store apps like `WhatsApp.Root.exe` (`5319275A.WhatsAppDesktop_cv1g1gvanyjgm!App`),
+/// `ms-teams.exe`, Spotify, Terminal, Calculator, and Microsoft Store cleanly!
+pub fn query_process_meta(pid: u32) -> (String, String, Option<String>) {
     unsafe {
         let Ok(hproc) = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid) else {
-            return (String::new(), String::new());
+            return (String::new(), String::new(), None);
         };
         let mut buf = [0u16; 520];
         let mut size = buf.len() as u32;
         let ok = QueryFullProcessImageNameW(hproc, PROCESS_NAME_WIN32, PWSTR(buf.as_mut_ptr()), &mut size).is_ok();
+
+        let mut aumid_buf = [0u16; 260];
+        let mut aumid_len = aumid_buf.len() as u32;
+        let aumid = if GetApplicationUserModelId(hproc, &mut aumid_len, PWSTR(aumid_buf.as_mut_ptr())) == ERROR_SUCCESS
+            && aumid_len > 1
+        {
+            let slice_len = (aumid_len as usize).saturating_sub(1).min(aumid_buf.len());
+            let s = String::from_utf16_lossy(&aumid_buf[..slice_len])
+                .trim_end_matches('\0')
+                .trim()
+                .to_string();
+            if s.is_empty() { None } else { Some(s) }
+        } else {
+            None
+        };
+
         let _ = windows::Win32::Foundation::CloseHandle(hproc);
         if !ok || size == 0 {
-            return (String::new(), String::new());
+            return (String::new(), String::new(), aumid);
         }
         let path = String::from_utf16_lossy(&buf[..size as usize]);
         let stem = Path::new(&path)
@@ -206,30 +243,159 @@ pub fn query_process_image(pid: u32) -> (String, String) {
             .and_then(|s| s.to_str())
             .unwrap_or("")
             .to_string();
-        (stem, path)
+        (stem, path, aumid)
     }
+}
+
+static LAST_DOCK_ACTIVATED_HWND: AtomicIsize = AtomicIsize::new(0);
+static LAST_DOCK_ACTIVATED_FG: AtomicIsize = AtomicIsize::new(0);
+
+/// Returns true ONLY if another genuine, titled, opaque, non-topmost, non-tool, non-shell
+/// user application window sits above `hwnd` in Z-order and meaningfully overlaps it.
+/// Filters out Windows 11 invisible helper/shadow/noactivate/transparent/CoreWindow frames
+/// that previously caused intermittent click-to-minimize failures!
+unsafe fn is_window_occluded_by_normal_window(hwnd: HWND) -> bool {
+    let mut target_rc = RECT::default();
+    if DwmGetWindowAttribute(
+        hwnd,
+        DWMWA_EXTENDED_FRAME_BOUNDS,
+        &mut target_rc as *mut _ as *mut _,
+        std::mem::size_of::<RECT>() as u32,
+    )
+    .is_err()
+        && GetWindowRect(hwnd, &mut target_rc).is_err()
+    {
+        return false;
+    }
+    let mut target_pid = 0u32;
+    GetWindowThreadProcessId(hwnd, Some(&mut target_pid));
+    let target_root = GetAncestor(hwnd, GA_ROOTOWNER);
+    let own_pid = std::process::id();
+    let mut cur = windows::Win32::UI::WindowsAndMessaging::GetWindow(
+        hwnd,
+        windows::Win32::UI::WindowsAndMessaging::GW_HWNDPREV,
+    )
+    .unwrap_or_default();
+    let mut steps = 0usize;
+    while !cur.0.is_null() && steps < 64 {
+        steps += 1;
+        if IsWindowVisible(cur).as_bool() && !IsIconic(cur).as_bool() && !is_native_taskbar_window(cur) {
+            let ex = GetWindowLongPtrW(cur, GWL_EXSTYLE) as u32;
+            let is_topmost = (ex & WS_EX_TOPMOST.0) != 0;
+            let is_tool = (ex & WS_EX_TOOLWINDOW.0) != 0 && (ex & WS_EX_APPWINDOW.0) == 0;
+            let is_noactivate = (ex & WS_EX_NOACTIVATE.0) != 0 && (ex & WS_EX_APPWINDOW.0) == 0;
+            let is_transparent = (ex & 0x0000_0020 /* WS_EX_TRANSPARENT */) != 0;
+            if !is_topmost && !is_tool && !is_noactivate && !is_transparent {
+                let mut cpid = 0u32;
+                GetWindowThreadProcessId(cur, Some(&mut cpid));
+                let cur_root = GetAncestor(cur, GA_ROOTOWNER);
+                let same_app = cpid == target_pid || (!target_root.0.is_null() && cur_root == target_root);
+                if cpid != 0 && cpid != own_pid && !same_app {
+                    // Must have a real non-empty title & must not be a shell/system/IME helper class
+                    let title_len = GetWindowTextW(cur, &mut [0u16; 4]);
+                    if title_len > 0 {
+                        let mut cls_buf = [0u16; 64];
+                        let clen = GetClassNameW(cur, &mut cls_buf) as usize;
+                        let cls = String::from_utf16_lossy(&cls_buf[..clen]);
+                        let is_shell_helper = matches!(
+                            cls.as_str(),
+                            "Progman"
+                                | "WorkerW"
+                                | "Windows.UI.Core.CoreWindow"
+                                | "Shell_TrayWnd"
+                                | "Shell_SecondaryTrayWnd"
+                                | "EdgeUiInputTopWndClass"
+                                | "ForegroundStaging"
+                        );
+                        if !is_shell_helper {
+                            let mut cloaked = 0i32;
+                            let is_cloaked = DwmGetWindowAttribute(
+                                cur,
+                                DWMWA_CLOAKED,
+                                &mut cloaked as *mut _ as *mut _,
+                                4,
+                            )
+                            .is_ok()
+                                && cloaked != 0;
+                            if !is_cloaked {
+                                let mut rc = RECT::default();
+                                let got_rc = DwmGetWindowAttribute(
+                                    cur,
+                                    DWMWA_EXTENDED_FRAME_BOUNDS,
+                                    &mut rc as *mut _ as *mut _,
+                                    std::mem::size_of::<RECT>() as u32,
+                                )
+                                .is_ok()
+                                    || GetWindowRect(cur, &mut rc).is_ok();
+                                if got_rc && rc.right > rc.left + 120 && rc.bottom > rc.top + 100 {
+                                    let overlap_w =
+                                        rc.right.min(target_rc.right) - rc.left.max(target_rc.left);
+                                    let overlap_h =
+                                        rc.bottom.min(target_rc.bottom) - rc.top.max(target_rc.top);
+                                    if overlap_w > 48 && overlap_h > 48 {
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        cur = windows::Win32::UI::WindowsAndMessaging::GetWindow(
+            cur,
+            windows::Win32::UI::WindowsAndMessaging::GW_HWNDPREV,
+        )
+        .unwrap_or_default();
+    }
+    false
 }
 
 pub fn focus_window(hwnd_raw: isize) {
     let hwnd = HWND(hwnd_raw as *mut _);
-    unsafe {
-        if IsIconic(hwnd).as_bool() {
-            let _ = ShowWindowAsync(hwnd, SW_RESTORE);
-        }
-    }
     crate::hooks_and_overlays::force_foreground_window(hwnd);
+    unsafe {
+        LAST_DOCK_ACTIVATED_HWND.store(hwnd_raw, Ordering::Relaxed);
+        LAST_DOCK_ACTIVATED_FG.store(GetForegroundWindow().0 as isize, Ordering::Relaxed);
+    }
 }
 
 pub fn activate_or_toggle_window(hwnd_raw: isize) {
     let hwnd = HWND(hwnd_raw as *mut _);
     unsafe {
-        if GetForegroundWindow() == hwnd && !IsIconic(hwnd).as_bool() {
+        let target = crate::hooks_and_overlays::resolve_active_popup_target(hwnd);
+        let fg = GetForegroundWindow();
+        let fg_raw = fg.0 as isize;
+        let root_h = GetAncestor(hwnd, GA_ROOTOWNER);
+        let fg_root = if !fg.0.is_null() {
+            GetAncestor(fg, GA_ROOTOWNER)
+        } else {
+            HWND::default()
+        };
+        let is_fg = fg == hwnd
+            || fg == target
+            || (!root_h.0.is_null() && fg_root == root_h);
+
+        // Also handle the case where Windows Foreground Lock resisted SetForegroundWindow when we
+        // raised `hwnd` on the previous click, yet `hwnd` is physically on top & unobstructed right now!
+        let was_last_raised_unchanged = LAST_DOCK_ACTIVATED_HWND.load(Ordering::Relaxed) == hwnd_raw
+            && LAST_DOCK_ACTIVATED_FG.load(Ordering::Relaxed) == fg_raw;
+
+        let not_minimized = !IsIconic(hwnd).as_bool() && !IsIconic(target).as_bool();
+        if not_minimized
+            && (is_fg || was_last_raised_unchanged)
+            && !is_window_occluded_by_normal_window(target)
+        {
+            LAST_DOCK_ACTIVATED_HWND.store(0, Ordering::Relaxed);
+            LAST_DOCK_ACTIVATED_FG.store(0, Ordering::Relaxed);
+            if target != hwnd {
+                let _ = ShowWindowAsync(target, SW_MINIMIZE);
+            }
             let _ = ShowWindowAsync(hwnd, SW_MINIMIZE);
         } else {
-            if IsIconic(hwnd).as_bool() {
-                let _ = ShowWindowAsync(hwnd, SW_RESTORE);
-            }
             crate::hooks_and_overlays::force_foreground_window(hwnd);
+            LAST_DOCK_ACTIVATED_HWND.store(hwnd_raw, Ordering::Relaxed);
+            LAST_DOCK_ACTIVATED_FG.store(GetForegroundWindow().0 as isize, Ordering::Relaxed);
         }
     }
 }
@@ -291,7 +457,34 @@ pub fn arrange_window(hwnd_raw: isize, mode: &str) {
     }
 }
 
-/// Detects per-monitor exclusive fullscreen apps/games AND SmartDodge dock-zone overlap!
+/// Pure, deterministic fullscreen predicate distinguishing true fullscreen videos/games
+/// (Chromium/Opera/Chrome/Edge/Firefox HTML5 & F11 fullscreen, VLC, UWP video, D3D/borderless games)
+/// from normal maximized apps across both Fixed-Bar (work-area reserved) and Floating/AutoHide modes!
+pub fn is_window_fullscreen_on_monitor(
+    win_rect: PhysicalRect,
+    mon_bounds: PhysicalRect,
+    mon_work_area: PhysicalRect,
+    is_zoomed: bool,
+    d3d_exclusive_fs: bool,
+) -> bool {
+    let covers_mon = win_rect.x <= mon_bounds.x + 2
+        && win_rect.y <= mon_bounds.y + 2
+        && win_rect.right() >= mon_bounds.right() - 2
+        && win_rect.bottom() >= mon_bounds.bottom() - 2;
+    if !covers_mon {
+        return false;
+    }
+    // When Dock or taskbar reserves work area (>=16px inset on any edge), a normal maximized window
+    // stops at `mon_work_area` and NEVER covers 100% of `mon_bounds`.
+    let work_area_inset = (mon_work_area.x - mon_bounds.x) >= 16
+        || (mon_work_area.y - mon_bounds.y) >= 16
+        || (mon_bounds.right() - mon_work_area.right()) >= 16
+        || (mon_bounds.bottom() - mon_work_area.bottom()) >= 16;
+    d3d_exclusive_fs || !is_zoomed || work_area_inset
+}
+
+/// Detects per-monitor fullscreen videos/games (including Chrome/Opera/Edge/Firefox HTML5 & F11
+/// fullscreen on ANY monitor!) AND SmartDodge dock-zone overlap!
 pub fn analyze_fullscreen_and_dodge(
     monitors: &[MonitorDescriptor],
     owned_hwnds: &HashSet<isize>,
@@ -299,6 +492,7 @@ pub fn analyze_fullscreen_and_dodge(
 ) -> (HashSet<String>, HashSet<String>) {
     let mut fullscreen_ids = HashSet::new();
     let mut overlapped_ids = HashSet::new();
+    let mut seen_top_mon = HashSet::new();
 
     let fg_hwnd = get_foreground_hwnd();
     let d3d_exclusive_fs = unsafe {
@@ -307,72 +501,32 @@ pub fn analyze_fullscreen_and_dodge(
             .unwrap_or(false)
     };
 
-    // 1. Check ONLY the actual FOREGROUND window for true fullscreen games/videos!
-    //    NEVER flags maximized Antigravity/VS Code/Chrome/WhatsApp/Electron apps or background windows!
-    if fg_hwnd != 0 && !owned_hwnds.contains(&fg_hwnd) {
-        unsafe {
-            let fg = HWND(fg_hwnd as *mut _);
-            let mut fg_pid = 0u32;
-            GetWindowThreadProcessId(fg, Some(&mut fg_pid));
-            if fg_pid != 0 && fg_pid != std::process::id() && IsWindowVisible(fg).as_bool() && !IsIconic(fg).as_bool() && !is_native_taskbar_window(fg) {
-                let mut cls_buf = [0u16; 64];
-                let clen = GetClassNameW(fg, &mut cls_buf) as usize;
-                let cls = String::from_utf16_lossy(&cls_buf[..clen]);
-                let is_shell_or_desktop = matches!(
-                    cls.as_str(),
-                    "Progman" | "WorkerW" | "Windows.UI.Core.CoreWindow" | "Shell_TrayWnd" | "Shell_SecondaryTrayWnd" | "ApplicationFrameWindow"
-                );
-                if !is_shell_or_desktop {
-                    let mut rc = RECT::default();
-                    let got_rc = DwmGetWindowAttribute(
-                        fg,
-                        DWMWA_EXTENDED_FRAME_BOUNDS,
-                        &mut rc as *mut _ as *mut _,
-                        std::mem::size_of::<RECT>() as u32,
-                    )
-                    .is_ok()
-                        || GetWindowRect(fg, &mut rc).is_ok();
-                    if got_rc {
-                        let cx = (rc.left + rc.right) / 2;
-                        let cy = (rc.top + rc.bottom) / 2;
-                        if let Some(mon) = monitors.iter().find(|m| m.bounds.contains(cx, cy)) {
-                            let mb = mon.bounds;
-                            let covers_mon = rc.left <= mb.x + 1
-                                && rc.top <= mb.y + 1
-                                && rc.right >= mb.right() - 1
-                                && rc.bottom >= mb.bottom() - 1;
-                            let style = GetWindowLongPtrW(fg, GWL_STYLE) as u32;
-                            let is_zoomed = IsZoomed(fg).as_bool();
-                            const WS_CAPTION_MASK: u32 = 0x00C0_0000;
-                            const WS_THICKFRAME_MASK: u32 = 0x0004_0000;
-                            let has_normal_frame = (style & WS_CAPTION_MASK) != 0 || (style & WS_THICKFRAME_MASK) != 0;
-                            // Only treat as fullscreen when D3D exclusive fullscreen is active OR
-                            // foreground is truly un-zoomed frameless borderless covering 100% of the monitor
-                            // (e.g., borderless fullscreen game or F11 fullscreen video — NEVER a maximized app!).
-                            if covers_mon && (d3d_exclusive_fs || (!is_zoomed && !has_normal_frame)) {
-                                fullscreen_ids.insert(mon.device_id.clone());
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // 2. SmartDodge overlap check across visible non-desktop user windows
+    // Walk all visible top-level windows in strict front-to-back Z-order:
+    // - The FIRST normal visible window on each monitor decides whether that monitor is currently
+    //   covered by a true fullscreen video/game (works across multi-monitor setups even when the
+    //   user clicks another monitor, and NEVER falsely triggers on normal maximized apps!).
+    // - Also computes SmartDodge edge overlap for floating/dodge dock mode.
     struct Ctx<'a> {
         own_pid: u32,
+        fg_hwnd: isize,
+        d3d_exclusive_fs: bool,
         owned: &'a HashSet<isize>,
         monitors: &'a [MonitorDescriptor],
         dock_edge: &'a str,
+        fs: &'a mut HashSet<String>,
+        seen_top_mon: &'a mut HashSet<String>,
         over: &'a mut HashSet<String>,
     }
 
     let mut ctx = Ctx {
         own_pid: std::process::id(),
+        fg_hwnd,
+        d3d_exclusive_fs,
         owned: owned_hwnds,
         monitors,
         dock_edge,
+        fs: &mut fullscreen_ids,
+        seen_top_mon: &mut seen_top_mon,
         over: &mut overlapped_ids,
     };
 
@@ -393,11 +547,23 @@ pub fn analyze_fullscreen_and_dodge(
         let mut cls_buf = [0u16; 64];
         let clen = GetClassNameW(hwnd, &mut cls_buf) as usize;
         let cls = String::from_utf16_lossy(&cls_buf[..clen]);
-        if matches!(cls.as_str(), "Progman" | "WorkerW" | "Windows.UI.Core.CoreWindow" | "Shell_TrayWnd" | "Shell_SecondaryTrayWnd") {
+        if matches!(
+            cls.as_str(),
+            "Progman"
+                | "WorkerW"
+                | "Windows.UI.Core.CoreWindow"
+                | "Shell_TrayWnd"
+                | "Shell_SecondaryTrayWnd"
+                | "XamlExplorerHostIslandWindow"
+                | "MultitaskingViewFrame"
+        ) {
             return BOOL(1);
         }
         let ex_style = GetWindowLongPtrW(hwnd, GWL_EXSTYLE) as u32;
-        if (ex_style & WS_EX_TOOLWINDOW.0) != 0 {
+        if (ex_style & WS_EX_TOOLWINDOW.0) != 0
+            || (ex_style & WS_EX_NOACTIVATE.0) != 0
+            || (ex_style & 0x0000_0020 /* WS_EX_TRANSPARENT */) != 0
+        {
             return BOOL(1);
         }
         let mut cloaked = 0i32;
@@ -429,6 +595,16 @@ pub fn analyze_fullscreen_and_dodge(
             return BOOL(1);
         };
         let mb = mon.bounds;
+
+        // Per-monitor fullscreen check on the topmost normal user window on this monitor!
+        if ctx.seen_top_mon.insert(mon.device_id.clone()) {
+            let win_rect = PhysicalRect::new(rc.left, rc.top, rw, rh);
+            let is_zoomed = IsZoomed(hwnd).as_bool();
+            let is_d3d_fg = raw == ctx.fg_hwnd && ctx.d3d_exclusive_fs;
+            if is_window_fullscreen_on_monitor(win_rect, mb, mon.work_area, is_zoomed, is_d3d_fg) {
+                ctx.fs.insert(mon.device_id.clone());
+            }
+        }
 
         // SmartDodge dock-edge overlap check (geometry-based!)
         let scale = mon.scale_factor();

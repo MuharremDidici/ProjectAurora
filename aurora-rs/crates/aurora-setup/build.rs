@@ -27,21 +27,34 @@ fn main() {
 
     println!("cargo:rustc-check-cfg=cfg(has_embedded_payload)");
 
+    let pkg_ver = env!("CARGO_PKG_VERSION");
+    let win_ver = {
+        let parts: Vec<&str> = pkg_ver.split('.').collect();
+        match parts.len() {
+            1 => format!("{pkg_ver}.0.0.0"),
+            2 => format!("{pkg_ver}.0.0"),
+            3 => format!("{pkg_ver}.0"),
+            _ => pkg_ver.to_string(),
+        }
+    };
+    let desc = format!("Project Aurora v{pkg_ver} Kurulum Sihirbazı (Sıfır UAC)");
+
+    println!("cargo:rerun-if-changed=../../Cargo.toml");
     let mut res = winresource::WindowsResource::new();
     let ico = Path::new("../../../assets/aurora.ico");
     if ico.exists() {
         res.set_icon(ico.to_str().unwrap());
     }
     res.set("ProductName", "Project Aurora Kurulum");
-    res.set("FileDescription", "Project Aurora v3.0.0 Kurulum Sihirbazı (Sıfır UAC)");
+    res.set("FileDescription", &desc);
     res.set("CompanyName", "Muharrem Didici");
-    res.set("ProductVersion", "3.0.0.0");
-    res.set("FileVersion", "3.0.0.0");
-    res.set_manifest(
+    res.set("ProductVersion", &win_ver);
+    res.set("FileVersion", &win_ver);
+    let manifest_xml = format!(
         r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
-  <assemblyIdentity version="3.0.0.0" processorArchitecture="amd64" name="ProjectAurora.Setup" type="win32"/>
-  <trustInfo xmlns="urn:schemas-microsoft-com:security">
+  <assemblyIdentity version="{win_ver}" processorArchitecture="amd64" name="ProjectAurora.Setup" type="win32"/>
+  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
     <security>
       <requestedPrivileges>
         <requestedExecutionLevel level="asInvoker" uiAccess="false"/>
@@ -53,7 +66,8 @@ fn main() {
       <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2</dpiAwareness>
     </windowsSettings>
   </application>
-</assembly>"#,
+</assembly>"#
     );
+    res.set_manifest(&manifest_xml);
     let _ = res.compile();
 }

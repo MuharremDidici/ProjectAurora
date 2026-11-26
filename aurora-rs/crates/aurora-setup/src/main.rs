@@ -9,7 +9,7 @@ use aurora_render::{CompositionSurface, FontFamily, GpuContext, IconKind, Painte
 use aurora_win32::{enable_per_monitor_dpi_v2, restore_taskbar_standalone};
 use parking_lot::Mutex;
 use windows::core::{w, Interface, HSTRING, PCWSTR};
-use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, WPARAM};
+use windows::Win32::Foundation::{CloseHandle, HWND, LPARAM, LRESULT, WPARAM};
 use windows::Win32::System::Com::{
     CoCreateInstance, CoInitializeEx, IPersistFile, CLSCTX_INPROC_SERVER, COINIT_APARTMENTTHREADED,
 };
@@ -21,7 +21,9 @@ use windows::Win32::System::Registry::{
     RegCreateKeyExW, RegDeleteTreeW, RegDeleteValueW, RegOpenKeyExW, RegSetValueExW, HKEY,
     HKEY_CURRENT_USER, KEY_SET_VALUE, REG_DWORD, REG_OPTION_NON_VOLATILE, REG_SZ,
 };
-use windows::Win32::System::Threading::{OpenProcess, TerminateProcess, PROCESS_TERMINATE};
+use windows::Win32::System::Threading::{
+    OpenProcess, TerminateProcess, WaitForSingleObject, PROCESS_SYNCHRONIZE, PROCESS_TERMINATE,
+};
 use windows::Win32::UI::Shell::{IShellLinkW, SHChangeNotify, ShellLink, SHCNE_ASSOCCHANGED, SHCNF_IDLIST};
 use windows::Win32::UI::WindowsAndMessaging::{
     CreateWindowExW, DefWindowProcW, DispatchMessageW, GetSystemMetrics, LoadCursorW,
@@ -51,16 +53,59 @@ struct WizardState {
     close_requested: bool,
 }
 
+fn parse_wait_pid(args: &[String]) -> Option<u32> {
+    for (i, arg) in args.iter().enumerate() {
+        let lower = arg.to_ascii_lowercase();
+        if let Some(rest) = lower.strip_prefix("--wait-pid=") {
+            if let Ok(pid) = rest.trim().parse::<u32>() {
+                return Some(pid);
+            }
+        }
+        if lower == "--wait-pid" {
+            if let Some(next) = args.get(i + 1) {
+                if let Ok(pid) = next.trim().parse::<u32>() {
+                    return Some(pid);
+                }
+            }
+        }
+    }
+    None
+}
+
+fn wait_for_pid_exit(pid: u32, timeout_ms: u32) {
+    if pid == 0 || pid == std::process::id() {
+        return;
+    }
+    unsafe {
+        if let Ok(hp) = OpenProcess(PROCESS_SYNCHRONIZE, false, pid) {
+            let _ = WaitForSingleObject(hp, timeout_ms);
+            let _ = CloseHandle(hp);
+        }
+    }
+}
+
+fn is_silent_or_update_mode(args: &[String]) -> bool {
+    args.iter().any(|a| {
+        a.eq_ignore_ascii_case("--silent")
+            || a.eq_ignore_ascii_case("/s")
+            || a.eq_ignore_ascii_case("--update")
+            || a.eq_ignore_ascii_case("/update")
+    })
+}
+
 fn main() {
     enable_per_monitor_dpi_v2();
     let _ = unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED) };
 
     let args: Vec<String> = std::env::args().collect();
+    if let Some(pid) = parse_wait_pid(&args) {
+        wait_for_pid_exit(pid, 5000);
+    }
     if args.iter().any(|a| a.eq_ignore_ascii_case("--uninstall")) {
         let _ = perform_uninstall();
         return;
     }
-    if args.iter().any(|a| a.eq_ignore_ascii_case("--silent")) {
+    if is_silent_or_update_mode(&args) {
         if perform_install(true, true, |_| {}).is_err() {
             std::process::exit(1);
         }
@@ -395,10 +440,11 @@ fn run_installer_gui() -> anyhow::Result<()> {
             ..Default::default()
         };
         let _ = RegisterClassW(&wc);
+        let title_h = HSTRING::from(format!("Project Aurora v{AURORA_VERSION} Kurulum"));
         let hwnd = CreateWindowExW(
             WS_EX_NOREDIRECTIONBITMAP,
             cls,
-            w!("Project Aurora v3.0.0 Kurulum"),
+            PCWSTR(title_h.as_ptr()),
             WS_POPUP,
             x,
             y,
@@ -535,7 +581,7 @@ fn run_installer_gui() -> anyhow::Result<()> {
                 // Brand Header
                 p.fill_circle(42.0, 44.0, 12.0, theme.accent1);
                 p.fill_radial_glow(42.0, 44.0, 24.0, 24.0, theme.accent_glow);
-                p.draw_text("Project Aurora v3.0.0", RectF::new(66.0, 24.0, 340.0, 24.0), 18.0, 800, theme.text_primary, FontFamily::Ui, TextAlign::Left, true, false);
+                p.draw_text(&format!("Project Aurora v{AURORA_VERSION}"), RectF::new(66.0, 24.0, 340.0, 24.0), 18.0, 800, theme.text_primary, FontFamily::Ui, TextAlign::Left, true, false);
                 p.draw_text("Saf Rust Motorlu Modern Windows 11 Kabuğu", RectF::new(66.0, 48.0, 380.0, 18.0), 11.0, 500, theme.text_secondary, FontFamily::Ui, TextAlign::Left, true, false);
 
                 // Close button
@@ -546,9 +592,9 @@ fn run_installer_gui() -> anyhow::Result<()> {
                 let info = RectF::new(28.0, 86.0, w as f32 - 56.0, 86.0);
                 p.fill_rounded_rect(info, 12.0, theme.inset_bg);
                 p.stroke_rounded_rect(info, 12.0, theme.border_subtle, 1.0, false);
-                p.draw_text("• Saf Rust + Tek Paylaşımlı Renderer: %0.1 CPU, Sıfır .NET 10", RectF::new(info.x + 14.0, info.y + 10.0, info.w - 28.0, 20.0), 11.0, 600, theme.text_primary, FontFamily::Ui, TextAlign::Left, true, false);
-                p.draw_text("• 7 Görsel Mimari, Dairesel Pencere Küresi, Canlı Pil/BT, OCR & QR", RectF::new(info.x + 14.0, info.y + 34.0, info.w - 28.0, 20.0), 11.0, 500, theme.text_secondary, FontFamily::Ui, TextAlign::Left, true, false);
-                p.draw_text("• Yönetici izni (UAC) gerekmez • v2.x verileriniz %100 korunur", RectF::new(info.x + 14.0, info.y + 56.0, info.w - 28.0, 20.0), 11.0, 500, theme.success, FontFamily::Ui, TextAlign::Left, true, false);
+                p.draw_text("• Saf Rust + Tek Paylaşımlı WebView2: Sıfır .NET 10, Sıfır Harici DLL", RectF::new(info.x + 14.0, info.y + 10.0, info.w - 28.0, 20.0), 11.0, 600, theme.text_primary, FontFamily::Ui, TextAlign::Left, true, false);
+                p.draw_text("• 10 Kabuk Mimarisi, Dinamik Ada, 20 Tema, 10 Masaüstü & 14 Dock Widget'ı", RectF::new(info.x + 14.0, info.y + 34.0, info.w - 28.0, 20.0), 11.0, 500, theme.text_secondary, FontFamily::Ui, TextAlign::Left, true, false);
+                p.draw_text("• Yönetici izni (UAC) gerekmez • v2.x / v3.x+ verileriniz %100 korunur", RectF::new(info.x + 14.0, info.y + 56.0, info.w - 28.0, 20.0), 11.0, 500, theme.success, FontFamily::Ui, TextAlign::Left, true, false);
 
                 if state.stage == WizardStage::Ready {
                     for (r, checked, lbl) in [
@@ -613,4 +659,34 @@ unsafe extern "system" fn setup_wnd_proc(hwnd: HWND, msg: u32, wparam: WPARAM, l
         _ => {}
     }
     DefWindowProcW(hwnd, msg, wparam, lparam)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_legacy_and_modern_updater_flags() {
+        let legacy_args = vec![
+            "Aurora-Kurulum.exe".to_string(),
+            "--update".to_string(),
+            "--wait-pid=4242".to_string(),
+        ];
+        assert!(is_silent_or_update_mode(&legacy_args));
+        assert_eq!(parse_wait_pid(&legacy_args), Some(4242));
+
+        let modern_args = vec![
+            "Aurora-Kurulum.exe".to_string(),
+            "--silent".to_string(),
+            "--relaunch".to_string(),
+            "--wait-pid".to_string(),
+            "9876".to_string(),
+        ];
+        assert!(is_silent_or_update_mode(&modern_args));
+        assert_eq!(parse_wait_pid(&modern_args), Some(9876));
+
+        let gui_args = vec!["Aurora-Kurulum.exe".to_string()];
+        assert!(!is_silent_or_update_mode(&gui_args));
+        assert_eq!(parse_wait_pid(&gui_args), None);
+    }
 }

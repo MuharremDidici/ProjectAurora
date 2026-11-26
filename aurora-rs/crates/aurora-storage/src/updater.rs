@@ -1,6 +1,8 @@
 use std::io::Read;
 use std::path::{Path, PathBuf};
-use aurora_core::{ReleaseManifest, AURORA_VERSION, DEFAULT_GITHUB_MANIFEST_URL};
+use aurora_core::{
+    ReleaseManifest, AURORA_VERSION, DEFAULT_GITHUB_API_LATEST_URL, DEFAULT_GITHUB_MANIFEST_URL,
+};
 use sha2::{Digest, Sha256};
 
 #[derive(Debug, Clone)]
@@ -23,6 +25,66 @@ pub fn compare_semver(a: &str, b: &str) -> std::cmp::Ordering {
     parse(a).cmp(&parse(b))
 }
 
+pub fn parse_manifest_or_github_api(body: &str) -> Option<ReleaseManifest> {
+    if let Ok(man) = serde_json::from_str::<ReleaseManifest>(body) {
+        if !man.version.trim().is_empty() && !man.download_url.trim().is_empty() {
+            return Some(man);
+        }
+    }
+
+    let v: serde_json::Value = serde_json::from_str(body).ok()?;
+    let tag_raw = v.get("tag_name").and_then(|x| x.as_str())?;
+    let version = tag_raw.trim().trim_start_matches(['v', 'V']).to_string();
+    if version.is_empty() {
+        return None;
+    }
+
+    let assets = v.get("assets").and_then(|x| x.as_array())?;
+    let mut preferred: Option<String> = None;
+    let mut fallback: Option<String> = None;
+    for asset in assets {
+        let name = asset
+            .get("name")
+            .and_then(|x| x.as_str())
+            .unwrap_or_default()
+            .to_ascii_lowercase();
+        let url = asset
+            .get("browser_download_url")
+            .and_then(|x| x.as_str())
+            .unwrap_or_default();
+        if url.is_empty() || !name.ends_with(".exe") {
+            continue;
+        }
+        if name.contains("aurora-kurulum") {
+            preferred = Some(url.to_string());
+            break;
+        }
+        if fallback.is_none() {
+            fallback = Some(url.to_string());
+        }
+    }
+    let download_url = preferred.or(fallback)?;
+    let published_at_utc = v
+        .get("published_at")
+        .and_then(|x| x.as_str())
+        .unwrap_or_default()
+        .to_string();
+    let release_notes = v
+        .get("body")
+        .and_then(|x| x.as_str())
+        .unwrap_or_default()
+        .trim()
+        .to_string();
+
+    Some(ReleaseManifest {
+        version,
+        published_at_utc,
+        download_url,
+        sha256: String::new(),
+        release_notes,
+    })
+}
+
 pub fn check_for_updates(custom_manifest_url: &str) -> UpdateCheckOutcome {
     let url = if custom_manifest_url.trim().is_empty() {
         DEFAULT_GITHUB_MANIFEST_URL
@@ -30,29 +92,30 @@ pub fn check_for_updates(custom_manifest_url: &str) -> UpdateCheckOutcome {
         custom_manifest_url.trim()
     };
 
-    let resp = ureq::get(url)
-        .set("User-Agent", &format!("ProjectAurora/{AURORA_VERSION}"))
-        .timeout(std::time::Duration::from_secs(12))
-        .call();
-
-    let Ok(response) = resp else {
-        return UpdateCheckOutcome {
-            success: false,
-            update_available: false,
-            current_version: AURORA_VERSION.into(),
-            latest_version: AURORA_VERSION.into(),
-            message: "Güncelleme sunucusuna ulaşılamadı.".into(),
-            manifest: None,
-        };
+    let fetch_manifest = |target_url: &str, accept_github: bool| -> Option<ReleaseManifest> {
+        let mut req = ureq::get(target_url)
+            .set("User-Agent", &format!("ProjectAurora/{AURORA_VERSION}"))
+            .timeout(std::time::Duration::from_secs(12));
+        if accept_github {
+            req = req.set("Accept", "application/vnd.github+json");
+        }
+        let resp = req.call().ok()?;
+        let body = resp.into_string().ok()?;
+        parse_manifest_or_github_api(&body)
     };
 
-    let Ok(manifest) = response.into_json::<ReleaseManifest>() else {
+    let mut manifest = fetch_manifest(url, false);
+    if manifest.is_none() && url.eq_ignore_ascii_case(DEFAULT_GITHUB_MANIFEST_URL) {
+        manifest = fetch_manifest(DEFAULT_GITHUB_API_LATEST_URL, true);
+    }
+
+    let Some(manifest) = manifest else {
         return UpdateCheckOutcome {
             success: false,
             update_available: false,
             current_version: AURORA_VERSION.into(),
             latest_version: AURORA_VERSION.into(),
-            message: "Sürüm manifesti okunamadı.".into(),
+            message: "Güncelleme sunucusuna ulaşılamadı veya sürüm manifesti okunamadı.".into(),
             manifest: None,
         };
     };
@@ -133,8 +196,46 @@ mod tests {
     #[test]
     fn semver_comparison_handles_v_prefix() {
         assert!(compare_semver("v3.0.0", "2.5.1").is_gt());
+        assert!(compare_semver("7.2.0", "3.0.0").is_gt());
+        assert!(compare_semver("7.2.0", "2.5.1").is_gt());
         assert!(compare_semver("3.0.0", "3.0.0").is_eq());
         assert!(compare_semver("2.4.1", "3.0.0").is_lt());
+    }
+
+    #[test]
+    fn parses_manifest_and_github_release_api_fallback() {
+        let direct_json = r#"{
+            "version": "7.2.0",
+            "publishedAtUtc": "2026-11-26T09:00:00Z",
+            "downloadUrl": "https://github.com/MuharremDidici/ProjectAurora/releases/download/v7.2.0/Aurora-Kurulum-v7.2.0-x64.exe",
+            "sha256": "ABCDEF",
+            "releaseNotes": "v7.2.0 notes"
+        }"#;
+        let m1 = parse_manifest_or_github_api(direct_json).expect("direct manifest");
+        assert_eq!(m1.version, "7.2.0");
+        assert_eq!(m1.sha256, "ABCDEF");
+        assert!(m1.download_url.ends_with("Aurora-Kurulum-v7.2.0-x64.exe"));
+
+        let github_api_json = r#"{
+            "tag_name": "v7.2.0",
+            "published_at": "2026-11-26T09:05:00Z",
+            "body": "Aurora v7.2.0 release",
+            "assets": [
+                {
+                    "name": "Project-Aurora-TekTik-Kurulum-v7.2.0.zip",
+                    "browser_download_url": "https://github.com/MuharremDidici/ProjectAurora/releases/download/v7.2.0/Project-Aurora-TekTik-Kurulum-v7.2.0.zip"
+                },
+                {
+                    "name": "Aurora-Kurulum-v7.2.0-x64.exe",
+                    "browser_download_url": "https://github.com/MuharremDidici/ProjectAurora/releases/download/v7.2.0/Aurora-Kurulum-v7.2.0-x64.exe"
+                }
+            ]
+        }"#;
+        let m2 = parse_manifest_or_github_api(github_api_json).expect("github api fallback");
+        assert_eq!(m2.version, "7.2.0");
+        assert_eq!(m2.published_at_utc, "2026-11-26T09:05:00Z");
+        assert_eq!(m2.release_notes, "Aurora v7.2.0 release");
+        assert!(m2.download_url.ends_with("Aurora-Kurulum-v7.2.0-x64.exe"));
     }
 
     #[test]

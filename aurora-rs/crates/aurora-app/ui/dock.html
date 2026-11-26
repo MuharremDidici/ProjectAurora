@@ -1835,12 +1835,1317 @@ body.style-cyber-prism .radial-disc {
     border-color: var(--accent-1);
     box-shadow: 0 0 28px -8px var(--accent-glow), inset 0 0 28px rgba(var(--a1-rgb), 0.12);
 }
+
+/* ========== v4.0 12-THEME SIGNATURES & CORNER RADIUS PRESETS ========== */
+body.radius-sharp { --radius-shell: 8px; --radius-card: 6px; --radius-item: 6px; --radius-btn: 6px; }
+body.radius-modern { --radius-shell: 20px; --radius-card: 14px; --radius-item: 12px; --radius-btn: 11px; }
+body.radius-capsule { --radius-shell: 999px; --radius-card: 18px; --radius-item: 14px; --radius-btn: 999px; }
+body.radius-capsule #dockBar.pinned-bar { border-radius: 0 !important; }
+body.radius-capsule .dock-pop { border-radius: 24px !important; }
+
+body.theme-oled-obsidian-dark .glass-shell {
+    background: rgba(0, 0, 0, 0.96) !important;
+    border: 1px solid rgba(255, 255, 255, 0.13) !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.92), inset 0 1px 0 rgba(255, 255, 255, 0.09) !important;
+}
+body.theme-midnight-emerald-dark .glass-shell {
+    background:
+        radial-gradient(ellipse 64% 55% at 20% 0%, rgba(16, 185, 129, 0.16), transparent 64%),
+        linear-gradient(168deg, var(--bg-glass-1), var(--bg-glass-2));
+}
+body.theme-sunset-kyoto-dark .glass-shell {
+    background:
+        radial-gradient(ellipse 68% 58% at 80% 0%, rgba(251, 146, 60, 0.16), transparent 64%),
+        radial-gradient(ellipse 52% 48% at 15% 100%, rgba(244, 114, 182, 0.12), transparent 64%),
+        linear-gradient(168deg, var(--bg-glass-1), var(--bg-glass-2));
+}
+body.theme-nordic-frost-light .glass-shell {
+    border-color: rgba(15, 23, 42, 0.13);
+    box-shadow: 0 20px 44px -14px rgba(15, 23, 42, 0.20), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+body.theme-warm-latte-light .glass-shell {
+    border-color: rgba(68, 44, 24, 0.14);
+    box-shadow: 0 20px 44px -14px rgba(68, 44, 24, 0.18), inset 0 1px 0 rgba(255, 251, 245, 0.95);
+}
+/* v4.1 8 New Curated 2026 Theme Signatures (Total 20 Themes) */
+body.theme-aurora-borealis-dark .glass-shell {
+    background:
+        radial-gradient(ellipse 64% 55% at 18% 0%, rgba(45, 212, 191, 0.18), transparent 64%),
+        radial-gradient(ellipse 56% 52% at 84% 100%, rgba(192, 132, 252, 0.15), transparent 64%),
+        linear-gradient(166deg, var(--bg-glass-1), var(--bg-glass-2));
+}
+body.theme-crystal-sapphire-dark .glass-shell {
+    background:
+        radial-gradient(ellipse 68% 54% at 24% 0%, rgba(96, 165, 250, 0.18), transparent 64%),
+        linear-gradient(166deg, var(--bg-glass-1), var(--bg-glass-2));
+}
+body.theme-frosted-quartz-light .glass-shell {
+    border-color: rgba(109, 40, 217, 0.14);
+    box-shadow: 0 20px 44px -14px rgba(45, 28, 84, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.96);
+}
+body.theme-matcha-paper-light .glass-shell {
+    border-color: rgba(22, 101, 52, 0.14);
+    box-shadow: 0 20px 44px -14px rgba(21, 31, 22, 0.15), inset 0 1px 0 rgba(252, 253, 251, 0.96);
+}
+body.theme-graphite-studio-dark .glass-shell {
+    background: linear-gradient(180deg, var(--bg-glass-1), var(--bg-glass-2));
+    border-color: rgba(255, 255, 255, 0.12);
+}
+body.theme-tokyo-rain-dark .glass-shell {
+    background:
+        radial-gradient(ellipse 60% 50% at 82% 0%, rgba(251, 113, 133, 0.18), transparent 62%),
+        radial-gradient(ellipse 52% 48% at 18% 100%, rgba(56, 189, 248, 0.14), transparent 62%),
+        linear-gradient(168deg, var(--bg-glass-1), var(--bg-glass-2));
+}
+body.theme-rose-velvet-dark .glass-shell {
+    background:
+        radial-gradient(ellipse 66% 54% at 22% 0%, rgba(249, 168, 212, 0.15), transparent 64%),
+        linear-gradient(166deg, var(--bg-glass-1), var(--bg-glass-2));
+}
+body.theme-desert-dune-dark .glass-shell {
+    background:
+        radial-gradient(ellipse 64% 52% at 78% 0%, rgba(251, 191, 36, 0.14), transparent 64%),
+        linear-gradient(166deg, var(--bg-glass-1), var(--bg-glass-2));
+}
+
+/* ========== v4.1 ECO GUARD (Auto-Pause Decorative Animations <= 20% Battery) ========== */
+body.eco-mode .dw-vinyl-disc,
+body.eco-mode .dw-eq span,
+body.eco-mode .dock-item.attention {
+    animation-play-state: paused !important;
+}
+
+/* ========== v4.1 5 DOCK SILHOUETTES & 4 ACTIVE INDICATOR STYLES ========== */
+.start-btn.start-capsule {
+    width: auto;
+    padding: 0 12px;
+    gap: 6px;
+    font-size: 11.5px;
+    font-weight: 700;
+}
+
+/* Split Islands ("Ayrık Adalar 2026") — 3 independent floating glass capsules with click-through wallpaper gaps! */
+body.sil-islands:not(.edge-left):not(.edge-right) .dock-stage {
+    padding-bottom: 8px !important;
+}
+body.sil-islands:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) {
+    width: calc(100vw - 24px) !important;
+    max-width: calc(100vw - 24px) !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    pointer-events: none !important;
+    display: grid !important;
+    grid-template-columns: 1fr auto 1fr !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+body.sil-islands:not(.edge-left):not(.edge-right) #dockBar:not(.tucked)::after {
+    display: none !important;
+}
+body.sil-islands:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-left,
+body.sil-islands:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-center,
+body.sil-islands:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-right {
+    pointer-events: auto;
+    width: fit-content;
+    height: calc(50px * var(--ds));
+    padding: 0 calc(10px * var(--ds));
+    border-radius: var(--radius-shell);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.11) 0%, rgba(255, 255, 255, 0.02) 38%, transparent 68%),
+        linear-gradient(165deg, var(--bg-glass-1), var(--bg-glass-2));
+    border: 1px solid var(--border-rim);
+    box-shadow: var(--shadow-shell);
+}
+body.sil-islands:not(.edge-left):not(.edge-right) #dockBar.density-compact:not(.tucked) .bar-zone-left,
+body.sil-islands:not(.edge-left):not(.edge-right) #dockBar.density-compact:not(.tucked) .bar-zone-center,
+body.sil-islands:not(.edge-left):not(.edge-right) #dockBar.density-compact:not(.tucked) .bar-zone-right {
+    height: calc(43px * var(--ds));
+}
+body.sil-islands:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-left { justify-self: start; }
+body.sil-islands:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-center { justify-self: center; }
+body.sil-islands:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-right { justify-self: end; }
+
+/* Minimal Rail Silhouette — whisper-slim translucent edge rail */
+body.sil-minimal-rail:not(.edge-left):not(.edge-right) .dock-stage { padding-bottom: 4px !important; }
+body.sil-minimal-rail:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) {
+    height: calc(44px * var(--ds));
+    min-height: calc(44px * var(--ds));
+    --item-sz: calc(34px * var(--ds));
+    --img-sz: calc(21px * var(--ds));
+    border-radius: 14px !important;
+    padding: 0 calc(12px * var(--ds));
+}
+
+/* Floating & Compact Center Silhouettes */
+body.sil-floating:not(.edge-left):not(.edge-right) .dock-stage,
+body.sil-compact:not(.edge-left):not(.edge-right) .dock-stage { padding-bottom: 8px !important; }
+body.sil-compact:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) {
+    gap: calc(4px * var(--ds));
+    padding: calc(4px * var(--ds)) calc(9px * var(--ds));
+    min-height: calc(48px * var(--ds));
+}
+
+/* 4 User-Selectable Active App Indicator Styles */
+body.ind-dot .dock-item.active .dock-dot {
+    width: 6px !important; height: 6px !important; border-radius: 50% !important; bottom: -3px !important;
+}
+body.ind-dot .dock-item.running:not(.active) .dock-dot {
+    width: 4px !important; height: 4px !important; border-radius: 50% !important;
+}
+body.ind-frame .dock-item.active {
+    border: 1.5px solid var(--accent-1) !important;
+    background: var(--accent-soft) !important;
+}
+body.ind-frame .dock-item.active .dock-dot { opacity: 0 !important; }
+body.ind-glow .dock-item.active {
+    box-shadow: 0 6px 20px -4px var(--accent-glow), inset 0 -2px 12px -4px var(--accent-glow) !important;
+}
+body.ind-glow .dock-item.active .dock-dot {
+    width: 20px !important; height: 3px !important;
+    box-shadow: 0 0 12px var(--accent-1), 0 0 6px var(--accent-2) !important;
+}
+
+/* ========== v4.1 CUTE MODULAR BOTTOM DOCK MICRO-WIDGETS ========== */
+.dw-slot {
+    display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; min-width: 0;
+}
+.dw-pill {
+    position: relative;
+    display: inline-flex; align-items: center; gap: 6px;
+    height: calc(var(--item-sz) * 0.84);
+    padding: 0 9px;
+    border-radius: calc(var(--radius-item) * 0.95);
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-card);
+    color: var(--text-1);
+    font-size: 11px; font-weight: 700;
+    cursor: pointer; flex-shrink: 0;
+    transition: background 0.14s, border-color 0.14s, transform 0.14s var(--ease), box-shadow 0.15s;
+}
+.dw-pill:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--accent-ring);
+    transform: translateY(-0.5px);
+}
+.dw-pill.active, .dw-pill.open {
+    background: var(--accent-soft);
+    border-color: var(--accent-ring);
+    color: var(--text-1);
+}
+.dw-add-btn {
+    width: 24px; height: 24px; border-radius: 50%;
+    border: 1px dashed var(--border-rim);
+    background: transparent; color: var(--text-2);
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0; opacity: 0.62;
+    transition: opacity 0.14s, background 0.14s, color 0.14s, border-color 0.14s, transform 0.15s;
+}
+.dw-add-btn:hover, .dw-add-btn.open {
+    opacity: 1; background: var(--accent-soft); color: var(--accent-1);
+    border-style: solid; border-color: var(--accent-ring); transform: scale(1.06);
+}
+.dw-sub { font-size: 9.5px; font-weight: 600; color: var(--text-2); }
+
+/* Dock Media Widget: Cute Spinning Mini Vinyl + Equalizer + Capsule */
+@keyframes vinylSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.dw-vinyl-disc {
+    width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+    background: radial-gradient(circle at 50% 50%, var(--accent-1) 0 22%, #111622 23% 44%, #1e293b 45% 49%, #0c101b 50% 76%, #243047 77% 80%, #090d16 81% 100%);
+    border: 1px solid rgba(255,255,255,0.22);
+    display: inline-flex; align-items: center; justify-content: center;
+    overflow: hidden; position: relative;
+    animation: vinylSpin 4.6s linear infinite;
+}
+.dw-vinyl-disc.paused { animation-play-state: paused; }
+.dw-vinyl-disc img {
+    width: 11px; height: 11px; border-radius: 50%; object-fit: cover;
+    border: 1px solid rgba(255,255,255,0.45);
+}
+.dw-media-txt {
+    max-width: 108px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-size: 11px; font-weight: 700;
+}
+.dw-mini-act {
+    width: 20px; height: 20px; border-radius: 50%;
+    border: none; background: transparent; color: var(--text-2);
+    display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.dw-mini-act:hover { background: var(--accent-tint); color: var(--accent-1); }
+
+@keyframes eqBounce {
+    0%, 100% { transform: scaleY(0.28); }
+    50% { transform: scaleY(1); }
+}
+.dw-eq {
+    display: inline-flex; align-items: flex-end; gap: 2px; height: 14px; padding: 0 1px;
+}
+.dw-eq span {
+    width: 2.5px; height: 100%; border-radius: 99px;
+    background: linear-gradient(180deg, var(--accent-1), var(--accent-2));
+    transform-origin: bottom;
+    animation: eqBounce 0.78s ease-in-out infinite;
+}
+.dw-eq span:nth-child(2) { animation-delay: 0.16s; animation-duration: 0.64s; }
+.dw-eq span:nth-child(3) { animation-delay: 0.32s; animation-duration: 0.86s; }
+.dw-eq span:nth-child(4) { animation-delay: 0.10s; animation-duration: 0.72s; }
+.dw-eq.paused span { animation-play-state: paused; transform: scaleY(0.32); }
+
+/* Dock Clock Variants: Flip, Analog, Matrix, World */
+.dw-flip-wrap { display: inline-flex; align-items: center; gap: 3px; }
+.dw-flip-card {
+    position: relative; min-width: 22px; height: 22px; padding: 0 3px;
+    border-radius: 5px; background: var(--bg-inset); border: 1px solid var(--border-rim);
+    font-family: var(--font-mono); font-size: 11.5px; font-weight: 800;
+    display: inline-flex; align-items: center; justify-content: center;
+    box-shadow: inset 0 -1px 0 rgba(0,0,0,0.32);
+}
+.dw-flip-card::after {
+    content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 1px;
+    background: rgba(0,0,0,0.28); pointer-events: none;
+}
+.dw-matrix-clock {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 800;
+    letter-spacing: 0.08em; color: var(--accent-1);
+    text-shadow: 0 0 10px var(--accent-glow);
+}
+.dw-analog-svg { width: 24px; height: 24px; flex-shrink: 0; }
+
+/* Dock AI Quota Dots, System Bars & Popovers */
+.dw-ai-dots { display: inline-flex; align-items: center; gap: 6px; }
+.dw-ai-chip { display: inline-flex; align-items: center; gap: 3px; font-size: 10.5px; font-weight: 800; }
+.dw-ai-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.dw-sys-bars { display: inline-flex; align-items: flex-end; gap: 2px; height: 14px; }
+.dw-sys-bar { width: 4px; border-radius: 2px; background: var(--accent-1); min-height: 3px; transition: height 0.25s; }
+.dw-sys-bar.ram { background: var(--accent-2); }
+
+#dockWidgetPicker { width: 348px; max-height: 404px; overflow-y: auto; right: auto; left: 14px; transform-origin: bottom left; }
+#dockAiPop { width: 332px; max-height: 392px; overflow-y: auto; right: 16px; transform-origin: bottom right; }
+.dwp-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 7px;
+    padding: 7px 9px; border-radius: 11px;
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+    transition: border-color 0.14s, background 0.14s;
+}
+.dwp-row.on { background: var(--accent-soft); border-color: var(--accent-ring); }
+.dwp-meta { flex: 1; min-width: 0; }
+.dwp-name { font-size: 11.5px; font-weight: 700; color: var(--text-1); }
+.dwp-sub { font-size: 9.5px; color: var(--text-2); }
+.dwp-ctrls { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.dwp-mini {
+    height: 22px; padding: 0 7px; border-radius: 7px;
+    border: 1px solid var(--border-subtle); background: var(--bg-inset);
+    color: var(--text-1); font-size: 9.5px; font-weight: 700; cursor: pointer;
+}
+.dwp-mini:hover { border-color: var(--accent-1); color: var(--accent-1); }
+.dwp-tog {
+    width: 32px; height: 18px; border-radius: 99px; border: none; padding: 2px;
+    background: var(--bg-inset); border: 1px solid var(--border-rim);
+    cursor: pointer; display: inline-flex; align-items: center; transition: background 0.15s;
+}
+.dwp-tog span {
+    width: 12px; height: 12px; border-radius: 50%; background: var(--text-2);
+    transition: transform 0.15s var(--spring), background 0.15s;
+}
+.dwp-tog.on { background: var(--accent-1); border-color: var(--accent-1); }
+.dwp-tog.on span { transform: translateX(14px); background: var(--accent-ink); }
+.ai-pop-card {
+    padding: 9px 10px; border-radius: 12px;
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+    display: flex; flex-direction: column; gap: 6px;
+}
+.ai-bar-track { height: 5px; border-radius: 99px; background: var(--bg-inset); overflow: hidden; }
+.ai-bar-fill { height: 100%; border-radius: 99px; transition: width 0.25s; }
+
+/* ========== v4.0 WINDOWS-FAMILIAR START, STATUS CLUSTER & BOTTOM-RIGHT POPOVERS ========== */
+.start-btn {
+    position: relative;
+    width: calc(var(--item-sz) * 0.92);
+    height: calc(var(--item-sz) * 0.92);
+    border-radius: var(--radius-item);
+    border: 1px solid rgba(var(--a1-rgb), 0.30);
+    background: linear-gradient(135deg, rgba(var(--a1-rgb), 0.20), rgba(var(--a2-rgb), 0.16));
+    color: var(--accent-1);
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+    transition: transform 0.15s var(--spring), background 0.14s, border-color 0.14s, box-shadow 0.15s;
+}
+.start-btn:hover {
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    color: var(--accent-ink);
+    border-color: transparent;
+    box-shadow: 0 6px 18px -5px var(--accent-glow);
+    transform: translateY(-1px);
+}
+.start-btn:active { transform: scale(0.94); }
+.start-btn:hover .hover-label { opacity: 1; }
+
+.dock-status-pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    height: calc(var(--item-sz) * 0.84);
+    padding: 0 10px;
+    border-radius: var(--radius-item);
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-1);
+    font-size: 11.5px; font-weight: 600;
+    cursor: pointer; flex-shrink: 0;
+    transition: background 0.14s, border-color 0.14s, color 0.14s;
+}
+.dock-status-pill:hover, .dock-status-pill.open {
+    background: var(--bg-card-hover);
+    border-color: var(--border-subtle);
+}
+.dock-status-pill.open {
+    background: var(--accent-soft);
+    border-color: var(--accent-ring);
+}
+.dock-status-pill .st-bat {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 11px; color: var(--text-2);
+}
+.dock-status-pill .st-bat.chg { color: var(--success); }
+.dock-status-pill .st-bat.low { color: var(--danger); }
+
+.dock-clock-pill {
+    position: relative;
+    display: inline-flex; align-items: center; gap: 8px;
+    height: calc(var(--item-sz) * 0.86);
+    padding: 0 10px;
+    border-radius: var(--radius-item);
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-1);
+    cursor: pointer; flex-shrink: 0;
+    transition: background 0.14s, border-color 0.14s;
+}
+.dock-clock-pill:hover, .dock-clock-pill.open {
+    background: var(--bg-card-hover);
+    border-color: var(--border-subtle);
+}
+.dock-clock-pill.open {
+    background: var(--accent-soft);
+    border-color: var(--accent-ring);
+}
+.dock-clock-stack {
+    display: flex; flex-direction: column; align-items: flex-end; line-height: 1.15;
+}
+.dock-clock-time { font-size: 12px; font-weight: 700; color: var(--text-1); }
+.dock-clock-date { font-size: 10px; font-weight: 500; color: var(--text-2); }
+.dock-notif-badge {
+    min-width: 17px; height: 17px; padding: 0 4px;
+    border-radius: 99px;
+    background: var(--accent-1); color: var(--accent-ink);
+    font-size: 9.5px; font-weight: 800;
+    display: inline-flex; align-items: center; justify-content: center;
+}
+
+.dock-tray-chevron {
+    position: relative;
+    width: calc(var(--item-sz) * 0.72);
+    height: calc(var(--item-sz) * 0.78);
+    border-radius: var(--radius-item);
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-2);
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0;
+    transition: background 0.14s, color 0.14s, border-color 0.14s;
+}
+.dock-tray-chevron:hover, .dock-tray-chevron.open {
+    background: var(--bg-card-hover); color: var(--text-1); border-color: var(--border-subtle);
+}
+.dock-tray-chevron.open svg { transform: rotate(180deg); }
+.dock-tray-chevron .tray-dot-cnt {
+    position: absolute; top: 1px; right: 1px;
+    min-width: 13px; height: 13px; padding: 0 3px;
+    border-radius: 99px; background: var(--accent-soft); color: var(--accent-1);
+    font-size: 8.5px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center;
+}
+
+/* Hover Style: Glow (zero vertical lift, luminous accent aura) */
+body.hover-glow .dock-item:hover {
+    box-shadow: 0 0 18px -3px var(--accent-glow), inset 0 0 0 1px var(--accent-ring);
+    background: var(--accent-soft);
+}
+
+/* ========== BOTTOM-RIGHT POPOVERS (Quick Controls, Calendar/Notifications, Tray, Context Menu) ========== */
+.dock-pop {
+    position: fixed;
+    bottom: 62px;
+    right: 12px;
+    border-radius: var(--radius-shell);
+    padding: 13px;
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: auto;
+    z-index: 42;
+    transform-origin: bottom right;
+    animation: popRiseIn 0.18s var(--spring);
+}
+.dock-pop.open { display: flex; }
+@keyframes popRiseIn {
+    from { opacity: 0; transform: translateY(10px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+#dockQuickControls { width: 344px; max-height: 392px; overflow-y: auto; }
+#dockCalNotif { width: 356px; max-height: 396px; overflow-y: auto; }
+#dockTrayPop { width: 280px; max-height: 356px; overflow-y: auto; right: 170px; }
+#dockCtxMenu {
+    width: 244px; padding: 7px; gap: 3px;
+    right: auto; transform-origin: bottom left; z-index: 60;
+}
+
+.qc-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; }
+.qc-tile {
+    display: flex; align-items: center; gap: 9px;
+    padding: 9px 11px; border-radius: var(--radius-card);
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-card); color: var(--text-1);
+    cursor: pointer; text-align: left;
+    transition: background 0.14s, border-color 0.14s, transform 0.12s;
+}
+.qc-tile:hover { background: var(--bg-card-hover); border-color: var(--border-rim); }
+.qc-tile:active { transform: scale(0.97); }
+.qc-tile.on {
+    background: linear-gradient(135deg, rgba(var(--a1-rgb), 0.22), rgba(var(--a2-rgb), 0.16));
+    border-color: var(--accent-ring);
+}
+.qc-tile .qc-ic {
+    width: 30px; height: 30px; border-radius: 10px;
+    background: var(--bg-card-hover); color: var(--text-2);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.qc-tile.on .qc-ic { background: var(--accent-1); color: var(--accent-ink); }
+.qc-tile .qc-lbl { font-size: 12px; font-weight: 700; line-height: 1.15; }
+.qc-tile .qc-sub { font-size: 10px; color: var(--text-2); margin-top: 1px; }
+
+.qc-slider-box {
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 10px 11px; border-radius: var(--radius-card);
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+}
+.qc-srow { display: flex; align-items: center; gap: 8px; }
+.qc-srow input[type=range] {
+    flex: 1; accent-color: var(--accent-1); height: 5px; cursor: pointer;
+}
+.qc-srow .qc-val { width: 34px; text-align: right; font-size: 11px; font-weight: 700; color: var(--text-2); }
+.qc-out-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+.qc-out-chip {
+    font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 99px;
+    border: 1px solid var(--border-subtle); background: transparent; color: var(--text-2);
+    cursor: pointer; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.qc-out-chip.active { background: var(--accent-soft); border-color: var(--accent-ring); color: var(--accent-1); }
+
+.qc-media {
+    display: flex; align-items: center; gap: 9px;
+    padding: 9px 10px; border-radius: var(--radius-card);
+    background: linear-gradient(135deg, rgba(var(--a1-rgb), 0.12), rgba(var(--a2-rgb), 0.08));
+    border: 1px solid var(--border-subtle);
+}
+.qc-media-art {
+    width: 38px; height: 38px; border-radius: 9px; object-fit: cover;
+    background: var(--bg-card-hover); display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.qc-bat-strip { display: flex; flex-wrap: wrap; gap: 6px; }
+.qc-bat-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 8px; border-radius: 99px;
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+    font-size: 10.5px; font-weight: 600; color: var(--text-1);
+}
+.qc-foot {
+    display: flex; align-items: center; justify-content: space-between; gap: 6px;
+    padding-top: 6px; border-top: 1px solid var(--border-subtle);
+}
+
+/* Calendar & Notifications Popover */
+.cn-tabs {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
+    padding: 3px; border-radius: 11px; background: var(--bg-inset);
+}
+.cn-tab {
+    border: none; background: transparent; color: var(--text-2);
+    font-family: var(--font); font-size: 11.5px; font-weight: 700;
+    padding: 6px 8px; border-radius: 8px; cursor: pointer;
+    transition: background 0.14s, color 0.14s;
+}
+.cn-tab.active { background: var(--bg-card-hover); color: var(--text-1); box-shadow: 0 2px 6px rgba(0,0,0,0.22); }
+.cn-list { display: flex; flex-direction: column; gap: 5px; max-height: 256px; overflow-y: auto; }
+.cn-item {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 8px 10px; border-radius: 11px;
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+    cursor: pointer; transition: background 0.13s, border-color 0.13s;
+}
+.cn-item:hover { background: var(--bg-card-hover); border-color: var(--border-rim); }
+.cal-head { display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; font-weight: 800; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; text-align: center; }
+.cal-dow { font-size: 10px; font-weight: 700; color: var(--text-2); padding: 3px 0; }
+.cal-day {
+    position: relative; height: 27px; border-radius: 8px; border: 1px solid transparent;
+    background: transparent; color: var(--text-1); font-size: 11.5px; font-weight: 600;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.cal-day:hover { background: var(--bg-card-hover); }
+.cal-day.muted { opacity: 0.34; }
+.cal-day.today { background: var(--accent-1); color: var(--accent-ink); font-weight: 800; }
+.cal-day.sel:not(.today) { border-color: var(--accent-1); background: var(--accent-soft); }
+.cal-day.has-note::after {
+    content: ''; position: absolute; bottom: 2px; width: 4px; height: 4px; border-radius: 50%;
+    background: var(--accent-2);
+}
+.cal-note-row { display: flex; gap: 6px; margin-top: 4px; }
+.cal-note-inp {
+    flex: 1; height: 30px; padding: 0 10px; border-radius: 9px;
+    border: 1px solid var(--border-rim); background: var(--bg-inset); color: var(--text-1);
+    font-family: var(--font); font-size: 11.5px; outline: none; user-select: text;
+}
+.cal-note-inp:focus { border-color: var(--accent-1); }
+
+/* Context Menu */
+.ctx-row {
+    display: flex; align-items: center; gap: 8px;
+    width: 100%; padding: 7px 9px; border-radius: 9px;
+    border: none; background: transparent; color: var(--text-1);
+    font-family: var(--font); font-size: 11.5px; font-weight: 600;
+    cursor: pointer; text-align: left;
+}
+.ctx-row:hover { background: var(--bg-card-hover); }
+.ctx-sep { height: 1px; background: var(--border-subtle); margin: 3px 6px; }
+.ctx-style-chips { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; padding: 3px 6px; }
+.ctx-chip {
+    padding: 4px 6px; border-radius: 7px; font-size: 10px; font-weight: 700;
+    border: 1px solid var(--border-subtle); background: var(--bg-card); color: var(--text-2);
+    cursor: pointer; text-align: center;
+}
+.ctx-chip.active { background: var(--accent-soft); border-color: var(--accent-ring); color: var(--accent-1); }
+
+/* ========== v4.0 MULTI-STYLE DOCK HUBS (3D Fan Cards, Win11 Modern Cards, Prism Radial Arc) ========== */
+.hub-shell-card {
+    border-radius: var(--radius-shell);
+    padding: 10px 12px;
+    display: flex; flex-direction: column; gap: 8px;
+    min-width: 248px; max-width: min(740px, calc(100vw - 24px));
+    animation: popRiseIn 0.17s var(--spring);
+}
+.hub-hdr { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.hub-hdr-title { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 800; color: var(--text-1); }
+.hub-hdr-acts { display: inline-flex; align-items: center; gap: 4px; }
+
+.fan3d-stage {
+    display: flex; align-items: flex-end; justify-content: center;
+    padding: 14px 18px 6px; perspective: 950px;
+}
+.fan3d-card {
+    position: relative; width: 158px; min-height: 98px;
+    margin: 0 -16px; padding: 10px;
+    border-radius: 14px;
+    background: linear-gradient(160deg, var(--bg-glass-2), var(--bg-glass-1));
+    border: 1px solid var(--border-rim);
+    box-shadow: 0 14px 28px -8px rgba(0, 0, 0, 0.56);
+    cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; gap: 8px;
+    transform: rotate(var(--fan-rot, 0deg)) translateY(var(--fan-dy, 0px)) rotateY(var(--fan-ry, 0deg));
+    transition: transform 0.20s var(--spring), border-color 0.14s, box-shadow 0.16s, z-index 0s;
+    z-index: var(--fan-z, 2);
+}
+.fan3d-card:hover, .fan3d-card.hovered {
+    transform: rotate(0deg) translateY(-14px) scale(1.07);
+    border-color: var(--accent-1);
+    box-shadow: 0 20px 36px -8px rgba(0, 0, 0, 0.72), 0 0 18px -4px var(--accent-glow);
+    z-index: 30;
+}
+.fan3d-card.active-win { border-color: var(--accent-ring); }
+
+.cards-strip { display: flex; align-items: stretch; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
+.win-card {
+    width: 176px; flex-shrink: 0; padding: 9px 10px;
+    border-radius: 13px;
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+    cursor: pointer; display: flex; flex-direction: column; gap: 8px;
+    transition: background 0.14s, border-color 0.14s, transform 0.14s var(--ease);
+}
+.win-card:hover, .win-card.hovered {
+    background: var(--bg-card-hover); border-color: var(--accent-1); transform: translateY(-2px);
+}
+.win-card.active-win { border-color: var(--accent-ring); background: var(--accent-soft); }
+.wcard-top { display: flex; align-items: center; gap: 7px; }
+.wcard-top img { width: 18px; height: 18px; border-radius: 4px; flex-shrink: 0; }
+.wcard-title { font-size: 11.5px; font-weight: 700; color: var(--text-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.wcard-sub {
+    font-size: 10px; color: var(--text-2);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    line-height: 1.3; min-height: 26px;
+}
+.wcard-acts { display: flex; align-items: center; justify-content: space-between; gap: 3px; }
+
+.arc-node {
+    position: absolute; transform: translate(-50%, -50%);
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 36px; padding: 0 11px 0 8px; max-width: 148px;
+    border-radius: 999px;
+    background: linear-gradient(160deg, var(--bg-glass-2), var(--bg-glass-1));
+    border: 1.25px solid var(--border-rim);
+    box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.62);
+    cursor: pointer; z-index: 16;
+    transition: border-color 0.14s, box-shadow 0.14s, transform 0.16s var(--spring);
+}
+.arc-node:hover, .arc-node.hovered {
+    border-color: var(--accent-1);
+    box-shadow: 0 14px 28px -6px rgba(0, 0, 0, 0.72), 0 0 18px -4px var(--accent-glow);
+    transform: translate(-50%, -50%) scale(1.06);
+    z-index: 26;
+}
+.arc-node img { width: 18px; height: 18px; border-radius: 4px; flex-shrink: 0; }
+.arc-node span { font-size: 11px; font-weight: 700; color: var(--text-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ========== v4.2 PRO 4-ZONE DOCK WIDGETS, DIRECT DRAG-REORDER & FLUID ZERO-CLICK UX ========== */
+.dw-zone {
+    display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; min-width: 0;
+    border-radius: 11px; transition: background 0.14s, border-color 0.14s, padding 0.14s;
+}
+.dw-zone.empty-idle { display: none; }
+body.dock-dragging-widget .dw-zone,
+body.dock-edit-mode .dw-zone {
+    display: inline-flex !important;
+    min-width: 58px; min-height: calc(var(--item-sz) * 0.78);
+    padding: 0 5px;
+    border: 1.5px dashed rgba(var(--a1-rgb), 0.36);
+    background: rgba(var(--a1-rgb), 0.06);
+}
+.dw-zone.drop-hot {
+    border-color: var(--accent-1) !important;
+    background: rgba(var(--a1-rgb), 0.20) !important;
+    box-shadow: 0 0 14px -3px var(--accent-glow);
+}
+.dw-zone-tag {
+    display: none;
+    font-size: 9px; font-weight: 800; letter-spacing: 0.03em;
+    color: var(--accent-1); opacity: 0.85; padding: 0 4px;
+    pointer-events: none; white-space: nowrap;
+}
+body.dock-dragging-widget .dw-zone:empty .dw-zone-tag,
+body.dock-dragging-widget .dw-zone.zone-has-only-tag .dw-zone-tag,
+body.dock-edit-mode .dw-zone.zone-has-only-tag .dw-zone-tag {
+    display: inline-flex; align-items: center;
+}
+body.dock-edit-mode .dw-pill {
+    border-style: dashed !important;
+    border-color: rgba(var(--a1-rgb), 0.55) !important;
+    cursor: grab !important;
+}
+.dw-edit-done {
+    height: calc(var(--item-sz) * 0.78); padding: 0 10px;
+    border-radius: 999px; border: 1px solid var(--accent-1);
+    background: var(--accent-1); color: var(--accent-ink);
+    font-size: 10.5px; font-weight: 800; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;
+    box-shadow: 0 4px 14px -3px var(--accent-glow);
+}
+
+/* Per-Widget Size & Appearance Modes */
+.dw-pill.dw-sz-compact {
+    height: calc(var(--item-sz) * 0.76); padding: 0 7px; gap: 4px; font-size: 10.5px;
+}
+.dw-pill.dw-sz-wide {
+    padding: 0 12px; gap: 8px;
+}
+.dw-pill.dw-st-clean {
+    background: transparent !important; border-color: transparent !important;
+}
+.dw-pill.dw-st-clean:hover {
+    background: var(--bg-card-hover) !important; border-color: var(--border-subtle) !important;
+}
+.dw-pill.dw-st-tinted {
+    background: linear-gradient(135deg, rgba(var(--a1-rgb), 0.22), rgba(var(--a2-rgb), 0.14)) !important;
+    border-color: var(--accent-ring) !important;
+}
+.dw-pill.dw-st-glass {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.04)) !important;
+    border: 1px solid var(--border-rim) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 4px 12px -4px rgba(0, 0, 0, 0.28);
+}
+body.mode-light .dw-pill.dw-st-glass {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.72)) !important;
+    box-shadow: inset 0 1px 0 #FFFFFF, 0 4px 12px -4px rgba(15, 23, 42, 0.12);
+}
+.dw-pill.dw-st-hardware {
+    background: #1B1D22 !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    border-radius: 9px !important;
+    font-family: var(--font-mono);
+    letter-spacing: -0.02em;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10), inset 0 -1px 0 rgba(0, 0, 0, 0.45);
+}
+body.mode-light .dw-pill.dw-st-hardware {
+    background: #EFECE6 !important;
+    color: #18181B !important;
+    border-color: rgba(24, 24, 27, 0.16) !important;
+    box-shadow: inset 0 1px 0 #FFFFFF, inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+}
+.dock-item:active {
+    transform: scale(0.91) !important;
+    transition-duration: 0.06s !important;
+}
+.dw-ic-badge {
+    width: 24px; height: 24px; border-radius: 7px; flex-shrink: 0;
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+    color: var(--accent-1); display: inline-flex; align-items: center; justify-content: center;
+}
+.dwp-row.on .dw-ic-badge {
+    background: var(--accent-soft); border-color: var(--accent-ring);
+}
+.ai-brand-ic { width: 15px; height: 15px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ai-brand-ic svg { width: 14px; height: 14px; }
+
+/* New Pro Dock Widgets: Inline Volume/Brightness Sliders, Mic Privacy LED, Virtual Desktops */
+.dw-slider-pill {
+    gap: 6px; padding: 0 8px 0 6px;
+}
+.dw-slider-track {
+    position: relative; width: 64px; height: 18px;
+    display: inline-flex; align-items: center; cursor: ew-resize; flex-shrink: 0;
+}
+.dw-pill.dw-sz-compact .dw-slider-track { width: 44px; }
+.dw-pill.dw-sz-wide .dw-slider-track { width: 92px; }
+.dw-slider-rail {
+    position: relative; width: 100%; height: 5px; border-radius: 99px;
+    background: var(--bg-inset); border: 1px solid var(--border-subtle); overflow: hidden;
+}
+.dw-slider-fill {
+    height: 100%; border-radius: 99px;
+    background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+    pointer-events: none; transition: width 0.05s linear;
+}
+.dw-slider-fill.muted { background: var(--danger); opacity: 0.55; }
+.dw-slider-pct { font-size: 10px; font-weight: 800; color: var(--text-2); min-width: 24px; text-align: right; }
+
+.dw-mic-led {
+    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    background: var(--success); box-shadow: 0 0 6px var(--success);
+}
+.dw-mic-led.live { background: #FB7185; box-shadow: 0 0 9px #FB7185; }
+.dw-mic-led.muted { background: var(--text-2); box-shadow: none; opacity: 0.55; }
+.dw-pill.mic-muted { border-color: rgba(251, 113, 133, 0.45); color: var(--danger); }
+.dw-pill.privacy-live { border-color: rgba(251, 113, 133, 0.55); background: rgba(251, 113, 133, 0.14); }
+
+.dw-desk-wrap { display: inline-flex; align-items: center; gap: 3px; padding: 0 5px !important; }
+.dw-desk-btn {
+    min-width: 20px; height: 20px; padding: 0 5px; border-radius: 6px;
+    border: 1px solid transparent; background: transparent; color: var(--text-2);
+    font-family: var(--font); font-size: 10.5px; font-weight: 800;
+    display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.dw-desk-btn:hover { background: var(--bg-card-hover); color: var(--text-1); }
+.dw-desk-btn.active {
+    background: var(--accent-1); color: var(--accent-ink); border-color: transparent;
+    box-shadow: 0 2px 8px -2px var(--accent-glow);
+}
+
+/* Direct Drag-and-Drop Visual Feedback (Apps & Widgets) */
+.dock-item.dragging, .dw-pill.dragging {
+    opacity: 0.40; transform: scale(0.92) !important;
+}
+.dock-item.drop-before::after, .dw-pill.drop-before::after {
+    content: ''; position: absolute; left: -4px; top: 4px; bottom: 4px; width: 3px;
+    border-radius: 99px; background: var(--accent-1);
+    box-shadow: 0 0 10px var(--accent-1); pointer-events: none; z-index: 40;
+}
+.dock-item.drop-after::after, .dw-pill.drop-after::after {
+    content: ''; position: absolute; right: -4px; top: 4px; bottom: 4px; width: 3px;
+    border-radius: 99px; background: var(--accent-1);
+    box-shadow: 0 0 10px var(--accent-1); pointer-events: none; z-index: 40;
+}
+body.edge-left .dock-item.drop-before::after, body.edge-right .dock-item.drop-before::after {
+    left: 4px; right: 4px; top: -4px; bottom: auto; width: auto; height: 3px;
+}
+body.edge-left .dock-item.drop-after::after, body.edge-right .dock-item.drop-after::after {
+    left: 4px; right: 4px; bottom: -4px; top: auto; width: auto; height: 3px;
+}
+
+/* Per-App Live Audio Mute Badge on Dock Icons */
+.app-audio-badge {
+    position: absolute; top: -3px; left: -3px;
+    width: 16px; height: 16px; border-radius: 50%; padding: 0;
+    border: 1px solid var(--border-rim);
+    background: var(--bg-glass-2); color: var(--accent-1);
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer; z-index: 6;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+    transition: transform 0.12s, background 0.12s, color 0.12s, border-color 0.12s;
+}
+.app-audio-badge svg { width: 9.5px; height: 9.5px; }
+.app-audio-badge:hover {
+    transform: scale(1.18); background: var(--accent-1); color: var(--accent-ink); border-color: var(--accent-1);
+}
+.app-audio-badge.muted {
+    background: rgba(251, 113, 133, 0.92); color: #FFFFFF; border-color: #FB7185;
+}
+
+/* Floating Live Scrub OSD Capsule */
+#scrubToast {
+    position: fixed; bottom: 68px; left: 50%; transform: translateX(-50%);
+    padding: 7px 13px; border-radius: 999px;
+    display: none; align-items: center; gap: 9px;
+    pointer-events: none; z-index: 70;
+    font-size: 11.5px; font-weight: 800; color: var(--text-1);
+}
+#scrubToast.open { display: inline-flex; }
+.scrub-bar { width: 78px; height: 5px; border-radius: 99px; background: var(--bg-inset); overflow: hidden; }
+.scrub-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent-1), var(--accent-2)); }
+
+/* Right-Click Pro Widget Inspector Popover */
+#dockWidgetInspector {
+    width: 282px; padding: 12px; gap: 9px;
+    right: auto; transform-origin: bottom center; z-index: 64;
+}
+.dwi-lbl {
+    font-size: 9.5px; font-weight: 800; color: var(--text-2);
+    text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;
+}
+.dwi-seg { display: grid; gap: 4px; }
+.dwi-seg.c4 { grid-template-columns: repeat(4, 1fr); }
+.dwi-seg.c3 { grid-template-columns: repeat(3, 1fr); }
+.dwi-seg.c2 { grid-template-columns: repeat(2, 1fr); }
+.dwi-btn {
+    padding: 5px 5px; border-radius: 8px; font-family: var(--font);
+    font-size: 10px; font-weight: 700; text-align: center;
+    border: 1px solid var(--border-subtle); background: var(--bg-card); color: var(--text-2);
+    cursor: pointer; transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.dwi-btn:hover { background: var(--bg-card-hover); color: var(--text-1); }
+.dwi-btn.active { background: var(--accent-soft); border-color: var(--accent-ring); color: var(--accent-1); }
+
+/* 6-Slice Radial Quick Action Wheel */
+#quickWheelPop {
+    position: fixed; bottom: 64px; left: 50%;
+    width: 232px; height: 232px; border-radius: 50% !important;
+    display: none; pointer-events: auto; z-index: 62;
+    animation: popRiseIn 0.16s var(--spring);
+}
+#quickWheelPop.open { display: block; }
+.qw-center {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: 72px; height: 72px; border-radius: 50%;
+    background: var(--bg-inset); border: 1.5px solid var(--border-rim);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 4px; cursor: pointer;
+    font-size: 10px; font-weight: 800; color: var(--text-1); line-height: 1.15;
+}
+.qw-center:hover { border-color: var(--accent-1); color: var(--accent-1); }
+.qw-node {
+    position: absolute; transform: translate(-50%, -50%);
+    width: 52px; height: 52px; border-radius: 50%;
+    border: 1px solid var(--border-rim); background: var(--bg-card);
+    color: var(--text-1); cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    font-family: var(--font); font-size: 8.5px; font-weight: 700;
+    transition: transform 0.14s var(--spring), background 0.14s, border-color 0.14s, box-shadow 0.14s;
+}
+.qw-node:hover {
+    transform: translate(-50%, -50%) scale(1.12);
+    background: var(--accent-soft); border-color: var(--accent-1); color: var(--accent-1);
+    box-shadow: 0 0 16px -3px var(--accent-glow);
+}
+.qw-node.on { background: var(--accent-tint); border-color: var(--accent-1); color: var(--accent-1); }
+
+/* ========== v6.0 — 6 FLAGSHIP SHELL ARCHITECTURES & CALM HIERARCHY ========== */
+.dw-dot5x7-svg { height: 18px; width: auto; display: block; flex-shrink: 0; }
+.dw-spark-svg { width: 46px; height: 18px; display: block; flex-shrink: 0; }
+.dw-art-thumb {
+    width: 22px; height: 22px; border-radius: 6px; object-fit: cover; flex-shrink: 0;
+    border: 1px solid var(--border-rim);
+    background: linear-gradient(135deg, rgba(var(--a1-rgb),0.22), rgba(var(--a2-rgb),0.18));
+    display: inline-flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.dw-art-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.dw-ai-rings { display: inline-flex; align-items: center; gap: 5px; }
+
+.dw-pill {
+    background: rgba(255, 255, 255, 0.042);
+    border: 1px solid var(--border-subtle);
+}
+body.mode-light .dw-pill {
+    background: rgba(20, 22, 26, 0.038);
+}
+
+/* 1. TAHOE SPATIAL GLASS — Thick Optical Floating Capsule + Round Glowing Active Dots */
+body.arch-tahoe-glass:not(.edge-left):not(.edge-right) .dock-stage:not(.tucked-stage):not(.pinned-bar-stage) {
+    padding-bottom: 6px !important;
+}
+body.arch-tahoe-glass #dockBar:not(.pinned-bar):not(.tucked) {
+    width: fit-content !important; max-width: calc(100vw - 24px) !important;
+    height: calc(46px * var(--ds)) !important; min-height: calc(46px * var(--ds)) !important;
+    border-radius: 24px !important;
+    padding: 0 calc(13px * var(--ds)) !important;
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.03) 38%, transparent 68%),
+        linear-gradient(165deg, var(--bg-glass-1), var(--bg-glass-2)) !important;
+    border: 1.25px solid rgba(255, 255, 255, 0.28) !important;
+    box-shadow:
+        0 24px 54px -14px rgba(0, 0, 0, 0.68),
+        inset 0 1.5px 0 rgba(255, 255, 255, 0.42),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+body.arch-tahoe-glass #dockBar:not(.pinned-bar).density-compact { height: calc(38px * var(--ds)) !important; min-height: calc(38px * var(--ds)) !important; }
+body.arch-tahoe-glass #dockBar:not(.pinned-bar).density-cozy { height: calc(54px * var(--ds)) !important; min-height: calc(54px * var(--ds)) !important; }
+body.arch-tahoe-glass.mode-light #dockBar:not(.pinned-bar):not(.tucked) {
+    border-color: rgba(255, 255, 255, 0.84) !important;
+    box-shadow: 0 20px 44px -12px rgba(15, 23, 42, 0.22), inset 0 1.5px 0 #FFFFFF !important;
+}
+body.arch-tahoe-glass .dock-item { border-radius: 14px !important; }
+body.arch-tahoe-glass .dock-item.active .dock-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    box-shadow: 0 0 10px var(--accent-glow);
+}
+body.arch-tahoe-glass .dock-pop { border-radius: 22px !important; }
+
+/* 2. NOTHING HARDWARE — 3 Detached Matte Dot-Matrix Hardware Islands (#EF4444 LED Dot) */
+body.arch-nothing-hardware:not(.edge-left):not(.edge-right) .dock-stage:not(.tucked-stage) { padding-bottom: 6px !important; }
+body.arch-nothing-hardware:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) {
+    width: calc(100vw - 24px) !important; max-width: calc(100vw - 24px) !important;
+    height: auto !important; min-height: 0 !important; padding: 0 !important;
+    background: transparent !important; border: none !important; box-shadow: none !important;
+    pointer-events: none !important;
+    display: grid !important; grid-template-columns: 1fr auto 1fr !important;
+    align-items: center !important; gap: 10px !important;
+}
+body.arch-nothing-hardware:not(.edge-left):not(.edge-right) #dockBar:not(.tucked)::after { display: none !important; }
+body.arch-nothing-hardware:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-left,
+body.arch-nothing-hardware:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-center,
+body.arch-nothing-hardware:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-right {
+    pointer-events: auto; width: fit-content; height: calc(46px * var(--ds));
+    padding: 0 calc(10px * var(--ds)); border-radius: 13px !important;
+    background:
+        radial-gradient(rgba(255,255,255,0.065) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(16, 17, 22, 0.95), rgba(9, 10, 14, 0.98)) !important;
+    background-size: 9px 9px, 100% 100% !important;
+    border: 1px solid rgba(255, 255, 255, 0.16) !important;
+    box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.74), inset 0 1px 0 rgba(255, 255, 255, 0.10) !important;
+}
+body.arch-nothing-hardware.mode-light:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-left,
+body.arch-nothing-hardware.mode-light:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-center,
+body.arch-nothing-hardware.mode-light:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-right {
+    background:
+        radial-gradient(rgba(15,23,42,0.07) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(249, 249, 251, 0.97), rgba(238, 240, 244, 0.98)) !important;
+    background-size: 9px 9px, 100% 100% !important;
+    border-color: rgba(15, 23, 42, 0.15) !important;
+    box-shadow: 0 14px 32px -12px rgba(15, 23, 42, 0.18), inset 0 1px 0 #FFFFFF !important;
+}
+body.arch-nothing-hardware:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-left { justify-self: start; }
+body.arch-nothing-hardware:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-center { justify-self: center; }
+body.arch-nothing-hardware:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-right { justify-self: end; }
+body.arch-nothing-hardware .dock-item,
+body.arch-nothing-hardware .dw-pill,
+body.arch-nothing-hardware .start-btn { border-radius: 9px !important; }
+body.arch-nothing-hardware .num,
+body.arch-nothing-hardware .dock-clock-time { font-family: var(--font-mono) !important; }
+body.arch-nothing-hardware .dock-item.active .dock-dot {
+    width: 6px !important; height: 6px !important; border-radius: 50% !important;
+    background: #EF4444 !important; box-shadow: 0 0 8px rgba(239, 68, 68, 0.72) !important;
+}
+
+/* 3. LINEAR STUDIO — Razor 40px Edge-to-Edge Zero-Glow Precision Bar */
+body.arch-linear-studio:not(.edge-left):not(.edge-right) .dock-stage.pinned-bar-stage { padding-bottom: 0 !important; }
+body.arch-linear-studio:not(.edge-left):not(.edge-right) #dockBar.pinned-bar {
+    height: calc(40px * var(--ds)) !important; min-height: calc(40px * var(--ds)) !important;
+    --item-sz: calc(30px * var(--ds)); --img-sz: calc(19px * var(--ds));
+    background: var(--bg-glass-1) !important;
+    border-top: 1px solid var(--border-rim) !important;
+    box-shadow: none !important;
+    padding: 0 calc(12px * var(--ds)) !important;
+}
+body.arch-linear-studio:not(.edge-left):not(.edge-right) #dockBar.pinned-bar::after { display: none !important; }
+body.arch-linear-studio:not(.edge-left):not(.edge-right) #dockBar.pinned-bar.density-compact {
+    height: calc(36px * var(--ds)) !important; min-height: calc(36px * var(--ds)) !important;
+    --item-sz: calc(27px * var(--ds)); --img-sz: calc(17px * var(--ds));
+}
+body.arch-linear-studio:not(.edge-left):not(.edge-right) #dockBar.pinned-bar.density-cozy {
+    height: calc(46px * var(--ds)) !important; min-height: calc(46px * var(--ds)) !important;
+    --item-sz: calc(35px * var(--ds)); --img-sz: calc(21px * var(--ds));
+}
+body.arch-linear-studio .dock-item,
+body.arch-linear-studio .dw-pill,
+body.arch-linear-studio .start-btn,
+body.arch-linear-studio .dock-status-pill,
+body.arch-linear-studio .dock-clock-pill { border-radius: 6px !important; }
+body.arch-linear-studio .dw-pill { background: transparent !important; border-color: var(--border-subtle) !important; }
+body.arch-linear-studio .dock-item.active {
+    background: rgba(var(--a1-rgb), 0.10) !important; border-color: rgba(var(--a1-rgb), 0.28) !important;
+}
+body.arch-linear-studio .dock-item.active .dock-dot {
+    width: 20px !important; height: 2px !important; border-radius: 1px !important;
+    background: var(--accent-1) !important; box-shadow: none !important; bottom: 0 !important;
+}
+body.arch-linear-studio .dock-pop { border-radius: 11px !important; box-shadow: 0 18px 42px -12px rgba(0,0,0,0.65) !important; }
+
+/* 4. VISION ORB — Full-Stadium Glass Capsule & Pure Circular Pearlescent Icon Orbs */
+body.arch-vision-orb:not(.edge-left):not(.edge-right) .dock-stage:not(.tucked-stage) { padding-bottom: 6px !important; }
+body.arch-vision-orb #dockBar:not(.pinned-bar):not(.tucked) {
+    width: fit-content !important; max-width: calc(100vw - 24px) !important;
+    height: calc(46px * var(--ds)) !important; min-height: calc(46px * var(--ds)) !important;
+    border-radius: 999px !important;
+    padding: 0 calc(14px * var(--ds)) !important;
+    background:
+        radial-gradient(ellipse 90% 60% at 50% 0%, rgba(255,255,255,0.22), transparent 64%),
+        linear-gradient(155deg, rgba(255,255,255,0.12), rgba(255,255,255,0.03) 55%, rgba(var(--a1-rgb),0.10)),
+        var(--bg-glass-1) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.36) !important;
+    box-shadow:
+        0 26px 56px -12px rgba(0, 0, 0, 0.72),
+        0 0 28px -10px rgba(var(--a1-rgb), 0.34),
+        inset 0 2px 0 rgba(255, 255, 255, 0.46),
+        inset 0 -1.5px 0 rgba(255, 255, 255, 0.14) !important;
+}
+body.arch-vision-orb.mode-light #dockBar:not(.pinned-bar):not(.tucked) {
+    border-color: rgba(255, 255, 255, 0.92) !important;
+    box-shadow: 0 20px 44px -10px rgba(15, 23, 42, 0.22), inset 0 2px 0 #FFFFFF !important;
+}
+body.arch-vision-orb .dock-item,
+body.arch-vision-orb .start-btn:not(.start-capsule) {
+    border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24) !important;
+}
+body.arch-vision-orb .dock-item:hover,
+body.arch-vision-orb .dock-item.active {
+    background: radial-gradient(circle at 35% 25%, rgba(255,255,255,0.26), rgba(var(--a1-rgb),0.24)) !important;
+    border-color: rgba(255, 255, 255, 0.48) !important;
+    box-shadow: 0 0 16px -4px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.45) !important;
+}
+body.arch-vision-orb .dw-pill,
+body.arch-vision-orb .dock-status-pill,
+body.arch-vision-orb .dock-clock-pill { border-radius: 999px !important; }
+body.arch-vision-orb .dock-item.active .dock-dot {
+    width: 12px !important; height: 3px !important; border-radius: 99px !important;
+    background: #FFFFFF !important; box-shadow: 0 0 8px rgba(255,255,255,0.8) !important; bottom: -2px !important;
+}
+body.arch-vision-orb .dock-pop { border-radius: 26px !important; }
+
+/* 5. ARC SPLIT — 2 Asymmetric Pods: Fused Navigation + Apps Card on Left/Center + Detached Utility Pod on Right */
+body.arch-arc-split:not(.edge-left):not(.edge-right) .dock-stage:not(.tucked-stage) { padding-bottom: 6px !important; }
+body.arch-arc-split:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) {
+    width: calc(100vw - 26px) !important; max-width: calc(100vw - 26px) !important;
+    height: auto !important; min-height: 0 !important; padding: 0 !important;
+    background: transparent !important; border: none !important; box-shadow: none !important;
+    pointer-events: none !important;
+    display: flex !important; align-items: center !important; justify-content: flex-start !important; gap: 0 !important;
+}
+body.arch-arc-split:not(.edge-left):not(.edge-right) #dockBar:not(.tucked)::after { display: none !important; }
+body.arch-arc-split:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-left {
+    pointer-events: auto; height: calc(46px * var(--ds));
+    padding: 0 calc(9px * var(--ds)) 0 calc(11px * var(--ds));
+    border-radius: 17px 0 0 17px !important;
+    background: linear-gradient(135deg, rgba(var(--a1-rgb),0.16), rgba(var(--a2-rgb),0.08)), var(--bg-glass-1) !important;
+    border: 1px solid rgba(var(--a1-rgb), 0.34) !important; border-right: none !important;
+    box-shadow: 0 20px 44px -14px rgba(0,0,0,0.62) !important;
+}
+body.arch-arc-split:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-center {
+    pointer-events: auto; height: calc(46px * var(--ds));
+    padding: 0 calc(12px * var(--ds));
+    border-radius: 0 17px 17px 0 !important;
+    background: var(--bg-glass-2) !important;
+    border: 1px solid var(--border-rim) !important;
+    box-shadow: 0 20px 44px -14px rgba(0,0,0,0.62) !important;
+}
+body.arch-arc-split:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-right {
+    pointer-events: auto; margin-left: auto; height: calc(46px * var(--ds));
+    padding: 0 calc(11px * var(--ds));
+    border-radius: 17px !important;
+    background: linear-gradient(160deg, var(--bg-glass-1), var(--bg-glass-2)) !important;
+    border: 1px solid var(--border-rim) !important;
+    box-shadow: 0 20px 44px -14px rgba(0,0,0,0.62) !important;
+}
+body.arch-arc-split .dock-item { border-radius: 11px !important; }
+body.arch-arc-split .dock-item.active {
+    background: rgba(var(--a1-rgb), 0.14) !important;
+    border: 1px solid rgba(var(--a1-rgb), 0.42) !important;
+}
+body.arch-arc-split .dock-item.active .dock-dot {
+    width: 5px !important; height: 5px !important; border-radius: 50% !important;
+    background: var(--accent-1) !important; box-shadow: none !important;
+}
+
+/* 6. BRAUN ATELIER — Solid Anodized Matte Aluminum/Ceramic Slab, Concave Wells, Signal Orange #EA580C */
+body.arch-braun-atelier:not(.edge-left):not(.edge-right) .dock-stage:not(.tucked-stage) { padding-bottom: 6px !important; }
+body.arch-braun-atelier #dockBar:not(.pinned-bar):not(.tucked) {
+    width: calc(100vw - 32px) !important; max-width: calc(100vw - 32px) !important;
+    height: calc(46px * var(--ds)) !important; min-height: calc(46px * var(--ds)) !important;
+    border-radius: 10px !important; padding: 0 calc(12px * var(--ds)) !important;
+    background: #17181C !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    box-shadow: 0 18px 36px -10px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255, 255, 255, 0.10), inset 0 -1px 0 rgba(0, 0, 0, 0.55) !important;
+}
+body.arch-braun-atelier #dockBar:not(.pinned-bar):not(.tucked)::after { display: none !important; }
+body.arch-braun-atelier.mode-light #dockBar:not(.pinned-bar):not(.tucked) {
+    background: #EFECE6 !important;
+    border: 1px solid rgba(24, 24, 27, 0.18) !important;
+    box-shadow: 0 14px 30px -10px rgba(24,24,27,0.18), inset 0 1px 0 #FFFFFF, inset 0 -1px 0 rgba(0, 0, 0, 0.08) !important;
+}
+body.arch-braun-atelier .dw-pill,
+body.arch-braun-atelier .dock-status-pill,
+body.arch-braun-atelier .dock-clock-pill {
+    border-radius: 7px !important; background: rgba(0, 0, 0, 0.28) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: inset 0 1.5px 3px rgba(0, 0, 0, 0.35) !important;
+}
+body.arch-braun-atelier.mode-light .dw-pill,
+body.arch-braun-atelier.mode-light .dock-status-pill,
+body.arch-braun-atelier.mode-light .dock-clock-pill {
+    background: #E4DFD6 !important; border-color: rgba(24, 24, 27, 0.14) !important;
+    box-shadow: inset 0 1.5px 3px rgba(0, 0, 0, 0.10) !important;
+}
+body.arch-braun-atelier .dock-item { border-radius: 8px !important; }
+body.arch-braun-atelier .dock-item.active {
+    background: rgba(234, 88, 12, 0.12) !important;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.3) !important;
+}
+body.arch-braun-atelier .dock-item.active .dock-dot {
+    width: 6px !important; height: 6px !important; border-radius: 50% !important;
+    background: #EA580C !important; box-shadow: 0 0 6px rgba(234,88,12,0.7) !important; bottom: -2px !important;
+}
+
+/* 7. SWISS EDITORIAL — Architectural Poster Bar, Bold 2px Top Ink Rule, Hairline Grid Cells */
+body.arch-swiss-editorial #dockBar.pinned-bar {
+    background: #0B0D12 !important;
+    border-top: 2px solid var(--accent-1) !important;
+    box-shadow: none !important;
+}
+body.arch-swiss-editorial.mode-light #dockBar.pinned-bar {
+    background: #FAF9F6 !important;
+    border-top: 2px solid #111827 !important;
+}
+body.arch-swiss-editorial .dw-pill,
+body.arch-swiss-editorial .dock-status-pill,
+body.arch-swiss-editorial .dock-clock-pill,
+body.arch-swiss-editorial .dock-item,
+body.arch-swiss-editorial .start-btn {
+    border-radius: 3px !important;
+    border: 1px solid var(--border-rim) !important;
+}
+body.arch-swiss-editorial .dock-item:not(.active) { border-color: transparent !important; }
+body.arch-swiss-editorial .dock-item.active {
+    background: rgba(var(--a1-rgb), 0.12) !important;
+    border-color: var(--accent-1) !important;
+}
+body.arch-swiss-editorial .dock-item.active .dock-dot {
+    width: 6px !important; height: 6px !important; border-radius: 1px !important;
+    background: var(--accent-1) !important; box-shadow: none !important;
+}
+body.arch-swiss-editorial .dock-pop { border-radius: 4px !important; border-width: 1.5px !important; }
+
+/* 8. COCKPIT HUD — Chamfered 45° Octagon Aerospace Rail, Blueprint Grid, Laser Top Dot */
+body.arch-cockpit-hud:not(.edge-left):not(.edge-right) .dock-stage:not(.tucked-stage) { padding-bottom: 6px !important; }
+body.arch-cockpit-hud #dockBar:not(.pinned-bar):not(.tucked) {
+    width: calc(100vw - 24px) !important; max-width: calc(100vw - 24px) !important;
+    height: calc(46px * var(--ds)) !important; min-height: calc(46px * var(--ds)) !important;
+    padding: 0 calc(16px * var(--ds)) !important; border-radius: 0 !important;
+    clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px) !important;
+    border-top: 2px solid var(--accent-1) !important;
+    border-bottom: 1px solid rgba(var(--a1-rgb), 0.35) !important;
+    background:
+        linear-gradient(rgba(var(--a1-rgb), 0.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(var(--a1-rgb), 0.055) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(8, 13, 24, 0.95), rgba(4, 8, 16, 0.98)) !important;
+    background-size: 14px 14px, 14px 14px, 100% 100% !important;
+}
+body.arch-cockpit-hud.mode-light #dockBar:not(.pinned-bar):not(.tucked) {
+    background:
+        linear-gradient(rgba(var(--a1-rgb), 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(var(--a1-rgb), 0.08) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(244, 248, 255, 0.96), rgba(232, 240, 250, 0.98)) !important;
+    background-size: 14px 14px, 14px 14px, 100% 100% !important;
+}
+body.arch-cockpit-hud .num,
+body.arch-cockpit-hud .dock-clock-time { font-family: var(--font-mono) !important; letter-spacing: 0.04em; }
+body.arch-cockpit-hud .dock-item,
+body.arch-cockpit-hud .dw-pill,
+body.arch-cockpit-hud .start-btn { border-radius: 4px !important; }
+body.arch-cockpit-hud .dock-item.active {
+    background: linear-gradient(180deg, rgba(var(--a1-rgb), 0.20), transparent) !important;
+}
+body.arch-cockpit-hud .dock-item.active .dock-dot {
+    top: -1px !important; bottom: auto !important;
+    width: 18px !important; height: 2px !important; border-radius: 0 !important;
+    background: var(--accent-1) !important; box-shadow: 0 0 10px var(--accent-glow) !important;
+}
+
+/* 9. FLUENT 2 MICA — Edge-to-Edge Windows 11 Silk Porcelain Bar */
+body.arch-fluent-mica #dockBar.pinned-bar {
+    background: linear-gradient(180deg, var(--bg-glass-2), var(--bg-glass-1)) !important;
+    border-top: 1px solid var(--border-rim) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
+}
+body.arch-fluent-mica.mode-light #dockBar.pinned-bar { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.96) !important; }
+body.arch-fluent-mica .dock-item { border-radius: 8px !important; }
+body.arch-fluent-mica .dock-item.active {
+    background: var(--bg-card-hover) !important; border-color: var(--border-subtle) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+}
+body.arch-fluent-mica .dock-item.active .dock-dot {
+    width: 16px !important; height: 3px !important; border-radius: 99px !important; bottom: 1px !important;
+}
+
+/* 10. ZEN GHOST — Zero-Chrome Floating Wallpaper Icons & Whisper Capsules */
+body.arch-zen-ghost:not(.edge-left):not(.edge-right) .dock-stage:not(.tucked-stage) { padding-bottom: 6px !important; }
+body.arch-zen-ghost:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) {
+    width: calc(100vw - 24px) !important; max-width: calc(100vw - 24px) !important;
+    height: auto !important; min-height: 0 !important; padding: 0 !important;
+    background: transparent !important; border: none !important; box-shadow: none !important;
+    pointer-events: none !important;
+    display: grid !important; grid-template-columns: 1fr auto 1fr !important; align-items: center !important;
+}
+body.arch-zen-ghost:not(.edge-left):not(.edge-right) #dockBar:not(.tucked)::after { display: none !important; }
+body.arch-zen-ghost:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-left,
+body.arch-zen-ghost:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-center,
+body.arch-zen-ghost:not(.edge-left):not(.edge-right) #dockBar:not(.tucked) .bar-zone-right {
+    pointer-events: auto; width: fit-content; height: calc(46px * var(--ds)); padding: 0 6px;
+    background: transparent !important; border: none !important; box-shadow: none !important;
+}
+body.arch-zen-ghost .bar-zone-left { justify-self: start; }
+body.arch-zen-ghost .bar-zone-center { justify-self: center; }
+body.arch-zen-ghost .bar-zone-right { justify-self: end; }
+body.arch-zen-ghost .dock-item img { filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.55)); }
+body.arch-zen-ghost .dock-item:hover,
+body.arch-zen-ghost .dock-item.active {
+    background: rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 8px 20px -6px rgba(0,0,0,0.45) !important;
+}
+body.arch-zen-ghost .dw-pill,
+body.arch-zen-ghost .dock-status-pill,
+body.arch-zen-ghost .dock-clock-pill {
+    background: rgba(12, 16, 28, 0.55) !important; border-color: rgba(255, 255, 255, 0.14) !important;
+}
+body.arch-zen-ghost.mode-light .dw-pill,
+body.arch-zen-ghost.mode-light .dock-status-pill,
+body.arch-zen-ghost.mode-light .dock-clock-pill {
+    background: rgba(255, 255, 255, 0.72) !important; border-color: rgba(15, 23, 42, 0.12) !important;
+}
         </style>
         </head>
         <body>
         <div class="dock-stage">
             <div id="radialHub"></div>
             <div id="folderStackCard" class="glass-shell"></div>
+            <div id="dockTrayPop" class="glass-shell dock-pop"></div>
+            <div id="dockQuickControls" class="glass-shell dock-pop"></div>
+            <div id="dockCalNotif" class="glass-shell dock-pop"></div>
+            <div id="dockWidgetPicker" class="glass-shell dock-pop"></div>
+            <div id="dockWidgetInspector" class="glass-shell dock-pop"></div>
+            <div id="dockAiPop" class="glass-shell dock-pop"></div>
+            <div id="dockCtxMenu" class="glass-shell dock-pop"></div>
+            <div id="quickWheelPop" class="glass-shell"></div>
+            <div id="scrubToast" class="glass-shell"></div>
             <div id="dockBar" class="glass-shell"></div>
         </div>
 
@@ -1916,7 +3221,14 @@ body.style-cyber-prism .radial-disc {
     mouse: '<svg class="svg-ic sm" viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="6"/><path d="M12 7v4"/></svg>',
     keyboard: '<svg class="svg-ic sm" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M7 13h.01M11 13h.01M15 13h.01M8 16h8"/></svg>',
     zip: '<svg class="svg-ic sm" viewBox="0 0 24 24"><path d="M21 8v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8"/><path d="M23 4H1v4h22V4z"/><path d="M10 12h4"/></svg>',
-    extLink: '<svg class="svg-ic sm" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>'
+    extLink: '<svg class="svg-ic sm" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>',
+    clock: '<svg class="svg-ic sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+    musicSm: '<svg class="svg-ic sm" viewBox="0 0 24 24"><path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>',
+    cpu: '<svg class="svg-ic sm" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/></svg>',
+    market: '<svg class="svg-ic sm" viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M16 7h5v5"/></svg>',
+    openai: '<svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="1.8" stroke-linecap="round"><path d="M12 3.2a4.3 4.3 0 0 1 3.7 2.1l3.6 2.1a4.3 4.3 0 0 1 0 7.4l-3.6 2.1a4.3 4.3 0 0 1-7.4 0l-3.6-2.1a4.3 4.3 0 0 1 0-7.4l3.6-2.1A4.3 4.3 0 0 1 12 3.2z"/><circle cx="12" cy="12" r="2.5"/></svg>',
+    gemini: '<svg viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="1.8" stroke-linejoin="round"><path d="M12 2.5C13.2 8.2 15.8 10.8 21.5 12 15.8 13.2 13.2 15.8 12 21.5 10.8 15.8 8.2 13.2 2.5 12 8.2 10.8 10.8 8.2 12 2.5z" fill="rgba(56,189,248,0.18)"/></svg>',
+    claude: '<svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="1.9" stroke-linecap="round"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/><circle cx="12" cy="12" r="2.1" fill="#F59E0B"/></svg>'
 };
 
         window.onerror = function(msg, src, line, col) {
@@ -1958,14 +3270,83 @@ let dwmPreviewActiveHwnd = null;
 let mouseX = null;
 let mouseY = null;
 let pointerInRadial = false;
-let dragPinState = null;
+let dragAppState = null;
+let dragWidgetState = null;
+let scrubState = null;
 let liveScaleOverride = null;
 let lastRenderedEdge = null;
+let quickControlsOpen = false;
+let calNotifOpen = false;
+let calNotifTab = 'notifications'; // 'notifications' | 'calendar'
+let calViewYear = new Date().getFullYear();
+let calViewMonth = new Date().getMonth();
+let calSelectedDate = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
+let trayPopOpen = false;
+let widgetPickerOpen = false;
+let widgetInspectorKind = null;
+let widgetInspectorX = 0;
+let quickWheelOpen = false;
+let quickWheelX = 0;
+let aiPopOpen = false;
+let ctxMenuOpen = false;
+let ctxMenuX = 0;
+let ctxMenuY = 0;
+let lastThemeIdApplied = '';
+
+const DOCK_ZONES = [
+    ['far-left', 'En Sol'],
+    ['before-apps', 'Uyg. Solu'],
+    ['after-apps', 'Uyg. Sağı'],
+    ['far-right', 'En Sağ']
+];
+const DOCK_ZONE_LABELS = {
+    'far-left': 'En Sol',
+    'before-apps': 'Uyg. Solu',
+    'after-apps': 'Uyg. Sağı',
+    'far-right': 'En Sağ'
+};
+const DOCK_WIDGET_META = {
+    'clock':             { name: 'Saat',             icon: SVG.clock,    variants: [['classic','Klasik'], ['dot5x7','LED 5×7'], ['flip','Split-Flap'], ['analog','Kronograf'], ['matrix','Dot-Matrix'], ['world','Dünya']] },
+    'media':             { name: 'Müzik Çalar',      icon: SVG.musicSm,  variants: [['vinyl','Vinil Plak'], ['art-pill','Kapak & Dalga'], ['eq','Ekolayzer'], ['capsule','Kapsül']] },
+    'volume-slider':     { name: 'Ses Kaydırıcı',    icon: SVG.vol,      variants: [['bar','Kaydırıcı'], ['mini','Mini']] },
+    'brightness-slider': { name: 'Parlaklık Barı',   icon: SVG.sun,      variants: [['bar','Kaydırıcı'], ['mini','Mini']] },
+    'mic-privacy':       { name: 'Mikrofon & LED',   icon: SVG.mic,      variants: [['pill','Kapsül'], ['icon','Sadece İkon']] },
+    'desktops':          { name: 'Sanal Masaüstü',   icon: SVG.desktop,  variants: [['pills','1·2·+'], ['compact','Kompakt']] },
+    'weather':           { name: 'Hava Durumu',      icon: SVG.cloud,    variants: [['pill','Kapsül']] },
+    'ai-quota':          { name: 'AI Kota',          icon: SVG.sparkles, variants: [['dots','3\'lü Durum'], ['rings','3\'lü Halka'], ['compact','Kompakt']] },
+    'battery':           { name: 'Pil & Bluetooth',  icon: SVG.battery,  variants: [['ring','Halka'], ['pill','Kapsül']] },
+    'system':            { name: 'CPU & RAM',        icon: SVG.cpu,      variants: [['bars','Çubuk'], ['spark','Canlı Eğri'], ['text','Metin']] },
+    'network':           { name: 'Ağ Hızı',          icon: SVG.activity, variants: [['speed','Canlı Hız']] },
+    'pomodoro':          { name: 'Pomodoro',         icon: SVG.timer,    variants: [['pill','Sayaç']] },
+    'market':            { name: 'Döviz & BTC',      icon: SVG.market,   variants: [['ticker','Kayan Kur']] },
+    'clipboard':         { name: 'Son Pano',         icon: SVG.clip,     variants: [['latest','Özet']] }
+};
+const ALL_SHELL_ARCHS = ['tahoe-glass', 'nothing-hardware', 'linear-studio', 'vision-orb', 'arc-split', 'braun-atelier', 'swiss-editorial', 'cockpit-hud', 'fluent-mica', 'zen-ghost'];
+const FLOATING_ARCHS = ['tahoe-glass', 'vision-orb', 'braun-atelier', 'cockpit-hud'];
+const SPLIT_ARCHS = ['nothing-hardware', 'arc-split', 'zen-ghost'];
+function getShellArchitecture() {
+    const raw = state?.shellArchitecture || 'tahoe-glass';
+    return raw === 'fluent-aurora' ? 'fluent-mica' : raw;
+}
+function getWidgetZone(w) {
+    if (!w) return 'before-apps';
+    if (w.zone === 'far-left' || w.zone === 'before-apps' || w.zone === 'after-apps' || w.zone === 'far-right') return w.zone;
+    return w.slot === 'left' ? 'before-apps' : 'after-apps';
+}
+function getWidgetsInZone(list, zone) {
+    return (list || [])
+        .filter(w => w.enabled && getWidgetZone(w) === zone)
+        .sort((a, b) => (Number(a.order || 0) - Number(b.order || 0)));
+}
 
 function getDockEdge() { return state?.dockEdge || 'Bottom'; }
 function isVerticalEdge() { const e = getDockEdge(); return e === 'Left' || e === 'Right'; }
+function getDockSilhouette() { return state?.dockSilhouette || 'fixed'; }
 function isPinnedBarMode() {
     const mode = state?.dockMode || (state?.dockAutoHide ? 'AutoHide' : 'AlwaysVisible');
+    const sil = getDockSilhouette();
+    const arch = getShellArchitecture();
+    if (FLOATING_ARCHS.includes(arch) || SPLIT_ARCHS.includes(arch) || sil === 'floating' || sil === 'islands' || sil === 'compact') return false;
     return mode === 'AlwaysVisible' && !isDockTuckedNow();
 }
 
@@ -2061,7 +3442,33 @@ function applyThemeVars(t) {
     for (const s of ALL_VISUAL_STYLES) {
         document.body.classList.toggle('style-' + s, s === styleId);
     }
+    const archId = getShellArchitecture();
+    for (const a of ALL_SHELL_ARCHS) {
+        document.body.classList.toggle('arch-' + a, a === archId);
+    }
     document.body.classList.toggle('mode-light', isLight);
+    if (lastThemeIdApplied && lastThemeIdApplied !== t.id) {
+        document.body.classList.remove('theme-' + lastThemeIdApplied);
+    }
+    if (t.id) {
+        document.body.classList.add('theme-' + t.id);
+        lastThemeIdApplied = t.id;
+    }
+    const rad = state?.cornerRadiusPreset || 'modern';
+    document.body.classList.toggle('radius-sharp', rad === 'sharp');
+    document.body.classList.toggle('radius-modern', rad === 'modern');
+    document.body.classList.toggle('radius-capsule', rad === 'capsule');
+    const hov = state?.dockHoverStyle || 'lift';
+    document.body.classList.toggle('hover-glow', hov === 'glow');
+    const sil = getDockSilhouette();
+    for (const s of ['fixed', 'floating', 'islands', 'minimal-rail', 'compact']) {
+        document.body.classList.toggle('sil-' + s, s === sil);
+    }
+    const ind = state?.dockIndicatorStyle || 'pill';
+    for (const ii of ['pill', 'dot', 'frame', 'glow']) {
+        document.body.classList.toggle('ind-' + ii, ii === ind);
+    }
+    document.body.classList.toggle('eco-mode', Boolean(state?.ecoModeActive));
 
     const op1 = typeof t.surfaceOpacity === 'number' ? Math.max(0.55, Math.min(1.0, t.surfaceOpacity)) : (isLight ? 0.94 : 0.92);
     const op2 = Math.min(1.0, op1 + 0.04);
@@ -2107,7 +3514,7 @@ function applyThemeVars(t) {
 }
 
 function isDockTuckedNow() {
-    if (radialGroupKey || openFolderPath || autoHideRevealed || isDraggingFileOverDock)
+    if (radialGroupKey || openFolderPath || quickControlsOpen || calNotifOpen || trayPopOpen || widgetPickerOpen || widgetInspectorKind || quickWheelOpen || aiPopOpen || ctxMenuOpen || state?.dockEditMode || autoHideRevealed || isDraggingFileOverDock)
         return false;
     if (manualTucked)
         return true;
@@ -2121,6 +3528,7 @@ function isDockTuckedNow() {
 }
 
 let pointerOverDock = false;
+let lastReportedDockPopOpen = false;
 
 function reportHitRects() {
     if (!state) return;
@@ -2128,9 +3536,18 @@ function reportHitRects() {
     const dock = document.getElementById('dockBar');
     const hub = document.getElementById('radialHub');
     const fcard = document.getElementById('folderStackCard');
+    const qcPop = document.getElementById('dockQuickControls');
+    const cnPop = document.getElementById('dockCalNotif');
+    const trPop = document.getElementById('dockTrayPop');
+    const wpPop = document.getElementById('dockWidgetPicker');
+    const wiPop = document.getElementById('dockWidgetInspector');
+    const aiPop = document.getElementById('dockAiPop');
+    const ctxPop = document.getElementById('dockCtxMenu');
+    const qwPop = document.getElementById('quickWheelPop');
     const edge = getDockEdge();
     const isVert = isVerticalEdge();
     const pinnedBar = isPinnedBarMode();
+    const isIslands = !isVert && (getDockSilhouette() === 'islands' || SPLIT_ARCHS.includes(getShellArchitecture()));
     let dockRect = null;
 
     if (dock && getComputedStyle(dock).display !== 'none') {
@@ -2138,7 +3555,22 @@ function reportHitRects() {
         if (r.width > 0 && r.height > 0) {
             dockRect = r;
             const tuckedNow = isDockTuckedNow();
-            if (isVert) {
+            if (isIslands && !tuckedNow) {
+                // Split Islands: report 3 independent clickable island rects so wallpaper gaps stay 100% click-through!
+                const extraTop = pointerOverDock ? 56 : 14;
+                const zones = dock.querySelectorAll('.bar-zone-left, .bar-zone-center, .bar-zone-right');
+                zones.forEach(z => {
+                    const zr = z.getBoundingClientRect();
+                    if (zr.width > 4 && zr.height > 4) {
+                        rects.push({
+                            x: Math.max(0, zr.left - 8),
+                            y: Math.max(0, zr.top - extraTop),
+                            w: zr.width + 16,
+                            h: zr.height + extraTop + 12
+                        });
+                    }
+                });
+            } else if (isVert) {
                 if (tuckedNow) {
                     const padY = 48;
                     const rx = edge === 'Left' ? 0 : Math.max(0, r.left - 6);
@@ -2184,7 +3616,7 @@ function reportHitRects() {
         }
     }
 
-    for (const pop of [hub, fcard]) {
+    for (const pop of [hub, fcard, qcPop, cnPop, trPop, wpPop, wiPop, aiPop, ctxPop, qwPop]) {
         if (pop && getComputedStyle(pop).display !== 'none') {
             const hr = pop.getBoundingClientRect();
             if (hr.width > 0 && hr.height > 0) {
@@ -2212,6 +3644,16 @@ function reportHitRects() {
                 }
             }
         }
+    }
+
+    const anyPopOpen = Boolean(
+        radialGroupKey || branchCatId || openFolderPath || expandedAccordionCat
+        || quickControlsOpen || calNotifOpen || trayPopOpen || widgetPickerOpen
+        || widgetInspectorKind || quickWheelOpen || aiPopOpen || ctxMenuOpen
+    );
+    if (anyPopOpen !== lastReportedDockPopOpen) {
+        lastReportedDockPopOpen = anyPopOpen;
+        send('setDockPopoverState', { open: anyPopOpen });
     }
 
     window.chrome.webview.postMessage({
@@ -2320,13 +3762,14 @@ function renderDock() {
     dock.onclick = null;
 
     const pinnedBar = isPinnedBarMode();
-    const splitLayout = pinnedBar && state.dockBarLayout === 'Split3Zone';
+    const isIslands = !isVert && (getDockSilhouette() === 'islands' || SPLIT_ARCHS.includes(getShellArchitecture()));
+    const splitLayout = isIslands || (pinnedBar && state.dockBarLayout === 'Split3Zone');
     if (stage) {
-        stage.classList.toggle('pinned-bar-stage', pinnedBar);
+        stage.classList.toggle('pinned-bar-stage', pinnedBar && !isIslands);
         stage.classList.remove('tucked-stage');
     }
     const densCls = state.dockDensity === 'Compact' ? ' density-compact' : (state.dockDensity === 'Cozy' ? ' density-cozy' : '');
-    const barCls = pinnedBar ? (' pinned-bar' + (splitLayout ? ' layout-split' : '')) : '';
+    const barCls = isIslands ? ' layout-split' : (pinnedBar ? (' pinned-bar' + (splitLayout ? ' layout-split' : '')) : '');
     dock.className = 'glass-shell' + densCls + barCls;
 
     const groups = state.groups || [];
@@ -2334,13 +3777,41 @@ function renderDock() {
     const runningUnpinned = groups.filter(g => !g.isPinned && g.windows.length > 0);
     const compactMode = isVert || (window.innerWidth < 1050);
 
-    const searchHtml = `
-        <div class="search-pill" onclick="send('openOmni')">
-            ${SVG.search}
-            ${compactMode ? '' : '<span>Ara</span>'}
-            ${isVert ? '<span class="hover-label">Evrensel Arama</span>' : ''}
-        </div>
-    `;
+    // Item #1: ONE single unified Start & Search trigger (never two duplicate buttons side by side!)
+    const startStyle = state.dockStartStyle || 'icon';
+    const searchHtml = (startStyle === 'capsule' && !compactMode)
+        ? `<button class="start-btn start-capsule" onclick="closeAllDockPopovers(false);send('openStartHub');" title="Başlat & Ara (Win)">
+               ${SVG.sparkles}<span>Ara</span>
+           </button>`
+        : `<button class="start-btn" onclick="closeAllDockPopovers(false);send('openStartHub');" title="Başlat & Ara (Win)">
+               ${SVG.sparkles}
+               <span class="hover-label">Başlat & Ara (Win)</span>
+           </button>`;
+
+    const dockWidgets = Array.isArray(state.dockWidgets) ? state.dockWidgets : [];
+    const editMode = Boolean(state.dockEditMode);
+    document.body.classList.toggle('dock-edit-mode', editMode);
+
+    const zFarLeft = !isVert ? getWidgetsInZone(dockWidgets, 'far-left') : [];
+    const zBeforeApps = !isVert ? getWidgetsInZone(dockWidgets, 'before-apps') : [];
+    const zAfterApps = !isVert ? getWidgetsInZone(dockWidgets, 'after-apps') : [];
+    const zFarRightAll = !isVert ? getWidgetsInZone(dockWidgets, 'far-right') : [];
+    const rightClockWidget = zFarRightAll.find(w => w.kind === 'clock') || null;
+    const zFarRightExtra = zFarRightAll.filter(w => w.kind !== 'clock');
+
+    const renderZoneContainer = (zoneId, items) => {
+        if (isVert || window.innerWidth < 860) return '';
+        const rendered = items.map((w, idx) => renderDockMicroWidgetHtml(w, zoneId, idx)).filter(Boolean).join('');
+        const isEmpty = !rendered;
+        return `<div class="dw-zone ${isEmpty ? 'empty-idle zone-has-only-tag' : ''}" data-dw-zone="${zoneId}"><span class="dw-zone-tag">${escHtml(DOCK_ZONE_LABELS[zoneId] || zoneId)}</span>${rendered}</div>`;
+    };
+    const farLeftZoneHtml = renderZoneContainer('far-left', zFarLeft);
+    const beforeAppsZoneHtml = renderZoneContainer('before-apps', zBeforeApps);
+    const afterAppsZoneHtml = renderZoneContainer('after-apps', zAfterApps);
+    const farRightZoneHtml = renderZoneContainer('far-right', zFarRightExtra);
+    const addWidgetBtnHtml = (!isVert && window.innerWidth >= 860)
+        ? `<button class="dw-add-btn ${widgetPickerOpen ? 'open' : ''}" onclick="toggleDockWidgetPicker(event)" title="Alt Dock Widget Ekle / Özelleştir (14 Pro Widget)">${SVG.plus}</button>${editMode ? `<button class="dw-edit-done" onclick="send('setDockEditMode',{active:false})" title="Düzenleme Modunu Kapat (ESC)">✓ Bitti</button>` : ''}`
+        : '';
 
     let appsHtml = '';
     for (let i = 0; i < pinned.length; i++) {
@@ -2356,7 +3827,7 @@ function renderDock() {
             }
             for (const b of buckets) {
                 if (isVert && b.groups.length === 1) {
-                    appsHtml += buildDockIconHtml(b.groups[0], -1, null);
+                    appsHtml += buildDockIconHtml(b.groups[0], -1, null, 0);
                     continue;
                 }
                 const isOpen = (expandedAccordionCat === b.id) || (radialAnchorCatId === b.id && Boolean(radialGroupKey));
@@ -2387,15 +3858,15 @@ function renderDock() {
                             ${isVert ? vertHeadHtml : horizHeadHtml}
                         </div>
                         <div class="acc-drawer">
-                            ${b.groups.map(g => buildDockIconHtml(g, -1, b.id)).join('')}
+                            ${b.groups.map((g, gi) => buildDockIconHtml(g, -1, b.id, gi)).join('')}
                         </div>
                     </div>
                 `;
             }
         } else {
             expandedAccordionCat = null;
-            for (const g of runningUnpinned) {
-                appsHtml += buildDockIconHtml(g, -1, null);
+            for (let i = 0; i < runningUnpinned.length; i++) {
+                appsHtml += buildDockIconHtml(runningUnpinned[i], -1, null, i);
             }
         }
     }
@@ -2434,15 +3905,54 @@ function renderDock() {
             ? 'Akıllı Kaçınma / Yüzen (Tıkla → Sabit Bar · Sağ Tık → Oto-Gizle)'
             : 'Oto-Gizle (Tıkla → Sabit Bar)');
 
-    const utilsHtml = `
-        <button class="pill-btn dock-v-btn num" onclick="send('openTray')" title="Sistem Tepsisi (${trayCount})">
+    const showStatus = !isVert && state.showDockStatusCluster !== false && window.innerWidth >= 820;
+    const volPct = state.audio?.volume ?? 50;
+    const volMuted = Boolean(state.audio?.muted);
+    const bat = state.battery || { present: false, percent: 100, charging: false };
+    const unread = Number(state.unreadNotifCount || 0);
+
+    const clockInnerHtml = rightClockWidget
+        ? renderClockInnerByVariant(rightClockWidget.variant || 'classic')
+        : `<span style="font-size:11px;font-weight:700;color:var(--text-2);">${escHtml(state.shortDate || 'Takvim')}</span>`;
+
+    const scrubTip = state.dockScrubGestures !== false
+        ? `Hızlı Kontroller · Sürükle/Tekerlek: Ses %${volPct} · Shift: Parlaklık · Orta Tık: Sessiz`
+        : `Hızlı Kontroller · Tekerlek: Ses %${volPct} · Orta Tık: Sessiz`;
+
+    const utilsHtml = showStatus ? `
+        ${farRightZoneHtml}
+        <button class="dock-tray-chevron ${trayPopOpen ? 'open' : ''}" onclick="toggleDockTrayPop(event)" title="Gizli Simgeler (${trayCount})">
+            ${SVG.tray}
+            ${trayCount > 0 ? `<span class="tray-dot-cnt num">${trayCount}</span>` : ''}
+        </button>
+        <button class="dock-status-pill ${quickControlsOpen ? 'open' : ''}"
+                onpointerdown="startStatusScrub(event)"
+                onclick="if(window.__suppressNextStatusClick && Date.now()<window.__suppressNextStatusClick) return; toggleQuickControls(event);"
+                onauxclick="if(event.button===1){event.preventDefault();event.stopPropagation();send('toggleMute');}"
+                onwheel="event.preventDefault();event.stopPropagation();if(event.shiftKey){send('adjustBrightnessDelta',{delta:event.deltaY<0?5:-5});}else{send('adjustVolumeDelta',{delta:event.deltaY<0?2:-2});}"
+                title="${scrubTip}">
+            <span style="color:${state.wifi?.on !== false ? 'var(--text-1)' : 'var(--text-2)'};display:inline-flex;">${SVG.wifi}</span>
+            <span style="color:${volMuted ? 'var(--danger)' : 'var(--text-1)'};display:inline-flex;">${volMuted ? SVG.mute : SVG.vol}</span>
+            ${bat.present ? `<span class="st-bat num ${bat.charging ? 'chg' : (bat.percent <= 20 ? 'low' : '')}">${SVG.battery}<span>${bat.percent}%</span></span>` : `<span class="st-bat num">${volPct}%</span>`}
+        </button>
+        <button class="dock-clock-pill ${calNotifOpen ? 'open' : ''}"
+                onclick="toggleCalNotif(event, ${state.notificationMode === 'aurora-mirror' ? 'null' : "'calendar'"})"
+                oncontextmenu="event.preventDefault();event.stopPropagation();openWidgetInspector(event,'clock');"
+                title="Takvim (Sağ Tık: Saat Stili & Konum)">
+            ${clockInnerHtml}
+            ${state.notificationMode === 'aurora-mirror'
+                ? (unread > 0 ? `<span class="dock-notif-badge num">${unread}</span>` : `<span style="color:var(--text-2);display:inline-flex;">${SVG.bell}</span>`)
+                : ''}
+        </button>
+    ` : `
+        <button class="pill-btn dock-v-btn num" onclick="toggleDockTrayPop(event)" title="Sistem Tepsisi (${trayCount})">
             ${SVG.tray}${isVert ? '' : `<span>${trayCount}</span>`}
             ${isVert && trayCount > 0 ? `<span class="dock-v-badge num">${trayCount}</span>` : ''}
             ${isVert ? `<span class="hover-label">Sistem Tepsisi (${trayCount})</span>` : ''}
         </button>
-        <button class="pill-btn dock-v-btn ${state.smartTidy?'tidy-on':''}" onclick="send('toggleSmartTidy')" title="Akıllı Derle">
-            ${SVG.sparkles}${compactMode ? '' : `<span>${state.smartTidy ? 'Derli' : 'Derle'}</span>`}
-            ${isVert ? `<span class="hover-label">Akıllı Derle: ${state.smartTidy ? 'Açık' : 'Kapalı'}</span>` : ''}
+        <button class="micro-btn dock-pin-btn" onclick="send('openSettings',{section:'appearance'})" title="Aurora Ayarları">
+            ${SVG.settings}
+            <span class="hover-label">Ayarlar</span>
         </button>
         <button class="micro-btn dock-pin-btn ${pinCls}" onclick="toggleDockPin()" oncontextmenu="event.preventDefault();send('setDockAutoHideMode');">
             ${SVG.pin}
@@ -2456,9 +3966,13 @@ function renderDock() {
             <div class="bar-zone-left">
                 ${searchHtml}
                 ${foldersHtml ? `<div class="dock-sep"></div>${foldersHtml}` : ''}
+                ${farLeftZoneHtml}
+                ${addWidgetBtnHtml}
             </div>
             <div class="bar-zone-center">
+                ${beforeAppsZoneHtml}
                 ${appsHtml}
+                ${afterAppsZoneHtml}
             </div>
             <div class="bar-zone-right">
                 ${utilsHtml}
@@ -2467,8 +3981,12 @@ function renderDock() {
     } else {
         html = `
             ${searchHtml}
+            ${farLeftZoneHtml}
+            ${addWidgetBtnHtml}
             <div class="dock-sep"></div>
+            ${beforeAppsZoneHtml}
             ${appsHtml}
+            ${afterAppsZoneHtml}
             ${foldersHtml ? `<div class="dock-sep"></div>${foldersHtml}` : ''}
             <div class="dock-sep"></div>
             ${utilsHtml}
@@ -2499,9 +4017,678 @@ function renderDock() {
     }
     renderRadialHub(false);
     renderFolderStackCard();
+    if (quickControlsOpen) renderQuickControlsPop();
+    if (calNotifOpen) renderCalNotifPop();
+    if (trayPopOpen) renderTrayPop();
+    if (widgetPickerOpen) renderDockWidgetPickerPop();
+    if (widgetInspectorKind) renderWidgetInspectorPop();
+    if (quickWheelOpen) renderQuickWheelPop();
+    if (aiPopOpen) renderDockAiPop();
+    if (ctxMenuOpen) renderCtxMenuPop();
     reportHitRects();
     requestAnimationFrame(reportHitRects);
     if (edgeChanged) { setTimeout(reportHitRects, 140); setTimeout(reportHitRects, 320); }
+}
+
+/* ========== v4.1 CUTE MODULAR BOTTOM DOCK MICRO-WIDGET ENGINE ========== */
+const DOCK_DM_GLYPHS = {
+    '0': [0x0E,0x11,0x13,0x15,0x19,0x11,0x0E], '1': [0x04,0x0C,0x04,0x04,0x04,0x04,0x0E],
+    '2': [0x0E,0x11,0x01,0x06,0x08,0x10,0x1F], '3': [0x1F,0x02,0x04,0x06,0x01,0x11,0x0E],
+    '4': [0x02,0x06,0x0A,0x12,0x1F,0x02,0x02], '5': [0x1F,0x10,0x1E,0x01,0x01,0x11,0x0E],
+    '6': [0x06,0x08,0x10,0x1E,0x11,0x11,0x0E], '7': [0x1F,0x01,0x02,0x04,0x08,0x08,0x08],
+    '8': [0x0E,0x11,0x11,0x0E,0x11,0x11,0x0E], '9': [0x0E,0x11,0x11,0x0F,0x01,0x02,0x0C],
+    ':': [0x00,0x04,0x04,0x00,0x04,0x04,0x00]
+};
+function renderDockDot5x7Svg(hhmm) {
+    const str = String(hhmm || '--:--').slice(0, 5);
+    let dots = '', cx = 1;
+    for (const ch of str) {
+        if (ch === ':') {
+            dots += `<circle cx="${cx+1}" cy="5.5" r="1.1" fill="var(--accent-1)"/><circle cx="${cx+1}" cy="11.5" r="1.1" fill="var(--accent-1)"/>`;
+            cx += 4.5; continue;
+        }
+        const rows = DOCK_DM_GLYPHS[ch] || DOCK_DM_GLYPHS['0'];
+        for (let r = 0; r < 7; r++) {
+            for (let c = 0; c < 5; c++) {
+                if ((rows[r] >> (4 - c)) & 1) {
+                    dots += `<circle cx="${cx + c * 2.2}" cy="${1.5 + r * 2.2}" r="0.95" fill="currentColor"/>`;
+                }
+            }
+        }
+        cx += 13;
+    }
+    return `<svg class="dw-dot5x7-svg" id="dockDot5x7" viewBox="0 0 ${Math.ceil(cx)} 17">${dots}</svg>`;
+}
+function renderDockSparkSvg(arr1, arr2) {
+    const mapPts = (arr) => {
+        const a = (Array.isArray(arr) && arr.length > 1) ? arr : [10, 14, 12, 18, 16, 20];
+        return a.map((v, i) => `${((i / (a.length - 1)) * 46).toFixed(1)},${(17 - Math.max(0, Math.min(100, v)) / 100 * 15).toFixed(1)}`).join(' ');
+    };
+    return `<svg class="dw-spark-svg" viewBox="0 0 46 18">
+        <polyline points="${mapPts(arr2)}" fill="none" stroke="var(--accent-2)" stroke-width="1.4" opacity="0.65" stroke-linecap="round" stroke-linejoin="round"/>
+        <polyline points="${mapPts(arr1)}" fill="none" stroke="var(--accent-1)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+}
+
+function renderClockInnerByVariant(variant) {
+    const clk = state?.clock || '--:--';
+    const parts = clk.split(':');
+    const hh = parts[0] || '--';
+    const mm = parts[1] || '--';
+    const shortDate = state?.shortDate || '';
+    if (variant === 'dot5x7') {
+        return renderDockDot5x7Svg(`${hh}:${mm}`);
+    }
+    if (variant === 'flip') {
+        return `
+            <span class="dw-flip-wrap">
+                <span class="dw-flip-card num" id="dockFlipH">${escHtml(hh)}</span>
+                <span style="font-weight:800;opacity:0.65;">:</span>
+                <span class="dw-flip-card num" id="dockFlipM">${escHtml(mm)}</span>
+            </span>
+        `;
+    }
+    if (variant === 'analog') {
+        const now = new Date();
+        const hDeg = ((now.getHours() % 12) + now.getMinutes() / 60) * 30;
+        const mDeg = (now.getMinutes() + now.getSeconds() / 60) * 6;
+        const sDeg = now.getSeconds() * 6;
+        return `
+            <svg class="dw-analog-svg" viewBox="0 0 28 28">
+                <circle cx="14" cy="14" r="12.5" fill="var(--bg-inset)" stroke="var(--border-rim)" stroke-width="1.3"/>
+                <circle cx="14" cy="4.2" r="0.9" fill="var(--text-2)"/><circle cx="23.8" cy="14" r="0.9" fill="var(--text-2)"/>
+                <circle cx="14" cy="23.8" r="0.9" fill="var(--text-2)"/><circle cx="4.2" cy="14" r="0.9" fill="var(--text-2)"/>
+                <line id="dockAnaH" x1="14" y1="14" x2="14" y2="7.5" stroke="var(--text-1)" stroke-width="1.9" stroke-linecap="round" transform="rotate(${hDeg.toFixed(1)} 14 14)"/>
+                <line id="dockAnaM" x1="14" y1="14" x2="14" y2="5.2" stroke="var(--text-1)" stroke-width="1.4" stroke-linecap="round" transform="rotate(${mDeg.toFixed(1)} 14 14)"/>
+                <line id="dockAnaS" x1="14" y1="14" x2="14" y2="4.6" stroke="var(--accent-1)" stroke-width="1" stroke-linecap="round" transform="rotate(${sDeg.toFixed(1)} 14 14)"/>
+                <circle cx="14" cy="14" r="1.4" fill="var(--accent-1)"/>
+            </svg>
+            <span class="dock-clock-stack">
+                <span class="dock-clock-time num" id="dockClockTime" style="font-size:11px;">${escHtml(clk)}</span>
+                <span class="dock-clock-date">${escHtml(shortDate)}</span>
+            </span>
+        `;
+    }
+    if (variant === 'matrix') {
+        return `<span class="dw-matrix-clock num" id="dockClockTime">${escHtml(clk)}</span>`;
+    }
+    if (variant === 'world') {
+        const now = new Date();
+        const utcStr = `${String(now.getUTCHours()).padStart(2,'0')}:${String(now.getUTCMinutes()).padStart(2,'0')}`;
+        return `
+            <span class="dock-clock-stack">
+                <span class="dock-clock-time num" id="dockClockTime">${escHtml(clk)}</span>
+                <span class="dock-clock-date num">UTC ${utcStr}</span>
+            </span>
+        `;
+    }
+    return `
+        <span class="dock-clock-stack">
+            <span class="dock-clock-time num" id="dockClockTime">${escHtml(clk)}</span>
+            <span class="dock-clock-date">${escHtml(shortDate)}</span>
+        </span>
+    `;
+}
+
+function renderDockMicroWidgetHtml(w, zoneId, zoneIdx) {
+    if (!w || !w.enabled) return '';
+    const v = w.variant || 'default';
+    const sz = w.size === 'compact' ? 'dw-sz-compact' : (w.size === 'wide' ? 'dw-sz-wide' : '');
+    const sm = w.styleMode === 'clean' ? 'dw-st-clean'
+        : (w.styleMode === 'tinted' ? 'dw-st-tinted'
+            : (w.styleMode === 'glass' ? 'dw-st-glass'
+                : (w.styleMode === 'hardware' ? 'dw-st-hardware' : '')));
+    const sk = escAttr(w.kind);
+    const szId = escAttr(zoneId || getWidgetZone(w));
+    const idx = Number.isFinite(zoneIdx) ? zoneIdx : 0;
+    const baseCls = `dw-pill ${sz} ${sm}`;
+    const dwAttrs = `data-dw-kind="${sk}" data-dw-zone="${szId}" data-dw-idx="${idx}" onpointerdown="startWidgetDrag(event,'${sk}','${szId}',${idx})" oncontextmenu="openWidgetInspector(event,'${sk}')" onwheel="handleDockWidgetWheel(event,'${sk}')"`;
+    const guardClick = `if(window.__suppressNextWidgetClick && Date.now()<window.__suppressNextWidgetClick) return;`;
+
+    if (w.kind === 'clock') {
+        return `<button class="${baseCls} ${calNotifOpen ? 'open' : ''}" ${dwAttrs} onclick="${guardClick}toggleCalNotif(event,'calendar')" title="Saat · Tıkla: Takvim · Sürükle: Taşı · Sağ Tık: Özelleştir">${renderClockInnerByVariant(v)}</button>`;
+    }
+    if (w.kind === 'volume-slider') {
+        const vol = Number(state.audio?.volume ?? 50);
+        const muted = Boolean(state.audio?.muted);
+        const dev = state.audio?.device || 'Ses Çıkışı';
+        if (v === 'mini') {
+            return `
+                <div class="${baseCls} num" ${dwAttrs} onclick="${guardClick}send('toggleMute')" onauxclick="if(event.button===1){event.stopPropagation();send('cycleAudioOutput');}" title="${escHtml(dev)} · Tıkla: Sessiz · Tekerlek: Ses · Orta Tık: Cihaz Değiştir">
+                    <span style="color:${muted ? 'var(--danger)' : 'var(--accent-1)'};display:inline-flex;">${muted ? SVG.mute : SVG.vol}</span>
+                    <span>${muted ? 'Sessiz' : vol + '%'}</span>
+                </div>
+            `;
+        }
+        return `
+            <div class="${baseCls} dw-slider-pill num" ${dwAttrs} title="${escHtml(dev)} · Sürükle: Ses · İkon: Sessiz · Orta Tık: Çıkış Değiştir · Sağ Tık: Özelleştir">
+                <button class="dw-mini-act" style="color:${muted ? 'var(--danger)' : 'var(--text-1)'};" onpointerdown="event.stopPropagation();" onclick="event.stopPropagation();send('toggleMute');" onauxclick="if(event.button===1){event.stopPropagation();send('cycleAudioOutput');}" title="Sessiz / Aç (Orta Tık: Çıkış Değiştir)">${muted ? SVG.mute : SVG.vol}</button>
+                <div class="dw-slider-track" onpointerdown="startInlineSlider(event,'volume',this)" onclick="event.stopPropagation();">
+                    <div class="dw-slider-rail"><div class="dw-slider-fill ${muted ? 'muted' : ''}" style="width:${muted ? 0 : vol}%;"></div></div>
+                </div>
+                <span class="dw-slider-pct">${muted ? '✕' : vol + '%'}</span>
+            </div>
+        `;
+    }
+    if (w.kind === 'brightness-slider') {
+        const mons = state.monitorBrightness || [];
+        const bri = mons.length > 0 ? Number(mons[0].percent ?? 80) : 80;
+        if (v === 'mini') {
+            return `
+                <div class="${baseCls} num" ${dwAttrs} onclick="${guardClick}toggleQuickControls(event)" title="Ekran Parlaklığı %${bri} · Tekerlek: Ayarla · Sağ Tık: Özelleştir">
+                    <span style="color:var(--warning);display:inline-flex;">${SVG.sun}</span>
+                    <span>${bri}%</span>
+                </div>
+            `;
+        }
+        return `
+            <div class="${baseCls} dw-slider-pill num" ${dwAttrs} title="Parlaklık %${bri} · Kaydır veya Tekerlek · Sağ Tık: Özelleştir">
+                <span style="color:var(--warning);display:inline-flex;">${SVG.sun}</span>
+                <div class="dw-slider-track" onpointerdown="startInlineSlider(event,'brightness',this)" onclick="event.stopPropagation();">
+                    <div class="dw-slider-rail"><div class="dw-slider-fill" style="width:${bri}%;"></div></div>
+                </div>
+                <span class="dw-slider-pct">${bri}%</span>
+            </div>
+        `;
+    }
+    if (w.kind === 'mic-privacy') {
+        const micMuted = Boolean(state.mic?.muted);
+        const camLive = Boolean(state.privacy?.camera);
+        const micLive = Boolean(state.privacy?.mic);
+        const liveApps = [...(state.privacy?.cameraApps || []), ...(state.privacy?.micApps || [])].slice(0, 2).join(', ');
+        const stateCls = micMuted ? 'mic-muted' : ((camLive || micLive) ? 'privacy-live' : '');
+        const ledCls = micMuted ? 'muted' : ((camLive || micLive) ? 'live' : '');
+        const lbl = micMuted ? 'Kapalı' : (camLive ? 'Kamera' : (micLive ? 'Canlı' : 'Mik'));
+        return `
+            <button class="${baseCls} ${stateCls}" ${dwAttrs} onclick="${guardClick}send('toggleMicMute')" title="Mikrofon ${micMuted ? 'Kapalı' : 'Açık'}${liveApps ? ' · Aktif: ' + escHtml(liveApps) : ''} · Tıkla: Sustur/Aç">
+                <span class="dw-mic-led ${ledCls}"></span>
+                <span style="display:inline-flex;">${micMuted ? SVG.micOff : SVG.mic}</span>
+                ${v === 'icon' ? '' : `<span>${lbl}</span>`}
+            </button>
+        `;
+    }
+    if (w.kind === 'desktops') {
+        const vd = state.virtualDesktop || { index: 1, count: 2 };
+        const cnt = Math.max(1, Math.min(6, Number(vd.count || 2)));
+        const cur = Math.max(1, Number(vd.index || 1));
+        if (v === 'compact') {
+            return `<button class="${baseCls} num" ${dwAttrs} onclick="${guardClick}send('openTaskView')" title="Sanal Masaüstü ${cur}/${cnt} · Tekerlek: Masaüstü Değiştir · Tıkla: Görev Görünümü">${SVG.layers}<span>M${cur}</span></button>`;
+        }
+        let btns = '';
+        for (let i = 1; i <= cnt; i++) {
+            btns += `<button class="dw-desk-btn num ${i === cur ? 'active' : ''}" onpointerdown="event.stopPropagation();" onclick="event.stopPropagation();send('switchVirtualDesktopIndex',{index:${i}});" title="Masaüstü ${i}">${i}</button>`;
+        }
+        return `
+            <div class="${baseCls} dw-desk-wrap" ${dwAttrs} title="Sanal Masaüstleri · Tekerlek: Geçiş Yap · Sağ Tık: Özelleştir">
+                ${btns}
+                <button class="dw-desk-btn" onpointerdown="event.stopPropagation();" onclick="event.stopPropagation();send('createVirtualDesktop');" title="Yeni Masaüstü">+</button>
+            </div>
+        `;
+    }
+    if (w.kind === 'media') {
+        const med = state.media;
+        if (!med) {
+            if (v === 'capsule') {
+                return `
+                    <div class="${baseCls}" ${dwAttrs} title="Müzik Çalar · Tıkla: Oynat · Sağ Tık: Özelleştir">
+                        <span style="color:var(--accent-1);display:inline-flex;">${SVG.musicSm}</span>
+                        <button class="dw-mini-act" onpointerdown="event.stopPropagation();" onclick="event.stopPropagation();send('mediaCmd',{cmd:'prev'});" title="Önceki">${SVG.prev}</button>
+                        <button class="dw-mini-act" onpointerdown="event.stopPropagation();" onclick="event.stopPropagation();send('mediaCmd',{cmd:'play_pause'});" title="Oynat / Başlat">${SVG.play}</button>
+                        <button class="dw-mini-act" onpointerdown="event.stopPropagation();" onclick="event.stopPropagation();send('mediaCmd',{cmd:'next'});" title="Sonraki">${SVG.next}</button>
+                    </div>
+                `;
+            }
+            return `
+                <div class="${baseCls}" ${dwAttrs} onclick="${guardClick}send('mediaCmd',{cmd:'play_pause'})" title="Müzik Çalar · Oynatmak için tıklayın · Sağ Tık: Özelleştir">
+                    <span style="color:var(--accent-1);display:inline-flex;">${SVG.musicSm}</span>
+                    <span class="dw-sub">Müzik</span>
+                    <button class="dw-mini-act" onpointerdown="event.stopPropagation();" onclick="event.stopPropagation();send('mediaCmd',{cmd:'play_pause'});" title="Oynat">${SVG.play}</button>
+                </div>
+            `;
+        }
+        const playing = Boolean(med.isPlaying);
+        if (v === 'art-pill') {
+            return `
+                <div class="${baseCls}" ${dwAttrs} onclick="${guardClick}send('mediaCmd',{cmd:'play_pause'})" title="${escHtml(med.title)} — ${escHtml(med.artist || med.app)}">
+                    <span class="dw-art-thumb">${med.artwork ? `<img src="data:image/jpeg;base64,${med.artwork}"/>` : SVG.musicSm}</span>
+                    <span class="dw-eq ${playing ? '' : 'paused'}"><span></span><span></span><span></span></span>
+                    <span class="dw-media-txt">${escHtml(med.title)}</span>
+                    <button class="dw-mini-act" onpointerdown="event.stopPropagation();" onclick="event.stopPropagation();send('mediaCmd',{cmd:'next'});" title="Sonraki">${SVG.next}</button>
+                </div>
+            `;
+        }
+        if (v === 'eq') {
+            return `
+                <div class="${baseCls}" ${dwAttrs} onclick="${guardClick}send('mediaCmd',{cmd:'play_pause'})" title="${escHtml(med.title)} — ${escHtml(med.artist || med.app)}">
+                    <span class="dw-eq ${playing ? '' : 'paused'}"><span></span><span></span><span></span><span></span></span>
+                    <span class="dw-media-txt">${escHtml(med.title)}</span>
+                    <button class="dw-mini-act" onpointerdown="event.stopPropagation();" onclick="event.stopPropagation();send('mediaCmd',{cmd:'next'});" title="Sonraki">${SVG.next}</button>
+                </div>
+            `;
+        }
+        if (v === 'capsule') {
+            return `
+                <div class="${baseCls}" ${dwAttrs} title="${escHtml(med.title)}">
+                    <button class="dw-mini-act" onpointerdown="event.stopPropagation();" onclick="event.stopPropagation();send('mediaCmd',{cmd:'prev'});">${SVG.prev}</button>
+                    <button class="dw-mini-act" onpointerdown="event.stopPropagation();" onclick="event.stopPropagation();send('mediaCmd',{cmd:'play_pause'});">${playing ? SVG.pause : SVG.play}</button>
+                    <button class="dw-mini-act" onpointerdown="event.stopPropagation();" onclick="event.stopPropagation();send('mediaCmd',{cmd:'next'});">${SVG.next}</button>
+                    <span class="dw-media-txt" style="max-width:84px;">${escHtml(med.title)}</span>
+                </div>
+            `;
+        }
+        return `
+            <div class="${baseCls}" ${dwAttrs} onclick="${guardClick}send('mediaCmd',{cmd:'play_pause'})" title="${escHtml(med.title)} — Tıkla: Oynat/Duraklat">
+                <span class="dw-vinyl-disc ${playing ? '' : 'paused'}">${med.artwork ? `<img src="data:image/jpeg;base64,${med.artwork}"/>` : ''}</span>
+                <span class="dw-media-txt">${escHtml(med.title)}</span>
+                <button class="dw-mini-act" onpointerdown="event.stopPropagation();" onclick="event.stopPropagation();send('mediaCmd',{cmd:'next'});" title="Sonraki">${SVG.next}</button>
+            </div>
+        `;
+    }
+    if (w.kind === 'weather') {
+        const wt = state.weather;
+        if (!wt || !wt.live) {
+            return `<button class="${baseCls}" ${dwAttrs} onclick="${guardClick}send('toggleWeatherNet')" title="Hava Durumu (Yenile)"><span style="color:var(--warning);display:inline-flex;">${SVG.cloud}</span><span class="dw-sub">Hava</span></button>`;
+        }
+        const isSunny = /(açık|güneş|clear|sun)/i.test(wt.summary || '');
+        return `<button class="${baseCls} num" ${dwAttrs} onclick="${guardClick}send('openToolsHub',{tab:'telemetry'})" title="${escHtml(wt.city || '')} · ${escHtml(wt.summary || '')}"><span style="color:${isSunny ? 'var(--warning)' : 'var(--accent-1)'};display:inline-flex;">${isSunny ? SVG.sun : SVG.cloud}</span><span>${wt.temp}°</span></button>`;
+    }
+    if (w.kind === 'ai-quota') {
+        const snaps = state.aiSnapshots || [];
+        const colors = { openai: '#10B981', gemini: '#38BDF8', claude: '#F59E0B' };
+        const shortN = { openai: 'G', gemini: 'Ge', claude: 'C' };
+        const items = snaps.length > 0 ? snaps : [
+            { provider: 'openai', remainingPercent: 100 },
+            { provider: 'gemini', remainingPercent: 100 },
+            { provider: 'claude', remainingPercent: 100 }
+        ];
+        if (v === 'rings') {
+            return `
+                <button class="${baseCls} num ${aiPopOpen ? 'open' : ''}" ${dwAttrs} onclick="${guardClick}toggleDockAiPop(event)" title="AI Kota Durumu (ChatGPT · Gemini · Claude)">
+                    <span class="dw-ai-rings">
+                        ${items.map(s => {
+                            const p = Math.max(0, Math.min(100, Number(s.remainingPercent ?? 100)));
+                            const d = (37.7 * (1 - p / 100)).toFixed(1);
+                            const col = colors[s.provider] || 'var(--accent-1)';
+                            return `<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="var(--border-subtle)" stroke-width="2"/><circle cx="8" cy="8" r="6" fill="none" stroke="${col}" stroke-width="2" stroke-dasharray="37.7" stroke-dashoffset="${d}" stroke-linecap="round" transform="rotate(-90 8 8)"/></svg>`;
+                        }).join('')}
+                    </span>
+                </button>
+            `;
+        }
+        if (v === 'compact') {
+            const minPct = Math.min(...items.map(s => Number(s.remainingPercent ?? 100)));
+            return `<button class="${baseCls} num ${aiPopOpen ? 'open' : ''}" ${dwAttrs} onclick="${guardClick}toggleDockAiPop(event)" title="AI Kota Durumu (ChatGPT · Gemini · Claude)"><span style="color:var(--accent-1);display:inline-flex;">${SVG.sparkles}</span><span>${minPct}%</span></button>`;
+        }
+        return `
+            <button class="${baseCls} num ${aiPopOpen ? 'open' : ''}" ${dwAttrs} onclick="${guardClick}toggleDockAiPop(event)" title="AI Kota Durumu (ChatGPT · Gemini · Claude)">
+                <span class="dw-ai-dots">
+                    ${items.map(s => `<span class="dw-ai-chip"><span class="dw-ai-dot" style="background:${colors[s.provider] || 'var(--accent-1)'};"></span>${shortN[s.provider] || 'AI'} ${s.remainingPercent ?? 100}%</span>`).join('')}
+                </span>
+            </button>
+        `;
+    }
+    if (w.kind === 'battery') {
+        const bat = state.battery || { present: false, percent: 100, charging: false };
+        const bt = (state.btDevices || []).find(d => d.hasBattery);
+        const pct = bt ? bt.percent : bat.percent;
+        const lbl = bt ? bt.name.slice(0, 7) : (bat.charging ? 'Şarj' : 'Pil');
+        if (v === 'pill') {
+            return `<button class="${baseCls} num" ${dwAttrs} onclick="${guardClick}toggleQuickControls(event)" title="${bt ? escHtml(bt.name) : 'Pil Durumu'}">${bt ? SVG.headphones : (bat.charging ? SVG.bolt : SVG.battery)}<span>${pct}%</span></button>`;
+        }
+        const dash = (44 * (1 - Math.max(0, Math.min(100, pct)) / 100)).toFixed(1);
+        return `
+            <button class="${baseCls} num" ${dwAttrs} onclick="${guardClick}toggleQuickControls(event)" title="${bt ? escHtml(bt.name) : 'Pil Durumu'} (${pct}%)">
+                <svg width="18" height="18" viewBox="0 0 18 18">
+                    <circle cx="9" cy="9" r="7" fill="none" stroke="var(--border-subtle)" stroke-width="2.2"/>
+                    <circle cx="9" cy="9" r="7" fill="none" stroke="${pct <= 20 ? 'var(--danger)' : 'var(--success)'}" stroke-width="2.2" stroke-dasharray="44" stroke-dashoffset="${dash}" stroke-linecap="round" transform="rotate(-90 9 9)"/>
+                </svg>
+                <span>${escHtml(lbl)} ${pct}%</span>
+            </button>
+        `;
+    }
+    if (w.kind === 'system') {
+        const cpu = Number(state.metrics?.cpu || 0);
+        const ram = Number(state.metrics?.ramPct || 0);
+        if (v === 'spark') {
+            return `<button class="${baseCls} num" ${dwAttrs} onclick="${guardClick}send('openToolsHub',{tab:'telemetry'})" title="CPU %${cpu} · RAM %${ram}">${renderDockSparkSvg(state.metrics?.cpuHist, state.metrics?.ramHist)}<span>${cpu}%</span></button>`;
+        }
+        if (v === 'text') {
+            return `<button class="${baseCls} num" ${dwAttrs} onclick="${guardClick}send('openToolsHub',{tab:'telemetry'})" title="CPU %${cpu} · RAM %${ram}"><span>C ${cpu}%</span><span class="dw-sub">R ${ram}%</span></button>`;
+        }
+        return `
+            <button class="${baseCls} num" ${dwAttrs} onclick="${guardClick}send('openToolsHub',{tab:'telemetry'})" title="CPU %${cpu} · RAM %${ram}">
+                <span class="dw-sys-bars">
+                    <span class="dw-sys-bar" style="height:${Math.max(20, Math.min(100, cpu))}%;"></span>
+                    <span class="dw-sys-bar ram" style="height:${Math.max(20, Math.min(100, ram))}%;"></span>
+                </span>
+                <span>${cpu}%</span>
+            </button>
+        `;
+    }
+    if (w.kind === 'network') {
+        const rx = Number(state.metrics?.rxKbps || 0);
+        const tx = Number(state.metrics?.txKbps || 0);
+        const fmt = kb => kb >= 1000 ? (kb / 1024).toFixed(1) + 'M' : Math.round(kb) + 'K';
+        return `<button class="${baseCls} num" ${dwAttrs} onclick="${guardClick}send('openToolsHub',{tab:'telemetry'})" title="Canlı Ağ Hızı"><span>↓${fmt(rx)}</span><span class="dw-sub">↑${fmt(tx)}</span></button>`;
+    }
+    if (w.kind === 'pomodoro') {
+        const f = state.focus || { running: false, label: '25:00' };
+        return `<button class="${baseCls} num ${f.running ? 'active' : ''}" ${dwAttrs} onclick="${guardClick}send('toggleFocus')" title="Pomodoro (Tıkla: Başlat / Duraklat)"><span style="color:${f.running ? 'var(--accent-1)' : 'var(--text-2)'};display:inline-flex;">${SVG.timer}</span><span>${escHtml(f.label || '25:00')}</span></button>`;
+    }
+    if (w.kind === 'market') {
+        const mk = state.market || {};
+        if (!mk.valid) {
+            return `<button class="${baseCls}" ${dwAttrs} onclick="${guardClick}send('refreshMarket')" title="Döviz & BTC Yükleniyor"><span style="color:var(--accent-1);display:inline-flex;">${SVG.market}</span><span class="dw-sub">Piyasa…</span></button>`;
+        }
+        const usd = mk.usdTry > 0 ? `$${mk.usdTry.toFixed(2)}` : '';
+        const btc = mk.btcUsd > 0 ? `₿${(mk.btcUsd / 1000).toFixed(1)}k` : '';
+        return `<button class="${baseCls} num" ${dwAttrs} onclick="${guardClick}send('refreshMarket')" title="USD/TRY · BTC/USD (${escHtml(mk.updatedAtHhmm || '')})"><span>${usd || btc}</span>${usd && btc ? `<span class="dw-sub">${btc}</span>` : ''}</button>`;
+    }
+    if (w.kind === 'clipboard') {
+        const c = state.latestClip;
+        const prev = c ? String(c.preview || 'Görsel').slice(0, 14) : 'Pano boş';
+        return `<button class="${baseCls}" ${dwAttrs} onclick="${guardClick}send('openToolsHub',{tab:'clipboard'})" title="Son Pano · Tıkla: Pano Kasası"><span style="color:var(--text-2);display:inline-flex;">${SVG.clip}</span><span class="dw-media-txt" style="max-width:74px;">${escHtml(prev)}</span></button>`;
+    }
+    return '';
+}
+
+function handleDockWidgetWheel(e, kind) {
+    const dw = (state?.dockWidgets || []).find(w => w.kind === kind);
+    let act = dw?.wheelAction || 'default';
+    if (act === 'default') {
+        if (kind === 'volume-slider') act = 'volume';
+        else if (kind === 'brightness-slider') act = 'brightness';
+        else if (kind === 'desktops') act = 'desktop';
+        else if (kind === 'media') act = 'media';
+        else act = 'none';
+    }
+    if (act === 'none') return;
+    e.preventDefault();
+    e.stopPropagation();
+    const up = e.deltaY < 0;
+    if (act === 'volume') send('adjustVolumeDelta', { delta: up ? 2 : -2 });
+    else if (act === 'brightness') send('adjustBrightnessDelta', { delta: up ? 5 : -5 });
+    else if (act === 'desktop') send('switchVirtualDesktopDelta', { delta: up ? -1 : 1 });
+    else if (act === 'media') send('mediaCmd', { cmd: up ? 'next' : 'prev' });
+}
+
+function cycleDockWidgetZone(kind) {
+    const dw = (state?.dockWidgets || []).find(w => w.kind === kind);
+    if (!dw) return;
+    const cur = getWidgetZone(dw);
+    const idx = DOCK_ZONES.findIndex(z => z[0] === cur);
+    const nextZone = DOCK_ZONES[(idx + 1) % DOCK_ZONES.length][0];
+    send('moveDockWidget', { kind, targetZone: nextZone, targetIndex: 99 });
+}
+
+function openWidgetInspector(e, kind) {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    closeRadialHub(false);
+    closeFolderStack(false);
+    closeAllDockPopovers(false);
+    widgetInspectorKind = kind;
+    widgetInspectorX = e ? e.clientX : (window.innerWidth / 2);
+    renderWidgetInspectorPop();
+    renderDock();
+}
+
+function moveWidgetStepInZone(kind, delta) {
+    const list = state?.dockWidgets || [];
+    const dw = list.find(w => w.kind === kind);
+    if (!dw) return;
+    const z = getWidgetZone(dw);
+    const same = getWidgetsInZone(list, z);
+    const idx = same.findIndex(x => x.kind === kind);
+    if (idx < 0) return;
+    const nextIdx = Math.max(0, Math.min(same.length - 1, idx + delta));
+    if (nextIdx !== idx) send('moveDockWidget', { kind, targetZone: z, targetIndex: nextIdx });
+}
+
+function renderWidgetInspectorPop() {
+    const el = document.getElementById('dockWidgetInspector');
+    if (!el || !state || !widgetInspectorKind) return;
+    const dw = (state.dockWidgets || []).find(w => w.kind === widgetInspectorKind);
+    if (!dw) { closeAllDockPopovers(true); return; }
+    const m = DOCK_WIDGET_META[dw.kind] || { name: dw.kind, icon: '✦', variants: [['default','Varsayılan']] };
+    const curZone = getWidgetZone(dw);
+    const curSize = dw.size || 'normal';
+    const curStyle = dw.styleMode || 'pill';
+    const curWheel = dw.wheelAction || 'default';
+    const dockR = document.getElementById('dockBar')?.getBoundingClientRect();
+    el.style.bottom = `${Math.max(54, dockR ? Math.round(window.innerHeight - dockR.top + 8) : 60)}px`;
+    el.style.left = `${Math.max(10, Math.min(window.innerWidth - 294, widgetInspectorX - 140))}px`;
+    const sk = escAttr(dw.kind);
+    el.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+            <span style="display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:800;"><span class="dw-ic-badge">${m.icon}</span><span>${escHtml(m.name)}</span></span>
+            <button class="micro-btn" onclick="closeAllDockPopovers(true)">${SVG.close}</button>
+        </div>
+        <div>
+            <div class="dwi-lbl">Konum (4 Bölge · Sürükleyerek de Taşınır)</div>
+            <div class="dwi-seg c4">
+                ${DOCK_ZONES.map(([z, lbl]) => `<button class="dwi-btn ${curZone === z ? 'active' : ''}" onclick="send('moveDockWidget',{kind:'${sk}',targetZone:'${z}',targetIndex:99})">${lbl}</button>`).join('')}
+            </div>
+        </div>
+        ${m.variants.length > 1 ? `
+            <div>
+                <div class="dwi-lbl">Tasarım Varyantı</div>
+                <div class="dwi-seg ${m.variants.length >= 3 ? 'c3' : 'c2'}">
+                    ${m.variants.map(([vk, vl]) => `<button class="dwi-btn ${dw.variant === vk ? 'active' : ''}" onclick="send('updateDockWidget',{kind:'${sk}',variant:'${vk}'})">${escHtml(vl)}</button>`).join('')}
+                </div>
+            </div>
+        ` : ''}
+        <div>
+            <div class="dwi-lbl">Boyut & Yüzey Arketipi</div>
+            <div class="dwi-seg c3" style="margin-bottom:4px;">
+                ${[['compact','Kompakt'],['normal','Normal'],['wide','Geniş']].map(([k,l]) => `<button class="dwi-btn ${curSize === k ? 'active' : ''}" onclick="send('updateDockWidget',{kind:'${sk}',size:'${k}'})">${l}</button>`).join('')}
+            </div>
+            <div class="dwi-seg c3">
+                ${[['pill','Kapsül'],['glass','Optik Cam'],['hardware','Donanım'],['clean','Çerçevesiz'],['tinted','Vurgulu']].map(([k,l]) => `<button class="dwi-btn ${curStyle === k ? 'active' : ''}" onclick="send('updateDockWidget',{kind:'${sk}',styleMode:'${k}'})">${l}</button>`).join('')}
+            </div>
+        </div>
+        <div>
+            <div class="dwi-lbl">Tekerlek Aksiyonu</div>
+            <div class="dwi-seg c3">
+                ${[['default','Varsayılan'],['volume','Ses'],['brightness','Parlaklık'],['desktop','Masaüstü'],['media','Medya'],['none','Yok']].map(([k,l]) => `<button class="dwi-btn ${curWheel === k ? 'active' : ''}" onclick="send('updateDockWidget',{kind:'${sk}',wheelAction:'${k}'})">${l}</button>`).join('')}
+            </div>
+        </div>
+        <div class="qc-foot">
+            <div style="display:flex;gap:4px;">
+                <button class="dwp-mini" onclick="moveWidgetStepInZone('${sk}',-1)" title="Sola Kaydır">← Sola</button>
+                <button class="dwp-mini" onclick="moveWidgetStepInZone('${sk}',1)" title="Sağa Kaydır">Sağa →</button>
+            </div>
+            <button class="pill-btn subtle" style="height:24px;font-size:10.5px;color:var(--danger);" onclick="send('toggleDockWidget',{kind:'${sk}'});closeAllDockPopovers(true);">Kaldır</button>
+        </div>
+    `;
+    el.classList.add('open');
+    requestAnimationFrame(reportHitRects);
+}
+
+function openQuickWheel(cx) {
+    closeRadialHub(false);
+    closeFolderStack(false);
+    closeAllDockPopovers(false);
+    quickWheelOpen = true;
+    quickWheelX = typeof cx === 'number' ? cx : (window.innerWidth / 2);
+    renderQuickWheelPop();
+    renderDock();
+}
+
+function renderQuickWheelPop() {
+    const el = document.getElementById('quickWheelPop');
+    if (!el || !state || !quickWheelOpen) return;
+    const dockR = document.getElementById('dockBar')?.getBoundingClientRect();
+    el.style.bottom = `${Math.max(58, dockR ? Math.round(window.innerHeight - dockR.top + 10) : 64)}px`;
+    el.style.left = `${Math.max(12, Math.min(window.innerWidth - 244, quickWheelX - 116))}px`;
+    const muted = Boolean(state.audio?.muted);
+    const micMuted = Boolean(state.mic?.muted);
+    const items = [
+        { deg: 0,   label: muted ? 'Sesi Aç' : 'Sessiz', ic: muted ? SVG.mute : SVG.vol, on: muted, act: "send('toggleMute')" },
+        { deg: 60,  label: micMuted ? 'Mik Aç' : 'Mik Kapat', ic: micMuted ? SVG.micOff : SVG.mic, on: micMuted, act: "send('toggleMicMute')" },
+        { deg: 120, label: 'Medya', ic: state.media?.isPlaying ? SVG.pause : SVG.play, on: Boolean(state.media?.isPlaying), act: "send('mediaCmd',{cmd:'play_pause'})" },
+        { deg: 180, label: 'Masaüstü', ic: SVG.desktop, on: false, act: "send('showDesktop')" },
+        { deg: 240, label: '50/50 Diz', ic: SVG.pair, on: false, act: "send('applyWindowLayout',{preset:'split'})" },
+        { deg: 300, label: 'OCR Tara', ic: SVG.scanText, on: false, act: "send('startScreenOcr')" }
+    ];
+    const cx = 116, cy = 116, r = 82;
+    el.innerHTML = `
+        <div class="qw-center" id="qwCenter" onclick="closeAllDockPopovers(true)">
+            <span style="color:var(--accent-1);display:inline-flex;">${SVG.bolt}</span>
+            <span style="margin-top:2px;">Hızlı<br/>Çember</span>
+        </div>
+        ${items.map(it => {
+            const p = polar(cx, cy, r, it.deg);
+            return `
+                <button class="qw-node ${it.on ? 'on' : ''}" style="left:${p.x.toFixed(1)}px;top:${p.y.toFixed(1)}px;"
+                        onmouseenter="const c=document.getElementById('qwCenter');if(c)c.innerHTML='<span>${escAttr(it.label)}</span>';"
+                        onclick="${it.act};closeAllDockPopovers(true);">
+                    ${it.ic}<span>${escHtml(it.label)}</span>
+                </button>
+            `;
+        }).join('')}
+    `;
+    el.classList.add('open');
+    requestAnimationFrame(reportHitRects);
+}
+
+function toggleDockWidgetPicker(e) {
+    if (e) e.stopPropagation();
+    const next = !widgetPickerOpen;
+    closeRadialHub(false);
+    closeFolderStack(false);
+    closeAllDockPopovers(false);
+    widgetPickerOpen = next;
+    if (next) renderDockWidgetPickerPop();
+    renderDock();
+}
+
+function cycleDockWidgetVariant(kind) {
+    const dw = (state?.dockWidgets || []).find(w => w.kind === kind);
+    const meta = DOCK_WIDGET_META[kind];
+    if (!dw || !meta || meta.variants.length <= 1) return;
+    const idx = meta.variants.findIndex(v => v[0] === dw.variant);
+    const nextVar = meta.variants[(idx + 1) % meta.variants.length][0];
+    send('updateDockWidget', { kind, variant: nextVar });
+}
+
+function flipDockWidgetSlot(kind) {
+    const dw = (state?.dockWidgets || []).find(w => w.kind === kind);
+    if (!dw) return;
+    send('updateDockWidget', { kind, slot: dw.slot === 'left' ? 'right' : 'left' });
+}
+
+function renderDockWidgetPickerPop() {
+    const el = document.getElementById('dockWidgetPicker');
+    if (!el || !state || !widgetPickerOpen) return;
+    const dockR = document.getElementById('dockBar')?.getBoundingClientRect();
+    el.style.bottom = `${Math.max(54, dockR ? Math.round(window.innerHeight - dockR.top + 8) : 60)}px`;
+    el.style.left = '14px';
+
+    const list = Array.isArray(state.dockWidgets) ? state.dockWidgets : [];
+    const activeCnt = list.filter(w => w.enabled).length;
+    el.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+            <div>
+                <div style="font-size:12.5px;font-weight:800;">Alt Dock Widget'ları (${activeCnt}/${list.length || 14})</div>
+                <div style="font-size:10px;color:var(--text-2);">4 bölge arasında sürükleyin · Sağ tıkla boyut/stil/tekerlek ayarlayın</div>
+            </div>
+            <button class="micro-btn" onclick="closeAllDockPopovers(true)">${SVG.close}</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;max-height:278px;overflow-y:auto;">
+            ${list.map(w => {
+                const m = DOCK_WIDGET_META[w.kind] || { name: w.kind, icon: '✦', variants: [['default','Varsayılan']] };
+                const curV = m.variants.find(x => x[0] === w.variant) || m.variants[0];
+                const curZ = getWidgetZone(w);
+                return `
+                    <div class="dwp-row ${w.enabled ? 'on' : ''}">
+                        <span class="dw-ic-badge">${m.icon}</span>
+                        <div class="dwp-meta">
+                            <div class="dwp-name">${escHtml(m.name)}</div>
+                            <div class="dwp-sub">${escHtml(DOCK_ZONE_LABELS[curZ] || curZ)} · ${escHtml(curV[1])}</div>
+                        </div>
+                        <div class="dwp-ctrls">
+                            ${m.variants.length > 1 ? `<button class="dwp-mini" onclick="cycleDockWidgetVariant('${escAttr(w.kind)}')" title="Stil Değiştir">${escHtml(curV[1])}</button>` : ''}
+                            <button class="dwp-mini" onclick="cycleDockWidgetZone('${escAttr(w.kind)}')" title="4 Bölge Arasında Taşı">${escHtml(DOCK_ZONE_LABELS[curZ] || curZ)}</button>
+                            <button class="dwp-tog ${w.enabled ? 'on' : ''}" onclick="send('toggleDockWidget',{kind:'${escAttr(w.kind)}'})" title="${w.enabled ? 'Kaldır' : 'Ekle'}"><span></span></button>
+                        </div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+        <div class="qc-foot">
+            <div style="display:flex;gap:5px;">
+                <button class="pill-btn subtle" style="height:26px;font-size:10.5px;" onclick="send('resetDockWidgets')">Sıfırla</button>
+                <button class="pill-btn" style="height:26px;font-size:10.5px;" onclick="closeAllDockPopovers(true);send('setDockEditMode',{active:${!state.dockEditMode}});">${state.dockEditMode ? '✓ Düzenlemeyi Bitir' : '⇄ Sürükle-Düzenle'}</button>
+            </div>
+            <button class="pill-btn accent" style="height:26px;font-size:10.5px;" onclick="closeAllDockPopovers(true);send('openWidgetGallery');">Stüdyo →</button>
+        </div>
+    `;
+    el.classList.add('open');
+    requestAnimationFrame(reportHitRects);
+}
+
+function toggleDockAiPop(e) {
+    if (e) e.stopPropagation();
+    const next = !aiPopOpen;
+    closeRadialHub(false);
+    closeFolderStack(false);
+    closeAllDockPopovers(false);
+    aiPopOpen = next;
+    if (next) {
+        send('refreshAiQuota');
+        renderDockAiPop();
+    }
+    renderDock();
+}
+
+function renderDockAiPop() {
+    const el = document.getElementById('dockAiPop');
+    if (!el || !state || !aiPopOpen) return;
+    const dockR = document.getElementById('dockBar')?.getBoundingClientRect();
+    el.style.bottom = `${Math.max(54, dockR ? Math.round(window.innerHeight - dockR.top + 8) : 60)}px`;
+    el.style.right = '16px';
+
+    const snaps = state.aiSnapshots || [];
+    const colors = { openai: '#10B981', gemini: '#38BDF8', claude: '#F59E0B' };
+    const brandSvg = { openai: SVG.openai, gemini: SVG.gemini, claude: SVG.claude };
+    el.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+            <span style="font-size:12.5px;font-weight:800;">AI Kota & Kullanım</span>
+            <div style="display:flex;gap:4px;">
+                <button class="micro-btn" onclick="send('refreshAiQuota')" title="Yenile">${SVG.refresh}</button>
+                <button class="micro-btn" onclick="closeAllDockPopovers(true);send('openWidgetGallery');" title="AI Kota Ayarları">${SVG.settings}</button>
+            </div>
+        </div>
+        ${snaps.length === 0 ? `<div style="padding:18px;text-align:center;font-size:11.5px;color:var(--text-2);">Kotalar taranıyor…</div>` : snaps.map((s, idx) => {
+            const col = colors[s.provider] || 'var(--accent-1)';
+            return `
+                <div class="ai-pop-card">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+                        <span style="font-size:12px;font-weight:800;display:inline-flex;align-items:center;gap:6px;">
+                            <span class="ai-brand-ic">${brandSvg[s.provider] || SVG.sparkles}</span>${escHtml(s.displayName)}
+                            <span style="font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:99px;background:var(--bg-inset);color:var(--text-2);">${escHtml(s.sourceBadge)}</span>
+                        </span>
+                        <span class="num" style="font-size:12px;font-weight:800;color:${col};">${s.remainingPercent}%</span>
+                    </div>
+                    <div class="ai-bar-track"><div class="ai-bar-fill" style="width:${s.remainingPercent}%;background:${col};"></div></div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:10px;color:var(--text-2);">
+                        <span>${escHtml(s.primaryLabel)}</span>
+                        <span style="display:inline-flex;gap:4px;">
+                            <button class="dwp-mini" onclick="send('bumpAiManualUsage',{provider:'${escAttr(s.provider)}',delta:1})">+1</button>
+                            <button class="dwp-mini" onclick="send('resetAiManualUsage',{provider:'${escAttr(s.provider)}'})">Sıfırla</button>
+                            <button class="dwp-mini" onclick="openAiPortalByIdx(${idx})">Portal ↗</button>
+                        </span>
+                    </div>
+                </div>
+            `;
+        }).join('')}
+    `;
+    el.classList.add('open');
+    requestAnimationFrame(reportHitRects);
+}
+function openAiPortalByIdx(idx) {
+    const s = (state?.aiSnapshots || [])[idx];
+    if (s && s.usageUrl) send('launchPath', { path: s.usageUrl });
 }
 
 function toggleDockPin() {
@@ -2520,24 +4707,392 @@ function scheduleDockAutoHide(delayMs = 440) {
         const shouldHide = (mode === 'AutoHide') ||
             (mode === 'SmartDodge' && ((liveDodgedOverride !== null) ? liveDodgedOverride : Boolean(state?.dockDodged)));
         const pointerOutside = isVerticalEdge() ? (mouseY === null) : (mouseX === null);
-        if (shouldHide && !pointerInRadial && !radialGroupKey && !pointerInFolder && !openFolderPath && !isDraggingFileOverDock && pointerOutside) {
+        if (shouldHide && !pointerInRadial && !radialGroupKey && !pointerInFolder && !openFolderPath && !quickControlsOpen && !calNotifOpen && !trayPopOpen && !widgetPickerOpen && !widgetInspectorKind && !quickWheelOpen && !aiPopOpen && !ctxMenuOpen && !state?.dockEditMode && !isDraggingFileOverDock && pointerOutside) {
             autoHideRevealed = false;
             renderDock();
         }
     }, delayMs);
 }
 
-function buildDockIconHtml(g, pinIndex, catId) {
+/* ========== v4.0/v4.2 BOTTOM-RIGHT QUICK CONTROLS, CALENDAR/NOTIFICATIONS, TRAY, WIDGET PICKER, INSPECTOR & QUICK WHEEL ========== */
+function closeAllDockPopovers(updateRects = true) {
+    const hadAny = quickControlsOpen || calNotifOpen || trayPopOpen || widgetPickerOpen || Boolean(widgetInspectorKind) || quickWheelOpen || aiPopOpen || ctxMenuOpen;
+    quickControlsOpen = false;
+    calNotifOpen = false;
+    trayPopOpen = false;
+    widgetPickerOpen = false;
+    widgetInspectorKind = null;
+    quickWheelOpen = false;
+    aiPopOpen = false;
+    ctxMenuOpen = false;
+    for (const id of ['dockQuickControls', 'dockCalNotif', 'dockTrayPop', 'dockWidgetPicker', 'dockWidgetInspector', 'dockAiPop', 'dockCtxMenu', 'quickWheelPop']) {
+        const el = document.getElementById(id);
+        if (el) { el.classList.remove('open'); el.innerHTML = ''; }
+    }
+    send('releaseDockFocus');
+    if (hadAny && updateRects) {
+        renderDock();
+    } else if (updateRects) {
+        requestAnimationFrame(reportHitRects);
+    }
+}
+
+function toggleQuickControls(e) {
+    if (e) e.stopPropagation();
+    const next = !quickControlsOpen;
+    closeRadialHub(false);
+    closeFolderStack(false);
+    closeAllDockPopovers(false);
+    quickControlsOpen = next;
+    if (next) renderQuickControlsPop();
+    renderDock();
+}
+
+function renderQuickControlsPop() {
+    const el = document.getElementById('dockQuickControls');
+    if (!el || !state || !quickControlsOpen) return;
+    const vol = state.audio?.volume ?? 50;
+    const muted = Boolean(state.audio?.muted);
+    const outs = state.audioOutputs || [];
+    const mons = state.monitorBrightness || [];
+    const med = state.media;
+    const bat = state.battery || { present: false, percent: 100, charging: false, status: 'AC Güç' };
+    const bts = state.btDevices || [];
+
+    const dockR = document.getElementById('dockBar')?.getBoundingClientRect();
+    el.style.bottom = `${Math.max(54, dockR ? Math.round(window.innerHeight - dockR.top + 8) : 60)}px`;
+    el.style.right = '12px';
+
+    el.innerHTML = `
+        <div class="qc-grid">
+            <button class="qc-tile ${state.wifi?.on !== false ? 'on' : ''}" onclick="send('toggleWifi')">
+                <span class="qc-ic">${SVG.wifi}</span>
+                <div><div class="qc-lbl">Wi-Fi</div><div class="qc-sub">${escHtml(state.wifi?.status || 'Bağlı')}</div></div>
+            </button>
+            <button class="qc-tile ${state.bluetooth?.on !== false ? 'on' : ''}" onclick="send('toggleBluetooth')">
+                <span class="qc-ic">${SVG.bluetooth}</span>
+                <div><div class="qc-lbl">Bluetooth</div><div class="qc-sub">${escHtml(state.bluetooth?.status || 'Aktif')}</div></div>
+            </button>
+            <button class="qc-tile ${state.quietHours ? 'on' : ''}" onclick="send('toggleQuietHours')">
+                <span class="qc-ic">${SVG.moon}</span>
+                <div><div class="qc-lbl">Odak Modu</div><div class="qc-sub">${state.quietHours ? 'Bildirimler Sessiz' : 'Normal'}</div></div>
+            </button>
+            <button class="qc-tile ${state.awake?.active ? 'on' : ''}" onclick="send('cycleAwake')">
+                <span class="qc-ic">${SVG.coffee}</span>
+                <div><div class="qc-lbl">Uyanık Kal</div><div class="qc-sub">${escHtml(state.awake?.shortLabel || 'Kapalı')}</div></div>
+            </button>
+        </div>
+
+        <div class="qc-slider-box">
+            <div class="qc-srow">
+                <button class="micro-btn ${muted ? 'danger' : ''}" onclick="send('toggleMute')" title="Sesi Kapat / Aç">${muted ? SVG.mute : SVG.vol}</button>
+                <input type="range" min="0" max="100" value="${vol}" oninput="send('setVolume',{value:Number(this.value)})"/>
+                <span class="qc-val num">${muted ? 'Sessiz' : vol + '%'}</span>
+            </div>
+            ${outs.length > 1 ? `
+                <div class="qc-out-chips">
+                    ${outs.slice(0, 4).map(o => `
+                        <button class="qc-out-chip ${o.isDefault ? 'active' : ''}" onclick="send('setAudioOutputDevice',{id:'${escAttr(o.id)}'})" title="${escHtml(o.fullName || o.name)}">${escHtml(o.name)}</button>
+                    `).join('')}
+                </div>
+            ` : ''}
+            ${mons.slice(0, 2).map(m => `
+                <div class="qc-srow">
+                    <span class="micro-btn" style="cursor:default;" title="${escHtml(m.name)}">${SVG.sun}</span>
+                    <input type="range" min="5" max="100" value="${m.percent}" oninput="send('setMonitorBrightness',{id:'${escAttr(m.id)}',value:Number(this.value)})"/>
+                    <span class="qc-val num">${m.percent}%</span>
+                </div>
+            `).join('')}
+        </div>
+
+        ${med ? `
+            <div class="qc-media">
+                ${med.artwork ? `<img class="qc-media-art" src="data:image/jpeg;base64,${med.artwork}"/>` : `<div class="qc-media-art">${SVG.music}</div>`}
+                <div style="flex:1;min-width:0;">
+                    <div style="font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(med.title)}</div>
+                    <div style="font-size:10.5px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(med.artist || med.app)}</div>
+                </div>
+                <div style="display:flex;gap:3px;">
+                    <button class="micro-btn" onclick="send('mediaCmd',{cmd:'prev'})">${SVG.prev}</button>
+                    <button class="micro-btn active" onclick="send('mediaCmd',{cmd:'play_pause'})">${med.isPlaying ? SVG.pause : SVG.play}</button>
+                    <button class="micro-btn" onclick="send('mediaCmd',{cmd:'next'})">${SVG.next}</button>
+                </div>
+            </div>
+        ` : ''}
+
+        ${(bat.present || bts.length > 0) ? `
+            <div class="qc-bat-strip">
+                ${bat.present ? `<span class="qc-bat-chip num">${bat.charging ? SVG.bolt : SVG.battery} Pil ${bat.percent}%</span>` : ''}
+                ${bts.slice(0, 3).map(d => `<span class="qc-bat-chip num">${d.category === 'headset' ? SVG.headphones : (d.category === 'mouse' ? SVG.mouse : SVG.bluetooth)} ${escHtml(d.name.slice(0, 14))}${d.hasBattery ? ' ' + d.percent + '%' : ''}</span>`).join('')}
+            </div>
+        ` : ''}
+
+        <div class="qc-foot">
+            <div style="display:flex;gap:5px;">
+                <button class="pill-btn" onclick="closeAllDockPopovers(true);send('openToolsHub');">${SVG.bolt}<span>Araçlar</span></button>
+                <button class="pill-btn" onclick="closeAllDockPopovers(true);send('openWidgetGallery');">${SVG.grid}<span>Widget</span></button>
+            </div>
+            <button class="pill-btn accent" onclick="closeAllDockPopovers(true);send('openSettings',{section:'appearance'});">${SVG.settings}<span>Ayarlar</span></button>
+        </div>
+    `;
+    el.classList.add('open');
+    requestAnimationFrame(reportHitRects);
+}
+
+function toggleCalNotif(e, forceTab) {
+    if (e) e.stopPropagation();
+    const mirror = state?.notificationMode === 'aurora-mirror';
+    const next = (mirror && forceTab)
+        ? (calNotifOpen ? (calNotifTab !== forceTab ? true : false) : true)
+        : !calNotifOpen;
+    closeRadialHub(false);
+    closeFolderStack(false);
+    closeAllDockPopovers(false);
+    calNotifOpen = next;
+    if (!mirror) {
+        calNotifTab = 'calendar';
+    } else if (forceTab) {
+        calNotifTab = forceTab;
+    } else if (next) {
+        calNotifTab = (state?.notifications?.length || 0) > 0 ? 'notifications' : 'calendar';
+    }
+    if (next) {
+        if (mirror && calNotifTab === 'notifications') send('markNotificationsRead');
+        renderCalNotifPop();
+    }
+    renderDock();
+}
+
+function switchCalNotifTab(tab) {
+    calNotifTab = tab;
+    if (tab === 'notifications') send('markNotificationsRead');
+    renderCalNotifPop();
+}
+
+function stepDockCalMonth(delta) {
+    calViewMonth += delta;
+    if (calViewMonth < 0) { calViewMonth = 11; calViewYear--; }
+    if (calViewMonth > 11) { calViewMonth = 0; calViewYear++; }
+    renderCalNotifPop();
+}
+
+function selectDockCalDay(iso) {
+    calSelectedDate = iso;
+    renderCalNotifPop();
+}
+
+function saveDockCalNote() {
+    const inp = document.getElementById('dockCalNoteInp');
+    if (!inp) return;
+    send('saveAgendaNote', { date: calSelectedDate, note: inp.value.trim() });
+    send('releaseDockFocus');
+}
+
+function renderCalNotifPop() {
+    const el = document.getElementById('dockCalNotif');
+    if (!el || !state || !calNotifOpen) return;
+    const dockR = document.getElementById('dockBar')?.getBoundingClientRect();
+    el.style.bottom = `${Math.max(54, dockR ? Math.round(window.innerHeight - dockR.top + 8) : 60)}px`;
+    el.style.right = '12px';
+
+    const notifs = state.notifications || [];
+    const notes = state.agendaNotes || {};
+    const monthsTr = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+    const dows = ['Pt','Sa','Ça','Pe','Cu','Ct','Pz'];
+
+    const mirror = state.notificationMode === 'aurora-mirror';
+    let bodyHtml = '';
+    if (mirror && calNotifTab === 'notifications') {
+        bodyHtml = `
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:11px;font-weight:700;color:var(--text-2);">${notifs.length} bildirim</span>
+                ${notifs.length > 0 ? `<button class="pill-btn subtle" style="height:24px;font-size:10.5px;" onclick="send('clearNotifications')">Tümünü Temizle</button>` : ''}
+            </div>
+            <div class="cn-list">
+                ${notifs.length === 0 ? `<div style="padding:26px 12px;text-align:center;font-size:12px;color:var(--text-2);">Şu an yeni bildirim yok ✓</div>` : notifs.map(n => `
+                    <div class="cn-item" onclick="send('activateNotification',{id:'${escAttr(n.id)}'});closeAllDockPopovers(true);">
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-size:10px;font-weight:800;color:var(--accent-1);text-transform:uppercase;">${escHtml(n.app)}</div>
+                            <div style="font-size:12px;font-weight:700;margin-top:1px;">${escHtml(n.title)}</div>
+                            ${n.body ? `<div style="font-size:11px;color:var(--text-2);margin-top:2px;line-height:1.3;">${escHtml(n.body.slice(0, 110))}</div>` : ''}
+                        </div>
+                        <button class="micro-btn" style="width:22px;height:22px;" onclick="event.stopPropagation();send('dismissNotification',{id:'${escAttr(n.id)}'});" title="Kapat">${SVG.close}</button>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    } else {
+        const firstDay = new Date(calViewYear, calViewMonth, 1);
+        const startOffset = (firstDay.getDay() + 6) % 7;
+        const daysInMonth = new Date(calViewYear, calViewMonth + 1, 0).getDate();
+        const prevDays = new Date(calViewYear, calViewMonth, 0).getDate();
+        const now = new Date();
+        const todayIso = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+
+        let cells = dows.map(d => `<div class="cal-dow">${d}</div>`).join('');
+        for (let i = startOffset - 1; i >= 0; i--) {
+            cells += `<div class="cal-day muted">${prevDays - i}</div>`;
+        }
+        for (let d = 1; d <= daysInMonth; d++) {
+            const iso = `${calViewYear}-${String(calViewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const cls = `cal-day num ${iso === todayIso ? 'today' : ''} ${iso === calSelectedDate ? 'sel' : ''} ${notes[iso] ? 'has-note' : ''}`;
+            cells += `<button class="${cls}" onclick="selectDockCalDay('${iso}')">${d}</button>`;
+        }
+        const curNote = notes[calSelectedDate] || '';
+        bodyHtml = `
+            <div class="cal-head">
+                <button class="micro-btn" onclick="stepDockCalMonth(-1)">${SVG.chevL}</button>
+                <span>${monthsTr[calViewMonth]} ${calViewYear}</span>
+                <button class="micro-btn" onclick="stepDockCalMonth(1)">${SVG.chevR}</button>
+            </div>
+            <div class="cal-grid">${cells}</div>
+            <div class="cal-note-row">
+                <input id="dockCalNoteInp" class="cal-note-inp" type="text" placeholder="${escHtml(calSelectedDate)} için not ekle..." value="${escHtml(curNote)}"
+                       onfocus="send('requestDockFocus')" onblur="send('releaseDockFocus')"
+                       onkeydown="if(event.key==='Enter'){saveDockCalNote();}"/>
+                <button class="pill-btn accent" style="height:30px;padding:0 11px;" onclick="saveDockCalNote()">Kaydet</button>
+            </div>
+        `;
+    }
+
+    el.innerHTML = mirror ? `
+        <div class="cn-tabs">
+            <button class="cn-tab ${calNotifTab === 'notifications' ? 'active' : ''}" onclick="switchCalNotifTab('notifications')">Bildirimler ${notifs.length > 0 ? '(' + notifs.length + ')' : ''}</button>
+            <button class="cn-tab ${calNotifTab === 'calendar' ? 'active' : ''}" onclick="switchCalNotifTab('calendar')">Takvim & Ajanda</button>
+        </div>
+        ${bodyHtml}
+    ` : `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px;">
+            <strong style="font-size:12px;">Takvim & Ajanda</strong>
+            <button class="pill-btn subtle" style="height:24px;font-size:10.5px;padding:0 8px;" onclick="closeAllDockPopovers(true);send('openWindowsNotifications');">${SVG.bell}<span>Windows Bildirimler</span></button>
+        </div>
+        ${bodyHtml}
+    `;
+    el.classList.add('open');
+    requestAnimationFrame(reportHitRects);
+}
+
+function toggleDockTrayPop(e) {
+    if (e) e.stopPropagation();
+    const next = !trayPopOpen;
+    closeRadialHub(false);
+    closeFolderStack(false);
+    closeAllDockPopovers(false);
+    trayPopOpen = next;
+    if (next) renderTrayPop();
+    renderDock();
+}
+
+function renderTrayPop() {
+    const el = document.getElementById('dockTrayPop');
+    if (!el || !state || !trayPopOpen) return;
+    const trays = state.trayApps || [];
+    const dockR = document.getElementById('dockBar')?.getBoundingClientRect();
+    el.style.bottom = `${Math.max(54, dockR ? Math.round(window.innerHeight - dockR.top + 8) : 60)}px`;
+    el.style.right = isVerticalEdge() ? '16px' : '168px';
+
+    el.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+            <span style="font-size:12px;font-weight:800;">Arka Plan & Tepsi (${trays.length})</span>
+            <button class="pill-btn subtle" style="height:24px;font-size:10.5px;" onclick="closeAllDockPopovers(true);send('peekNativeTray');">Klasik (10sn)</button>
+        </div>
+        <div class="fstack-list" style="max-height:320px;">
+            ${trays.length === 0 ? `<div style="padding:16px;text-align:center;font-size:11.5px;color:var(--text-2);">Arka planda çalışan ek uygulama yok.</div>` : trays.map((t, idx) => `
+                <div class="fstack-row" onclick="send('openTrayApp',{index:${idx}});closeAllDockPopovers(true);">
+                    ${t.icon ? `<img src="data:image/png;base64,${t.icon}"/>` : `<span style="width:20px;display:inline-flex;justify-content:center;color:var(--accent-1);">${SVG.layers}</span>`}
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:11.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(t.name)}</div>
+                        <div style="font-size:10px;color:var(--text-2);" class="num">${escHtml(t.subtitle || 'Arka Plan')} · ${t.memoryMb || 0} MB</div>
+                    </div>
+                    <button class="micro-btn danger" style="width:22px;height:22px;" onclick="event.stopPropagation();send('quitTrayApp',{index:${idx}});" title="Kapat">${SVG.close}</button>
+                </div>
+            `).join('')}
+        </div>
+    `;
+    el.classList.add('open');
+    requestAnimationFrame(reportHitRects);
+}
+
+function openDockCtxMenu(e) {
+    if (!state) return;
+    if (e.target.closest('.dock-item, .dw-pill, .dock-clock-pill, .folder-chip, .acc-bucket, .dock-pin-btn')) return;
+    e.preventDefault();
+    closeRadialHub(false);
+    closeFolderStack(false);
+    closeAllDockPopovers(false);
+    ctxMenuOpen = true;
+    ctxMenuX = Math.max(8, Math.min(window.innerWidth - 256, e.clientX));
+    ctxMenuY = e.clientY;
+    renderCtxMenuPop();
+}
+
+function renderCtxMenuPop() {
+    const el = document.getElementById('dockCtxMenu');
+    if (!el || !state || !ctxMenuOpen) return;
+    const dockR = document.getElementById('dockBar')?.getBoundingClientRect();
+    const curHub = state.dockHubStyle || 'dendritic';
+    const curSil = getDockSilhouette();
+    el.style.left = `${ctxMenuX}px`;
+    el.style.right = 'auto';
+    el.style.bottom = `${Math.max(56, dockR ? Math.round(window.innerHeight - dockR.top + 8) : 60)}px`;
+
+    el.innerHTML = `
+        <button class="ctx-row" onclick="toggleDockWidgetPicker(event);">
+            ${SVG.plus}<span>Alt Dock Widget Ekle (14 Pro Widget)</span>
+        </button>
+        <button class="ctx-row" onclick="closeAllDockPopovers(true);send('setDockEditMode',{active:${!state.dockEditMode}});">
+            ${SVG.moveWin}<span>${state.dockEditMode ? '✓ Alt Dock Düzenlemeyi Bitir' : 'Alt Dock Widget\'larını Sürükle-Düzenle'}</span>
+        </button>
+        <button class="ctx-row" onclick="openQuickWheel(ctxMenuX);">
+            ${SVG.bolt}<span>Hızlı Aksiyon Çemberi</span>
+        </button>
+        <button class="ctx-row" onclick="closeAllDockPopovers(true);send('setWidgetEditMode',{active:true});">
+            ${SVG.moveWin}<span>Masaüstü Widget'larını Düzenle</span>
+        </button>
+        <button class="ctx-row" onclick="closeAllDockPopovers(true);send('openWidgetGallery');">
+            ${SVG.grid}<span>Widget Stüdyosu (30 Widget)</span>
+        </button>
+        <div class="ctx-sep"></div>
+        <div style="font-size:9.5px;font-weight:800;color:var(--text-2);padding:2px 8px;text-transform:uppercase;letter-spacing:0.05em;">Dock Silüeti</div>
+        <div class="ctx-style-chips">
+            <button class="ctx-chip ${curSil === 'fixed' ? 'active' : ''}" onclick="send('setDockSilhouette',{silhouette:'fixed'});closeAllDockPopovers(true);">Sabit Çubuk</button>
+            <button class="ctx-chip ${curSil === 'islands' ? 'active' : ''}" onclick="send('setDockSilhouette',{silhouette:'islands'});closeAllDockPopovers(true);">Ayrık Adalar</button>
+            <button class="ctx-chip ${curSil === 'floating' ? 'active' : ''}" onclick="send('setDockSilhouette',{silhouette:'floating'});closeAllDockPopovers(true);">Yüzen Cam</button>
+            <button class="ctx-chip ${curSil === 'minimal-rail' ? 'active' : ''}" onclick="send('setDockSilhouette',{silhouette:'minimal-rail'});closeAllDockPopovers(true);">Minimal Şerit</button>
+        </div>
+        <div class="ctx-sep"></div>
+        <div style="font-size:9.5px;font-weight:800;color:var(--text-2);padding:2px 8px;text-transform:uppercase;letter-spacing:0.05em;">Pencere Dallanma Stili</div>
+        <div class="ctx-style-chips">
+            <button class="ctx-chip ${curHub === 'dendritic' ? 'active' : ''}" onclick="send('setDockHubStyle',{style:'dendritic'});closeAllDockPopovers(true);">Dairesel Küre</button>
+            <button class="ctx-chip ${curHub === 'fan3d' ? 'active' : ''}" onclick="send('setDockHubStyle',{style:'fan3d'});closeAllDockPopovers(true);">3D Yelpaze</button>
+            <button class="ctx-chip ${curHub === 'cards' ? 'active' : ''}" onclick="send('setDockHubStyle',{style:'cards'});closeAllDockPopovers(true);">Modern Kart</button>
+            <button class="ctx-chip ${curHub === 'radial' ? 'active' : ''}" onclick="send('setDockHubStyle',{style:'radial'});closeAllDockPopovers(true);">Yay Çemberi</button>
+        </div>
+        <div class="ctx-sep"></div>
+        <button class="ctx-row" onclick="closeAllDockPopovers(true);send('launchPath',{path:'taskmgr.exe'});">
+            ${SVG.activity}<span>Görev Yöneticisi</span>
+        </button>
+        <button class="ctx-row" onclick="closeAllDockPopovers(true);send('openSettings',{section:'taskbar'});">
+            ${SVG.settings}<span>Aurora Görev Çubuğu Ayarları</span>
+        </button>
+    `;
+    el.classList.add('open');
+    requestAnimationFrame(reportHitRects);
+}
+
+function buildDockIconHtml(g, pinIndex, catId, runIndex = -1) {
     const isAnchored = (radialGroupKey === g.key);
     const hasAttn = Boolean(g.hasAttention);
     const prog = Number(g.progress || 0);
     const hasProg = prog > 0 && prog < 100;
     const cls = `dock-item mag-target ${g.hasActive ? 'active' : (g.windows.length > 0 ? 'running' : '')} ${isAnchored ? 'radial-anchored' : ''} ${hasAttn ? 'attention' : ''}`;
     const safeKey = escHtml(g.key);
+    const safeKeyAttr = escAttr(g.key);
     const safeCat = catId ? `'${escHtml(catId)}'` : 'null';
     const monogram = escHtml((g.displayName || 'A').slice(0, 1).toUpperCase());
-    const pinAttrs = pinIndex >= 0
-        ? `data-pin-id="${safeKey}" data-pin-idx="${pinIndex}" onpointerdown="startPinDrag(event,'${safeKey}',${pinIndex})"`
+    const appIdx = pinIndex >= 0 ? pinIndex : runIndex;
+    const dragAttrs = (!catId && appIdx >= 0)
+        ? `data-app-key="${safeKey}" data-app-pinned="${pinIndex >= 0 ? '1' : '0'}" data-app-idx="${appIdx}" onpointerdown="startAppDrag(event,'${safeKeyAttr}',${pinIndex >= 0 ? 'true' : 'false'},${appIdx})"`
         : '';
     const singleSub = g.windows.length === 1
         ? cleanWindowTitle(g.windows[0].title, g.displayName)
@@ -2545,6 +5100,16 @@ function buildDockIconHtml(g, pinIndex, catId) {
     const labelText = g.windows.length > 1
         ? `${g.displayName} (${g.windows.length})`
         : (singleSub && singleSub.toLowerCase() !== g.displayName.toLowerCase() ? `${g.displayName} · ${shortOrbLabel(singleSub)}` : g.displayName);
+
+    const showAudioBadge = state?.dockPerAppAudio !== false && Boolean(g.audioPid);
+    const audioBadgeHtml = showAudioBadge ? `
+        <button class="app-audio-badge ${g.audioMuted ? 'muted' : ''}"
+                onpointerdown="event.stopPropagation();"
+                onclick="event.stopPropagation();send('toggleAppMute',{pid:${g.audioPid},groupKey:'${safeKeyAttr}'});"
+                title="${g.audioMuted ? 'Sesi Aç' : 'Uygulamayı Sustur'} (%${g.audioVolume ?? 100} · Alt+Tekerlek: Uygulama Sesi)">
+            ${g.audioMuted ? SVG.mute : SVG.vol}
+        </button>
+    ` : '';
 
     const progOffset = hasProg ? (152 * (1 - prog / 100)).toFixed(1) : '152';
     const progSvg = hasProg ? `
@@ -2557,18 +5122,19 @@ function buildDockIconHtml(g, pinIndex, catId) {
     ` : '';
 
     return `
-        <div class="${cls}" data-group-key="${safeKey}" ${pinAttrs}
-             onmouseenter="onDockItemEnter(this,'${safeKey}',${g.windows.length},${safeCat})"
-             onmouseleave="onDockItemLeave('${safeKey}')"
-             ondragover="onDockAppDragOver(event,this,'${safeKey}')"
+        <div class="${cls}" data-group-key="${safeKey}" ${dragAttrs}
+             onmouseenter="onDockItemEnter(this,'${safeKeyAttr}',${g.windows.length},${safeCat})"
+             onmouseleave="onDockItemLeave('${safeKeyAttr}')"
+             ondragover="onDockAppDragOver(event,this,'${safeKeyAttr}')"
              ondragleave="onDockAppDragLeave(this)"
-             ondrop="onDockAppDrop(event,this,'${safeKey}')"
-             onwheel="handleGroupWheel(event,'${safeKey}')"
+             ondrop="onDockAppDrop(event,this,'${safeKeyAttr}')"
+             onwheel="handleGroupWheel(event,'${safeKeyAttr}')"
              onauxclick="if(event.button===1 && ${g.windows.length}>0){send('closeWindow',{hwnd:${g.windows[0]?.hwnd || 0}});}"
-             onclick="handleGroupClick(event,'${safeKey}')"
-             oncontextmenu="event.preventDefault();openRadialForElement(this,'${safeKey}',${safeCat},true);">
+             onclick="handleGroupClick(event,'${safeKeyAttr}')"
+             oncontextmenu="event.preventDefault();openRadialForElement(this,'${safeKeyAttr}',${safeCat},true);">
             ${progSvg}
-            ${hasAttn ? `<span class="attn-pip"></span>` : ''}
+            ${audioBadgeHtml}
+            ${(hasAttn && !showAudioBadge) ? `<span class="attn-pip"></span>` : ''}
             <span class="hover-label">${escHtml(labelText)}</span>
             ${g.icon ? `<img src="data:image/png;base64,${g.icon}"/>` : `<div class="fallback-badge">${monogram}</div>`}
             ${g.windows.length > 1 ? `<span class="count-pill num">${g.windows.length}</span>` : ''}
@@ -2807,10 +5373,10 @@ function onDockItemEnter(el, key, winCount, catId) {
         clearTimeout(radialCloseTimer);
         return;
     }
-    if (winCount > 1 && !dragPinState) {
+    if (winCount > 1 && !dragAppState && !dragWidgetState) {
         const delay = radialGroupKey ? 90 : 145;
         hoverRadialTimer = setTimeout(() => {
-            if (!dragPinState) openRadialForElement(el, key, catId, false);
+            if (!dragAppState && !dragWidgetState) openRadialForElement(el, key, catId, false);
         }, delay);
     } else if (radialGroupKey && !pointerInRadial) {
         scheduleRadialClose(220);
@@ -2963,6 +5529,10 @@ function handleGroupWheel(e, key) {
     if (!g || g.windows.length === 0) return;
     e.preventDefault();
     e.stopPropagation();
+    if (e.altKey && state?.dockPerAppAudio !== false && g.audioPid) {
+        send('adjustAppVolumeDelta', { pid: g.audioPid, groupKey: key, delta: e.deltaY < 0 ? 5 : -5 });
+        return;
+    }
     const delta = e.deltaY > 0 ? 1 : -1;
     send('cycleGroupWindow', { key, delta, fromWheel: true });
     if (radialGroupKey === key && g.windows.length > 1) {
@@ -3202,6 +5772,15 @@ function renderRadialHub(forceAnimate) {
         return;
     }
 
+    // Dispatch to selectable v4.0 Multi-Window Hub Style (dendritic | fan3d | cards | radial)
+    const hubStyle = state.dockHubStyle || 'dendritic';
+    if (!branchCatId && hubStyle !== 'dendritic') {
+        const g = (state.groups || []).find(x => x.key === radialGroupKey);
+        if (!g) { closeRadialHub(true); return; }
+        renderAlternateHubStyle(hub, g, hubStyle, forceAnimate);
+        return;
+    }
+
     const model = buildConstellationModel();
     if (!model || model.nodes.length === 0) {
         closeRadialHub(true);
@@ -3366,6 +5945,185 @@ function renderRadialHub(forceAnimate) {
     if (shouldAnimate) setTimeout(reportHitRects, 220);
 }
 
+function renderAlternateHubStyle(hub, g, hubStyle, forceAnimate) {
+    const wins = (g.windows || []).slice(0, 6);
+    const sig = `${hubStyle}|${g.key}|${g.isPinned?1:0}|` + wins.map(w => `${w.hwnd}:${w.isActive?1:0}:${w.isTopMost?1:0}:${w.title}`).join(',');
+    const activeKeySig = `${hubStyle}|${g.key}`;
+    const shouldAnimate = forceAnimate || (radialLastOpenedKey !== activeKeySig);
+    if (!shouldAnimate && constellationSig === sig && hub.classList.contains('open')) return;
+    radialLastOpenedKey = activeKeySig;
+    constellationSig = sig;
+    constellationNodes = wins.map(w => ({ id: `win:${w.hwnd}`, hwnd: w.hwnd, isLeaf: true, groupKey: g.key }));
+
+    const dockR = document.getElementById('dockBar')?.getBoundingClientRect();
+    const edge = getDockEdge();
+    const isVert = isVerticalEdge();
+    const safeKey = escAttr(g.key);
+    const icHtml = g.icon
+        ? `<img src="data:image/png;base64,${g.icon}" style="width:18px;height:18px;border-radius:4px;"/>`
+        : `<span style="width:18px;height:18px;border-radius:5px;background:var(--accent-1);color:var(--accent-ink);font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;">${escHtml((g.displayName||'A')[0])}</span>`;
+
+    if (hubStyle === 'radial' && !isVert && wins.length > 0) {
+        // Style 4: Prism Arc Orbital Semi-Circle
+        const hubW = Math.min(480, Math.max(320, wins.length * 108));
+        const hubH = 196;
+        const cx = hubW / 2;
+        const cy = hubH - 8;
+        const R = Math.min(138, Math.max(92, 82 + wins.length * 11));
+        const spread = wins.length === 1 ? [0] : wins.map((_, i) => -68 + (136 * i) / (wins.length - 1));
+        const rawX = radialAnchorX ?? (window.innerWidth / 2);
+        const left = Math.max(8, Math.min(window.innerWidth - hubW - 8, rawX - hubW / 2));
+        const bottomPx = dockR ? Math.max(44, Math.round(window.innerHeight - dockR.top + 4)) : 56;
+        hub.style.width = `${hubW}px`;
+        hub.style.height = `${hubH}px`;
+        hub.style.top = 'auto';
+        hub.style.bottom = `${bottomPx}px`;
+        hub.style.left = `${left.toFixed(1)}px`;
+
+        const arcPath = orbArcPath(cx, cy, R, -74, 74);
+        let nodesHtml = '';
+        wins.forEach((w, i) => {
+            const p = polar(cx, cy, R, spread[i]);
+            const clean = cleanWindowTitle(w.title, g.displayName);
+            nodesHtml += `
+                <div class="arc-node ${w.isActive ? 'active-win' : ''}"
+                     style="left:${p.x.toFixed(1)}px;top:${p.y.toFixed(1)}px;"
+                     onmouseenter="radialSelectedHwnd=${w.hwnd};scheduleDwmPreview(${w.hwnd},false);"
+                     onclick="send('focusWindow',{hwnd:${w.hwnd}});closeRadialHub(true);"
+                     onauxclick="if(event.button===1){event.stopPropagation();send('closeWindow',{hwnd:${w.hwnd}});}">
+                    ${g.icon ? `<img src="data:image/png;base64,${g.icon}"/>` : ''}
+                    <span>${escHtml(shortOrbLabel(clean))}</span>
+                    <button class="orb-tbtn danger" style="width:18px;height:18px;" onclick="event.stopPropagation();send('closeWindow',{hwnd:${w.hwnd}});">${SVG.close}</button>
+                </div>
+            `;
+        });
+        hub.innerHTML = `
+            <svg class="const-svg-layer" viewBox="0 0 ${hubW} ${hubH}">
+                <path d="${arcPath}" fill="none" stroke="rgba(var(--a1-rgb),0.40)" stroke-width="2" stroke-dasharray="4 4"/>
+                <circle cx="${cx}" cy="${cy - 2}" r="5" fill="var(--accent-1)"/>
+            </svg>
+            <div class="orb-topbar show" style="top:auto;bottom:14px;">
+                ${icHtml}
+                <span class="orb-topbar-title">${escHtml(g.displayName)} (${wins.length})</span>
+                <span class="orb-topbar-sep"></span>
+                <span class="orb-topbar-acts">
+                    ${wins.length >= 2 ? `<button class="orb-tbtn-pill" onclick="event.stopPropagation();pairRadialGroupWindows('${safeKey}');">${SVG.pair}<span>50/50</span></button>` : ''}
+                    <button class="orb-tbtn" title="Yeni Pencere" onclick="event.stopPropagation();send('launchNewInstance',{key:'${safeKey}'});closeRadialHub(true);">${SVG.plus}</button>
+                    <button class="orb-tbtn ${g.isPinned ? 'active' : ''}" title="Sabitle" onclick="event.stopPropagation();togglePinRadial();">${SVG.pin}</button>
+                    <button class="orb-tbtn danger" title="Hepsini Kapat" onclick="event.stopPropagation();send('closeAllGroupWindows',{key:'${safeKey}'});closeRadialHub(true);">${SVG.trash}</button>
+                </span>
+            </div>
+            ${nodesHtml}
+        `;
+        hub.className = 'open';
+        requestAnimationFrame(reportHitRects);
+        return;
+    }
+
+    // Style 2: 3D Fan Cards OR Style 3: Windows 11 Modern Horizontal Card Strip
+    const isFan = (hubStyle === 'fan3d');
+    const bodyCards = wins.length === 0 ? `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 4px;">
+            <span style="font-size:11.5px;color:var(--text-2);">Açık pencere yok</span>
+            <button class="pill-btn accent" onclick="launchRadialGroup()">Başlat</button>
+        </div>
+    ` : isFan ? `
+        <div class="fan3d-stage">
+            ${wins.map((w, i) => {
+                const mid = (wins.length - 1) / 2;
+                const d = i - mid;
+                const rot = (d * 7.5).toFixed(1);
+                const dy = (Math.abs(d) * 7).toFixed(1);
+                const ry = (-d * 10).toFixed(1);
+                const clean = cleanWindowTitle(w.title, g.displayName);
+                return `
+                    <div class="fan3d-card ${w.isActive ? 'active-win' : ''}"
+                         style="--fan-rot:${rot}deg;--fan-dy:${dy}px;--fan-ry:${ry}deg;--fan-z:${10 - Math.round(Math.abs(d))};"
+                         onmouseenter="radialSelectedHwnd=${w.hwnd};scheduleDwmPreview(${w.hwnd},false);"
+                         onclick="send('focusWindow',{hwnd:${w.hwnd}});closeRadialHub(true);">
+                        <div class="wcard-top">
+                            ${g.icon ? `<img src="data:image/png;base64,${g.icon}"/>` : ''}
+                            <span class="wcard-title">${escHtml(shortOrbLabel(clean))}</span>
+                        </div>
+                        <div class="wcard-sub">${escHtml(clean)}</div>
+                        <div class="wcard-acts">
+                            <div style="display:flex;gap:2px;">
+                                <button class="orb-tbtn" title="Sola Yasla" onclick="event.stopPropagation();execOrbWindowAction(${w.hwnd},'arrange','left',this);">${SVG.snapL}</button>
+                                <button class="orb-tbtn" title="Sağa Yasla" onclick="event.stopPropagation();execOrbWindowAction(${w.hwnd},'arrange','right',this);">${SVG.snapR}</button>
+                                <button class="orb-tbtn ${w.isTopMost ? 'active' : ''}" title="Üstte Tut" onclick="event.stopPropagation();execOrbWindowAction(${w.hwnd},'top','',this);">${SVG.pin}</button>
+                            </div>
+                            <button class="orb-tbtn danger" title="Kapat" onclick="event.stopPropagation();execOrbWindowAction(${w.hwnd},'close','',this);">${SVG.close}</button>
+                        </div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    ` : `
+        <div class="cards-strip">
+            ${wins.map(w => {
+                const clean = cleanWindowTitle(w.title, g.displayName);
+                return `
+                    <div class="win-card ${w.isActive ? 'active-win' : ''}"
+                         onmouseenter="radialSelectedHwnd=${w.hwnd};scheduleDwmPreview(${w.hwnd},false);"
+                         onclick="send('focusWindow',{hwnd:${w.hwnd}});closeRadialHub(true);">
+                        <div class="wcard-top">
+                            ${g.icon ? `<img src="data:image/png;base64,${g.icon}"/>` : ''}
+                            <span class="wcard-title">${escHtml(g.displayName)}</span>
+                            <button class="orb-tbtn danger" title="Kapat" onclick="event.stopPropagation();execOrbWindowAction(${w.hwnd},'close','',this);">${SVG.close}</button>
+                        </div>
+                        <div class="wcard-sub">${escHtml(clean)}</div>
+                        <div class="wcard-acts">
+                            <button class="orb-tbtn" title="Sola %50" onclick="event.stopPropagation();execOrbWindowAction(${w.hwnd},'arrange','left',this);">${SVG.snapL}</button>
+                            <button class="orb-tbtn" title="Sağa %50" onclick="event.stopPropagation();execOrbWindowAction(${w.hwnd},'arrange','right',this);">${SVG.snapR}</button>
+                            <button class="orb-tbtn ${w.isTopMost ? 'active' : ''}" title="Üstte Tut" onclick="event.stopPropagation();execOrbWindowAction(${w.hwnd},'top','',this);">${SVG.pin}</button>
+                            <button class="orb-tbtn" title="Simge Durumuna" onclick="event.stopPropagation();execOrbWindowAction(${w.hwnd},'min','',this);">${SVG.min}</button>
+                        </div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+
+    hub.style.width = 'auto';
+    hub.style.height = 'auto';
+    hub.innerHTML = `
+        <div class="glass-shell hub-shell-card">
+            <div class="hub-hdr">
+                <span class="hub-hdr-title">${icHtml}<span>${escHtml(g.displayName)}</span><span style="font-size:10.5px;color:var(--text-2);font-weight:600;">(${wins.length})</span></span>
+                <span class="hub-hdr-acts">
+                    ${g.audioPid ? `<button class="micro-btn ${g.audioMuted ? 'danger' : 'active'}" style="width:24px;height:24px;" title="${g.audioMuted ? 'Sesi Aç' : 'Uygulamayı Sustur'} (%${g.audioVolume ?? 100})" onclick="event.stopPropagation();send('toggleAppMute',{pid:${g.audioPid},groupKey:'${safeKey}'});">${g.audioMuted ? SVG.mute : SVG.vol}</button>` : ''}
+                    ${wins.length >= 2 ? `<button class="orb-tbtn-pill" onclick="event.stopPropagation();pairRadialGroupWindows('${safeKey}');">${SVG.pair}<span>50/50</span></button>` : ''}
+                    <button class="micro-btn" style="width:24px;height:24px;" title="Yeni Pencere" onclick="event.stopPropagation();send('launchNewInstance',{key:'${safeKey}'});closeRadialHub(true);">${SVG.plus}</button>
+                    <button class="micro-btn ${g.isPinned ? 'active' : ''}" style="width:24px;height:24px;" title="${g.isPinned ? 'Sabiti Kaldır' : 'Sabitle'}" onclick="event.stopPropagation();togglePinRadial();">${SVG.pin}</button>
+                    ${wins.length > 0 ? `<button class="micro-btn danger" style="width:24px;height:24px;" title="Tümünü Kapat" onclick="event.stopPropagation();send('closeAllGroupWindows',{key:'${safeKey}'});closeRadialHub(true);">${SVG.trash}</button>` : ''}
+                </span>
+            </div>
+            ${bodyCards}
+        </div>
+    `;
+    hub.className = 'open';
+
+    requestAnimationFrame(() => {
+        const hr = hub.getBoundingClientRect();
+        if (isVert && dockR) {
+            const rawY = radialAnchorY ?? (window.innerHeight / 2);
+            const topPos = Math.max(8, Math.min(window.innerHeight - hr.height - 8, rawY - hr.height / 2));
+            const leftPos = edge === 'Left' ? (dockR.right + 10) : Math.max(8, dockR.left - hr.width - 10);
+            hub.style.bottom = 'auto';
+            hub.style.top = `${topPos.toFixed(1)}px`;
+            hub.style.left = `${leftPos.toFixed(1)}px`;
+        } else {
+            const rawX = radialAnchorX ?? (window.innerWidth / 2);
+            const leftPos = Math.max(10, Math.min(window.innerWidth - hr.width - 10, rawX - hr.width / 2));
+            const bottomPx = dockR ? Math.max(48, Math.round(window.innerHeight - dockR.top + 8)) : 60;
+            hub.style.top = 'auto';
+            hub.style.bottom = `${bottomPx}px`;
+            hub.style.left = `${leftPos.toFixed(1)}px`;
+        }
+        reportHitRects();
+    });
+}
+
 function setConstellationHover(nodeId) {
     clearTimeout(constellationHoverTimer);
     if (constellationHoveredId === nodeId) {
@@ -3418,6 +6176,7 @@ function updateConstellationHoverVisuals() {
                 `;
             } else if (cur.isLeaf && cur.hwnd) {
                 actsHtml = `
+                    ${grp?.audioPid ? `<button class="orb-tbtn ${grp.audioMuted ? 'danger' : 'active'}" title="${grp.audioMuted ? 'Uygulama Sesini Aç' : 'Uygulamayı Sustur'} (%${grp.audioVolume ?? 100})" onclick="event.stopPropagation();send('toggleAppMute',{pid:${grp.audioPid},groupKey:'${safeKey}'});">${grp.audioMuted ? SVG.mute : SVG.vol}</button>` : ''}
                     <button class="orb-tbtn" title="Sola Yasla %50" onclick="event.stopPropagation();execOrbWindowAction(${cur.hwnd},'arrange','left',this);">${SVG.snapL}</button>
                     <button class="orb-tbtn" title="Sağa Yasla %50" onclick="event.stopPropagation();execOrbWindowAction(${cur.hwnd},'arrange','right',this);">${SVG.snapR}</button>
                     ${winCnt >= 2 ? `<button class="orb-tbtn-pill" title="2 Pencereyi 50/50 Yan Yana Diz" onclick="event.stopPropagation();pairRadialGroupWindows('${safeKey}');">${SVG.pair}<span>50/50</span></button>` : ''}
@@ -3488,7 +6247,7 @@ function previewPinCaption() {}
 function togglePinRadial() {
     const g = (state?.groups || []).find(x => x.key === radialGroupKey);
     if (!g) return;
-    send('togglePin', { name: g.displayName, path: g.executablePath });
+    send('togglePin', { name: g.displayName, path: g.executablePath, aumid: g.aumid || '' });
     closeRadialHub(true);
 }
 
@@ -3515,49 +6274,276 @@ function execOrbitAction(act, mode) {
     execOrbWindowAction(hwnd, act, mode, null);
 }
 
-function startPinDrag(e, pinId, startIdx) {
+/* ========== v4.2 UNIFIED DIRECT DRAG-REORDER (ALL APPS + 4-ZONE WIDGETS) & FLUID SCRUB ========== */
+function startAppDrag(e, key, isPinned, startIdx) {
+    if (e.button !== 0 || e.altKey || e.target.closest('.app-audio-badge')) return;
+    dragAppState = {
+        key,
+        isPinned: Boolean(isPinned),
+        startIdx,
+        targetPinned: Boolean(isPinned),
+        targetIdx: startIdx,
+        startX: e.clientX,
+        startY: e.clientY,
+        moved: false,
+        el: e.currentTarget
+    };
+}
+
+function startWidgetDrag(e, kind, startZone, startIdx) {
     if (e.button !== 0 || e.altKey) return;
-    dragPinState = { pinId, startIdx, targetIdx: startIdx, startX: e.clientX, startY: e.clientY, moved: false };
+    if (!state?.dockEditMode && e.target.closest('.dw-slider-track, .dw-mini-act, .dw-desk-btn')) return;
+    dragWidgetState = {
+        kind,
+        startZone,
+        startIdx,
+        targetZone: startZone,
+        targetIdx: startIdx,
+        startX: e.clientX,
+        startY: e.clientY,
+        moved: false,
+        el: e.currentTarget
+    };
+}
+
+function startInlineSlider(e, mode, trackEl) {
+    if (e.button !== 0 || state?.dockEditMode) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const updateFromClientX = (clientX, forceSend) => {
+        const r = trackEl.getBoundingClientRect();
+        if (r.width <= 0) return;
+        const pct = Math.max(mode === 'brightness' ? 5 : 0, Math.min(100, Math.round(((clientX - r.left) / r.width) * 100)));
+        const fill = trackEl.querySelector('.dw-slider-fill');
+        if (fill) { fill.style.width = `${pct}%`; fill.classList.remove('muted'); }
+        const pctLbl = trackEl.parentElement?.querySelector('.dw-slider-pct');
+        if (pctLbl) pctLbl.textContent = `${pct}%`;
+        showScrubToast(mode, pct, clientX);
+        const now = Date.now();
+        if (forceSend || !scrubState || (now - scrubState.lastSent) >= 35) {
+            if (scrubState) scrubState.lastSent = now;
+            send(mode === 'brightness' ? 'setBrightness' : 'setVolume', { value: pct });
+        }
+    };
+    scrubState = { kind: 'inline', mode, trackEl, startX: e.clientX, lastSent: 0, active: true, updateFromClientX };
+    updateFromClientX(e.clientX, true);
+}
+
+function startStatusScrub(e) {
+    if (e.button !== 0 || state?.dockScrubGestures === false) return;
+    const isBri = Boolean(e.shiftKey);
+    const startVal = isBri
+        ? Number((state?.monitorBrightness?.[0]?.percent) ?? 80)
+        : Number(state?.audio?.volume ?? 50);
+    scrubState = {
+        kind: 'status',
+        mode: isBri ? 'brightness' : 'volume',
+        startX: e.clientX,
+        startVal,
+        lastVal: startVal,
+        lastSent: 0,
+        active: false
+    };
+}
+
+function showScrubToast(mode, pct, clientX) {
+    const t = document.getElementById('scrubToast');
+    if (!t) return;
+    const dockR = document.getElementById('dockBar')?.getBoundingClientRect();
+    t.style.bottom = `${Math.max(58, dockR ? Math.round(window.innerHeight - dockR.top + 10) : 64)}px`;
+    if (typeof clientX === 'number') {
+        t.style.left = `${Math.max(96, Math.min(window.innerWidth - 96, clientX))}px`;
+    }
+    const ic = mode === 'brightness' ? SVG.sun : (pct === 0 ? SVG.mute : SVG.vol);
+    const lbl = mode === 'brightness' ? 'Parlaklık' : 'Ses';
+    t.innerHTML = `<span style="color:var(--accent-1);display:inline-flex;">${ic}</span><span>${lbl}</span><span class="scrub-bar"><span class="scrub-bar-fill" style="width:${pct}%;"></span></span><span class="num">${pct}%</span>`;
+    t.classList.add('open');
+}
+
+function hideScrubToast() {
+    const t = document.getElementById('scrubToast');
+    if (t) t.classList.remove('open');
+}
+
+function clearDragHighlights() {
+    document.querySelectorAll('.drop-before,.drop-after,.dragging').forEach(el => {
+        el.classList.remove('drop-before', 'drop-after', 'dragging');
+    });
+    document.querySelectorAll('.dw-zone.drop-hot').forEach(el => el.classList.remove('drop-hot'));
+    document.body.classList.remove('dock-dragging-widget');
 }
 
 document.addEventListener('pointermove', e => {
-    if (!dragPinState) return;
-    const isVert = isVerticalEdge();
-    const delta = isVert ? Math.abs(e.clientY - dragPinState.startY) : Math.abs(e.clientX - dragPinState.startX);
-    if (delta > 12) {
-        dragPinState.moved = true;
-        clearTimeout(hoverRadialTimer);
-        closeRadialHub(false);
-        const pinEls = Array.from(document.querySelectorAll('[data-pin-idx]'));
-        let bestIdx = dragPinState.startIdx;
-        let bestDist = Infinity;
-        pinEls.forEach(el => {
-            el.style.outline = 'none';
-            const r = el.getBoundingClientRect();
-            const d = isVert
-                ? Math.abs(e.clientY - (r.top + r.height / 2))
-                : Math.abs(e.clientX - (r.left + r.width / 2));
-            if (d < bestDist) {
-                bestDist = d;
-                bestIdx = parseInt(el.getAttribute('data-pin-idx'), 10);
+    if (scrubState) {
+        if (scrubState.kind === 'inline') {
+            scrubState.updateFromClientX(e.clientX, false);
+            return;
+        }
+        const dx = e.clientX - scrubState.startX;
+        if (!scrubState.active && Math.abs(dx) >= 8) {
+            scrubState.active = true;
+            window.__suppressNextStatusClick = Date.now() + 400;
+        }
+        if (scrubState.active) {
+            const minV = scrubState.mode === 'brightness' ? 5 : 0;
+            const nextV = Math.max(minV, Math.min(100, Math.round(scrubState.startVal + dx * 0.65)));
+            if (nextV !== scrubState.lastVal) {
+                scrubState.lastVal = nextV;
+                showScrubToast(scrubState.mode, nextV, e.clientX);
+                const now = Date.now();
+                if (now - scrubState.lastSent >= 35) {
+                    scrubState.lastSent = now;
+                    send(scrubState.mode === 'brightness' ? 'setBrightness' : 'setVolume', { value: nextV });
+                }
             }
-        });
-        dragPinState.targetIdx = bestIdx;
-        const targetEl = pinEls.find(el => parseInt(el.getAttribute('data-pin-idx'), 10) === bestIdx);
-        if (targetEl) targetEl.style.outline = '2px dashed var(--accent-1)';
+        }
+        return;
+    }
+
+    if (dragAppState) {
+        const isVert = isVerticalEdge();
+        const delta = isVert ? Math.abs(e.clientY - dragAppState.startY) : Math.abs(e.clientX - dragAppState.startX);
+        if (delta > 12) {
+            if (!dragAppState.moved) {
+                dragAppState.moved = true;
+                clearTimeout(hoverRadialTimer);
+                closeRadialHub(false);
+                if (dragAppState.el) dragAppState.el.classList.add('dragging');
+            }
+            const appEls = Array.from(document.querySelectorAll('.dock-item[data-app-idx]'));
+            appEls.forEach(el => el.classList.remove('drop-before', 'drop-after'));
+            let bestEl = null;
+            let bestDist = Infinity;
+            appEls.forEach(el => {
+                const r = el.getBoundingClientRect();
+                const d = isVert
+                    ? Math.abs(e.clientY - (r.top + r.height / 2))
+                    : Math.abs(e.clientX - (r.left + r.width / 2));
+                if (d < bestDist) { bestDist = d; bestEl = el; }
+            });
+            if (bestEl) {
+                const r = bestEl.getBoundingClientRect();
+                const after = isVert ? (e.clientY > r.top + r.height / 2) : (e.clientX > r.left + r.width / 2);
+                const tPinned = bestEl.getAttribute('data-app-pinned') === '1';
+                const baseIdx = parseInt(bestEl.getAttribute('data-app-idx'), 10);
+                let targetIdx = baseIdx + (after ? 1 : 0);
+                if (dragAppState.isPinned === tPinned && dragAppState.startIdx < targetIdx) {
+                    targetIdx = Math.max(0, targetIdx - 1);
+                }
+                dragAppState.targetPinned = tPinned;
+                dragAppState.targetIdx = Math.max(0, targetIdx);
+                bestEl.classList.add(after ? 'drop-after' : 'drop-before');
+            }
+        }
+        return;
+    }
+
+    if (dragWidgetState) {
+        const dx = Math.abs(e.clientX - dragWidgetState.startX);
+        const dy = Math.abs(e.clientY - dragWidgetState.startY);
+        if (dx > 9 || dy > 9) {
+            if (!dragWidgetState.moved) {
+                dragWidgetState.moved = true;
+                document.body.classList.add('dock-dragging-widget');
+                if (dragWidgetState.el) dragWidgetState.el.classList.add('dragging');
+            }
+            const zones = Array.from(document.querySelectorAll('.dw-zone[data-dw-zone]'));
+            zones.forEach(z => z.classList.remove('drop-hot'));
+            document.querySelectorAll('.dw-pill.drop-before,.dw-pill.drop-after').forEach(p => p.classList.remove('drop-before', 'drop-after'));
+
+            let bestZoneEl = null;
+            let bestZDist = Infinity;
+            zones.forEach(z => {
+                const r = z.getBoundingClientRect();
+                if (r.width <= 0) return;
+                const cx = Math.max(r.left, Math.min(r.right, e.clientX));
+                const d = Math.abs(e.clientX - cx);
+                if (d < bestZDist) { bestZDist = d; bestZoneEl = z; }
+            });
+            if (bestZoneEl) {
+                bestZoneEl.classList.add('drop-hot');
+                const zId = bestZoneEl.getAttribute('data-dw-zone');
+                dragWidgetState.targetZone = zId;
+                const pills = Array.from(bestZoneEl.querySelectorAll('.dw-pill[data-dw-kind]'))
+                    .filter(p => p.getAttribute('data-dw-kind') !== dragWidgetState.kind);
+                if (pills.length === 0) {
+                    dragWidgetState.targetIdx = 0;
+                } else {
+                    let bestP = null, bestPDist = Infinity;
+                    pills.forEach(p => {
+                        const r = p.getBoundingClientRect();
+                        const d = Math.abs(e.clientX - (r.left + r.width / 2));
+                        if (d < bestPDist) { bestPDist = d; bestP = p; }
+                    });
+                    if (bestP) {
+                        const r = bestP.getBoundingClientRect();
+                        const after = e.clientX > r.left + r.width / 2;
+                        const idx = pills.indexOf(bestP) + (after ? 1 : 0);
+                        dragWidgetState.targetIdx = idx;
+                        bestP.classList.add(after ? 'drop-after' : 'drop-before');
+                    }
+                }
+            }
+        }
     }
 });
 
-document.addEventListener('pointerup', () => {
-    if (!dragPinState) return;
-    const st = dragPinState;
-    dragPinState = null;
-    document.querySelectorAll('[data-pin-idx]').forEach(el => el.style.outline = 'none');
-    if (st.moved && st.targetIdx !== st.startIdx) {
-        window.__suppressNextDockClick = Date.now() + 220;
-        send('reorderPin', { id: st.pinId, targetIndex: st.targetIdx });
+document.addEventListener('pointerup', e => {
+    if (scrubState) {
+        const sc = scrubState;
+        scrubState = null;
+        if (sc.kind === 'inline') {
+            sc.updateFromClientX(e.clientX, true);
+        } else if (sc.active) {
+            window.__suppressNextStatusClick = Date.now() + 260;
+            send(sc.mode === 'brightness' ? 'setBrightness' : 'setVolume', { value: sc.lastVal });
+        }
+        setTimeout(hideScrubToast, 180);
+        return;
+    }
+
+    if (dragAppState) {
+        const st = dragAppState;
+        dragAppState = null;
+        clearDragHighlights();
+        if (st.moved && (st.targetIdx !== st.startIdx || st.targetPinned !== st.isPinned)) {
+            window.__suppressNextDockClick = Date.now() + 260;
+            send('reorderDockApp', {
+                key: st.key,
+                isPinned: st.isPinned,
+                targetPinned: st.targetPinned,
+                targetIndex: st.targetIdx
+            });
+        }
+        return;
+    }
+
+    if (dragWidgetState) {
+        const st = dragWidgetState;
+        dragWidgetState = null;
+        clearDragHighlights();
+        if (st.moved && (st.targetZone !== st.startZone || st.targetIdx !== st.startIdx)) {
+            window.__suppressNextWidgetClick = Date.now() + 260;
+            send('moveDockWidget', {
+                kind: st.kind,
+                targetZone: st.targetZone,
+                targetIndex: st.targetIdx
+            });
+        }
     }
 });
+
+function cancelAllDockPointerDrags() {
+    if (dragAppState || dragWidgetState || scrubState) {
+        dragAppState = null;
+        dragWidgetState = null;
+        scrubState = null;
+        clearDragHighlights();
+        hideScrubToast();
+    }
+}
+document.addEventListener('pointercancel', cancelAllDockPointerDrags);
+window.addEventListener('blur', cancelAllDockPointerDrags);
 
 window.addEventListener('DOMContentLoaded', () => {
     const hub = document.getElementById('radialHub');
@@ -3588,6 +6574,46 @@ window.addEventListener('DOMContentLoaded', () => {
         folderCloseTimer = setTimeout(() => {
             if (!pointerInFolder) closeFolderStack(true);
         }, 380);
+    });
+
+    const dockEl = document.getElementById('dockBar');
+    if (dockEl) {
+        dockEl.addEventListener('contextmenu', openDockCtxMenu);
+        const isEmptyDockArea = (t) => !t.closest('.dock-item,.dw-pill,.dw-slider-track,.dw-desk-btn,.dw-add-btn,.dw-edit-done,.folder-chip,.start-btn,.dock-status-pill,.dock-clock-pill,.dock-tray-chevron,.acc-bucket,button,input');
+        dockEl.addEventListener('wheel', e => {
+            if (!state || isDockTuckedNow() || !isEmptyDockArea(e.target)) return;
+            const act = state.dockEmptyWheelAction || 'volume';
+            if (act === 'none') return;
+            e.preventDefault();
+            const up = e.deltaY < 0;
+            if (act === 'volume') send('adjustVolumeDelta', { delta: up ? 2 : -2 });
+            else if (act === 'brightness') send('adjustBrightnessDelta', { delta: up ? 5 : -5 });
+            else if (act === 'desktop') send('switchVirtualDesktopDelta', { delta: up ? -1 : 1 });
+            else if (act === 'media') send('mediaCmd', { cmd: up ? 'next' : 'prev' });
+        }, { passive: false });
+        dockEl.addEventListener('dblclick', e => {
+            if (!state || isDockTuckedNow() || !isEmptyDockArea(e.target)) return;
+            const act = state.dockEmptyDblClickAction || 'show-desktop';
+            if (act === 'none') return;
+            if (act === 'quick-wheel') openQuickWheel(e.clientX);
+            else send('runEmptyDockAction', { actionKind: act });
+        });
+        dockEl.addEventListener('auxclick', e => {
+            if (e.button !== 1 || !state || isDockTuckedNow() || !isEmptyDockArea(e.target)) return;
+            const act = state.dockEmptyMidClickAction || 'media-play';
+            if (act === 'none') return;
+            e.preventDefault();
+            if (act === 'quick-wheel') openQuickWheel(e.clientX);
+            else send('runEmptyDockAction', { actionKind: act });
+        });
+    }
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            if (state?.dockEditMode) send('setDockEditMode', { active: false });
+            closeRadialHub(false);
+            closeFolderStack(false);
+            closeAllDockPopovers(true);
+        }
     });
 
     window.addEventListener('dragover', e => {
@@ -3705,7 +6731,7 @@ if (typeof ResizeObserver !== 'undefined') {
         reportHitRects();
     });
     dockResizeObs.observe(document.documentElement);
-    for (const id of ['dockBar', 'radialHub', 'folderStackCard']) {
+    for (const id of ['dockBar', 'radialHub', 'folderStackCard', 'dockQuickControls', 'dockCalNotif', 'dockTrayPop', 'dockWidgetPicker', 'dockWidgetInspector', 'dockAiPop', 'dockCtxMenu', 'quickWheelPop']) {
         const el = document.getElementById(id);
         if (el) dockResizeObs.observe(el);
     }
@@ -3721,19 +6747,22 @@ function applyParabolicWave() {
 
 function stepParabolicWave() {
     waveRafId = null;
-    const magStrength = ((state?.dockMagnification ?? 48) / 100.0);
+    const hoverStyle = state?.dockHoverStyle || 'lift';
     const items = document.querySelectorAll('.mag-target');
+    if (hoverStyle === 'glow') {
+        items.forEach(el => { el._magCur = 1.0; el.style.transform = ''; el.style.zIndex = ''; });
+        return;
+    }
+    const magStrength = hoverStyle === 'lift' ? 0.24 : ((state?.dockMagnification ?? 48) / 100.0);
     const edge = getDockEdge();
     const isVert = isVerticalEdge();
-    const active = ((isVert ? mouseY !== null : mouseX !== null) && magStrength > 0.02 && !pointerInRadial && !pointerInFolder);
+    const active = ((isVert ? mouseY !== null : mouseX !== null) && magStrength > 0.02 && !pointerInRadial && !pointerInFolder && !quickControlsOpen && !calNotifOpen && !trayPopOpen && !widgetPickerOpen && !widgetInspectorKind && !quickWheelOpen && !aiPopOpen && !ctxMenuOpen && !dragAppState && !dragWidgetState);
 
     let needsNextFrame = false;
     const targets = [];
 
-    // Zero-Drift Fitts's Law Hover Wave:
-    // NEVER mutates marginLeft/Right/Top/Bottom, so every icon stays 100% locked at its exact click coordinate (0px target drift!).
-    // Uses a crisp GPU-composited perpendicular elevation + tightly bounded scale that fits cleanly inside the static icon gap.
-    const focusRadius = 92;
+    // Zero-Drift Fitts's Law Hover Wave / Micro-Lift:
+    const focusRadius = hoverStyle === 'lift' ? 38 : 92;
     items.forEach(el => {
         const baseDim = isVert
             ? (el._baseH || (el._baseH = el.offsetHeight || 42))
@@ -3880,13 +6909,61 @@ window.chrome.webview.addEventListener('message', e => {
             expandedAccordionCat = buckets[0].id;
         }
         renderDock();
+    } else if (msg.type === 'clockTick') {
+        if (state && msg.clock) {
+            state.clock = msg.clock;
+            const ct = document.getElementById('dockClockTime');
+            if (ct) ct.textContent = msg.clock;
+            const dm = document.getElementById('dockDot5x7');
+            if (dm) dm.outerHTML = renderDockDot5x7Svg(msg.clock);
+            const parts = msg.clock.split(':');
+            const fh = document.getElementById('dockFlipH');
+            const fm = document.getElementById('dockFlipM');
+            if (fh && parts[0]) fh.textContent = parts[0];
+            if (fm && parts[1]) fm.textContent = parts[1];
+            const ah = document.getElementById('dockAnaH');
+            const am = document.getElementById('dockAnaM');
+            const as = document.getElementById('dockAnaS');
+            if (ah && am && as) {
+                const now = new Date();
+                ah.setAttribute('transform', `rotate(${(((now.getHours()%12)+now.getMinutes()/60)*30).toFixed(1)} 14 14)`);
+                am.setAttribute('transform', `rotate(${((now.getMinutes()+now.getSeconds()/60)*6).toFixed(1)} 14 14)`);
+                as.setAttribute('transform', `rotate(${(now.getSeconds()*6).toFixed(1)} 14 14)`);
+            }
+        }
+    } else if (msg.type === 'toggleQuickControls') {
+        toggleQuickControls(null);
+    } else if (msg.type === 'toggleCalNotif') {
+        toggleCalNotif(null, msg.tab || null);
     } else if (msg.type === 'outsideDeactivate') {
         if (radialGroupKey || branchCatId) closeRadialHub(true);
         if (openFolderPath) closeFolderStack(true);
+        if (quickControlsOpen || calNotifOpen || trayPopOpen || widgetPickerOpen || widgetInspectorKind || quickWheelOpen || aiPopOpen || ctxMenuOpen) closeAllDockPopovers(true);
         if (expandedAccordionCat) {
             expandedAccordionCat = null;
             renderDock();
         }
+    }
+});
+
+// Clicking empty space on the Dock bar or transparent backdrop closes any open Dock popover on click #1
+document.addEventListener('pointerdown', (e) => {
+    const anyOpen = radialGroupKey || branchCatId || openFolderPath || expandedAccordionCat
+        || quickControlsOpen || calNotifOpen || trayPopOpen || widgetPickerOpen
+        || widgetInspectorKind || quickWheelOpen || aiPopOpen || ctxMenuOpen;
+    if (!anyOpen) return;
+    if (e.target.closest(
+        '.dock-pop, .dock-ctx-menu, .quick-wheel-pop, .radial-hub, .folder-stack-card, ' +
+        '.dock-item, .dock-pill, .dock-widget, .micro-btn, .tray-btn, button, input, select'
+    )) {
+        return;
+    }
+    if (radialGroupKey || branchCatId) closeRadialHub(true);
+    if (openFolderPath) closeFolderStack(true);
+    if (quickControlsOpen || calNotifOpen || trayPopOpen || widgetPickerOpen || widgetInspectorKind || quickWheelOpen || aiPopOpen || ctxMenuOpen) closeAllDockPopovers(true);
+    if (expandedAccordionCat) {
+        expandedAccordionCat = null;
+        renderDock();
     }
 });
 

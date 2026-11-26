@@ -1,17 +1,11 @@
-# Project Aurora — PRD Requirement Traceability Matrix
+# Project Aurora — Feature & Verification Matrix (`v7.2.0`, Saf Rust)
 
-| Requirement ID | Summary | Implemented Component | Automated Test / Evidence |
-|---|---|---|---|
-| **TB-001..TB-002** | Edge display & documented AppBar coordination | `AuroraTaskbarWindow`, `Win32AppBarService`, `TaskbarLayoutCalculator` | `WindowsPlatformAdapterTests`, `SecurityAndLayoutTests` |
-| **TB-003..TB-006** | Pin/unpin, window discovery, activate/toggle, app grouping | `Win32WindowCatalog`, `Win32WindowActivationService`, `AuroraStateStore.BuildTaskbarGroups` | `SecurityAndLayoutTests`, `WindowsPlatformAdapterTests` |
-| **TB-007..TB-012** | Window preview menu, Left/Center alignment, Auto-hide, Multi-monitor DPI, `Alt+Arrow` keyboard reorder, accessible names | `AuroraTaskbarWindow`, `MonitorTopologyService` | `CoreDesignAndEventTests`, `DesignSystemAndModuleViewModelTests` |
-| **TB-014..TB-015** | User-controlled native taskbar setup guide & Coexistence detection | `Win32AppBarService.QueryNativeTaskbarStatus`, `AuroraStudioWindow` (Section 0), `Native_Taskbar_Recovery_Guide.html` | `SecurityAndLayoutTests`, `WindowsPlatformAdapterTests` |
-| **CC-001..CC-003** | Shortcut/click open (`Ctrl+Alt+A`), truthful Wi-Fi & Bluetooth status + `ms-settings:` fallback | `ControlCenterWindow`, `WindowsRadioAndNetworkService`, `ControlCenterViewModel` | `DesignSystemAndModuleViewModelTests` |
-| **CC-004..CC-006** | Real Core Audio master volume/mute, active endpoints & per-app audio session mixer | `CoreAudioService` (`IAudioEndpointVolume`, `ISimpleAudioVolume`) | `WindowsPlatformAdapterTests` |
-| **CC-007..CC-012** | Battery, WMI Brightness, configurable card order/visibility, Compact/Standard/Expanded density, Airplane deep-link, honest error states | `WindowsDisplayAndPowerService`, `ControlCenterViewModel`, `ControlCenterWindow` | `WindowsPlatformAdapterTests`, `DesignSystemAndModuleViewModelTests` |
-| **NT-001..NT-006** | Aurora notifications, SQLite history + retention, category grouping, Quiet Hours, Clear All + Undo, explicit 3rd-party privacy boundary | `NotificationCenterWindow`, `AuroraToastWindow`, `NotificationCenterViewModel`, `SqliteAuroraRepository` | `PersistenceAndThemeArchiveTests`, `DesignSystemAndModuleViewModelTests` |
-| **WG-001..WG-008** | Clock/Date, Calendar, Weather (offline default + opt-in Open-Meteo), CPU/RAM, GPU, Network RX/TX, Small/Medium/Large resize & pause-when-hidden | `WidgetBoardWindow`, `WidgetBoardViewModel`, `WindowsSystemMetricsService` | `WindowsPlatformAdapterTests` |
-| **Media Hub** | GSMTC live playback metadata, multi-session switcher, capability-gated transport buttons | `GsmtcMediaSessionService`, `MediaHubViewModel`, `ControlCenterWindow`, `AuroraTaskbarWindow` | `Aurora.Media` build & runtime check |
-| **Workspaces** | Named profiles (`İş & Odak`, `Oyun & Performans`, `Kişisel & Akış`, `Obsidian Pro`) with deterministic rollback fallback | `WorkspaceManagerViewModel`, `AuroraStateStore.SwitchProfileAsync` | `DesignSystemAndModuleViewModelTests`, `PersistenceAndThemeArchiveTests` |
-| **Personalization** | 4 theme families (`Aurora Glass`, `Obsidian Pro`, `Aurora Flow`, `Nebula`), Sandboxed Live Preview, WCAG AA contrast check, `.auroratheme` SHA-256 + security validation | `PersonalizationStudioViewModel`, `ThemePackageValidator`, `ThemePackageArchiveService`, `BuiltInThemes` | `CoreDesignAndEventTests`, `SecurityAndLayoutTests`, `PersistenceAndThemeArchiveTests` |
-| **Recovery & Safety** | Standard-user (`asInvoker`), Safe Mode (`--safe-mode` + `StartupCrashSentinel`), HKCU optional startup, JSON settings backup/restore, zero Explorer modification | `App.xaml.cs`, `StartupCrashSentinel`, `HkcuStartupRegistrationService`, `Native_Taskbar_Recovery_Guide.html` | Live self-contained `Aurora.App.exe` verification |
+| Domain | Implemented Pure Rust / WebView2 Components | Automated Crate Tests |
+|---|---|---|
+| **Multi-Monitor Dock & Native AppBar** | `aurora_win32::appbar::NativeAppBarManager`, `aurora_core::models`, `dock.html` | `aurora-core`, `aurora-win32`, `aurora-app` (`cargo test --workspace`) |
+| **Window Activation & Alt+Tab Focus Safety** | `aurora_win32::hooks_and_overlays`, `hardware_osd`, `windows_catalog`, `webview_host.rs` | `aurora-win32::tests::alt_drag_strictly_excludes_turkish_altgr_and_shell_switchers` |
+| **10 Shell Architectures, 20 Themes & 2D HSV** | `aurora_core::tokens`, `aurora_core::models`, `crown.html`, `dock.html` | `all_v7_architectures_and_island_styles_resolve_cleanly`, `all_twenty_themes_exceed_wcag_aa_on_primary_secondary_and_accent` |
+| **Dynamic Island (`Aurora Crown`) & Live OSD** | `aurora_win32::hardware_osd`, `audio`, `bluetooth`, `media`, `crown.html` | `aurora-win32::tests` (volume step, Live BT, GSMTC STA) |
+| **Real Win11 System Tray & OmniSearch** | `aurora_win32::privacy_and_metrics` (`NotifyIconSettings`), `aurora_core::calc`, `bridge.rs` | `notify_icon_registry_and_tray_query_return_deduplicated_apps`, `turkish_fuzzy_search_matches_diacritics` |
+| **10 Desktop Widgets (`HWND_BOTTOM`) & AI Quota** | `widgets.html`, `aurora_storage::widgets_store`, `aurora_win32::ai_quota` (DPAPI) | `widgets_store::tests`, `ai_quota::tests` |
+| **Persistence, Updater & Zero-UAC Setup** | `aurora_storage::updater`, `aurora-setup`, Watchdog (`--watchdog-pid`) | `updater::tests`, `aurora-setup::tests`, live `SHA256_MATCH` verification |

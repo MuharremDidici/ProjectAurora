@@ -298,6 +298,10 @@ pub fn try_suppress_win11_shell_overlay(
         return None;
     }
     unsafe {
+        // Never touch XamlExplorerHostIslandWindow / CoreWindow while Alt is held (Alt+Tab switcher).
+        if (GetAsyncKeyState(VK_MENU.0 as i32) as u16 & 0x8000) != 0 {
+            return None;
+        }
         if !IsWindowVisible(hwnd).as_bool() {
             return None;
         }
@@ -329,6 +333,15 @@ pub fn try_suppress_win11_shell_overlay(
         let mut title_buf = [0u16; 128];
         let tlen = GetWindowTextW(hwnd, &mut title_buf) as usize;
         let title = String::from_utf16_lossy(&title_buf[..tlen]);
+        let tl = title.to_lowercase();
+        if tl.contains("görev")
+            || tl.contains("task")
+            || tl.contains("multitask")
+            || tl.contains("switcher")
+            || tl.contains("alt")
+        {
+            return None;
+        }
 
         let mut rc = RECT::default();
         if DwmGetWindowAttribute(hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, &mut rc as *mut _ as *mut _, 16).is_err()

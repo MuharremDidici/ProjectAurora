@@ -1,5 +1,5 @@
 #![windows_subsystem = "windows"]
-#![recursion_limit = "256"]
+#![recursion_limit = "512"]
 
 mod actions;
 mod bridge;
@@ -9,31 +9,34 @@ mod window;
 
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
-use std::sync::atomic::AtomicBool;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use actions::{build_dock_groups, user_known_folder};
+use actions::{build_dock_groups_ordered, update_stable_orders, user_known_folder};
 use aurora_core::{
-    BackgroundTrayApp, BluetoothBatteryDevice, Color, ExternalMonitorBrightness,
-    InstalledAppEntry, MediaSessionSnapshot, MonitorDescriptor, PhysicalRect, PrivacySnapshot,
-    SystemMetricsSnapshot, SystemToastNotification, WeatherSnapshot,
+    theme_by_id, AiProviderQuotaSnapshot, AudioStateSnapshot, BackgroundTrayApp,
+    BluetoothBatteryDevice, Color, DiskUsageEntry, ExternalMonitorBrightness, InstalledAppEntry,
+    LocalAiStatusSnapshot, MarketSnapshot, MediaSessionSnapshot, MonitorDescriptor, PhysicalRect,
+    PrivacySnapshot, SystemMetricsSnapshot, SystemToastNotification, ThemeColorCustomization,
+    WeatherSnapshot, AURORA_VERSION,
 };
 use aurora_render::{FontFamily, GpuContext, RectF, TextAlign};
 use aurora_storage::{
     aurora_data_dir, aurora_root_dir, check_for_updates, download_and_verify_installer, AuroraDb,
     AuxiliaryStateStore, ClipboardVaultDb, PrivacySafeLogger, ShellPreferencesStore,
-    StartupCrashSentinel,
+    StartupCrashSentinel, UserPreferencesRecord, WidgetsLayoutStore, WidgetsPersistenceDoc,
 };
 use aurora_surfaces::SnipMode;
 use aurora_win32::{
     analyze_fullscreen_and_dodge, build_full_installed_app_catalog, compute_next_volume_step,
     compute_snap_zones, enable_per_monitor_dpi_v2, enumerate_monitors, enumerate_open_windows,
-    extract_icon_png_base64, extract_shell_path_icon_base64, fetch_live_weather,
-    force_foreground_window, friendly_folder_name, get_clipboard_text, get_foreground_hwnd,
-    get_keyboard_layout_code, is_point_inside_window_or_owned, is_window_owned_by, launch_target,
-    pick_file_dialog, pick_folder_dialog, post_wake_ui,
-    query_background_tray_apps, query_bluetooth_batteries, query_media_session,
+    extract_icon_png_base64, extract_shell_path_icon_base64, extract_wallpaper_accent_colors,
+    fetch_live_weather, fetch_market_snapshot, force_foreground_window, friendly_folder_name,
+    get_clipboard_text, get_foreground_hwnd, get_keyboard_layout_code,
+    is_point_inside_window_or_owned, is_window_owned_by, launch_target, pick_file_dialog,
+    pick_folder_dialog, post_wake_ui, query_ai_quota_snapshots, query_background_tray_apps,
+    query_bluetooth_batteries, query_disk_usages, query_local_ai_status, query_media_session,
     query_privacy_snapshot, read_folder_stack_entries_full, recognize_screen_region_ocr,
     record_gif_region, register_aurora_hotkeys, restore_taskbar_standalone,
     sample_screen_pixel_hex, search_local_files, set_alt_drag_enabled, set_clipboard_text,
@@ -69,11 +72,21 @@ use windows::Win32::UI::WindowsAndMessaging::{
 
 const CROWN_HTML: &str = include_str!("../ui/crown.html");
 const DOCK_HTML: &str = include_str!("../ui/dock.html");
+const WIDGETS_HTML: &str = include_str!("../ui/widgets.html");
+const WIDGETS_SURFACE_ID: usize = 100;
 
 enum BgReply {
     InstalledApps(Vec<InstalledAppEntry>),
     Weather(WeatherSnapshot),
+    AiQuota(Vec<AiProviderQuotaSnapshot>),
+    Market(MarketSnapshot),
+    LocalAiAndDisks {
+        local_ai: LocalAiStatusSnapshot,
+        disks: Vec<DiskUsageEntry>,
+    },
+    WallpaperAccent(Option<(String, String)>),
     Media(MediaSessionSnapshot),
+    AudioSnapshot(AudioStateSnapshot),
     Bluetooth(Vec<BluetoothBatteryDevice>),
     Brightness(Vec<ExternalMonitorBrightness>),
     Privacy(PrivacySnapshot),
@@ -104,6 +117,11 @@ enum BgReply {
     ShelfFilePicked {
         path: String,
         share_qr_after: bool,
+    },
+    WidgetPhotoLoaded {
+        widget_id: String,
+        path: String,
+        data_uri: String,
     },
     IconReady {
         key: String,
@@ -339,10 +357,11 @@ fn main() {
     let smoke_exit_secs = parse_arg_value(&args, "--smoke-exit-after-seconds")
         .and_then(|s| s.parse::<u64>().ok());
     let open_studio = args.iter().any(|a| a == "--studio");
+    let force_safe_mode = args.iter().any(|a| a == "--safe-mode");
 
-    if let Err(e) = run_shell_host(smoke_exit_secs, open_studio) {
+    if let Err(e) = run_shell_host(smoke_exit_secs, open_studio, force_safe_mode) {
         let logger = PrivacySafeLogger::new(None);
-        logger.error("APP", "FATAL", &format!("Aurora v3 exit: {e}"));
+        logger.error("APP", "FATAL", &format!("Aurora v{AURORA_VERSION} exit: {e}"));
         restore_taskbar_standalone();
     }
 }
@@ -465,6 +484,7 @@ fn materialize_ui_assets() -> anyhow::Result<PathBuf> {
     std::fs::create_dir_all(&ui_dir)?;
     write_if_changed(&ui_dir.join("crown.html"), CROWN_HTML)?;
     write_if_changed(&ui_dir.join("dock.html"), DOCK_HTML)?;
+    write_if_changed(&ui_dir.join("widgets.html"), WIDGETS_HTML)?;
     Ok(ui_dir)
 }
 
@@ -482,7 +502,7 @@ fn compute_crown_bounds(mon: &LiveMonitorHandle) -> PhysicalRect {
     let b = mon.descriptor.bounds;
     let scale = mon.descriptor.scale_factor().max(1.0);
     let w = ((1260.0 * scale).round() as i32).min(b.width - 12).max(360);
-    let h = ((640.0 * scale).round() as i32).min(b.height - 24).max(260);
+    let h = b.height.max(320);
     let x = b.x + (b.width - w) / 2;
     let y = b.y;
     PhysicalRect { x, y, width: w, height: h }
@@ -534,7 +554,18 @@ fn sync_taskbar_and_appbar(
             && state.prefs.effective_dock_mode() == "AlwaysVisible";
         let edge = state.prefs.effective_dock_edge();
         let density = state.prefs.effective_dock_density();
-        appbar.apply_dock_reservation(edge, state.prefs.dock_scale_percent, reserve, density, false);
+        let arch = state.prefs.effective_shell_architecture();
+        let changed = appbar.apply_dock_reservation(
+            edge,
+            state.prefs.dock_scale_percent,
+            reserve,
+            density,
+            arch,
+            false,
+        );
+        if changed {
+            appbar.refit_mismatched_maximized_windows_once();
+        }
     } else if appbar.is_native_taskbar_suppressed() {
         appbar.restore_native_taskbar();
     }
@@ -571,27 +602,38 @@ fn create_dock_surfaces(
     docks
 }
 
-fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Result<()> {
+fn run_shell_host(
+    smoke_exit_secs: Option<u64>,
+    open_studio: bool,
+    force_safe_mode: bool,
+) -> anyhow::Result<()> {
     let logger = PrivacySafeLogger::new(None);
     let _ = std::fs::remove_file(aurora_data_dir().join("clean_exit.flag"));
 
     let sentinel = StartupCrashSentinel::new(None);
-    let safe_mode = sentinel.record_boot_and_check_safe_mode();
+    let sentinel_safe = sentinel.record_boot_and_check_safe_mode();
+    let safe_mode = force_safe_mode || sentinel_safe;
 
     let prefs_store = ShellPreferencesStore::new(None);
     let mut prefs = prefs_store.load();
     if safe_mode {
         prefs.hide_native_taskbar_while_active = false;
         prefs.reserve_dock_work_area = Some(false);
-        logger.warn("BOOT", "SAFE_MODE", "3 unclean boots detected; entered safe mode");
+        if force_safe_mode {
+            logger.warn("BOOT", "SAFE_MODE", "launched with --safe-mode flag");
+        } else {
+            logger.warn("BOOT", "SAFE_MODE", "3 unclean boots detected; entered safe mode");
+        }
     }
 
     let aurora_db = AuroraDb::open(None);
     let clip_db = ClipboardVaultDb::open(None);
     let aux_store = AuxiliaryStateStore::new(None);
+    let widgets_store = WidgetsLayoutStore::new(None);
 
     let user_prefs = aurora_db.load_user_preferences();
     let aux = aux_store.load();
+    let wdoc = widgets_store.load();
     let profiles = aurora_db.load_workspace_profiles();
     let pinned = aurora_db.load_pinned_shortcuts();
     let clips = clip_db.list("all", "", 60);
@@ -601,6 +643,11 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
         prefs,
         profiles,
         pinned,
+        wdoc.widgets,
+        wdoc.dock_widgets,
+        wdoc.todos,
+        wdoc.countdown,
+        wdoc.ai_configs,
         clips,
         aux.drop_shelf_paths,
         aux.agenda_notes,
@@ -624,6 +671,17 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
     let (vol_tx, vol_rx) = bounded::<(u8, bool)>(64);
     let (bg_tx, bg_rx_cmd) = unbounded::<BgCommand>();
     let (reply_tx, reply_rx) = unbounded::<BgReply>();
+
+    for w in &state.widgets {
+        if let Some(ref p) = w.photo_path {
+            if !p.trim().is_empty() {
+                let _ = bg_tx.try_send(BgCommand::LoadWidgetPhoto {
+                    widget_id: w.id.clone(),
+                    path: p.clone(),
+                });
+            }
+        }
+    }
 
     let mut monitors = enumerate_monitors();
     if monitors.is_empty() {
@@ -686,15 +744,38 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
         !omni_hk_ok,
     );
 
-    // 6. Pre-populate initial open windows & dock groups BEFORE first Ready arrives so Dock never paints empty!
+    // 6. Auto-heal any corrupted/backslash-stripped pins on startup, then pre-populate open windows & dock groups!
     {
+        let healed = state.heal_pinned_shortcuts();
+        if !healed.is_empty() {
+            aurora_db.save_pinned_shortcuts(&state.pinned_shortcuts);
+            for (name, old_p, new_p) in &healed {
+                logger.info(
+                    "BOOT",
+                    "PIN_AUTO_HEALED",
+                    &format!("Repaired pinned shortcut '{name}': '{old_p}' -> '{new_p}'"),
+                );
+            }
+        }
         let mut own_hwnds: HashSet<isize> = HashSet::new();
         own_hwnds.insert(crown.hwnd.0 as isize);
         for d in &docks {
             own_hwnds.insert(d.hwnd.0 as isize);
         }
         let wins = enumerate_open_windows(&own_hwnds, &state.attention_procs);
-        let groups = build_dock_groups(&state.pinned_shortcuts, &wins, None);
+        update_stable_orders(
+            &wins,
+            &state.pinned_shortcuts,
+            &mut state.running_group_order,
+            &mut state.window_seen_order,
+        );
+        let groups = build_dock_groups_ordered(
+            &state.pinned_shortcuts,
+            &wins,
+            None,
+            &state.running_group_order,
+            &state.window_seen_order,
+        );
         for g in &groups {
             if !state.icon_png_b64.contains_key(&g.group_key)
                 && state.icon_requested.insert(g.group_key.clone())
@@ -703,6 +784,7 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
                     key: g.group_key.clone(),
                     hwnd: g.windows.first().map(|w| w.hwnd),
                     exe_path: g.executable_path.clone(),
+                    aumid: g.aumid.clone(),
                 });
             }
         }
@@ -711,7 +793,17 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
     }
 
     // 7. Spawn non-blocking background workers (app catalog, file search, folder stacks, telemetry, OCR/GIF)
-    spawn_background_workers(bg_rx_cmd, reply_tx, wake_hwnd, brightness.clone());
+    let notif_mirror_active = Arc::new(AtomicBool::new(
+        state.prefs.effective_notification_mode() == "aurora-mirror"
+            && state.prefs.system_notification_bridge_enabled,
+    ));
+    spawn_background_workers(
+        bg_rx_cmd,
+        reply_tx,
+        wake_hwnd,
+        brightness.clone(),
+        notif_mirror_active.clone(),
+    );
 
     let start_instant = Instant::now();
     let mut last_clock_sec = chrono::Local::now().timestamp();
@@ -723,6 +815,7 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
     let mut peek_tray_until_ms: u64 = 0;
     let mut popup_opened_at_ms: u64 = 0;
     let mut prev_crown_interactive = false;
+    let mut prev_watch_clicks = false;
     let mut crown_ever_focused = false;
     let mut popup_opened_prev_fg: isize = 0;
     let mut last_omni_toggle_ms: u64 = 0;
@@ -732,6 +825,17 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
     let mut dock_ui_ready: HashSet<usize> = HashSet::new();
     let mut dock_nav_started: HashMap<usize, Instant> = HashMap::new();
     let mut dock_reload_attempts: HashMap<usize, u8> = HashMap::new();
+    let mut widgets_surface: Option<WebViewOverlaySurface> = None;
+    let mut widgets_ready = false;
+    let mut widgets_ui_ready = false;
+    let mut widgets_nav_started: Option<Instant> = None;
+    let mut widgets_reload_attempts: u8 = 0;
+    let mut last_widgets_json = String::new();
+    let mut last_ai_quota_refresh = Instant::now() - Duration::from_secs(120);
+    let mut last_market_refresh = Instant::now() - Duration::from_secs(600);
+    let mut last_local_ai_refresh = Instant::now() - Duration::from_secs(60);
+    let mut last_day_night_check = Instant::now() - Duration::from_secs(120);
+    let mut post_display_trim_at: Option<Instant> = None;
     let mut last_crown_json = String::new();
     let mut last_dock_json: HashMap<String, String> = HashMap::new();
     let mut trimmed_boot_ws = false;
@@ -748,15 +852,16 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
         .join(",");
     logger.info(
         "BOOT",
-        "V3_READY",
+        "V4_READY",
         &format!(
-            "Project Aurora v3.0.0 Hybrid-Rust started on {} monitor(s); crown=({},{},{}x{}) docks={} mode={} reserve={} tb_hidden={} kbd_hook={} mouse_hook={} hotkeys=[{}]",
+            "Project Aurora v{AURORA_VERSION} Hybrid-Rust started on {} monitor(s); crown=({},{},{}x{}) docks={} widgets={} mode={} reserve={} tb_hidden={} kbd_hook={} mouse_hook={} hotkeys=[{}]",
             monitors.len(),
             crown_bounds.x,
             crown_bounds.y,
             crown_bounds.width,
             crown_bounds.height,
             docks.len(),
+            state.widgets.len(),
             state.prefs.effective_dock_mode(),
             state.prefs.effective_reserve_dock_work_area(),
             appbar.is_native_taskbar_suppressed(),
@@ -787,6 +892,7 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
         let mut needs_taskbar_sync = false;
         let mut needs_bounds_sync = false;
         let mut needs_hotkey_sync = false;
+        let mut needs_widgets_sync = false;
         let mut needs_state_push = false;
         let mut needs_catalog_push = false;
 
@@ -872,18 +978,29 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
                     }
                     let mon_rects: Vec<PhysicalRect> =
                         monitors.iter().map(|m| m.descriptor.bounds).collect();
+                    let suppress_sys_notif = state.prefs.effective_notification_mode() == "aurora-mirror"
+                        && state.prefs.system_notification_bridge_enabled;
                     let _ = try_suppress_win11_shell_overlay(
                         HWND(hwnd as *mut _),
                         &mon_rects,
                         state.prefs.hardware_osd_enabled,
-                        state.prefs.system_notification_bridge_enabled,
+                        suppress_sys_notif,
                     );
                 }
                 ShellHookEvent::WindowCatalogChanged { foreground_hwnd } => {
                     catalog_changed = true;
                     let is_own = foreground_hwnd == crown.hwnd.0 as isize
                         || is_window_owned_by(foreground_hwnd, crown.hwnd)
-                        || docks.iter().any(|d| d.hwnd.0 as isize == foreground_hwnd)
+                        || docks.iter().any(|d| {
+                            d.hwnd.0 as isize == foreground_hwnd
+                                || is_window_owned_by(foreground_hwnd, d.hwnd)
+                        })
+                        || widgets_surface
+                            .as_ref()
+                            .is_some_and(|w| {
+                                w.hwnd.0 as isize == foreground_hwnd
+                                    || is_window_owned_by(foreground_hwnd, w.hwnd)
+                            })
                         || transient_overlay
                             .as_ref()
                             .is_some_and(|o| o.win.hwnd.0 as isize == foreground_hwnd);
@@ -897,10 +1014,16 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
                         {
                             crown.release_interactive();
                             crown.post_json(r#"{"type":"outsideDeactivate"}"#);
+                            state.crown_stage_open = false;
                             crown_ever_focused = false;
                             popup_opened_prev_fg = 0;
                             prev_crown_interactive = false;
-                            set_watch_external_clicks(false);
+                        } else if state.crown_stage_open {
+                            state.crown_stage_open = false;
+                            crown.post_json(r#"{"type":"outsideDeactivate"}"#);
+                        }
+                        if !state.dock_popover_open_mons.is_empty() {
+                            state.dock_popover_open_mons.clear();
                         }
                         for d in &docks {
                             d.post_json(r#"{"type":"outsideDeactivate"}"#);
@@ -961,16 +1084,31 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
                     }
                 }
                 ShellHookEvent::ExternalMouseClick { px, py } => {
-                    if crown.is_interactive()
-                        && now_ms.saturating_sub(popup_opened_at_ms) >= 180
+                    if (crown.is_interactive() || state.crown_stage_open)
+                        && (!crown.is_interactive()
+                            || now_ms.saturating_sub(popup_opened_at_ms) >= 180)
                         && !is_point_inside_window_or_owned(px, py, crown.hwnd)
                     {
-                        crown.release_interactive();
+                        if crown.is_interactive() {
+                            crown.release_interactive();
+                        }
                         crown.post_json(r#"{"type":"outsideDeactivate"}"#);
+                        state.crown_stage_open = false;
                         crown_ever_focused = false;
                         popup_opened_prev_fg = 0;
                         prev_crown_interactive = false;
-                        set_watch_external_clicks(false);
+                    }
+                    if !state.dock_popover_open_mons.is_empty()
+                        && now_ms.saturating_sub(state.dock_popover_opened_at_ms) >= 100
+                        && !docks.iter().any(|d| is_point_inside_window_or_owned(px, py, d.hwnd))
+                    {
+                        state.dock_popover_open_mons.clear();
+                        for d in &docks {
+                            d.post_json(r#"{"type":"outsideDeactivate"}"#);
+                        }
+                        if let Some(prev) = dwm_preview.as_mut() {
+                            prev.hide();
+                        }
                     }
                 }
             }
@@ -1005,20 +1143,48 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
                             pending_open_studio = false;
                             popup_opened_at_ms = now_ms;
                             crown.focus_and_activate();
-                            crown.post_json(r#"{"type":"toggleDeck","tab":"studio"}"#);
+                            crown.post_json(r#"{"type":"openSettings","section":"appearance"}"#);
                         } else if pending_open_tour {
                             pending_open_tour = false;
                             popup_opened_at_ms = now_ms;
                             crown.focus_and_activate();
                             crown.post_json(r#"{"type":"openTour","step":0}"#);
                         }
+                    } else if surface_id == WIDGETS_SURFACE_ID {
+                        if source == "uiReady" {
+                            widgets_ui_ready = true;
+                        }
+                        let first_time = !widgets_ready;
+                        widgets_ready = true;
+                        if let Some(ws) = widgets_surface.as_ref() {
+                            let j = state.build_widgets_state_json();
+                            if first_time || source == "uiReady" {
+                                logger.info(
+                                    "UI",
+                                    "SURFACE_READY",
+                                    &format!(
+                                        "widgets surface={surface_id} mon={} bounds=({},{},{}x{}) ready via {source} count={} payload_bytes={}",
+                                        ws.monitor_id,
+                                        ws.bounds_px.x,
+                                        ws.bounds_px.y,
+                                        ws.bounds_px.width,
+                                        ws.bounds_px.height,
+                                        state.widgets.len(),
+                                        j.len()
+                                    ),
+                                );
+                            }
+                            ws.post_json(&j);
+                            last_widgets_json = j;
+                            ws.post_json(r#"{"type":"syncLayout"}"#);
+                        }
                     } else {
                         if source == "uiReady" {
                             dock_ui_ready.insert(surface_id);
                         }
                         let first_time = dock_ready.insert(surface_id);
-                        if let Some(d) = docks.iter().find(|d| d.surface_id == surface_id) {
-                            let j = state.build_dock_state_json(&d.monitor_id);
+                        if let Some((idx, d)) = docks.iter().enumerate().find(|(_, d)| d.surface_id == surface_id) {
+                            let j = state.build_dock_state_json(&d.monitor_id, idx == 0, now_ms);
                             if first_time || source == "uiReady" {
                                 logger.info(
                                     "UI",
@@ -1049,7 +1215,9 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
                         state: &mut state,
                         crown: &mut crown,
                         docks: &mut docks,
+                        widgets_surface: &mut widgets_surface,
                         prefs_store: &prefs_store,
+                        widgets_store: &widgets_store,
                         aurora_db: &aurora_db,
                         clip_db: &clip_db,
                         aux_store: &aux_store,
@@ -1065,6 +1233,7 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
                         needs_taskbar_sync: &mut needs_taskbar_sync,
                         needs_bounds_sync: &mut needs_bounds_sync,
                         needs_hotkey_sync: &mut needs_hotkey_sync,
+                        needs_widgets_sync: &mut needs_widgets_sync,
                         needs_state_push: &mut needs_state_push,
                         popup_opened_at_ms: &mut popup_opened_at_ms,
                         peek_tray_until_ms: &mut peek_tray_until_ms,
@@ -1114,6 +1283,7 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
                     {
                         crown.release_interactive();
                         crown.post_json(r#"{"type":"outsideDeactivate"}"#);
+                        state.crown_stage_open = false;
                         trim_process_working_set();
                     }
                 }
@@ -1131,10 +1301,15 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
                     monitors = enumerate_monitors();
                     last_crown_json.clear();
                     last_dock_json.clear();
+                    last_widgets_json.clear();
                     crown.force_resync_region();
                     for d in &mut docks {
                         d.force_resync_region();
                     }
+                    if let Some(ws) = widgets_surface.as_mut() {
+                        ws.force_resync_region();
+                    }
+                    post_display_trim_at = Some(Instant::now() + Duration::from_secs(5));
                     let _ = bg_tx.try_send(BgCommand::RefreshSlowHardware);
                     needs_taskbar_sync = true;
                     needs_bounds_sync = true;
@@ -1154,6 +1329,24 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
                         &format!("Loaded {} installed apps/settings/tools", apps.len()),
                     );
                     state.installed_apps = apps;
+                    let healed = state.heal_pinned_shortcuts();
+                    if !healed.is_empty() {
+                        aurora_db.save_pinned_shortcuts(&state.pinned_shortcuts);
+                        for (name, old_p, new_p) in &healed {
+                            logger.info(
+                                "APPS",
+                                "PIN_AUTO_HEALED",
+                                &format!("Catalog-healed pinned shortcut '{name}': '{old_p}' -> '{new_p}'"),
+                            );
+                        }
+                        state.dock_groups = build_dock_groups_ordered(
+                            &state.pinned_shortcuts,
+                            &state.open_windows,
+                            None,
+                            &state.running_group_order,
+                            &state.window_seen_order,
+                        );
+                    }
                     needs_catalog_push = true;
                     needs_state_push = true;
                 }
@@ -1161,18 +1354,103 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
                     state.weather = w;
                     needs_state_push = true;
                 }
+                BgReply::AiQuota(snaps) => {
+                    state.ai_snapshots = snaps;
+                    needs_state_push = true;
+                }
+                BgReply::Market(m) => {
+                    state.market = m;
+                    needs_state_push = true;
+                }
+                BgReply::LocalAiAndDisks { local_ai, disks } => {
+                    state.local_ai = local_ai;
+                    state.disks = disks;
+                    needs_state_push = true;
+                }
+                BgReply::WallpaperAccent(colors_opt) => match colors_opt {
+                    Some((a1, a2)) => {
+                        let key = state.theme_id.clone();
+                        let map = state
+                            .prefs
+                            .theme_customizations
+                            .get_or_insert_with(HashMap::new);
+                        let entry: &mut ThemeColorCustomization = map.entry(key).or_default();
+                        entry.accent_primary = Some(a1.clone());
+                        entry.accent_secondary = Some(a2.clone());
+                        prefs_store.save(&state.prefs);
+                        post_toast_json(
+                            &crown,
+                            "Duvar Kağıdı Renkleri Uygulandı",
+                            &format!("Ana: {a1} · İkincil: {a2} (WCAG AA+)"),
+                            "",
+                        );
+                        needs_state_push = true;
+                    }
+                    None => {
+                        post_toast_json(
+                            &crown,
+                            "Duvar Kağıdı Okunamadı",
+                            "Mevcut duvar kağıdı düz renk veya erişilemez olabilir.",
+                            "",
+                        );
+                    }
+                },
                 BgReply::Media(m) => {
                     if state.media.title != m.title
                         || state.media.artist != m.artist
+                        || state.media.app_name != m.app_name
                         || state.media.is_playing != m.is_playing
                         || state.media.has_session != m.has_session
+                        || state.media.thumbnail_bytes.is_some() != m.thumbnail_bytes.is_some()
                     {
                         state.media = m;
                         needs_state_push = true;
                     }
                 }
+                BgReply::AudioSnapshot(snap) => {
+                    if state.audio != snap {
+                        state.audio = snap;
+                        needs_state_push = true;
+                    }
+                }
                 BgReply::Bluetooth(bt) => {
+                    if state.bt_boot_initialized && state.prefs.island_bt_popin {
+                        if let Some(new_dev) = bt.iter().find(|d| {
+                            d.is_connected
+                                && !state
+                                    .bluetooth_devices
+                                    .iter()
+                                    .any(|prev| prev.is_connected && prev.id == d.id)
+                        }) {
+                            let msg_json = json!({
+                                "type": "btPopin",
+                                "name": new_dev.name,
+                                "percent": new_dev.battery_percent,
+                                "hasBattery": new_dev.has_battery,
+                                "category": new_dev.category,
+                            })
+                            .to_string();
+                            crown.post_json(&msg_json);
+                        }
+                    }
+                    state.bt_boot_initialized = true;
                     state.bluetooth_devices = bt;
+                    needs_state_push = true;
+                }
+                BgReply::WidgetPhotoLoaded { widget_id, path, data_uri } => {
+                    state.widget_photos.insert(widget_id.clone(), data_uri);
+                    if let Some(w) = state.widgets.iter_mut().find(|w| w.id == widget_id) {
+                        if w.photo_path.as_deref() != Some(path.as_str()) {
+                            w.photo_path = Some(path);
+                            widgets_store.save(&WidgetsPersistenceDoc {
+                                widgets: state.widgets.clone(),
+                                dock_widgets: state.dock_widgets.clone(),
+                                todos: state.todos.clone(),
+                                countdown: state.countdown.clone(),
+                                ai_configs: state.ai_configs.clone(),
+                            });
+                        }
+                    }
                     needs_state_push = true;
                 }
                 BgReply::Brightness(mb) => {
@@ -1205,20 +1483,45 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
                     let changed_battery = state.metrics.battery_percent != m.battery_percent
                         || state.metrics.is_charging != m.is_charging;
                     state.metrics = m;
-                    if state.metrics_tab_active || changed_battery {
+                    if state.metrics_tab_active || changed_battery || state.dock_needs_live_metrics() {
                         needs_state_push = true;
                     }
                 }
                 BgReply::TrayApps(trays) => {
                     for t in &trays {
-                        if !t.executable_path.is_empty()
-                            && !state.icon_png_b64.contains_key(&t.id)
-                            && state.icon_requested.insert(t.id.clone())
+                        let stem = Path::new(&t.executable_path)
+                            .file_stem()
+                            .and_then(|s| s.to_str())
+                            .map(|s| s.to_ascii_lowercase())
+                            .unwrap_or_default();
+                        let icon_key = if stem.is_empty() { t.id.clone() } else { stem.clone() };
+                        if !state.icon_png_b64.contains_key(&icon_key)
+                            && state.icon_requested.insert(icon_key.clone())
                         {
+                            let aumid = if aurora_win32::is_windows_apps_sandbox_path(&t.executable_path) {
+                                state
+                                    .installed_apps
+                                    .iter()
+                                    .find(|a| {
+                                        let lt = a.launch_path.to_ascii_lowercase();
+                                        lt.starts_with("appsfolder:")
+                                            && (a.name.eq_ignore_ascii_case(&t.name)
+                                                || lt.contains(&stem))
+                                    })
+                                    .and_then(|a| {
+                                        a.launch_path
+                                            .strip_prefix("appsfolder:")
+                                            .or_else(|| a.launch_path.strip_prefix("APPSFOLDER:"))
+                                            .map(|s| s.to_string())
+                                    })
+                            } else {
+                                None
+                            };
                             let _ = bg_tx.try_send(BgCommand::ExtractIconPng {
-                                key: t.id.clone(),
+                                key: icon_key,
                                 hwnd: None,
                                 exe_path: t.executable_path.clone(),
+                                aumid,
                             });
                         }
                     }
@@ -1234,6 +1537,11 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
                     }
                 }
                 BgReply::FreshNotifications(fresh) => {
+                    if state.prefs.effective_notification_mode() != "aurora-mirror"
+                        || !state.prefs.system_notification_bridge_enabled
+                    {
+                        continue;
+                    }
                     let mut added_any = false;
                     for n in fresh {
                         if state.dismissed_sys_notif_ids.contains(&n.notification_id)
@@ -1349,7 +1657,9 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
                             state: &mut state,
                             crown: &mut crown,
                             docks: &mut docks,
+                            widgets_surface: &mut widgets_surface,
                             prefs_store: &prefs_store,
+                            widgets_store: &widgets_store,
                             aurora_db: &aurora_db,
                             clip_db: &clip_db,
                             aux_store: &aux_store,
@@ -1365,6 +1675,7 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
                             needs_taskbar_sync: &mut needs_taskbar_sync,
                             needs_bounds_sync: &mut needs_bounds_sync,
                             needs_hotkey_sync: &mut needs_hotkey_sync,
+                            needs_widgets_sync: &mut needs_widgets_sync,
                             needs_state_push: &mut needs_state_push,
                             popup_opened_at_ms: &mut popup_opened_at_ms,
                             peek_tray_until_ms: &mut peek_tray_until_ms,
@@ -1436,8 +1747,9 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
                     match res {
                         Ok(installer_path) => {
                             let _ = launch_target(&format!(
-                                "{}|--silent --relaunch",
-                                installer_path.to_string_lossy()
+                                "{}|--silent --relaunch --wait-pid={}",
+                                installer_path.to_string_lossy(),
+                                std::process::id()
                             ));
                             should_exit = true;
                         }
@@ -1462,11 +1774,9 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
             let owned = is_window_owned_by(fg, crown.hwnd);
             popup_opened_prev_fg = if owned { 0 } else { fg };
             crown_ever_focused = owned;
-            set_watch_external_clicks(true);
         } else if !crown_active && prev_crown_interactive {
             crown_ever_focused = false;
             popup_opened_prev_fg = 0;
-            set_watch_external_clicks(false);
         }
         prev_crown_interactive = crown_active;
 
@@ -1481,11 +1791,19 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
             {
                 crown.release_interactive();
                 crown.post_json(r#"{"type":"outsideDeactivate"}"#);
+                state.crown_stage_open = false;
                 crown_ever_focused = false;
                 popup_opened_prev_fg = 0;
                 prev_crown_interactive = false;
-                set_watch_external_clicks(false);
             }
+        }
+
+        let want_watch_clicks = crown.is_interactive()
+            || state.crown_stage_open
+            || !state.dock_popover_open_mons.is_empty();
+        if want_watch_clicks != prev_watch_clicks {
+            prev_watch_clicks = want_watch_clicks;
+            set_watch_external_clicks(want_watch_clicks);
         }
 
         // 7. Manage Lazy On-Demand Direct2D Overlay (OCR / Eyedropper / GIF Region / Shift+Drag Snap!)
@@ -1631,6 +1949,9 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
             for d in &docks {
                 own_hwnds.insert(d.hwnd.0 as isize);
             }
+            if let Some(ws) = widgets_surface.as_ref() {
+                own_hwnds.insert(ws.hwnd.0 as isize);
+            }
             if let Some(ov) = transient_overlay.as_ref() {
                 own_hwnds.insert(ov.win.hwnd.0 as isize);
             }
@@ -1644,7 +1965,19 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
                 }
             }
 
-            let dock_groups = build_dock_groups(&state.pinned_shortcuts, &wins, None);
+            update_stable_orders(
+                &wins,
+                &state.pinned_shortcuts,
+                &mut state.running_group_order,
+                &mut state.window_seen_order,
+            );
+            let dock_groups = build_dock_groups_ordered(
+                &state.pinned_shortcuts,
+                &wins,
+                None,
+                &state.running_group_order,
+                &state.window_seen_order,
+            );
             for g in &dock_groups {
                 if !state.icon_png_b64.contains_key(&g.group_key)
                     && state.icon_requested.insert(g.group_key.clone())
@@ -1653,6 +1986,7 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
                         key: g.group_key.clone(),
                         hwnd: g.windows.first().map(|w| w.hwnd),
                         exe_path: g.executable_path.clone(),
+                        aumid: g.aumid.clone(),
                     });
                 }
             }
@@ -1667,6 +2001,15 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
 
             // Apply per-monitor Fullscreen suppression cleanly (never hide interactive Crown!)
             crown.set_suppressed_fullscreen(fs_mons.contains(&crown.monitor_id));
+            if let Some(ws) = widgets_surface.as_mut() {
+                let is_fs = fs_mons.contains(&ws.monitor_id);
+                let prev_fs = ws.suppressed_fullscreen;
+                ws.set_suppressed_fullscreen(is_fs);
+                if prev_fs != is_fs && widgets_ready {
+                    let pv = json!({ "type": "widgetVisibility", "paused": is_fs }).to_string();
+                    ws.post_json(&pv);
+                }
+            }
             for d in &mut docks {
                 let is_fs = fs_mons.contains(&d.monitor_id);
                 d.set_suppressed_fullscreen(is_fs);
@@ -1718,6 +2061,8 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
             last_tb_guard = Instant::now();
             if state.prefs.hide_native_taskbar_while_active && peek_tray_until_ms == 0 {
                 appbar.enforce_native_taskbar_suppressed(None);
+                // Re-verify AppBar WorkArea edge alignment every sweep (zero-cost no-op when healthy!)
+                sync_taskbar_and_appbar(&mut appbar, &state, false);
             }
         }
 
@@ -1751,19 +2096,29 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
             }
         }
 
-        // 11. 1Hz Lightweight Clock Tick + Pomodoro / Awake / GIF Timers
+        // 11. 1Hz Lightweight Clock Tick + Pomodoro / Awake / GIF / AI Quota / Auto Day-Night
         let cur_sec = chrono::Local::now().timestamp();
         if cur_sec != last_clock_sec {
             last_clock_sec = cur_sec;
+            let now_dt = chrono::Local::now();
+            let clock_str = if state.prefs.show_clock_seconds {
+                now_dt.format("%H:%M:%S").to_string()
+            } else {
+                now_dt.format("%H:%M").to_string()
+            };
+            let tick = json!({ "type": "clockTick", "clock": clock_str }).to_string();
             if crown_ready {
-                let now_dt = chrono::Local::now();
-                let clock_str = if state.prefs.show_clock_seconds {
-                    now_dt.format("%H:%M:%S").to_string()
-                } else {
-                    now_dt.format("%H:%M").to_string()
-                };
-                let tick = json!({ "type": "clockTick", "clock": clock_str }).to_string();
                 crown.post_json(&tick);
+            }
+            for d in &docks {
+                if dock_ready.contains(&d.surface_id) {
+                    d.post_json(&tick);
+                }
+            }
+            if let Some(ws) = widgets_surface.as_ref() {
+                if widgets_ready && !ws.suppressed_fullscreen {
+                    ws.post_json(&tick);
+                }
             }
             if state.focus_running {
                 if state.focus_seconds > 0 {
@@ -1771,6 +2126,7 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
                 } else {
                     state.focus_running = false;
                     state.focus_seconds = 25 * 60;
+                    state.focus_completed_mins = state.focus_completed_mins.saturating_add(25);
                     post_toast_json(&crown, "Odak Tamamlandı", "25 dakikalık seans bitti!", "");
                 }
                 needs_state_push = true;
@@ -1793,6 +2149,56 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
                 })
                 .to_string();
                 crown.post_json(&g);
+            }
+            // 60s periodic AI Quota refresh ONLY when user has an active AI Quota widget (Dock or Desktop)!
+            if state.needs_ai_quota_poll()
+                && last_ai_quota_refresh.elapsed() >= Duration::from_secs(60)
+            {
+                last_ai_quota_refresh = Instant::now();
+                let _ = bg_tx.try_send(BgCommand::RefreshAiQuota(state.ai_configs.clone()));
+            }
+            // 5m opt-in Market ticker refresh ONLY when user enabled a Market widget (Dock or Desktop)!
+            if state.needs_market_poll()
+                && last_market_refresh.elapsed() >= Duration::from_secs(300)
+            {
+                last_market_refresh = Instant::now();
+                let _ = bg_tx.try_send(BgCommand::RefreshMarket);
+            }
+            // 15s opt-in Local AI (Ollama/LM Studio) & Disk health check ONLY when active!
+            if state.needs_local_ai_or_disks_poll()
+                && last_local_ai_refresh.elapsed() >= Duration::from_secs(15)
+            {
+                last_local_ai_refresh = Instant::now();
+                let _ = bg_tx.try_send(BgCommand::RefreshLocalAiAndDisks);
+            }
+            // 60s check for Automatic Day/Night Theme switching (07:00..19:00 -> Day, else Night)
+            if state.prefs.auto_day_night_theme
+                && last_day_night_check.elapsed() >= Duration::from_secs(60)
+            {
+                use chrono::Timelike;
+                last_day_night_check = Instant::now();
+                let hr = now_dt.hour();
+                let target_id = if (7..19).contains(&hr) {
+                    theme_by_id(&state.prefs.day_theme_id).id
+                } else {
+                    theme_by_id(&state.prefs.night_theme_id).id
+                };
+                if state.theme_id != target_id {
+                    state.theme_id = target_id;
+                    aurora_db.save_user_preferences(&UserPreferencesRecord {
+                        active_theme_id: state.theme_id.clone(),
+                        active_profile_id: state.active_profile_id.clone(),
+                        focus_mode_enabled: state.focus_mode_enabled,
+                        reduced_motion: false,
+                    });
+                    needs_state_push = true;
+                }
+            }
+            if let Some(trim_t) = post_display_trim_at {
+                if Instant::now() >= trim_t {
+                    post_display_trim_at = None;
+                    trim_process_working_set();
+                }
             }
             if !trimmed_boot_ws && now_ms >= 5000 {
                 trimmed_boot_ws = true;
@@ -1844,6 +2250,13 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
                     );
                 }
             }
+            if let Some(ws) = widgets_surface.as_mut() {
+                ws.monitor_id = p_mon.descriptor.device_id.clone();
+                ws.set_bounds_px(
+                    p_mon.descriptor.work_area,
+                    p_mon.descriptor.scale_factor() as f32,
+                );
+            }
         }
         if needs_hotkey_sync {
             unregister_aurora_hotkeys(crown.hwnd);
@@ -1856,9 +2269,10 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
             );
         }
 
-        // 12b. Staged Sequential Dock Navigation + Self-Healing Hydration Watchdog!
-        // Prevents WebView2 `--process-per-site` cold-renderer concurrent Navigate() script freeze!
-        if crown_nav_done || now_ms >= 350 {
+        // 12b. Staged Sequential Dock Navigation + Self-Healing Hydration Watchdog (v5.0)!
+        // Wait for crown cold-parse to settle before launching multi-monitor docks sequentially so
+        // the single shared `--process-per-site` renderer hydrates every monitor cleanly on attempt 0!
+        if crown_ready || crown_nav_done || now_ms >= 900 {
             let mut prev_dock_ok = true;
             for d in &docks {
                 let sid = d.surface_id;
@@ -1867,21 +2281,21 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
                 }
                 if let Some(&started) = dock_nav_started.get(&sid) {
                     let attempts = *dock_reload_attempts.get(&sid).unwrap_or(&0);
-                    if started.elapsed() >= Duration::from_millis(1500) && attempts < 4 {
+                    if started.elapsed() >= Duration::from_millis(4000) && attempts < 3 {
                         dock_reload_attempts.insert(sid, attempts + 1);
                         dock_nav_started.insert(sid, Instant::now());
                         logger.warn(
                             "UI",
                             "DOCK_RECOVERY_RELOAD",
                             &format!(
-                                "dock surface={sid} missed uiReady after 1500ms; re-navigating (attempt {})",
+                                "dock surface={sid} missed uiReady after 4000ms; re-navigating (attempt {})",
                                 attempts + 1
                             ),
                         );
                         d.navigate_to_page();
                     }
-                    // Allow next monitor dock to start once this one has waited 350ms
-                    if started.elapsed() < Duration::from_millis(350) {
+                    // Allow next monitor dock to start once this one has had 450ms head-start
+                    if started.elapsed() < Duration::from_millis(450) {
                         prev_dock_ok = false;
                     }
                 } else if prev_dock_ok {
@@ -1892,11 +2306,66 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
             }
         }
 
-        // 13. Change-Hashed State Push to Crown & Per-Monitor Docks (zero redundant DOM churn!)
+        // 12c. Lazy Desktop Widgets Surface (HWND_BOTTOM, zero VRAM when disabled/empty, staged after docks!)
+        let want_widgets = state.prefs.widgets_enabled && !state.widgets.is_empty();
+        let docks_done = dock_ui_ready.len() >= docks.len();
+        if !want_widgets && widgets_surface.is_some() {
+            widgets_surface = None;
+            widgets_ready = false;
+            widgets_ui_ready = false;
+            widgets_nav_started = None;
+            widgets_reload_attempts = 0;
+            last_widgets_json.clear();
+            trim_process_working_set();
+        } else if want_widgets
+            && widgets_surface.is_none()
+            && !monitors.is_empty()
+            && (needs_widgets_sync || (crown_nav_done && docks_done) || now_ms >= 1400)
+        {
+            let p_mon = &monitors[0];
+            if let Ok(ws) = WebViewOverlaySurface::create_desktop_widgets(
+                WIDGETS_SURFACE_ID,
+                p_mon.descriptor.device_id.clone(),
+                &wv_env,
+                &ui_dir,
+                p_mon.descriptor.work_area,
+                p_mon.descriptor.scale_factor() as f32,
+                surf_tx.clone(),
+                Some(wake_hwnd),
+                false,
+            ) {
+                widgets_nav_started = Some(Instant::now());
+                widgets_reload_attempts = 0;
+                widgets_surface = Some(ws);
+                needs_widgets_sync = true;
+            }
+        }
+        if let Some(ws) = widgets_surface.as_mut() {
+            if !widgets_ui_ready {
+                if let Some(started) = widgets_nav_started {
+                    if started.elapsed() >= Duration::from_millis(1600) && widgets_reload_attempts < 3 {
+                        widgets_reload_attempts += 1;
+                        widgets_nav_started = Some(Instant::now());
+                        ws.navigate_to_page();
+                    }
+                }
+            }
+            if needs_widgets_sync {
+                let elevate = state.widget_edit_mode || state.widgets.iter().any(|w| w.pinned_top);
+                ws.set_desktop_elevated(elevate);
+            }
+        }
+
+        // 13. Change-Hashed State Push to Crown, Per-Monitor Docks & Desktop Widgets (zero redundant DOM churn!)
         if needs_catalog_push && crown_ready {
             crown.post_json(&state.build_catalog_json());
         }
         if needs_state_push {
+            notif_mirror_active.store(
+                state.prefs.effective_notification_mode() == "aurora-mirror"
+                    && state.prefs.system_notification_bridge_enabled,
+                Ordering::Relaxed,
+            );
             if crown_ready {
                 let cj = state.build_crown_state_json(
                     &crown.monitor_id,
@@ -1909,20 +2378,30 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
                     last_crown_json = cj;
                 }
             }
-            for d in &docks {
+            for (idx, d) in docks.iter().enumerate() {
                 if !dock_ready.contains(&d.surface_id) {
                     continue;
                 }
-                let dj = state.build_dock_state_json(&d.monitor_id);
+                let dj = state.build_dock_state_json(&d.monitor_id, idx == 0, now_ms);
                 if last_dock_json.get(&d.monitor_id).map(String::as_str) != Some(dj.as_str()) {
                     d.post_json(&dj);
                     last_dock_json.insert(d.monitor_id.clone(), dj);
                 }
             }
+            if let Some(ws) = widgets_surface.as_ref() {
+                if widgets_ready {
+                    let wj = state.build_widgets_state_json();
+                    if wj != last_widgets_json {
+                        ws.post_json(&wj);
+                        last_widgets_json = wj;
+                    }
+                }
+            }
         }
 
         // 14. Zero-CPU Kernel Wait until next Win32 message / WM_AURORA_WAKE / timer
-        let docks_hydrating = dock_ui_ready.len() < docks.len();
+        let docks_hydrating = dock_ui_ready.len() < docks.len()
+            || (widgets_surface.is_some() && !widgets_ui_ready);
         let wait_ms = if transient_overlay.is_some() {
             16
         } else if docks_hydrating {
@@ -1947,12 +2426,13 @@ fn run_shell_host(smoke_exit_secs: Option<u64>, open_studio: bool) -> anyhow::Re
     drop(key_hook);
     drop(win_hooks);
     unregister_aurora_hotkeys(crown.hwnd);
+    drop(widgets_surface);
     drop(docks);
     drop(crown);
     appbar.restore_native_taskbar();
     let _ = std::fs::write(aurora_data_dir().join("clean_exit.flag"), b"ok");
     sentinel.mark_healthy();
-    logger.info("APP", "CLEAN_EXIT", "Project Aurora v3.0.0 exited cleanly.");
+    logger.info("APP", "CLEAN_EXIT", &format!("Project Aurora v{AURORA_VERSION} exited cleanly."));
     Ok(())
 }
 
@@ -1994,6 +2474,7 @@ fn spawn_background_workers(
     reply_tx: Sender<BgReply>,
     wake_hwnd: isize,
     brightness: Arc<BrightnessController>,
+    notif_mirror_active: Arc<AtomicBool>,
 ) {
     // Worker 1: On-Demand Command Processor (Native Pickers, Folder Stacks, File Search, Icons, OCR, GIF, Updates)
     let tx_cmd = reply_tx.clone();
@@ -2017,6 +2498,28 @@ fn spawn_background_workers(
                             let _ = tx_cmd.send(BgReply::ShelfFilePicked {
                                 path: p,
                                 share_qr_after,
+                            });
+                            post_wake_ui(wake_hwnd);
+                        }
+                    }
+                    BgCommand::PickWidgetPhoto { widget_id } => {
+                        if let Some(p) = pick_file_dialog("Widget Fotoğrafı Seçin") {
+                            if let Some(data_uri) = encode_widget_photo_data_uri(&p) {
+                                let _ = tx_cmd.send(BgReply::WidgetPhotoLoaded {
+                                    widget_id,
+                                    path: p,
+                                    data_uri,
+                                });
+                                post_wake_ui(wake_hwnd);
+                            }
+                        }
+                    }
+                    BgCommand::LoadWidgetPhoto { widget_id, path } => {
+                        if let Some(data_uri) = encode_widget_photo_data_uri(&path) {
+                            let _ = tx_cmd.send(BgReply::WidgetPhotoLoaded {
+                                widget_id,
+                                path,
+                                data_uri,
                             });
                             post_wake_ui(wake_hwnd);
                         }
@@ -2081,8 +2584,8 @@ fn spawn_background_workers(
                         let _ = tx_cmd.send(BgReply::FileSearch { seq, query, files });
                         post_wake_ui(wake_hwnd);
                     }
-                    BgCommand::ExtractIconPng { key, hwnd, exe_path } => {
-                        if let Some(b64) = extract_icon_png_base64(hwnd, &exe_path) {
+                    BgCommand::ExtractIconPng { key, hwnd, exe_path, aumid } => {
+                        if let Some(b64) = extract_icon_png_base64(hwnd, &exe_path, aumid.as_deref()) {
                             let _ = tx_cmd.send(BgReply::IconReady { key, b64 });
                             post_wake_ui(wake_hwnd);
                         }
@@ -2127,6 +2630,28 @@ fn spawn_background_workers(
                             post_wake_ui(wake_hwnd);
                         }
                     }
+                    BgCommand::RefreshAiQuota(cfgs) => {
+                        let snaps = query_ai_quota_snapshots(&cfgs);
+                        let _ = tx_cmd.send(BgReply::AiQuota(snaps));
+                        post_wake_ui(wake_hwnd);
+                    }
+                    BgCommand::RefreshMarket => {
+                        if let Some(snap) = fetch_market_snapshot() {
+                            let _ = tx_cmd.send(BgReply::Market(snap));
+                            post_wake_ui(wake_hwnd);
+                        }
+                    }
+                    BgCommand::RefreshLocalAiAndDisks => {
+                        let local_ai = query_local_ai_status();
+                        let disks = query_disk_usages();
+                        let _ = tx_cmd.send(BgReply::LocalAiAndDisks { local_ai, disks });
+                        post_wake_ui(wake_hwnd);
+                    }
+                    BgCommand::SyncWallpaperAccent(surface_hex) => {
+                        let res = extract_wallpaper_accent_colors(&surface_hex);
+                        let _ = tx_cmd.send(BgReply::WallpaperAccent(res));
+                        post_wake_ui(wake_hwnd);
+                    }
                     BgCommand::CheckClipboard => {
                         if let Some(txt) = get_clipboard_text() {
                             if !txt.is_empty() && txt != last_clip_text {
@@ -2158,7 +2683,9 @@ fn spawn_background_workers(
         .spawn(move || {
             let _ = unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED) };
 
-            // Fast sub-50ms hardware & tray boot scans FIRST (don't block behind 300-app icon catalog!)
+            // Fast sub-50ms hardware, live media & tray boot scans FIRST (never block behind 300-app icon catalog!)
+            let init_media = query_media_session();
+            let _ = reply_tx.send(BgReply::Media(init_media));
             let init_bt = query_bluetooth_batteries();
             let _ = reply_tx.send(BgReply::Bluetooth(init_bt.clone()));
             let visible_procs: HashSet<String> = enumerate_open_windows(&HashSet::new(), &HashSet::new())
@@ -2182,24 +2709,40 @@ fn spawn_background_workers(
 
             let mut metrics = MetricsSampler::new();
             let mut wpn = WpnNotificationBridge::new(None);
+            let audio_poll = CoreAudioController::new();
+            let mut last_audio_snap = audio_poll.get_snapshot();
             let mut last_bt_snapshot: Vec<BluetoothBatteryDevice> = init_bt;
+            let mut last_audio_tick = Instant::now();
             let mut last_tray_tick = Instant::now();
             let mut last_bt_tick = Instant::now();
             let mut last_slow_hw_tick = Instant::now();
             let mut last_weather_tick = Instant::now();
 
             loop {
-                // Unified 1.5s battery-friendly cadence: mtime-gated Toasts + Media + Privacy + Metrics
-                let fresh = wpn.poll_new_toasts();
-                if !fresh.is_empty() {
-                    let _ = reply_tx.send(BgReply::FreshNotifications(fresh));
-                    post_wake_ui(wake_hwnd);
+                // Unified 1.5s battery-friendly cadence: mtime-gated Toasts (opt-in) + Media + Privacy + Metrics
+                if notif_mirror_active.load(Ordering::Relaxed) {
+                    let fresh = wpn.poll_new_toasts();
+                    if !fresh.is_empty() {
+                        let _ = reply_tx.send(BgReply::FreshNotifications(fresh));
+                        post_wake_ui(wake_hwnd);
+                    }
                 }
 
                 let _ = reply_tx.send(BgReply::Media(query_media_session()));
                 let _ = reply_tx.send(BgReply::Privacy(query_privacy_snapshot()));
                 let _ = reply_tx.send(BgReply::Metrics(metrics.sample(true)));
                 post_wake_ui(wake_hwnd);
+
+                // 3s loop: Per-app audio sessions & mic mute (change-filtered, <0.5ms COM read)
+                if last_audio_tick.elapsed() >= Duration::from_secs(3) {
+                    last_audio_tick = Instant::now();
+                    let fresh_audio = audio_poll.get_snapshot();
+                    if fresh_audio != last_audio_snap {
+                        last_audio_snap = fresh_audio.clone();
+                        let _ = reply_tx.send(BgReply::AudioSnapshot(fresh_audio));
+                        post_wake_ui(wake_hwnd);
+                    }
+                }
 
                 // 12s loop: System Tray background apps (excluding only apps with visible windows!)
                 if last_tray_tick.elapsed() >= Duration::from_secs(12) {
@@ -2245,4 +2788,18 @@ fn spawn_background_workers(
             }
         })
         .ok();
+}
+
+fn encode_widget_photo_data_uri(path: &str) -> Option<String> {
+    use base64::Engine;
+    use image::ImageFormat;
+    let img = image::open(path).ok()?;
+    let thumb = img.thumbnail(640, 640);
+    let mut buf = Vec::new();
+    let mut cursor = std::io::Cursor::new(&mut buf);
+    thumb.write_to(&mut cursor, ImageFormat::Jpeg).ok()?;
+    Some(format!(
+        "data:image/jpeg;base64,{}",
+        base64::engine::general_purpose::STANDARD.encode(&buf)
+    ))
 }

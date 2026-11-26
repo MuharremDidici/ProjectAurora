@@ -1,9 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <ItemGroup>
-    <ProjectReference Include="..\Aurora.Core\Aurora.Core.csproj" />
-    <ProjectReference Include="..\Aurora.Application\Aurora.Application.csproj" />
-  </ItemGroup>
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-  </PropertyGroup>
-</Project>

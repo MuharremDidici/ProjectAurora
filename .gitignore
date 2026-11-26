@@ -1,27 +1,19 @@
-## .NET / Visual Studio / Rider
-bin/
-obj/
-.vs/
-.idea/
-*.user
-*.suo
-*.userosscache
-*.sln.docstates
-*.cache
-*.log
-*.pdb
-*.tmp
-TestResults/
-BenchmarkDotNet.Artifacts/
-
 ## Rust / Cargo build outputs
 aurora-rs/target/
 target/
 
+## Visual Studio / IDE / JetBrains
+.vs/
+.idea/
+*.user
+*.suo
+*.cache
+*.log
+*.pdb
+*.tmp
+
 ## Project Aurora build & installer outputs (distributed via GitHub Releases)
 dist/
-installer/stage/
-installer/Aurora.Setup/Payload/*.zip
 *.aurora-backup
 
 ## OS files

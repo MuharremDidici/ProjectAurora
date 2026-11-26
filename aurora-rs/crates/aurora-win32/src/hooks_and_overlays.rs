@@ -1,4 +1,4 @@
-use std::sync::atomic::{AtomicBool, AtomicIsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicIsize, AtomicU32, Ordering};
 use aurora_core::PhysicalRect;
 use crossbeam_channel::Sender;
 use parking_lot::Mutex;
@@ -14,23 +14,26 @@ use windows::Win32::System::LibraryLoader::GetModuleHandleW;
 use windows::Win32::System::Threading::GetCurrentThreadId;
 use windows::Win32::UI::Accessibility::{SetWinEventHook, UnhookWinEvent, HWINEVENTHOOK};
 use windows::Win32::UI::Input::KeyboardAndMouse::{
-    GetAsyncKeyState, RegisterHotKey, UnregisterHotKey, HOT_KEY_MODIFIERS, MOD_ALT, MOD_CONTROL,
-    MOD_NOREPEAT, MOD_SHIFT, VK_CONTROL, VK_LBUTTON, VK_LMENU, VK_RBUTTON, VK_RMENU, VK_SHIFT,
+    GetAsyncKeyState, IsWindowEnabled, RegisterHotKey, UnregisterHotKey, HOT_KEY_MODIFIERS,
+    MOD_ALT, MOD_CONTROL, MOD_NOREPEAT, MOD_SHIFT, VK_CONTROL, VK_LBUTTON, VK_LMENU, VK_RBUTTON,
+    VK_RMENU, VK_SHIFT,
 };
 use windows::Win32::UI::Shell::{DragFinish, DragQueryFileW, HDROP};
 use windows::Win32::UI::WindowsAndMessaging::{
     AllowSetForegroundWindow, BringWindowToTop, CallNextHookEx, CreateWindowExW, DefWindowProcW,
-    DestroyWindow, GetAncestor, GetClassNameW, GetForegroundWindow, GetMessageW, GetWindow,
-    GetWindowRect, GetWindowThreadProcessId, IsIconic, IsZoomed, PostThreadMessageW,
+    DestroyWindow, GetAncestor, GetClassNameW, GetForegroundWindow, GetLastActivePopup,
+    GetMessageW, GetWindow, GetWindowLongPtrW, GetWindowRect, GetWindowThreadProcessId,
+    IsHungAppWindow, IsIconic, IsWindow, IsWindowVisible, IsZoomed, PostThreadMessageW,
     RegisterClassW, SetForegroundWindow, SetWindowPos, SetWindowsHookExW, ShowWindow,
     ShowWindowAsync, SwitchToThisWindow, UnhookWindowsHookEx, ASFW_ANY, EVENT_OBJECT_CREATE,
     EVENT_OBJECT_DESTROY, EVENT_OBJECT_LOCATIONCHANGE, EVENT_OBJECT_NAMECHANGE, EVENT_OBJECT_SHOW,
     EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_MINIMIZEEND, EVENT_SYSTEM_MINIMIZESTART,
-    EVENT_SYSTEM_MOVESIZEEND, EVENT_SYSTEM_MOVESIZESTART, GA_ROOT, GA_ROOTOWNER, GW_OWNER,
-    HWND_TOPMOST, MSLLHOOKSTRUCT, MSG, SWP_NOACTIVATE, SWP_SHOWWINDOW, SW_HIDE,
-    SW_RESTORE, WH_MOUSE_LL, WINEVENT_OUTOFCONTEXT, WINEVENT_SKIPOWNPROCESS, WM_LBUTTONDOWN,
-    WM_LBUTTONUP, WM_MOUSEMOVE, WM_QUIT, WM_RBUTTONDOWN, WM_RBUTTONUP, WNDCLASSW,
-    WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW, WS_EX_TOPMOST, WS_EX_TRANSPARENT, WS_POPUP,
+    EVENT_SYSTEM_MOVESIZEEND, EVENT_SYSTEM_MOVESIZESTART, GA_ROOT, GA_ROOTOWNER, GWL_EXSTYLE,
+    GW_OWNER, HWND_NOTOPMOST, HWND_TOPMOST, MSLLHOOKSTRUCT, MSG, SWP_NOACTIVATE, SWP_NOMOVE,
+    SWP_NOSIZE, SWP_SHOWWINDOW, SW_HIDE, SW_RESTORE, SW_SHOW, WH_MOUSE_LL, WINEVENT_OUTOFCONTEXT,
+    WINEVENT_SKIPOWNPROCESS, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_MOUSEMOVE, WM_QUIT, WM_RBUTTONDOWN,
+    WM_RBUTTONUP, WNDCLASSW, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW, WS_EX_TOPMOST, WS_EX_TRANSPARENT,
+    WS_POPUP,
 };
 
 use crate::hardware_osd::post_wake_ui;
@@ -52,6 +55,7 @@ static MOUSE_WAKE_HWND: AtomicIsize = AtomicIsize::new(0);
 static ALT_DRAG_ENABLED: AtomicBool = AtomicBool::new(true);
 static SNAP_ZONES_ENABLED: AtomicBool = AtomicBool::new(true);
 static WATCH_EXTERNAL_CLICKS: AtomicBool = AtomicBool::new(false);
+static LAST_FG_LOC_TICK: AtomicU32 = AtomicU32::new(0);
 
 #[derive(Default)]
 struct AltDragState {
@@ -197,22 +201,37 @@ unsafe extern "system" fn win_event_proc(
         return;
     }
     let h = hwnd.0 as isize;
-    // Fast lock-free drop for high-frequency LOCATIONCHANGE events (99.99% of calls!)
+    // Fast lock-free filter for high-frequency LOCATIONCHANGE events:
+    // - Forward Shift+Drag snap moves immediately.
+    // - Also wake fullscreen/dodge detector (throttled to 120ms) when the foreground window resizes
+    //   so entering/exiting fullscreen YouTube/Netflix/VLC hides & restores Dock instantaneously!
     if event == EVENT_OBJECT_LOCATIONCHANGE {
-        if !SNAP_ZONES_ENABLED.load(Ordering::Relaxed)
-            || SHIFT_DRAG_HWND.load(Ordering::Relaxed) != h
+        if SNAP_ZONES_ENABLED.load(Ordering::Relaxed)
+            && SHIFT_DRAG_HWND.load(Ordering::Relaxed) == h
         {
+            let shift_down = (GetAsyncKeyState(VK_SHIFT.0 as i32) as u16 & 0x8000) != 0;
+            if shift_down {
+                if let Some(guard) = EVENT_TX.try_lock() {
+                    if let Some(tx) = guard.as_ref() {
+                        let mut pt = POINT::default();
+                        let _ = windows::Win32::UI::WindowsAndMessaging::GetCursorPos(&mut pt);
+                        let _ = tx.try_send(ShellHookEvent::ShiftDragMoved { hwnd: h, px: pt.x, py: pt.y });
+                    }
+                }
+            }
             return;
         }
-        let shift_down = (GetAsyncKeyState(VK_SHIFT.0 as i32) as u16 & 0x8000) != 0;
-        if !shift_down {
-            return;
-        }
-        let Some(guard) = EVENT_TX.try_lock() else { return };
-        if let Some(tx) = guard.as_ref() {
-            let mut pt = POINT::default();
-            let _ = windows::Win32::UI::WindowsAndMessaging::GetCursorPos(&mut pt);
-            let _ = tx.try_send(ShellHookEvent::ShiftDragMoved { hwnd: h, px: pt.x, py: pt.y });
+        if hwnd == GetForegroundWindow() {
+            let prev = LAST_FG_LOC_TICK.load(Ordering::Relaxed);
+            if _time.wrapping_sub(prev) >= 120 {
+                LAST_FG_LOC_TICK.store(_time, Ordering::Relaxed);
+                if let Some(guard) = EVENT_TX.try_lock() {
+                    if let Some(tx) = guard.as_ref() {
+                        let _ = tx.try_send(ShellHookEvent::WindowCatalogChanged { foreground_hwnd: h });
+                        post_wake_ui(MOUSE_WAKE_HWND.load(Ordering::Relaxed));
+                    }
+                }
+            }
         }
         return;
     }
@@ -501,21 +520,103 @@ pub fn is_point_inside_window_or_owned(px: i32, py: i32, owner: HWND) -> bool {
     }
 }
 
-/// Deadlock-free foreground & keyboard focus transfer — NEVER calls `AttachThreadInput`,
-/// so foreign Electron/Chromium/UWP input queues and keyboard modifiers can NEVER deadlock or stick!
+/// Resolves the actual activatable window target: if `hwnd` has a visible, enabled modal popup
+/// (e.g. Java `SunAwtDialog` owned by `SunAwtFrame`), returns that popup instead of the blocked parent.
+pub fn resolve_active_popup_target(hwnd: HWND) -> HWND {
+    unsafe {
+        if hwnd.0.is_null() || !IsWindow(hwnd).as_bool() {
+            return hwnd;
+        }
+        let popup = GetLastActivePopup(hwnd);
+        if !popup.0.is_null()
+            && popup != hwnd
+            && IsWindow(popup).as_bool()
+            && IsWindowVisible(popup).as_bool()
+            && IsWindowEnabled(popup).as_bool()
+        {
+            return popup;
+        }
+        hwnd
+    }
+}
+
+/// 5-Stage Deadlock-Free Industrial Foreground & Z-Order Engine (v5.0):
+/// - NEVER calls `AttachThreadInput`, so foreign Electron/Java/UWP queues can NEVER deadlock!
+/// - Resolves active modal popups (`GetLastActivePopup`, fixes Java `SunAwtFrame` + `SunAwtDialog`).
+/// - Performs a safe non-hung `HWND_TOPMOST` → `HWND_NOTOPMOST` Z-order elevation bump so stubborn
+///   Java AWT/Swing, Qt, and Electron windows physically rise above competing windows even under
+///   Windows Foreground Lock (`WS_EX_NOACTIVATE` Dock clicks).
+/// - Finishes with verified `SetForegroundWindow` + `SwitchToThisWindow(target, true)` Alt-Tab focus handoff.
 pub fn force_foreground_window(hwnd: HWND) {
     unsafe {
-        if hwnd.0.is_null() {
+        if hwnd.0.is_null() || !IsWindow(hwnd).as_bool() {
             return;
         }
-        let _ = AllowSetForegroundWindow(ASFW_ANY);
-        if IsIconic(hwnd).as_bool() {
+
+        let target = resolve_active_popup_target(hwnd);
+
+        // Stage 1: Restore iconic windows cleanly (both parent and active popup if distinct)
+        if target != hwnd && IsIconic(hwnd).as_bool() {
             let _ = ShowWindowAsync(hwnd, SW_RESTORE);
         }
-        let _ = BringWindowToTop(hwnd);
-        let _ = SetForegroundWindow(hwnd);
-        if GetForegroundWindow() != hwnd {
-            SwitchToThisWindow(hwnd, true);
+        if IsIconic(target).as_bool() {
+            let _ = ShowWindowAsync(target, SW_RESTORE);
+        } else {
+            let _ = ShowWindowAsync(target, SW_SHOW);
+        }
+
+        // Stage 2: Grant explicit foreground transfer permission to target PID + ASFW_ANY
+        let mut target_pid = 0u32;
+        GetWindowThreadProcessId(target, Some(&mut target_pid));
+        if target_pid != 0 {
+            let _ = AllowSetForegroundWindow(target_pid);
+        }
+        let _ = AllowSetForegroundWindow(ASFW_ANY);
+
+        // Stage 3: Safe physical Z-order elevation bump for healthy non-topmost windows.
+        // Guaranteed never to leave a window stuck topmost (synchronous pair, guarded by IsHungAppWindow).
+        let lift_z_order = |w: HWND| {
+            if w.0.is_null() || !IsWindow(w).as_bool() || IsHungAppWindow(w).as_bool() {
+                return;
+            }
+            let ex = GetWindowLongPtrW(w, GWL_EXSTYLE) as u32;
+            let was_topmost = (ex & WS_EX_TOPMOST.0) != 0;
+            if !was_topmost {
+                let _ = SetWindowPos(
+                    w,
+                    HWND_TOPMOST,
+                    0,
+                    0,
+                    0,
+                    0,
+                    SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW,
+                );
+                let _ = SetWindowPos(
+                    w,
+                    HWND_NOTOPMOST,
+                    0,
+                    0,
+                    0,
+                    0,
+                    SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW,
+                );
+            }
+        };
+
+        if target != hwnd {
+            lift_z_order(hwnd);
+        }
+        lift_z_order(target);
+
+        // Stage 4: Standard activation & Z-top bring
+        let _ = BringWindowToTop(target);
+        let _ = SetForegroundWindow(target);
+
+        // Stage 5: Verified fallback via Alt-Tab native focus handoff when Windows Foreground Lock resists
+        if GetForegroundWindow() != target {
+            SwitchToThisWindow(target, true);
+            let _ = BringWindowToTop(target);
+            let _ = SetForegroundWindow(target);
         }
     }
 }

@@ -1,0 +1,2200 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Aurora Desktop Widgets v5.0</title>
+<style>
+:root {
+    --bg-glass-1: rgba(14, 18, 28, 0.78);
+    --bg-glass-2: rgba(20, 26, 40, 0.88);
+    --bg-card: rgba(255, 255, 255, 0.055);
+    --bg-card-hover: rgba(255, 255, 255, 0.11);
+    --border-subtle: rgba(255, 255, 255, 0.10);
+    --border-rim: rgba(255, 255, 255, 0.19);
+    --text-1: #F8FAFC;
+    --text-2: #94A3B8;
+    --accent-1: #38BDF8;
+    --accent-2: #818CF8;
+    --accent-ink: #040914;
+    --a1-rgb: 56, 189, 248;
+    --a2-rgb: 129, 140, 248;
+    --radius-w: 22px;
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --shadow-w: 0 18px 46px -14px rgba(0, 0, 0, 0.56), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    --braun-bg: #1A1B1E;
+    --braun-bg-2: #23252A;
+    --braun-border: rgba(255, 255, 255, 0.11);
+    --braun-accent: #F97316;
+    --matrix-bg: rgba(9, 10, 13, 0.92);
+    --matrix-dot: rgba(255, 255, 255, 0.075);
+    --editorial-bg: rgba(15, 17, 23, 0.95);
+    --editorial-line: rgba(255, 255, 255, 0.10);
+}
+body.mode-light {
+    --bg-glass-1: rgba(252, 250, 247, 0.84);
+    --bg-glass-2: rgba(255, 254, 252, 0.94);
+    --bg-card: rgba(20, 24, 34, 0.045);
+    --bg-card-hover: rgba(20, 24, 34, 0.09);
+    --border-subtle: rgba(20, 24, 34, 0.10);
+    --border-rim: rgba(20, 24, 34, 0.17);
+    --text-1: #14171F;
+    --text-2: #525B6B;
+    --shadow-w: 0 16px 38px -14px rgba(15, 23, 42, 0.16), 0 2px 6px rgba(15, 23, 42, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    --braun-bg: #F2EFEA;
+    --braun-bg-2: #E7E3DC;
+    --braun-border: rgba(24, 24, 27, 0.12);
+    --braun-accent: #EA580C;
+    --matrix-bg: rgba(245, 246, 248, 0.94);
+    --matrix-dot: rgba(15, 23, 42, 0.085);
+    --editorial-bg: rgba(252, 251, 249, 0.96);
+    --editorial-line: rgba(20, 24, 34, 0.10);
+}
+body.radius-sharp { --radius-w: 10px; }
+body.radius-soft { --radius-w: 28px; }
+body.eco-mode * { animation: none !important; transition-duration: 0.05s !important; }
+body.eco-mode .widget-card { backdrop-filter: none !important; }
+body.widgets-paused #canvas { visibility: hidden; pointer-events: none; }
+body.widgets-paused * { animation-play-state: paused !important; }
+
+* { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+html, body {
+    width: 100%; height: 100%; overflow: hidden; background: transparent;
+    font-family: 'Segoe UI Variable Display', 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
+    color: var(--text-1); -webkit-font-smoothing: antialiased;
+}
+.num { font-variant-numeric: tabular-nums; }
+.mono { font-family: 'Cascadia Mono', 'Consolas', monospace; font-variant-numeric: tabular-nums; }
+
+#canvas { position: fixed; inset: 0; pointer-events: none; }
+
+/* Edit Mode Top Control Bar */
+#editBanner {
+    display: none;
+    position: fixed; top: 18px; left: 50%; transform: translateX(-50%);
+    padding: 8px 10px 8px 16px; border-radius: 999px;
+    background: var(--bg-glass-2);
+    border: 1px solid var(--border-rim);
+    backdrop-filter: blur(26px) saturate(165%);
+    box-shadow: 0 20px 50px -12px rgba(0,0,0,0.52);
+    align-items: center; gap: 12px; z-index: 900; pointer-events: auto;
+    font-size: 12px; font-weight: 600; color: var(--text-1);
+}
+body.edit-mode #editBanner { display: flex; }
+.eb-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent-1);
+    box-shadow: 0 0 10px rgba(var(--a1-rgb), 0.7);
+}
+.eb-btn {
+    height: 28px; padding: 0 12px; border-radius: 999px;
+    border: 1px solid var(--border-subtle); background: var(--bg-card);
+    color: var(--text-1); font-size: 11.5px; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: background 0.14s, border-color 0.14s, transform 0.12s var(--ease);
+}
+.eb-btn:hover { background: var(--bg-card-hover); border-color: var(--border-rim); }
+.eb-btn:active { transform: scale(0.96); }
+.eb-btn.primary { background: var(--accent-1); color: var(--accent-ink); border-color: transparent; font-weight: 700; }
+.eb-btn.primary:hover { filter: brightness(1.06); }
+
+/* ═══════════ BASE WIDGET CONTAINER ═══════════ */
+.widget-card {
+    position: absolute; pointer-events: auto;
+    border-radius: var(--radius-w);
+    padding: 16px 18px;
+    overflow: hidden;
+    transition: box-shadow 0.2s var(--ease), border-color 0.18s ease, transform 0.18s var(--ease);
+}
+.widget-card.w-sz-S { width: 236px; min-height: 116px; padding: 13px 15px; }
+.widget-card.w-sz-M { width: 320px; min-height: 148px; padding: 16px 18px; }
+.widget-card.w-sz-L { width: 392px; min-height: 184px; padding: 18px 20px; }
+
+/* ═══════════ 5 INDUSTRIAL DESIGN ARCHETYPES (SKINS) ═══════════ */
+
+/* 1. OPTICAL GLASS (Apple Tahoe / visionOS) */
+.widget-card.skin-glass {
+    background: var(--bg-glass-1);
+    border: 1px solid var(--border-rim);
+    backdrop-filter: blur(28px) saturate(165%);
+    box-shadow: var(--shadow-w);
+}
+.widget-card.skin-glass::before {
+    content: ''; position: absolute; inset: 0 0 auto 0; height: 1px; pointer-events: none;
+    background: linear-gradient(90deg, transparent 6%, rgba(255,255,255,0.34) 50%, transparent 94%);
+    opacity: 0.72;
+}
+body.mode-light .widget-card.skin-glass::before {
+    background: linear-gradient(90deg, transparent 6%, rgba(255,255,255,1) 50%, transparent 94%);
+}
+
+/* 2. FRAMELESS WALLPAPER TYPOGRAPHY (Zero box, floats directly over wallpaper!) */
+.widget-card.skin-frameless {
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.52), 0 1px 4px rgba(0, 0, 0, 0.42);
+    color: #FFFFFF;
+}
+.widget-card.skin-frameless .w-sub,
+.widget-card.skin-frameless .w-title {
+    color: rgba(255, 255, 255, 0.80);
+}
+.widget-card.skin-frameless .w-btn,
+.widget-card.skin-frameless .w-ibtn {
+    background: rgba(15, 18, 28, 0.42);
+    border-color: rgba(255, 255, 255, 0.22);
+    color: #FFFFFF;
+    backdrop-filter: blur(16px);
+}
+.widget-card.skin-frameless .w-btn:hover,
+.widget-card.skin-frameless .w-ibtn:hover {
+    background: rgba(15, 18, 28, 0.64);
+}
+.widget-card.skin-frameless .ai-row,
+.widget-card.skin-frameless .mkt-chip,
+.widget-card.skin-frameless .td-row,
+.widget-card.skin-frameless .ln-btn {
+    background: rgba(12, 16, 26, 0.38);
+    border-color: rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(14px);
+}
+body.edit-mode .widget-card.skin-frameless {
+    border: 1px dashed rgba(var(--a1-rgb), 0.72) !important;
+    background: rgba(10, 14, 24, 0.28) !important;
+}
+
+/* 3. BRAUN / DIETER RAMS TACTILE INSTRUMENT */
+.widget-card.skin-braun {
+    background: var(--braun-bg);
+    border: 1px solid var(--braun-border);
+    border-radius: 16px;
+    box-shadow:
+        0 18px 40px -16px rgba(0, 0, 0, 0.55),
+        inset 0 1px 0 rgba(255, 255, 255, 0.09),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+body.mode-light .widget-card.skin-braun {
+    box-shadow:
+        0 14px 32px -14px rgba(15, 23, 42, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.06);
+}
+.widget-card.skin-braun::after {
+    content: ''; position: absolute; top: 11px; right: 12px;
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--braun-accent);
+    box-shadow: 0 0 8px rgba(249, 115, 22, 0.55);
+    pointer-events: none;
+}
+.widget-card.skin-braun .w-title {
+    font-size: 9.5px; letter-spacing: 0.14em; font-weight: 700;
+}
+
+/* 4. DOT-MATRIX / NOTHING HARDWARE */
+.widget-card.skin-matrix {
+    background-color: var(--matrix-bg);
+    background-image: radial-gradient(var(--matrix-dot) 1.15px, transparent 1.15px);
+    background-size: 10px 10px;
+    border: 1px solid var(--border-rim);
+    border-radius: 18px;
+    backdrop-filter: blur(22px);
+    box-shadow: 0 20px 44px -16px rgba(0, 0, 0, 0.58);
+}
+.widget-card.skin-matrix::before,
+.widget-card.skin-matrix::after {
+    content: ''; position: absolute; width: 7px; height: 7px; pointer-events: none;
+    border-color: rgba(var(--a1-rgb), 0.55); border-style: solid;
+}
+.widget-card.skin-matrix::before { top: 8px; left: 8px; border-width: 1.5px 0 0 1.5px; border-radius: 2px 0 0 0; }
+.widget-card.skin-matrix::after { bottom: 8px; right: 8px; border-width: 0 1.5px 1.5px 0; border-radius: 0 0 2px 0; }
+.widget-card.skin-matrix .w-title {
+    font-family: 'Cascadia Mono', 'Consolas', monospace;
+    font-size: 9.5px; letter-spacing: 0.14em;
+}
+
+/* 5. EDITORIAL SWISS MATTE / PORCELAIN */
+.widget-card.skin-editorial {
+    background: var(--editorial-bg);
+    border: 1px solid var(--editorial-line);
+    border-radius: 14px;
+    box-shadow: 0 14px 34px -14px rgba(0, 0, 0, 0.34);
+}
+body.mode-light .widget-card.skin-editorial {
+    box-shadow: 0 12px 30px -12px rgba(15, 23, 42, 0.13), 0 1px 3px rgba(15, 23, 42, 0.05);
+}
+.widget-card.skin-editorial .w-head {
+    padding-bottom: 8px; margin-bottom: 10px;
+    border-bottom: 1px solid var(--editorial-line);
+}
+
+/* Edit Mode Overlay */
+body.edit-mode .widget-card {
+    cursor: grab;
+    box-shadow: 0 0 0 1.5px rgba(var(--a1-rgb), 0.65), var(--shadow-w);
+}
+body.edit-mode .widget-card.dragging {
+    cursor: grabbing;
+    transform: scale(1.015);
+    z-index: 800;
+    box-shadow: 0 24px 60px -10px rgba(0, 0, 0, 0.68), 0 0 0 2px var(--accent-1);
+}
+.w-edit-bar {
+    display: none;
+    position: absolute; top: 8px; left: 8px; right: 8px;
+    justify-content: space-between; align-items: center; gap: 4px;
+    padding: 4px 6px; border-radius: 10px;
+    background: var(--bg-glass-2);
+    border: 1px solid var(--border-rim);
+    backdrop-filter: blur(18px);
+    z-index: 30;
+}
+body.edit-mode .widget-card:hover .w-edit-bar,
+body.edit-mode .widget-card.dragging .w-edit-bar { display: flex; }
+
+/* Shared Typography & Micro Controls */
+.w-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    margin-bottom: 10px;
+}
+.w-title {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+    color: var(--text-2);
+}
+.w-title svg { width: 13px; height: 13px; flex-shrink: 0; color: var(--accent-1); }
+.w-sub { font-size: 11px; color: var(--text-2); font-weight: 500; }
+.w-badge {
+    font-size: 9.5px; font-weight: 700; padding: 2px 7px; border-radius: 999px;
+    background: rgba(var(--a1-rgb), 0.14); color: var(--accent-1);
+    border: 1px solid rgba(var(--a1-rgb), 0.25); letter-spacing: 0.02em;
+}
+.w-btn {
+    height: 26px; padding: 0 10px; border-radius: 8px;
+    border: 1px solid var(--border-subtle); background: var(--bg-card);
+    color: var(--text-1); font-size: 11px; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+    transition: background 0.14s, border-color 0.14s, transform 0.12s var(--ease);
+}
+.w-btn:hover { background: var(--bg-card-hover); border-color: var(--border-rim); }
+.w-btn:active { transform: scale(0.95); }
+.w-btn.primary { background: var(--accent-1); color: var(--accent-ink); border-color: transparent; font-weight: 700; }
+.w-ibtn {
+    width: 26px; height: 26px; border-radius: 8px;
+    border: 1px solid var(--border-subtle); background: var(--bg-card);
+    color: var(--text-1); cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: background 0.14s, border-color 0.14s, transform 0.12s var(--ease);
+}
+.w-ibtn:hover { background: var(--bg-card-hover); border-color: var(--border-rim); }
+.w-ibtn:active { transform: scale(0.92); }
+.w-ibtn.active { background: rgba(var(--a1-rgb), 0.2); border-color: var(--accent-1); color: var(--accent-1); }
+.w-ibtn.danger:hover { background: rgba(244, 63, 94, 0.22); border-color: rgba(244, 63, 94, 0.55); color: #FB7185; }
+.w-ibtn svg, .w-btn svg { width: 13px; height: 13px; }
+
+/* ═══════════ 1. CLOCK WIDGET (7 PRO DESIGNS) ═══════════ */
+.clk-swiss-row { display: flex; align-items: baseline; gap: 4px; line-height: 0.94; }
+.clk-swiss-hh { font-size: 56px; font-weight: 800; letter-spacing: -0.045em; }
+.clk-swiss-sep { font-size: 46px; font-weight: 300; color: var(--accent-1); opacity: 0.85; transform: translateY(-3px); }
+.clk-swiss-mm { font-size: 56px; font-weight: 300; letter-spacing: -0.04em; opacity: 0.92; }
+.clk-swiss-ss { font-size: 15px; font-weight: 700; color: var(--accent-1); margin-left: 6px; }
+.w-sz-S .clk-swiss-hh, .w-sz-S .clk-swiss-mm { font-size: 40px; }
+.w-sz-L .clk-swiss-hh, .w-sz-L .clk-swiss-mm { font-size: 68px; }
+.clk-sec-track { width: 100%; height: 2px; border-radius: 99px; background: var(--border-subtle); margin: 10px 0 8px; overflow: hidden; }
+.clk-sec-fill { height: 100%; background: var(--accent-1); transition: width 0.35s linear; }
+.clk-meta-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11.5px; color: var(--text-2); }
+
+/* Hero Frameless Clock */
+.clk-hero { text-align: left; padding: 4px 2px; }
+.clk-hero-time { font-size: 68px; font-weight: 200; letter-spacing: -0.05em; line-height: 0.92; }
+.w-sz-S .clk-hero-time { font-size: 48px; }
+.w-sz-L .clk-hero-time { font-size: 84px; }
+.clk-hero-date { font-size: 13px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.84; margin-top: 8px; }
+.clk-hero-weath { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; opacity: 0.78; margin-top: 4px; }
+
+/* 3D Mechanical Split-Flap */
+.flip-stage { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 4px 0 8px; }
+.flip-tile {
+    position: relative; width: 78px; height: 84px; border-radius: 13px;
+    background: linear-gradient(180deg, #1E222B 0%, #151820 49%, #11131A 51%, #1A1E28 100%);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 10px 24px -8px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 44px; font-weight: 800; color: #F8FAFC; letter-spacing: -0.03em;
+}
+body.mode-light .widget-card:not(.skin-frameless) .flip-tile {
+    background: linear-gradient(180deg, #FFFFFF 0%, #F4F5F8 49%, #E6E8EE 51%, #F8F9FB 100%);
+    color: #111827; border-color: rgba(15, 23, 42, 0.14);
+    box-shadow: 0 8px 18px -8px rgba(15, 23, 42, 0.22), inset 0 1px 0 #FFFFFF;
+}
+.w-sz-S .flip-tile { width: 62px; height: 68px; font-size: 34px; }
+.w-sz-L .flip-tile { width: 96px; height: 98px; font-size: 54px; }
+.flip-tile::after {
+    content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 2px;
+    background: rgba(0, 0, 0, 0.55); box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+.flip-rivet-l, .flip-rivet-r {
+    position: absolute; top: calc(50% - 3px); width: 4px; height: 6px; border-radius: 2px;
+    background: rgba(148, 163, 184, 0.45); z-index: 2;
+}
+.flip-rivet-l { left: 4px; } .flip-rivet-r { right: 4px; }
+.flip-colon { display: flex; flex-direction: column; gap: 10px; }
+.flip-colon span { width: 5px; height: 5px; border-radius: 50%; background: var(--accent-1); opacity: 0.85; }
+
+/* Braun Chronograph Analog */
+.chrono-wrap { display: flex; align-items: center; gap: 16px; }
+.chrono-dial { width: 112px; height: 112px; flex-shrink: 0; filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.28)); }
+.w-sz-S .chrono-dial { width: 88px; height: 88px; }
+.w-sz-L .chrono-dial { width: 132px; height: 132px; }
+
+/* Dot-Matrix LED Clock */
+.dm-box {
+    padding: 12px 14px; border-radius: 12px;
+    background-color: rgba(0, 0, 0, 0.26);
+    background-image: radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px);
+    background-size: 6px 6px;
+    border: 1px solid var(--border-subtle);
+}
+body.mode-light .widget-card:not(.skin-frameless) .dm-box {
+    background-color: rgba(15, 23, 42, 0.04);
+    background-image: radial-gradient(rgba(15, 23, 42, 0.08) 1px, transparent 1px);
+}
+.dm-time { font-size: 42px; font-weight: 800; letter-spacing: 0.08em; color: var(--text-1); line-height: 1; }
+.w-sz-S .dm-time { font-size: 30px; }
+.dm-dots { display: flex; gap: 3px; margin-top: 10px; }
+.dm-dots span { flex: 1; height: 4px; border-radius: 99px; background: var(--border-subtle); }
+.dm-dots span.on { background: var(--accent-1); }
+
+/* Turkish Typographic Word Clock */
+.word-clk-main { font-size: 26px; font-weight: 800; line-height: 1.12; letter-spacing: -0.025em; }
+.word-clk-min { font-size: 24px; font-weight: 300; line-height: 1.14; color: var(--accent-1); }
+
+/* World Horizon */
+.world-list { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.world-cell {
+    padding: 8px 10px; border-radius: 11px;
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+    display: flex; align-items: center; justify-content: space-between;
+}
+
+/* ═══════════ 2. MEDIA WIDGET (4 PRO DESIGNS) ═══════════ */
+.med-ambient-bg {
+    position: absolute; inset: -24px; background-size: cover; background-position: center;
+    filter: blur(28px) saturate(145%) brightness(0.55); opacity: 0.38; pointer-events: none; z-index: 0;
+}
+body.mode-light .med-ambient-bg { filter: blur(28px) saturate(135%) brightness(1.1); opacity: 0.24; }
+.med-fg { position: relative; z-index: 1; }
+.med-row { display: flex; align-items: center; gap: 13px; }
+.med-art {
+    width: 62px; height: 62px; border-radius: 13px; flex-shrink: 0; overflow: hidden;
+    background: linear-gradient(135deg, rgba(var(--a1-rgb), 0.28), rgba(var(--a2-rgb), 0.22));
+    border: 1px solid var(--border-rim);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 10px 22px -8px rgba(0, 0, 0, 0.45);
+}
+.med-art img { width: 100%; height: 100%; object-fit: cover; }
+.med-title { font-size: 13.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.med-artist { font-size: 11.5px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+.med-ctrls { display: flex; align-items: center; gap: 6px; margin-top: 9px; }
+
+/* Animated 5-Bar Equalizer */
+.eq-bars { display: inline-flex; align-items: flex-end; gap: 2.5px; height: 13px; }
+.eq-bars i {
+    display: block; width: 2.5px; border-radius: 99px; background: var(--accent-1);
+    height: 4px; transition: height 0.2s;
+}
+.eq-bars.play i:nth-child(1) { animation: eqWave 0.72s ease-in-out infinite alternate; }
+.eq-bars.play i:nth-child(2) { animation: eqWave 0.54s ease-in-out 0.14s infinite alternate; }
+.eq-bars.play i:nth-child(3) { animation: eqWave 0.86s ease-in-out 0.08s infinite alternate; }
+.eq-bars.play i:nth-child(4) { animation: eqWave 0.62s ease-in-out 0.22s infinite alternate; }
+@keyframes eqWave { from { height: 3px; } to { height: 13px; } }
+
+/* Spinning Vinyl Turntable + Tonearm */
+.tt-stage { position: relative; width: 78px; height: 70px; flex-shrink: 0; }
+.tt-disc {
+    width: 68px; height: 68px; border-radius: 50%; overflow: hidden; position: relative;
+    background: radial-gradient(circle at center, #111 0%, #1c1f26 30%, #0d0f14 32%, #181b22 62%, #0c0e13 64%, #151820 100%);
+    border: 1.5px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 10px 22px -6px rgba(0, 0, 0, 0.55);
+    display: flex; align-items: center; justify-content: center;
+}
+.tt-disc.spin { animation: spinSlow 9s linear infinite; }
+.tt-disc img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid #0B0D12; }
+.tt-spindle { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: #E2E8F0; box-shadow: 0 0 0 1.5px #090B10; }
+.tt-arm {
+    position: absolute; top: 2px; right: 0; width: 22px; height: 54px; pointer-events: none;
+    transform-origin: 14px 8px; transform: rotate(-22deg); transition: transform 0.35s var(--ease);
+}
+.tt-arm.engaged { transform: rotate(8deg); }
+@keyframes spinSlow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* Hardware Tape Deck */
+.deck-window {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 8px 12px; border-radius: 10px; margin-bottom: 8px;
+    background: rgba(0, 0, 0, 0.24); border: 1px solid var(--border-subtle);
+}
+body.mode-light .widget-card:not(.skin-frameless) .deck-window { background: rgba(15, 23, 42, 0.05); }
+.deck-reel { width: 24px; height: 24px; color: var(--accent-1); }
+.deck-reel.spin { animation: spinSlow 3.6s linear infinite; }
+
+/* ═══════════ 3. WEATHER WIDGET (VECTOR ART) ═══════════ */
+.weath-hero { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.weath-temp { font-size: 44px; font-weight: 800; letter-spacing: -0.04em; line-height: 0.96; }
+.weath-svg { width: 58px; height: 58px; flex-shrink: 0; }
+.weath-meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px; }
+.weath-cell { padding: 6px 9px; border-radius: 9px; background: var(--bg-card); border: 1px solid var(--border-subtle); font-size: 10.5px; }
+
+/* ═══════════ 4. AI QUOTA STUDIO (CUSTOM BRAND EMBLEMS) ═══════════ */
+.ai-list { display: flex; flex-direction: column; gap: 7px; }
+.ai-row {
+    display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px;
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+}
+.ai-emblem {
+    width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255, 255, 255, 0.06); border: 1px solid var(--border-subtle);
+}
+.ai-emblem svg { width: 16px; height: 16px; }
+.ai-bar { height: 4px; border-radius: 99px; background: var(--border-subtle); overflow: hidden; margin-top: 5px; }
+.ai-fill { height: 100%; border-radius: 99px; transition: width 0.35s var(--ease); }
+
+/* ═══════════ 5. BATTERY & SYSTEM INSTRUMENTS ═══════════ */
+.rings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(72px, 1fr)); gap: 8px; text-align: center; }
+.ring-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.ring-svg { width: 58px; height: 58px; }
+.ring-lbl { font-size: 10.5px; font-weight: 600; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 82px; }
+.bar-track { height: 6px; border-radius: 99px; background: var(--border-subtle); overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent-1), var(--accent-2)); transition: width 0.35s var(--ease); }
+
+/* ═══════════ 6. OTHER WIDGETS (TODO / MARKET / LAUNCHER / NOTES / POMODORO / ETC.) ═══════════ */
+.cal-day-num { font-size: 38px; font-weight: 800; line-height: 1; letter-spacing: -0.04em; color: var(--accent-1); }
+.note-ta {
+    width: 100%; min-height: 92px; resize: none; border-radius: 10px;
+    border: 1px solid var(--border-subtle); background: var(--bg-card);
+    color: var(--text-1); font: inherit; font-size: 12px; line-height: 1.5;
+    padding: 9px 10px; outline: none; user-select: text;
+}
+.note-ta:focus { border-color: var(--accent-1); }
+.ln-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+.ln-btn {
+    padding: 8px 4px; border-radius: 11px; border: 1px solid var(--border-subtle);
+    background: var(--bg-card); color: var(--text-1); cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    transition: background 0.14s, transform 0.12s var(--ease);
+}
+.ln-btn:hover { background: var(--bg-card-hover); transform: translateY(-1px); }
+.ln-btn img { width: 22px; height: 22px; border-radius: 6px; }
+.ln-btn span { font-size: 9.5px; font-weight: 600; max-width: 58px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.td-inp-row { display: flex; gap: 6px; margin-bottom: 8px; }
+.td-inp {
+    flex: 1; min-width: 0; height: 28px; border-radius: 8px;
+    border: 1px solid var(--border-subtle); background: var(--bg-card);
+    color: var(--text-1); font: inherit; font-size: 11.5px; padding: 0 9px; outline: none; user-select: text;
+}
+.td-inp:focus { border-color: var(--accent-1); }
+.td-list { display: flex; flex-direction: column; gap: 5px; max-height: 132px; overflow-y: auto; }
+.td-row {
+    display: flex; align-items: center; gap: 7px; padding: 6px 8px; border-radius: 9px;
+    background: var(--bg-card); border: 1px solid var(--border-subtle); font-size: 11.5px;
+}
+.td-chk {
+    width: 15px; height: 15px; border-radius: 4px; border: 1.5px solid var(--border-rim);
+    background: transparent; cursor: pointer; flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center; color: var(--accent-ink);
+}
+.td-chk.done { background: var(--accent-1); border-color: var(--accent-1); }
+.td-txt { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.td-txt.done { text-decoration: line-through; opacity: 0.5; }
+.mkt-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; }
+.mkt-chip { padding: 8px 10px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-subtle); }
+.quote-body { font-size: 13.5px; font-weight: 500; line-height: 1.5; font-style: italic; }
+
+/* ═══════════ DIRECT RIGHT-CLICK PRO INSPECTOR ═══════════ */
+#widgetInspector {
+    display: none; position: fixed; z-index: 950; pointer-events: auto;
+    width: 288px; padding: 14px; border-radius: 18px;
+    background: var(--bg-glass-2);
+    border: 1px solid var(--border-rim);
+    backdrop-filter: blur(30px) saturate(170%);
+    box-shadow: 0 26px 64px -12px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    color: var(--text-1);
+    animation: inspIn 0.16s var(--ease);
+}
+#widgetInspector.open { display: block; }
+@keyframes inspIn { from { opacity: 0; transform: scale(0.95) translateY(4px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+.insp-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 11px; padding-bottom: 8px; border-bottom: 1px solid var(--border-subtle); }
+.insp-sec { margin-bottom: 10px; }
+.insp-lbl { font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-2); margin-bottom: 5px; }
+.insp-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.insp-chip {
+    height: 25px; padding: 0 9px; border-radius: 8px;
+    border: 1px solid var(--border-subtle); background: var(--bg-card);
+    color: var(--text-1); font-size: 11px; font-weight: 600; cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+}
+.insp-chip:hover { background: var(--bg-card-hover); border-color: var(--border-rim); }
+.insp-chip.active { background: var(--accent-1); color: var(--accent-ink); border-color: transparent; font-weight: 700; }
+.insp-range { width: 100%; accent-color: var(--accent-1); cursor: pointer; }
+.insp-foot { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding-top: 9px; border-top: 1px solid var(--border-subtle); }
+
+/* ═══════════ v6.0 6TH ARCHETYPE (DERİN CAM) & 22 STUDIO WIDGETS ═══════════ */
+.widget-card.skin-neoglass {
+    background:
+        linear-gradient(165deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.03) 42%, rgba(var(--a1-rgb),0.08) 100%),
+        var(--bg-glass-1);
+    border: 1px solid rgba(255,255,255,0.26);
+    backdrop-filter: blur(34px) saturate(185%);
+    box-shadow:
+        0 24px 54px -12px rgba(0, 0, 0, 0.62),
+        inset 0 1.5px 0 rgba(255, 255, 255, 0.42),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.08);
+}
+body.mode-light .widget-card.skin-neoglass {
+    background:
+        linear-gradient(165deg, rgba(255,255,255,0.92) 0%, rgba(244,247,252,0.78) 100%);
+    border-color: rgba(255,255,255,0.90);
+    box-shadow:
+        0 18px 42px -12px rgba(15, 23, 42, 0.18),
+        inset 0 1.5px 0 #FFFFFF;
+}
+.med-poster-card { position: relative; min-height: 158px; display: flex; flex-direction: column; justify-content: flex-end; margin: -4px; border-radius: 16px; overflow: hidden; padding: 14px; background: linear-gradient(145deg, rgba(var(--a1-rgb),0.28), rgba(var(--a2-rgb),0.22), #0F172A); }
+.med-poster-bg { position: absolute; inset: 0; background-size: cover; background-position: center; }
+.med-poster-scrim { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8,11,18,0.12) 0%, rgba(8,11,18,0.68) 58%, rgba(8,11,18,0.94) 100%); }
+.med-poster-fg { position: relative; z-index: 2; color: #FFFFFF; }
+.tp7-wrap { display: flex; align-items: center; gap: 14px; }
+.tp7-platter {
+    width: 72px; height: 72px; border-radius: 50%; flex-shrink: 0; position: relative;
+    background: conic-gradient(from 40deg, #E2E8F0 0deg, #94A3B8 90deg, #F1F5F9 180deg, #64748B 270deg, #E2E8F0 360deg);
+    border: 2px solid rgba(255,255,255,0.28); box-shadow: 0 8px 20px rgba(0,0,0,0.42), inset 0 0 0 8px rgba(15,23,42,0.14);
+    display: flex; align-items: center; justify-content: center;
+}
+.tp7-platter.spin { animation: spinSlow 6s linear infinite; }
+.tp7-notch { position: absolute; top: 8px; width: 5px; height: 5px; border-radius: 50%; background: #EA580C; }
+.tp7-center { width: 20px; height: 20px; border-radius: 50%; background: #0F172A; border: 2px solid #F8FAFC; }
+.tp7-oled { padding: 6px 8px; border-radius: 8px; background: #090B0E; color: #E2E8F0; border: 1px solid rgba(255,255,255,0.12); margin-bottom: 7px; }
+.cassette-shell {
+    padding: 10px 12px; border-radius: 11px;
+    background: rgba(15, 18, 25, 0.72); border: 1px solid rgba(255,255,255,0.16);
+    margin-bottom: 8px;
+}
+.weath-sky-card {
+    margin: -16px -18px; padding: 16px 18px; min-height: 148px; position: relative; overflow: hidden; color: #FFFFFF;
+}
+.weath-sky-card.sky-day { background: linear-gradient(160deg, #0284C7 0%, #38BDF8 55%, #7DD3FC 100%); }
+.weath-sky-card.sky-night { background: linear-gradient(160deg, #090D1F 0%, #1E1B4B 60%, #312E81 100%); }
+.weath-sky-card.sky-rain { background: linear-gradient(160deg, #1E293B 0%, #334155 55%, #0F172A 100%); }
+.weath-sky-card.sky-sunset { background: linear-gradient(160deg, #7C2D12 0%, #EA580C 52%, #F59E0B 100%); }
+.mix-row { display: flex; align-items: center; gap: 8px; font-size: 11px; }
+.mix-row input[type=range] { flex: 1; accent-color: var(--accent-1); height: 4px; cursor: pointer; }
+.mix-outs { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.mix-out-chip {
+    font-size: 9.5px; font-weight: 700; padding: 2px 7px; border-radius: 999px;
+    border: 1px solid var(--border-subtle); background: var(--bg-card); color: var(--text-2);
+    cursor: pointer; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.mix-out-chip.active { background: var(--accent-1); color: var(--accent-ink); border-color: transparent; }
+.photo-box {
+    width: 100%; height: 152px; border-radius: 12px; overflow: hidden; position: relative;
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+    display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 6px;
+}
+.photo-box img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo-box.polaroid { padding: 8px 8px 26px 8px; background: #FAF9F6; border-radius: 6px; color: #18181B; height: 172px; }
+.photo-box.polaroid img { border-radius: 3px; }
+.photo-box.gallery-mat { padding: 14px; background: #14161D; border: 2px solid rgba(255,255,255,0.16); }
+.photo-pick-btn {
+    position: absolute; bottom: 8px; right: 8px; opacity: 0; transition: opacity 0.16s;
+}
+.widget-card:hover .photo-pick-btn, .photo-box.empty .photo-pick-btn { opacity: 1; }
+.cal-month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; text-align: center; font-size: 10.5px; }
+.cal-m-dow { font-size: 9px; font-weight: 700; color: var(--text-2); padding: 2px 0; }
+.cal-m-cell { height: 22px; border-radius: 6px; display: flex; align-items: center; justify-content: center; position: relative; font-weight: 600; }
+.cal-m-cell.muted { opacity: 0.3; }
+.cal-m-cell.today { background: var(--accent-1); color: var(--accent-ink); font-weight: 800; }
+.cal-m-cell.note::after { content: ''; position: absolute; bottom: 2px; width: 3.5px; height: 3.5px; border-radius: 50%; background: var(--accent-2); }
+.qdrop-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 8px; }
+.qdrop-clip {
+    padding: 5px 8px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border-subtle);
+    font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer;
+}
+.qdrop-clip:hover { border-color: var(--accent-1); }
+</style>
+</head>
+<body>
+<div id="editBanner">
+    <span class="eb-dot"></span>
+    <span>Widget Düzenleme · Sürükle veya Sağ Tıkla</span>
+    <button class="eb-btn" onclick="send('openWidgetGallery')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="13" height="13"><path d="M12 5v14M5 12h14"/></svg>
+        Galeri
+    </button>
+    <button class="eb-btn primary" onclick="send('setWidgetEditMode',{active:false})">Tamam (ESC)</button>
+</div>
+
+<div id="canvas"></div>
+<div id="widgetInspector" onpointerdown="event.stopPropagation()"></div>
+
+<script>
+const send = (action, data = {}) => {
+    try { window.chrome.webview.postMessage({ action, ...data }); } catch (_) {}
+};
+
+/* ═══════════ ZERO-EMOJI PRECISION 1.6px MONOLINE SVG ICON SET ═══════════ */
+const IC = {
+    clock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/></svg>`,
+    music: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>`,
+    prev: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 20 9 12l10-8v16ZM5 19V5"/></svg>`,
+    next: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 4 10 8-10 8V4ZM19 5v14"/></svg>`,
+    play: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l10.5-6.5L8 5.5z"/></svg>`,
+    pause: `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6.5" y="5" width="4" height="14" rx="1.2"/><rect x="13.5" y="5" width="4" height="14" rx="1.2"/></svg>`,
+    battery: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="17" height="10" rx="2.2"/><path d="M22 10.5v3"/><path d="M6 10.5v3M9.5 10.5v3"/></svg>`,
+    bolt: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 10-12h-7l0-8z"/></svg>`,
+    cpu: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/></svg>`,
+    spark: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2L12 3z"/></svg>`,
+    calendar: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M16 2.5v4M8 2.5v4M3 9.5h18"/></svg>`,
+    note: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14v11l-5 5H5V4z"/><path d="M14 15h5"/></svg>`,
+    timer: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 1.5M9 2.5h6"/></svg>`,
+    grid: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.6"/></svg>`,
+    check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>`,
+    list: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>`,
+    chart: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M16 7h5v5"/></svg>`,
+    flag: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4m0 0h11l-2 4.5L16 13H5"/></svg>`,
+    disk: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3 13h18M7 16h.01M10.5 16h.01"/></svg>`,
+    quote: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M9 11H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4v8a4 4 0 0 1-4 4M21 11h-4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4v8a4 4 0 0 1-4 4"/></svg>`,
+    brain: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"><path d="M12 4a4 4 0 0 0-4 4v8a4 4 0 0 0 4 4m0-16a4 4 0 0 1 4 4v8a4 4 0 0 1-4 4M8 9H5.5A2.5 2.5 0 0 0 3 11.5 2.5 2.5 0 0 0 5.5 14H8M16 9h2.5A2.5 2.5 0 0 1 21 11.5 2.5 2.5 0 0 1 18.5 14H16"/></svg>`,
+    pin: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5M8 4h8l-1 6 3 3H6l3-3-1-6z"/></svg>`,
+    trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>`,
+    refresh: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2 5.3M20 4v7h-7"/></svg>`,
+    sliders: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2.2" fill="currentColor"/><circle cx="15" cy="17" r="2.2" fill="currentColor"/></svg>`,
+    close: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>`,
+    headset: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 13a8 8 0 0 1 16 0v5a2 2 0 0 1-2 2h-1v-6h3M4 14h3v6H6a2 2 0 0 1-2-2v-4z"/></svg>`,
+    mouse: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="6.5" y="3" width="11" height="18" rx="5.5"/><path d="M12 7v3.5" stroke-linecap="round"/></svg>`,
+    keyboard: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="2.5" y="6" width="19" height="12" rx="2.2"/><path d="M6.5 10h.01M10 10h.01M13.5 10h.01M17 10h.01M8 14h8"/></svg>`,
+    gamepad: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7" width="19" height="10" rx="4.5"/><path d="M7.5 10.5v3M6 12h3M15.5 11h.01M17.5 13h.01"/></svg>`,
+    laptop: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="4" y="5" width="16" height="11" rx="1.8"/><path d="M2 19h20"/></svg>`,
+    sun: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.8 4.8l1.6 1.6M17.6 17.6l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.8 19.2l1.6-1.6M17.6 6.4l1.6-1.6"/></svg>`,
+    moon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z"/></svg>`,
+    vol: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>`,
+    mute: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="m22 9-6 6M16 9l6 6"/></svg>`,
+    photo: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m21 15-5-5L5 20"/></svg>`,
+    qr: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v3M14 20h3M20 20h1"/></svg>`,
+    scanText: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 9h10M7 12h7M7 15h9"/></svg>`,
+    pipette: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="m2 22 1-1h3l9-9M3 21v-3l9-9M15 6l3.4-3.4a2.1 2.1 0 1 1 3 3L18 9"/></svg>`,
+    record: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>`,
+    /* Bespoke AI Brand Vector Marks (Zero Emojis!) */
+    openai: `<svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2a4.3 4.3 0 0 1 3.7 2.1l3.6 2.1a4.3 4.3 0 0 1 0 7.4l-3.6 2.1a4.3 4.3 0 0 1-7.4 0l-3.6-2.1a4.3 4.3 0 0 1 0-7.4l3.6-2.1A4.3 4.3 0 0 1 12 3.2z"/><circle cx="12" cy="12" r="2.6"/></svg>`,
+    gemini: `<svg viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="1.7" stroke-linejoin="round"><path d="M12 2.5C13.2 8.2 15.8 10.8 21.5 12 15.8 13.2 13.2 15.8 12 21.5 10.8 15.8 8.2 13.2 2.5 12 8.2 10.8 10.8 8.2 12 2.5z" fill="rgba(56,189,248,0.18)"/></svg>`,
+    claude: `<svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="1.85" stroke-linecap="round"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/><circle cx="12" cy="12" r="2.2" fill="#F59E0B"/></svg>`
+};
+
+function weatherIllustrationSvg(summary) {
+    const s = (summary || '').toLowerCase();
+    if (s.includes('yağmur') || s.includes('sağanak') || s.includes('rain')) {
+        return `<svg class="weath-svg" viewBox="0 0 64 64" fill="none">
+            <path d="M19 37h26a10 10 0 0 0 1-19.9A13.5 13.5 0 0 0 19.6 21 8.5 8.5 0 0 0 19 37z" fill="rgba(148,163,184,0.28)" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
+            <path d="M23 44l-2.5 7M33 44l-2.5 7M43 44l-2.5 7" stroke="#38BDF8" stroke-width="2.4" stroke-linecap="round"/>
+        </svg>`;
+    }
+    if (s.includes('kar') || s.includes('snow')) {
+        return `<svg class="weath-svg" viewBox="0 0 64 64" fill="none">
+            <path d="M19 36h26a10 10 0 0 0 1-19.9A13.5 13.5 0 0 0 19.6 20 8.5 8.5 0 0 0 19 36z" fill="rgba(226,232,240,0.26)" stroke="currentColor" stroke-width="2.2"/>
+            <circle cx="24" cy="45" r="2.3" fill="#E0F2FE"/><circle cx="33" cy="49" r="2.3" fill="#E0F2FE"/><circle cx="42" cy="45" r="2.3" fill="#E0F2FE"/>
+        </svg>`;
+    }
+    if (s.includes('bulut') || s.includes('sis') || s.includes('kapalı') || s.includes('cloud')) {
+        return `<svg class="weath-svg" viewBox="0 0 64 64" fill="none">
+            <circle cx="41" cy="21" r="9" fill="rgba(251,191,36,0.32)" stroke="#FBBF24" stroke-width="2"/>
+            <path d="M18 44h28a10 10 0 0 0 1-19.9A13.5 13.5 0 0 0 20.4 27 8.8 8.8 0 0 0 18 44z" fill="rgba(148,163,184,0.28)" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
+        </svg>`;
+    }
+    return `<svg class="weath-svg" viewBox="0 0 64 64" fill="none">
+        <circle cx="32" cy="32" r="12" fill="rgba(251,191,36,0.28)" stroke="#FBBF24" stroke-width="2.4"/>
+        <path d="M32 10v5M32 49v5M10 32h5M49 32h5M16.4 16.4l3.5 3.5M44.1 44.1l3.5 3.5M47.6 16.4l-3.5 3.5M19.9 44.1l-3.5 3.5" stroke="#FBBF24" stroke-width="2.2" stroke-linecap="round"/>
+    </svg>`;
+}
+
+const SKIN_META = [
+    { id: 'frameless', name: 'Çerçevesiz' },
+    { id: 'glass',     name: 'Optik Cam' },
+    { id: 'neoglass',  name: 'Derin Cam' },
+    { id: 'braun',     name: 'Braun' },
+    { id: 'matrix',    name: 'Dot-Matrix' },
+    { id: 'editorial', name: 'İsviçre Kart' }
+];
+
+const VARIANT_CATALOG = {
+    clock: [
+        { id: 'swiss', name: 'İsviçre Dev' },
+        { id: 'solar', name: 'Güneş Yörüngesi' },
+        { id: 'braun-pro', name: 'Braun BN0032' },
+        { id: 'dotmatrix-led', name: 'LED Matris 5×7' },
+        { id: 'orbital', name: 'Orbital Halka' },
+        { id: 'editorial-poster', name: 'Editoryal Poster' },
+        { id: 'flip', name: 'Split-Flap' },
+        { id: 'dev-hex', name: 'Geliştirici Hex' },
+        { id: 'word', name: 'Yazı Saati' },
+        { id: 'world', name: 'Dünya Saatleri' },
+        { id: 'hero', name: 'Duvar Kağıdı' }
+    ],
+    media: [
+        { id: 'poster', name: 'Tam Kapak Poster' },
+        { id: 'tp7', name: 'TE TP-7 Disk' },
+        { id: 'cassette', name: 'Kaset Deck' },
+        { id: 'turntable', name: 'Pikap Plak' },
+        { id: 'waveform', name: 'Ses Dalgası' },
+        { id: 'ambient', name: 'Ortam Işığı' },
+        { id: 'minimal', name: 'Minimal Şerit' }
+    ],
+    weather: [
+        { id: 'dynamic-sky', name: 'Canlı Gökyüzü' },
+        { id: 'barometer', name: 'Braun Barometre' },
+        { id: 'telemetry', name: 'Telemetri' },
+        { id: 'minimal', name: 'Sade' }
+    ],
+    'ai-quota': [
+        { id: 'cards', name: 'Kartlar' },
+        { id: 'rings', name: 'Halkalar' },
+        { id: 'compact', name: 'Kompakt' }
+    ],
+    battery: [
+        { id: 'rings', name: 'Halkalar' },
+        { id: 'bars', name: 'Çubuklar' }
+    ],
+    system: [
+        { id: 'oscilloscope', name: 'Osiloskop' },
+        { id: 'rings', name: 'Kadranlar' },
+        { id: 'spark', name: 'Canlı Grafik' }
+    ],
+    calendar: [
+        { id: 'month', name: 'Aylık Izgara' },
+        { id: 'today', name: 'Bugün' }
+    ],
+    'audio-mixer': [
+        { id: 'mixer', name: 'Canlı Mikser' }
+    ],
+    'focus-rings': [
+        { id: 'rings', name: 'Aktivite Halkaları' }
+    ],
+    'photo-frame': [
+        { id: 'polaroid', name: 'Polaroid' },
+        { id: 'frameless', name: 'Çerçevesiz' },
+        { id: 'gallery-mat', name: 'Galeri Paspartu' }
+    ],
+    'quick-drop': [
+        { id: 'drop', name: 'Hızlı Pano & Araç' }
+    ],
+    notes: [
+        { id: 'glass', name: 'Not Defteri' },
+        { id: 'minimal', name: 'Sade' }
+    ],
+    pomodoro: [
+        { id: 'ring', name: 'Halka' },
+        { id: 'minimal', name: 'Sade' }
+    ],
+    launcher: [
+        { id: 'grid', name: 'Izgara' },
+        { id: 'list', name: 'Liste' }
+    ],
+    todo: [{ id: 'list', name: 'Görevler' }],
+    market: [{ id: 'cards', name: 'Kartlar' }, { id: 'ticker', name: 'Şerit' }],
+    countdown: [{ id: 'card', name: 'Sayaç' }],
+    'storage-net': [{ id: 'bars', name: 'Çubuklar' }],
+    quote: [{ id: 'editorial', name: 'Editoryal' }],
+    'local-ai': [{ id: 'status', name: 'Durum' }]
+};
+
+const KIND_LABELS = {
+    clock: 'Saat', media: 'Medya Oynatıcı', weather: 'Hava Durumu', 'ai-quota': 'AI Kota Stüdyosu',
+    battery: 'Pil & Bluetooth', system: 'Sistem Telemetri', calendar: 'Takvim & Ajanda',
+    'audio-mixer': 'Ses Mikseri', 'focus-rings': 'Odak Halkaları', 'photo-frame': 'Fotoğraf Çerçevesi', 'quick-drop': 'Hızlı Pano & Araç',
+    notes: 'Yapışkan Not', pomodoro: 'Odak Zamanlayıcı', launcher: 'Hızlı Başlatıcı',
+    todo: 'Görev Listesi', market: 'Piyasa & Döviz', countdown: 'Geri Sayım',
+    'storage-net': 'Disk & Ağ', quote: 'Günün Sözü', 'local-ai': 'Yerel AI Monitör'
+};
+
+const QUOTES_TR = [
+    { text: 'İyi tasarım mümkün olan en az tasarımdır.', author: 'Dieter Rams' },
+    { text: 'Sadelik, karmaşıklığın ustalıkla süzülmüş halidir.', author: 'Leonardo da Vinci' },
+    { text: 'Detaylar detay değildir; tasarımı oluşturan onlardır.', author: 'Charles Eames' },
+    { text: 'Tasarım yalnızca nasıl göründüğü değil, nasıl çalıştığıdır.', author: 'Steve Jobs' },
+    { text: 'Odaklanmak, yüzlerce iyi fikre hayır diyebilmektir.', author: 'Aurora Stüdyo' }
+];
+
+let state = null;
+let dragCtx = null;
+let lastRenderSig = '';
+let hitTimer = null;
+let countdownEditOpen = false;
+let quoteOffset = 0;
+let inspectorWid = null;
+let inspectorPos = { x: 0, y: 0 };
+
+function escHtml(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function hexToRgb(hex) {
+    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '');
+    return m ? `${parseInt(m[1],16)}, ${parseInt(m[2],16)}, ${parseInt(m[3],16)}` : '56, 189, 248';
+}
+function hexLum(hex) {
+    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '');
+    if (!m) return 0.5;
+    return (0.299 * parseInt(m[1],16) + 0.587 * parseInt(m[2],16) + 0.114 * parseInt(m[3],16)) / 255;
+}
+function normalizeVariant(kind, raw) {
+    if (kind === 'clock') {
+        if (raw === 'minimal' || raw === 'default') return 'swiss';
+        if (raw === 'analog') return 'chronograph';
+        if (raw === 'matrix') return 'dotmatrix';
+        if (raw === 'chronograph') return 'braun-pro';
+    }
+    if (kind === 'media') {
+        if (raw === 'vinyl') return 'turntable';
+        if (raw === 'glass' || raw === 'default') return 'ambient';
+        if (raw === 'compact') return 'minimal';
+        if (raw === 'deck') return 'tp7';
+    }
+    if (kind === 'weather') {
+        if (raw === 'compact' || raw === 'default' || raw === 'card' || raw === 'atmospheric') return 'dynamic-sky';
+    }
+    return raw || (VARIANT_CATALOG[kind]?.[0]?.id || 'default');
+}
+
+const DM_GLYPHS = {
+    '0': [0x0E,0x11,0x13,0x15,0x19,0x11,0x0E], '1': [0x04,0x0C,0x04,0x04,0x04,0x04,0x0E],
+    '2': [0x0E,0x11,0x01,0x06,0x08,0x10,0x1F], '3': [0x1F,0x02,0x04,0x06,0x01,0x11,0x0E],
+    '4': [0x02,0x06,0x0A,0x12,0x1F,0x02,0x02], '5': [0x1F,0x10,0x1E,0x01,0x01,0x11,0x0E],
+    '6': [0x06,0x08,0x10,0x1E,0x11,0x11,0x0E], '7': [0x1F,0x01,0x02,0x04,0x08,0x08,0x08],
+    '8': [0x0E,0x11,0x11,0x0E,0x11,0x11,0x0E], '9': [0x0E,0x11,0x11,0x0F,0x01,0x02,0x0C],
+    ':': [0x00,0x04,0x04,0x00,0x04,0x04,0x00]
+};
+function renderDotMatrix5x7Svg(text, accent) {
+    const str = String(text || '00:00');
+    let dots = '', cx = 4;
+    for (const ch of str) {
+        if (ch === ':') {
+            dots += `<circle cx="${cx+2}" cy="12" r="2.2" fill="${accent}"/><circle cx="${cx+2}" cy="24" r="2.2" fill="${accent}"/>`;
+            cx += 9; continue;
+        }
+        const rows = DM_GLYPHS[ch] || DM_GLYPHS['0'];
+        for (let r = 0; r < 7; r++) {
+            for (let c = 0; c < 5; c++) {
+                const on = (rows[r] >> (4 - c)) & 1;
+                dots += `<circle cx="${cx + c * 5.2}" cy="${3 + r * 5.2}" r="${on ? 2.1 : 1.3}" fill="${on ? 'currentColor' : 'currentColor'}" opacity="${on ? 0.96 : 0.14}"/>`;
+            }
+        }
+        cx += 31;
+    }
+    return `<svg viewBox="0 0 ${cx} 40" style="width:100%;height:56px;display:block;">${dots}</svg>`;
+}
+function renderOscilloscopeSvg(arr, color, w, h, idSfx) {
+    const pts = (Array.isArray(arr) && arr.length > 1) ? arr : [18,22,19,28,24,35,30,26,32,29];
+    const maxV = Math.max(25, ...pts);
+    const coords = pts.map((v, i) => `${((i / (pts.length - 1)) * w).toFixed(1)},${(h - 4 - (Math.max(0, v) / maxV) * (h - 8)).toFixed(1)}`);
+    const poly = coords.join(' ');
+    return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:${h}px;display:block;">
+        <defs><linearGradient id="osc-${idSfx}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${color}" stop-opacity="0.34"/><stop offset="100%" stop-color="${color}" stop-opacity="0.01"/></linearGradient></defs>
+        <line x1="0" y1="${(h*0.25).toFixed(0)}" x2="${w}" y2="${(h*0.25).toFixed(0)}" stroke="currentColor" stroke-opacity="0.08" stroke-dasharray="3 3"/>
+        <line x1="0" y1="${(h*0.50).toFixed(0)}" x2="${w}" y2="${(h*0.50).toFixed(0)}" stroke="currentColor" stroke-opacity="0.08" stroke-dasharray="3 3"/>
+        <line x1="0" y1="${(h*0.75).toFixed(0)}" x2="${w}" y2="${(h*0.75).toFixed(0)}" stroke="currentColor" stroke-opacity="0.08" stroke-dasharray="3 3"/>
+        <polygon points="0,${h} ${poly} ${w},${h}" fill="url(#osc-${idSfx})"/>
+        <polyline points="${poly}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+}
+
+function applyTheme(t, radiusPreset, eco) {
+    if (!t || !t.colors) return;
+    const isLight = t.colorMode === 'Light';
+    document.body.classList.toggle('mode-light', isLight);
+    document.body.classList.toggle('eco-mode', Boolean(eco));
+    document.body.classList.remove('radius-sharp', 'radius-modern', 'radius-soft');
+    document.body.classList.add('radius-' + (radiusPreset || 'modern'));
+    const c = t.colors;
+    const op = Math.max(0.64, Math.min(0.98, Number(t.surfaceOpacity ?? (isLight ? 0.86 : 0.78))));
+    const root = document.documentElement.style;
+    root.setProperty('--bg-glass-1', `rgba(${hexToRgb(c.surface1)}, ${op.toFixed(2)})`);
+    root.setProperty('--bg-glass-2', `rgba(${hexToRgb(c.surface2)}, ${Math.min(0.98, op + 0.08).toFixed(2)})`);
+    root.setProperty('--text-1', c.textPrimary);
+    root.setProperty('--text-2', c.textSecondary);
+    root.setProperty('--accent-1', c.accentPrimary);
+    root.setProperty('--accent-2', c.accentSecondary);
+    root.setProperty('--a1-rgb', hexToRgb(c.accentPrimary));
+    root.setProperty('--a2-rgb', hexToRgb(c.accentSecondary));
+    root.setProperty('--accent-ink', hexLum(c.accentPrimary) > 0.56 ? '#090D16' : '#FFFFFF');
+}
+
+function reportHitRects() {
+    const rects = [];
+    const addEl = el => {
+        if (!el) return;
+        const r = el.getBoundingClientRect();
+        if (r.width > 4 && r.height > 4) {
+            rects.push({ x: Math.floor(r.left - 3), y: Math.floor(r.top - 3), w: Math.ceil(r.width + 6), h: Math.ceil(r.height + 6) });
+        }
+    };
+    if (state?.widgetEditMode) {
+        addEl(document.getElementById('editBanner'));
+    }
+    document.querySelectorAll('.widget-card').forEach(addEl);
+    const insp = document.getElementById('widgetInspector');
+    if (insp && insp.classList.contains('open')) addEl(insp);
+    try { window.chrome.webview.postMessage({ type: 'hitRects', rects }); } catch (_) {}
+}
+function scheduleHitRects() {
+    clearTimeout(hitTimer);
+    hitTimer = setTimeout(reportHitRects, 28);
+}
+
+function resolveWidgetXY(w) {
+    const vw = window.innerWidth || 1920;
+    const vh = window.innerHeight || 1080;
+    const estW = w.size === 'S' ? 236 : (w.size === 'L' ? 392 : 320);
+    let left = w.x < 0 ? (vw + w.x) : w.x;
+    let top = w.y < 0 ? (vh + w.y) : w.y;
+    left = Math.max(12, Math.min(vw - estW - 12, left));
+    top = Math.max(12, Math.min(vh - 120, top));
+    return { left: Math.round(left), top: Math.round(top) };
+}
+
+function turkishTimeWords(h, m) {
+    const ones = ['Sıfır','Bir','İki','Üç','Dört','Beş','Altı','Yedi','Sekiz','Dokuz'];
+    const tens = ['','On','Yirmi','Otuz','Kırk','Elli'];
+    const numToTr = n => {
+        if (n < 10) return ones[n];
+        const t = Math.floor(n / 10), o = n % 10;
+        return o === 0 ? tens[t] : `${tens[t]} ${ones[o]}`;
+    };
+    return {
+        hLine: numToTr(h),
+        mLine: m === 0 ? 'Tam' : numToTr(m)
+    };
+}
+
+function buildChronographSvg(now) {
+    const h = now.getHours() % 12, m = now.getMinutes(), s = now.getSeconds();
+    const hDeg = (h + m / 60) * 30;
+    const mDeg = (m + s / 60) * 6;
+    const sDeg = s * 6;
+    let ticks = '';
+    for (let i = 0; i < 60; i++) {
+        const major = i % 5 === 0;
+        const y1 = major ? 7 : 9;
+        const y2 = major ? 15 : 12.5;
+        const w = major ? 2 : 0.9;
+        const op = major ? 0.88 : 0.34;
+        ticks += `<line x1="50" y1="${y1}" x2="50" y2="${y2}" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" opacity="${op}" transform="rotate(${i * 6} 50 50)"/>`;
+    }
+    return `<svg class="chrono-dial" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="47" fill="rgba(0,0,0,0.18)" stroke="var(--border-rim)" stroke-width="1.5"/>
+        <circle cx="50" cy="50" r="43.5" fill="none" stroke="var(--border-subtle)" stroke-width="0.6"/>
+        ${ticks}
+        <rect x="64" y="44.5" width="14" height="11" rx="2.5" fill="var(--bg-card)" stroke="var(--border-rim)" stroke-width="0.8"/>
+        <text x="71" y="52.4" text-anchor="middle" font-size="6.8" font-weight="700" fill="currentColor" class="num">${now.getDate()}</text>
+        <line data-chrono-h x1="50" y1="53" x2="50" y2="27" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" transform="rotate(${hDeg.toFixed(1)} 50 50)"/>
+        <line data-chrono-m x1="50" y1="55" x2="50" y2="17" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" transform="rotate(${mDeg.toFixed(1)} 50 50)"/>
+        <line data-chrono-s x1="50" y1="60" x2="50" y2="13" stroke="var(--braun-accent, var(--accent-1))" stroke-width="1.2" stroke-linecap="round" transform="rotate(${sDeg.toFixed(1)} 50 50)"/>
+        <circle cx="50" cy="50" r="3" fill="var(--braun-accent, var(--accent-1))"/>
+        <circle cx="50" cy="50" r="1.2" fill="#FFFFFF"/>
+    </svg>`;
+}
+
+function buildRingSvg(pct, color, label, subIcon) {
+    const p = Math.max(0, Math.min(100, Number(pct) || 0));
+    const r = 23, c = 2 * Math.PI * r;
+    const off = c * (1 - p / 100);
+    return `
+        <div class="ring-item">
+            <svg class="ring-svg" viewBox="0 0 58 58">
+                <circle cx="29" cy="29" r="${r}" fill="none" stroke="var(--border-subtle)" stroke-width="4.5"/>
+                <circle cx="29" cy="29" r="${r}" fill="none" stroke="${color}" stroke-width="4.5"
+                    stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"
+                    transform="rotate(-90 29 29)"/>
+                <text x="29" y="33" text-anchor="middle" fill="currentColor" font-size="12" font-weight="800" class="num">${p}%</text>
+            </svg>
+            <div class="ring-lbl" title="${escHtml(label)}">${subIcon ? `<span style="display:inline-flex;vertical-align:-2px;margin-right:3px;width:11px;height:11px;color:${color};">${subIcon}</span>` : ''}${escHtml(label)}</div>
+        </div>
+    `;
+}
+
+function buildSparklineSvg(arr, color, idSuffix) {
+    const pts = (Array.isArray(arr) && arr.length > 1) ? arr : [10, 14, 12, 18, 15, 22, 19, 24];
+    const maxV = Math.max(20, ...pts);
+    const w = 132, h = 34;
+    const coords = pts.map((v, i) => {
+        const x = (i / (pts.length - 1)) * w;
+        const y = h - 3 - ((Math.max(0, v) / maxV) * (h - 6));
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+    });
+    const poly = coords.join(' ');
+    const area = `0,${h} ${poly} ${w},${h}`;
+    return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" style="display:block;overflow:visible;">
+        <defs><linearGradient id="sg-${idSuffix}" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="${color}" stop-opacity="0.34"/>
+            <stop offset="100%" stop-color="${color}" stop-opacity="0.0"/>
+        </linearGradient></defs>
+        <polygon points="${area}" fill="url(#sg-${idSuffix})"/>
+        <polyline points="${poly}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+}
+
+function btDeviceIcon(cat) {
+    if (cat === 'headset') return IC.headset;
+    if (cat === 'mouse') return IC.mouse;
+    if (cat === 'keyboard') return IC.keyboard;
+    if (cat === 'gamepad') return IC.gamepad;
+    return IC.battery;
+}
+
+function buildWidgetInner(w) {
+    const variant = normalizeVariant(w.kind, w.variant);
+    const now = new Date();
+    const days = ['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
+    const months = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+    const fullDateTr = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
+    const clk = state.clock || `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    const parts = clk.split(':');
+    const hh = parts[0] || String(now.getHours()).padStart(2,'0');
+    const mm = parts[1] || String(now.getMinutes()).padStart(2,'0');
+    const ss = String(now.getSeconds()).padStart(2,'0');
+    const secPct = ((now.getSeconds() / 59) * 100).toFixed(1);
+    const weathLine = state.weather?.live ? `${Math.round(state.weather.temp)}° · ${escHtml(state.weather.city || '')}` : '';
+
+    /* 1. CLOCK (10+ STUDIO DESIGNS) */
+    if (w.kind === 'clock') {
+        if (variant === 'dotmatrix-led') {
+            return `
+                <div class="w-head"><span class="w-title">${IC.clock} LED MATRİS 5×7</span><span class="mono w-sub" data-clock-ss>${ss}s</span></div>
+                <div id="dmLed-${escHtml(w.id)}">${renderDotMatrix5x7Svg(`${hh}:${mm}`, 'var(--accent-1)')}</div>
+                <div class="clk-meta-row" style="margin-top:8px;"><span class="mono">${escHtml(fullDateTr)}</span><span class="mono">${weathLine}</span></div>
+            `;
+        }
+        if (variant === 'solar') {
+            const hrs = now.getHours() + now.getMinutes() / 60;
+            const dayFrac = Math.max(0, Math.min(1, (hrs - 6) / 14));
+            const isDay = hrs >= 6 && hrs <= 20;
+            const ang = Math.PI * (1 - dayFrac);
+            const sx = (90 + 68 * Math.cos(ang)).toFixed(1);
+            const sy = (44 - 30 * Math.sin(ang)).toFixed(1);
+            return `
+                <div class="w-head"><span class="w-title">${isDay ? IC.sun : IC.moon} Güneş Yörüngesi</span><span class="num w-sub">${escHtml(weathLine || fullDateTr)}</span></div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="font-size:38px;font-weight:800;letter-spacing:-0.04em;line-height:1;" class="num" data-clock-live>${escHtml(hh)}:${escHtml(mm)}</div>
+                    <svg viewBox="0 0 180 54" style="flex:1;height:48px;">
+                        <line x1="14" y1="44" x2="166" y2="44" stroke="currentColor" stroke-opacity="0.18" stroke-dasharray="3 3"/>
+                        <path d="M 22 44 A 68 30 0 0 1 158 44" fill="none" stroke="var(--accent-1)" stroke-opacity="0.35" stroke-width="1.6"/>
+                        <circle cx="${sx}" cy="${sy}" r="6" fill="${isDay ? '#FBBF24' : '#818CF8'}"/>
+                    </svg>
+                </div>
+                <div class="w-sub" style="margin-top:4px;">${escHtml(fullDateTr)}</div>
+            `;
+        }
+        if (variant === 'orbital') {
+            const hp = ((now.getHours() % 12) / 12) * 100;
+            const mp = (now.getMinutes() / 60) * 100;
+            const sp = (now.getSeconds() / 60) * 100;
+            const ring = (r, p, col) => {
+                const c = 2 * Math.PI * r;
+                return `<circle cx="44" cy="44" r="${r}" fill="none" stroke="${col}" stroke-opacity="0.16" stroke-width="4.5"/><circle cx="44" cy="44" r="${r}" fill="none" stroke="${col}" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${(c*(1-p/100)).toFixed(1)}" transform="rotate(-90 44 44)"/>`;
+            };
+            return `
+                <div style="display:flex;align-items:center;gap:14px;">
+                    <svg viewBox="0 0 88 88" width="84" height="84" style="flex-shrink:0;">
+                        ${ring(38, hp, 'var(--accent-1)')}
+                        ${ring(29, mp, 'var(--accent-2)')}
+                        ${ring(20, sp, '#34D399')}
+                    </svg>
+                    <div style="flex:1;min-width:0;">
+                        <div class="w-title" style="margin-bottom:4px;">Orbital</div>
+                        <div class="num" style="font-size:30px;font-weight:800;line-height:1;" data-clock-live>${escHtml(hh)}:${escHtml(mm)}<span style="font-size:13px;color:var(--accent-1);margin-left:4px;" data-clock-ss>${ss}</span></div>
+                        <div class="w-sub" style="margin-top:4px;">${escHtml(fullDateTr)}</div>
+                    </div>
+                </div>
+            `;
+        }
+        if (variant === 'editorial-poster') {
+            return `
+                <div style="display:flex;flex-direction:column;justify-content:space-between;min-height:122px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-2);font-weight:700;">
+                        <span>${escHtml(days[now.getDay()])}</span><span>${escHtml(weathLine || 'AURORA')}</span>
+                    </div>
+                    <div style="font-size:58px;font-weight:900;letter-spacing:-0.055em;line-height:0.9;margin:8px 0;" class="num" data-clock-live>${escHtml(hh)}:${escHtml(mm)}</div>
+                    <div style="font-size:11.5px;font-weight:600;color:var(--accent-1);">${now.getDate()} ${escHtml(months[now.getMonth()])} ${now.getFullYear()}</div>
+                </div>
+            `;
+        }
+        if (variant === 'dev-hex') {
+            const epoch = Math.floor(now.getTime() / 1000);
+            const hNum = now.getHours();
+            const bits = Array.from({ length: 6 }, (_, i) => (hNum >> (5 - i)) & 1);
+            return `
+                <div class="w-head"><span class="w-title">${IC.cpu} DEV TELEMETRY</span><span class="mono w-sub">0x${epoch.toString(16).toUpperCase()}</span></div>
+                <div class="mono" style="font-size:36px;font-weight:800;letter-spacing:-0.03em;line-height:1;" data-clock-live>${escHtml(hh)}:${escHtml(mm)}:${ss}</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:8px;border-top:1px solid var(--border-subtle);">
+                    <span class="mono w-sub">UNIX ${epoch}</span>
+                    <span style="display:inline-flex;gap:4px;" title="Binary Saat">${bits.map(b => `<span style="width:7px;height:7px;border-radius:50%;background:${b ? 'var(--accent-1)' : 'var(--border-rim)'};"></span>`).join('')}</span>
+                </div>
+            `;
+        }
+        if (variant === 'hero') {
+            return `
+                <div class="clk-hero">
+                    <div class="clk-hero-time num" data-clock-live>${escHtml(hh)}:${escHtml(mm)}</div>
+                    <div class="clk-hero-date">${escHtml(fullDateTr)}</div>
+                    ${weathLine ? `<div class="clk-hero-weath">${IC.sun.replace('<svg ', '<svg width="13" height="13" ')}<span>${weathLine} · ${escHtml(state.weather.summary || '')}</span></div>` : ''}
+                </div>
+            `;
+        }
+        if (variant === 'flip') {
+            return `
+                <div class="w-head"><span class="w-title">${IC.clock} Split-Flap</span><span class="w-sub">${escHtml(state.shortDate || '')}</span></div>
+                <div class="flip-stage">
+                    <div class="flip-tile num"><span class="flip-rivet-l"></span><span data-clock-hh>${escHtml(hh)}</span><span class="flip-rivet-r"></span></div>
+                    <div class="flip-colon"><span></span><span></span></div>
+                    <div class="flip-tile num"><span class="flip-rivet-l"></span><span data-clock-mm>${escHtml(mm)}</span><span class="flip-rivet-r"></span></div>
+                </div>
+                <div class="clk-meta-row"><span>${escHtml(fullDateTr)}</span><span class="num">${weathLine}</span></div>
+            `;
+        }
+        if (variant === 'chronograph' || variant === 'braun-pro') {
+            return `
+                <div class="chrono-wrap">
+                    ${buildChronographSvg(now)}
+                    <div style="flex:1;min-width:0;">
+                        <div class="w-title" style="margin-bottom:4px;">Braun BN0032</div>
+                        <div style="font-size:26px;font-weight:800;letter-spacing:-0.03em;" class="num" data-clock-live>${escHtml(hh)}:${escHtml(mm)}</div>
+                        <div class="w-sub" style="margin-top:3px;">${escHtml(fullDateTr)}</div>
+                        ${weathLine ? `<div class="w-sub" style="margin-top:4px;color:var(--braun-accent, var(--accent-1));font-weight:600;">${weathLine}</div>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+        if (variant === 'dotmatrix') {
+            const lit = Math.max(1, Math.round(((now.getHours() * 60 + now.getMinutes()) / 1440) * 18));
+            const strip = Array.from({ length: 18 }, (_, i) => `<span class="${i < lit ? 'on' : ''}"></span>`).join('');
+            return `
+                <div class="w-head"><span class="w-title">${IC.clock} DOT-MATRIX</span><span class="mono w-sub">UTC${now.getTimezoneOffset() <= 0 ? '+' : '-'}${Math.abs(Math.round(now.getTimezoneOffset() / 60))}</span></div>
+                <div class="dm-box">
+                    <div class="dm-time mono" data-clock-live>${escHtml(hh)}:${escHtml(mm)}<span style="font-size:16px;color:var(--accent-1);margin-left:5px;" data-clock-ss>${ss}</span></div>
+                    <div class="dm-dots">${strip}</div>
+                </div>
+                <div class="clk-meta-row" style="margin-top:8px;"><span class="mono">${escHtml(fullDateTr)}</span><span class="mono">${weathLine}</span></div>
+            `;
+        }
+        if (variant === 'word') {
+            const words = turkishTimeWords(now.getHours(), now.getMinutes());
+            return `
+                <div class="w-head"><span class="w-title">${IC.clock} Zaman</span><span class="num w-sub" data-clock-live>${escHtml(hh)}:${escHtml(mm)}</span></div>
+                <div class="word-clk-main">${escHtml(words.hLine)}</div>
+                <div class="word-clk-min">${escHtml(words.mLine)}</div>
+                <div class="w-sub" style="margin-top:10px;">${escHtml(fullDateTr)}</div>
+            `;
+        }
+        if (variant === 'world') {
+            const zones = [
+                { city: 'İstanbul', tz: 'Europe/Istanbul' },
+                { city: 'Londra', tz: 'Europe/London' },
+                { city: 'New York', tz: 'America/New_York' },
+                { city: 'Tokyo', tz: 'Asia/Tokyo' }
+            ];
+            return `
+                <div class="w-head"><span class="w-title">${IC.clock} Dünya Saatleri</span><span class="w-sub">${escHtml(state.shortDate || '')}</span></div>
+                <div class="world-list">
+                    ${zones.map(z => {
+                        let tStr = '--:--', hr = 12;
+                        try {
+                            const fmt = new Intl.DateTimeFormat('tr-TR', { timeZone: z.tz, hour: '2-digit', minute: '2-digit', hour12: false });
+                            tStr = fmt.format(now);
+                            hr = parseInt(tStr.split(':')[0], 10) || 12;
+                        } catch (_) {}
+                        const isDay = hr >= 6 && hr < 19;
+                        return `<div class="world-cell">
+                            <div>
+                                <div style="font-size:10.5px;color:var(--text-2);font-weight:600;">${z.city}</div>
+                                <div style="font-size:16px;font-weight:800;margin-top:1px;" class="num">${tStr}</div>
+                            </div>
+                            <span style="width:15px;height:15px;color:${isDay ? '#FBBF24' : '#818CF8'};">${isDay ? IC.sun : IC.moon}</span>
+                        </div>`;
+                    }).join('')}
+                </div>
+            `;
+        }
+        // Default: Swiss Editorial Giant
+        return `
+            <div class="clk-swiss-row num">
+                <span class="clk-swiss-hh" data-clock-hh>${escHtml(hh)}</span>
+                <span class="clk-swiss-sep">:</span>
+                <span class="clk-swiss-mm" data-clock-mm>${escHtml(mm)}</span>
+                <span class="clk-swiss-ss" data-clock-ss>${ss}</span>
+            </div>
+            <div class="clk-sec-track"><div class="clk-sec-fill" data-clock-bar style="width:${secPct}%"></div></div>
+            <div class="clk-meta-row">
+                <span>${escHtml(fullDateTr)}</span>
+                <span class="num" style="font-weight:600;color:var(--text-1);">${weathLine}</span>
+            </div>
+        `;
+    }
+
+    /* 2. MEDIA PLAYER (4 PRO DESIGNS) */
+    if (w.kind === 'media') {
+        const m = state.media;
+        const playing = Boolean(m?.isPlaying);
+        const title = m?.title || 'Çalan Medya Yok';
+        const artist = m?.artist || (m?.app || 'Spotify · Tarayıcı · Medya');
+        const artSrc = m?.artwork ? `data:image/jpeg;base64,${m.artwork}` : null;
+        const ctrls = `
+            <div class="med-ctrls" onpointerdown="event.stopPropagation()">
+                <button class="w-ibtn" onclick="send('mediaCmd',{cmd:'prev'})" title="Önceki">${IC.prev}</button>
+                <button class="w-btn primary" style="height:26px;padding:0 12px;" onclick="send('mediaCmd',{cmd:'play_pause'})" title="${playing ? 'Duraklat' : 'Oynat'}">${playing ? IC.pause : IC.play}</button>
+                <button class="w-ibtn" onclick="send('mediaCmd',{cmd:'next'})" title="Sonraki">${IC.next}</button>
+                <div class="eq-bars ${playing ? 'play' : ''}" style="margin-left:auto;"><i></i><i></i><i></i><i></i></div>
+            </div>
+        `;
+        if (variant === 'turntable') {
+            return `
+                <div class="w-head"><span class="w-title">${IC.music} Pikap Stüdyo</span><span class="w-sub">${playing ? 'Çalıyor' : 'Hazır'}</span></div>
+                <div class="med-row">
+                    <div class="tt-stage">
+                        <div class="tt-disc ${playing ? 'spin' : ''}">
+                            ${artSrc ? `<img src="${artSrc}"/>` : `<span style="width:20px;height:20px;color:var(--accent-1);">${IC.music}</span>`}
+                            <span class="tt-spindle"></span>
+                        </div>
+                        <svg class="tt-arm ${playing ? 'engaged' : ''}" viewBox="0 0 24 58" fill="none">
+                            <circle cx="15" cy="8" r="5" fill="#94A3B8" stroke="#1E293B" stroke-width="1.5"/>
+                            <path d="M15 11 L13 42 L7 50" stroke="#CBD5E1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <rect x="4" y="48" width="6" height="4" rx="1" transform="rotate(-35 4 48)" fill="var(--braun-accent, var(--accent-1))"/>
+                        </svg>
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                        <div class="med-title">${escHtml(title)}</div>
+                        <div class="med-artist">${escHtml(artist)}</div>
+                        ${ctrls}
+                    </div>
+                </div>
+            `;
+        }
+        if (variant === 'poster') {
+            return `
+                <div class="med-poster-card">
+                    ${artSrc ? `<div class="med-poster-bg" style="background-image:url('${artSrc}');"></div>` : ''}
+                    <div class="med-poster-scrim"></div>
+                    <div class="med-poster-fg">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                            <span style="font-size:9.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;opacity:0.8;">${escHtml(m?.app || 'MEDYA')}</span>
+                            <div class="eq-bars ${playing ? 'play' : ''}"><i></i><i></i><i></i><i></i></div>
+                        </div>
+                        <div class="med-title" style="font-size:15px;">${escHtml(title)}</div>
+                        <div class="med-artist" style="color:rgba(255,255,255,0.75);">${escHtml(artist)}</div>
+                        <div class="med-ctrls" style="margin-top:10px;" onpointerdown="event.stopPropagation()">
+                            <button class="w-ibtn" style="background:rgba(255,255,255,0.14);border-color:rgba(255,255,255,0.22);color:#FFF;" onclick="send('mediaCmd',{cmd:'prev'})">${IC.prev}</button>
+                            <button class="w-btn primary" style="height:26px;padding:0 13px;" onclick="send('mediaCmd',{cmd:'play_pause'})">${playing ? IC.pause : IC.play}</button>
+                            <button class="w-ibtn" style="background:rgba(255,255,255,0.14);border-color:rgba(255,255,255,0.22);color:#FFF;" onclick="send('mediaCmd',{cmd:'next'})">${IC.next}</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        if (variant === 'tp7') {
+            return `
+                <div class="w-head"><span class="w-title">${IC.music} TE TP-7 STUDIO</span><span class="mono w-sub" style="color:#EA580C;">${playing ? 'REC/PLAY' : 'STANDBY'}</span></div>
+                <div class="tp7-wrap">
+                    <div class="tp7-platter ${playing ? 'spin' : ''}">
+                        <span class="tp7-notch"></span>
+                        <div class="tp7-center"></div>
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                        <div class="tp7-oled">
+                            <div class="med-title mono" style="font-size:11.5px;color:#FFF;">${escHtml(title)}</div>
+                            <div class="med-artist mono" style="font-size:9.5px;color:#94A3B8;">${escHtml(artist)}</div>
+                        </div>
+                        ${ctrls}
+                    </div>
+                </div>
+            `;
+        }
+        if (variant === 'cassette' || variant === 'deck') {
+            const reelSvg = `<svg class="deck-reel ${playing ? 'spin' : ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v6M4.2 16.5l5.2-3M19.8 16.5l-5.2-3"/></svg>`;
+            return `
+                <div class="w-head"><span class="w-title">${IC.music} Kaset Deck</span><span class="mono w-sub">${playing ? 'PLAY' : 'STOP'}</span></div>
+                <div class="cassette-shell">
+                    <div class="deck-window" style="margin-bottom:5px;">
+                        ${reelSvg}
+                        <div style="flex:1;min-width:0;text-align:center;">
+                            <div class="med-title" style="font-size:12px;">${escHtml(title)}</div>
+                            <div class="med-artist" style="font-size:10px;">${escHtml(artist)}</div>
+                        </div>
+                        ${reelSvg}
+                    </div>
+                    <div style="height:3px;border-radius:99px;background:rgba(255,255,255,0.1);overflow:hidden;"><div style="width:${playing ? '64%' : '20%'};height:100%;background:var(--accent-1);"></div></div>
+                </div>
+                ${ctrls}
+            `;
+        }
+        if (variant === 'waveform') {
+            const fakeWave = playing ? [25, 58, 42, 84, 65, 92, 48, 76, 38, 62, 74, 40] : [18, 20, 18, 22, 19, 21, 18, 20, 19, 18, 20, 18];
+            return `
+                <div class="w-head"><span class="w-title">${IC.music} Ses Dalgası</span><span class="w-sub">${escHtml(m?.app || 'Medya')}</span></div>
+                <div class="med-title">${escHtml(title)}</div>
+                <div class="med-artist" style="margin-bottom:6px;">${escHtml(artist)}</div>
+                ${renderOscilloscopeSvg(fakeWave, 'var(--accent-1)', 260, 34, w.id + 'mw')}
+                ${ctrls}
+            `;
+        }
+        if (variant === 'minimal') {
+            return `
+                <div class="med-row">
+                    <div class="med-art" style="width:44px;height:44px;border-radius:10px;">${artSrc ? `<img src="${artSrc}"/>` : `<span style="width:18px;height:18px;color:var(--accent-1);">${IC.music}</span>`}</div>
+                    <div style="flex:1;min-width:0;">
+                        <div class="med-title" style="font-size:12.5px;">${escHtml(title)}</div>
+                        <div class="med-artist" style="font-size:10.5px;">${escHtml(artist)}</div>
+                    </div>
+                    <div style="display:flex;gap:4px;" onpointerdown="event.stopPropagation()">
+                        <button class="w-ibtn" onclick="send('mediaCmd',{cmd:'play_pause'})">${playing ? IC.pause : IC.play}</button>
+                        <button class="w-ibtn" onclick="send('mediaCmd',{cmd:'next'})">${IC.next}</button>
+                    </div>
+                </div>
+            `;
+        }
+        // Default: Ambient Album-Art Studio Card
+        return `
+            ${artSrc ? `<div class="med-ambient-bg" style="background-image:url('${artSrc}');"></div>` : ''}
+            <div class="med-fg">
+                <div class="w-head"><span class="w-title">${IC.music} Medya Stüdyo</span><span class="w-sub">${escHtml(m?.app || (playing ? 'Çalıyor' : 'Beklemede'))}</span></div>
+                <div class="med-row">
+                    <div class="med-art">${artSrc ? `<img src="${artSrc}"/>` : `<span style="width:24px;height:24px;color:var(--accent-1);">${IC.music}</span>`}</div>
+                    <div style="flex:1;min-width:0;">
+                        <div class="med-title">${escHtml(title)}</div>
+                        <div class="med-artist">${escHtml(artist)}</div>
+                        ${ctrls}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    /* 3. WEATHER (4 PRO VECTOR DESIGNS) */
+    if (w.kind === 'weather') {
+        const wt = state.weather || {};
+        const temp = wt.live ? `${Math.round(wt.temp)}°` : '--°';
+        const city = wt.city || 'Konum Bekleniyor';
+        const sum = wt.summary || 'Veri yenileniyor';
+        if (variant === 'dynamic-sky') {
+            const hr = now.getHours();
+            const isRain = /(yağmur|sağanak|rain|storm|fırtına)/i.test(sum);
+            const skyCls = isRain ? 'sky-rain' : (hr >= 18 && hr < 21 ? 'sky-sunset' : (hr >= 6 && hr < 18 ? 'sky-day' : 'sky-night'));
+            return `
+                <div class="weath-sky-card ${skyCls}">
+                    <div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;opacity:0.86;">
+                        <span>${escHtml(city)}</span><span>${wt.live ? 'CANLI' : 'HAVA'}</span>
+                    </div>
+                    <div class="weath-hero" style="margin-top:10px;">
+                        <div>
+                            <div class="weath-temp num">${temp}</div>
+                            <div style="font-size:12px;font-weight:600;opacity:0.9;margin-top:4px;">${escHtml(sum)}</div>
+                        </div>
+                        ${weatherIllustrationSvg(sum)}
+                    </div>
+                </div>
+            `;
+        }
+        if (variant === 'barometer') {
+            const tNum = wt.live ? Math.round(wt.temp) : 20;
+            const norm = Math.max(0, Math.min(1, (tNum + 10) / 55));
+            const ang = -125 + norm * 250;
+            return `
+                <div class="w-head"><span class="w-title">${IC.sun} Barometre</span><span class="w-sub">${escHtml(city)}</span></div>
+                <div style="display:flex;align-items:center;gap:14px;">
+                    <svg viewBox="0 0 80 80" width="76" height="76" style="flex-shrink:0;">
+                        <circle cx="40" cy="40" r="34" fill="none" stroke="var(--border-rim)" stroke-width="3" stroke-dasharray="150 220" stroke-dashoffset="-15" transform="rotate(140 40 40)"/>
+                        <line x1="40" y1="44" x2="40" y2="14" stroke="#EA580C" stroke-width="2.4" stroke-linecap="round" transform="rotate(${ang.toFixed(1)} 40 40)"/>
+                        <circle cx="40" cy="40" r="3.5" fill="var(--text-1)"/>
+                    </svg>
+                    <div><div class="weath-temp num" style="font-size:36px;">${temp}</div><div class="w-sub" style="margin-top:3px;">${escHtml(sum)}</div></div>
+                </div>
+            `;
+        }
+        if (variant === 'minimal') {
+            return `
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="width:42px;height:42px;">${weatherIllustrationSvg(sum).replace('class="weath-svg"', 'width="42" height="42"')}</div>
+                    <div>
+                        <div style="font-size:30px;font-weight:800;line-height:1;" class="num">${temp}</div>
+                        <div class="w-sub" style="margin-top:2px;">${escHtml(city)} · ${escHtml(sum)}</div>
+                    </div>
+                </div>
+            `;
+        }
+        if (variant === 'telemetry') {
+            return `
+                <div class="w-head"><span class="w-title">${IC.sun} Hava Telemetri</span><span class="w-badge">${wt.live ? 'Canlı' : 'Çevrimdışı'}</span></div>
+                <div class="weath-hero">
+                    <div>
+                        <div class="weath-temp num">${temp}</div>
+                        <div style="font-size:12.5px;font-weight:700;margin-top:3px;">${escHtml(city)}</div>
+                    </div>
+                    ${weatherIllustrationSvg(sum)}
+                </div>
+                <div class="weath-meta-grid">
+                    <div class="weath-cell"><div class="w-sub">Durum</div><div style="font-weight:700;margin-top:2px;">${escHtml(sum)}</div></div>
+                    <div class="weath-cell"><div class="w-sub">Tarih</div><div style="font-weight:700;margin-top:2px;" class="num">${escHtml(state.shortDate || '')}</div></div>
+                </div>
+            `;
+        }
+        return `
+            <div class="w-head"><span class="w-title">${IC.sun} Hava Durumu</span><span class="w-sub">${escHtml(city)}</span></div>
+            <div class="weath-hero">
+                <div>
+                    <div class="weath-temp num">${temp}</div>
+                    <div style="font-size:12.5px;font-weight:600;color:var(--text-2);margin-top:4px;">${escHtml(sum)}</div>
+                </div>
+                ${weatherIllustrationSvg(sum)}
+            </div>
+        `;
+    }
+
+    /* 4. AI QUOTA STUDIO (BESPOKE BRAND EMBLEMS) */
+    if (w.kind === 'ai-quota') {
+        const snaps = state.aiSnapshots || [];
+        const colorOf = p => p === 'openai' ? '#10B981' : (p === 'gemini' ? '#38BDF8' : '#F59E0B');
+        const emblemOf = p => p === 'openai' ? IC.openai : (p === 'gemini' ? IC.gemini : IC.claude);
+        const list = snaps.length > 0 ? snaps : [
+            { provider: 'openai', displayName: 'ChatGPT', planName: 'Plus', sourceBadge: 'Sayaç', remainingPercent: 100, primaryLabel: '0 / 80', secondaryLabel: 'Hazır' },
+            { provider: 'gemini', displayName: 'Gemini', planName: 'Pro', sourceBadge: 'Sayaç', remainingPercent: 100, primaryLabel: '0 / 100', secondaryLabel: 'Hazır' },
+            { provider: 'claude', displayName: 'Claude', planName: 'Pro', sourceBadge: 'Sayaç', remainingPercent: 100, primaryLabel: '0 / 45', secondaryLabel: 'Hazır' }
+        ];
+        if (variant === 'rings') {
+            return `
+                <div class="w-head">
+                    <span class="w-title">${IC.spark} AI Kota Stüdyosu</span>
+                    <button class="w-ibtn" style="width:22px;height:22px;" onpointerdown="event.stopPropagation()" onclick="send('refreshAiQuota')" title="Yenile">${IC.refresh}</button>
+                </div>
+                <div class="rings-grid">
+                    ${list.map(s => buildRingSvg(s.remainingPercent, colorOf(s.provider), s.displayName, emblemOf(s.provider))).join('')}
+                </div>
+            `;
+        }
+        return `
+            <div class="w-head">
+                <span class="w-title">${IC.spark} AI Kota Stüdyosu</span>
+                <div style="display:flex;gap:4px;" onpointerdown="event.stopPropagation()">
+                    <button class="w-ibtn" style="width:22px;height:22px;" onclick="send('refreshAiQuota')" title="Yenile">${IC.refresh}</button>
+                    <button class="w-ibtn" style="width:22px;height:22px;" onclick="send('openSettings',{section:'widgets'})" title="API & Plan Ayarları">${IC.sliders}</button>
+                </div>
+            </div>
+            <div class="ai-list">
+                ${list.map(s => {
+                    const col = colorOf(s.provider);
+                    const pct = Math.max(0, Math.min(100, Number(s.remainingPercent ?? 100)));
+                    return `<div class="ai-row">
+                        <div class="ai-emblem">${emblemOf(s.provider)}</div>
+                        <div style="flex:1;min-width:0;">
+                            <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+                                <span style="font-size:12px;font-weight:700;">${escHtml(s.displayName)} <span style="font-size:10px;color:var(--text-2);font-weight:500;">${escHtml(s.planName || '')}</span></span>
+                                <span style="font-size:10.5px;font-weight:800;color:${col};" class="num">${pct}%</span>
+                            </div>
+                            <div style="display:flex;align-items:center;justify-content:space-between;font-size:10px;color:var(--text-2);margin-top:1px;">
+                                <span class="num">${escHtml(s.primaryLabel || '')}</span>
+                                <span>${escHtml(s.sourceBadge || 'Sayaç')}</span>
+                            </div>
+                            <div class="ai-bar"><div class="ai-fill" style="width:${pct}%;background:${col};"></div></div>
+                        </div>
+                        <div style="display:flex;gap:3px;" onpointerdown="event.stopPropagation()">
+                            <button class="w-btn" style="height:22px;padding:0 7px;font-size:10px;" onclick="send('bumpAiManualUsage',{provider:'${escHtml(s.provider)}',delta:1})" title="+1 İstem">+1</button>
+                        </div>
+                    </div>`;
+                }).join('')}
+            </div>
+        `;
+    }
+
+    /* 5. BATTERY & BLUETOOTH RINGS / BARS */
+    if (w.kind === 'battery') {
+        const items = [];
+        if (state.battery?.present) {
+            items.push({ name: state.battery.charging ? 'PC · Şarj' : 'Bilgisayar', pct: state.battery.percent ?? 100, col: state.battery.charging ? '#34D399' : 'var(--accent-1)', icon: IC.laptop });
+        }
+        (state.btDevices || []).slice(0, 3).forEach(d => {
+            items.push({
+                name: d.name || 'Bluetooth',
+                pct: d.hasBattery === false ? 100 : (d.percent ?? 0),
+                col: (d.percent ?? 100) <= 20 ? '#FB7185' : '#38BDF8',
+                icon: btDeviceIcon(d.category)
+            });
+        });
+        if (items.length === 0) {
+            items.push({ name: 'AC Güç', pct: 100, col: '#34D399', icon: IC.bolt });
+        }
+        if (variant === 'bars') {
+            return `
+                <div class="w-head"><span class="w-title">${IC.battery} Pil & Bluetooth</span><span class="w-sub">${items.length} cihaz</span></div>
+                <div style="display:flex;flex-direction:column;gap:9px;">
+                    ${items.map(it => `<div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;font-size:11.5px;margin-bottom:4px;">
+                            <span style="display:inline-flex;align-items:center;gap:6px;font-weight:600;"><span style="width:13px;height:13px;color:${it.col};">${it.icon}</span>${escHtml(it.name)}</span>
+                            <span class="num" style="font-weight:700;">${it.pct}%</span>
+                        </div>
+                        <div class="bar-track"><div class="bar-fill" style="width:${it.pct}%;background:${it.col};"></div></div>
+                    </div>`).join('')}
+                </div>
+            `;
+        }
+        return `
+            <div class="w-head"><span class="w-title">${IC.battery} Pil & Bluetooth</span><span class="w-sub">${items.length} cihaz</span></div>
+            <div class="rings-grid">${items.map(it => buildRingSvg(it.pct, it.col, it.name, it.icon)).join('')}</div>
+        `;
+    }
+
+    /* 6. SYSTEM TELEMETRY */
+    if (w.kind === 'system') {
+        const m = state.metrics || {};
+        const cpu = Math.round(m.cpu || 0), ram = Math.round(m.ramPct || 0);
+        const rx = Number(m.rxKbps || 0);
+        const netLbl = rx >= 1024 ? `${(rx / 1024).toFixed(1)} MB/s` : `${Math.round(rx)} KB/s`;
+        if (variant === 'oscilloscope') {
+            return `
+                <div class="w-head"><span class="w-title">${IC.cpu} OSİLOSKOP</span><span class="mono w-sub">CPU ${cpu}% · RAM ${ram}%</span></div>
+                <div style="display:flex;flex-direction:column;gap:6px;">
+                    <div>
+                        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-2);margin-bottom:2px;"><span>CPU Yükü</span><span class="mono" style="color:var(--accent-1);font-weight:700;">${cpu}%</span></div>
+                        ${renderOscilloscopeSvg(m.cpuHist, 'var(--accent-1)', 260, 32, w.id + 'oc')}
+                    </div>
+                    <div>
+                        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-2);margin-bottom:2px;"><span>Bellek (${m.ramUsed ?? 0}/${m.ramTotal ?? 0} GB)</span><span class="mono" style="color:var(--accent-2);font-weight:700;">${ram}%</span></div>
+                        ${renderOscilloscopeSvg(m.ramHist, 'var(--accent-2)', 260, 32, w.id + 'or')}
+                    </div>
+                </div>
+            `;
+        }
+        if (variant === 'spark') {
+            return `
+                <div class="w-head"><span class="w-title">${IC.cpu} Canlı Telemetri</span><span class="mono w-sub">${netLbl}</span></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <div>
+                        <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;"><span class="w-sub">CPU</span><span class="num" style="font-weight:800;">${cpu}%</span></div>
+                        ${buildSparklineSvg(m.cpuHist, '#38BDF8', w.id + 'c')}
+                    </div>
+                    <div>
+                        <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;"><span class="w-sub">RAM</span><span class="num" style="font-weight:800;">${ram}%</span></div>
+                        ${buildSparklineSvg(m.ramHist, '#818CF8', w.id + 'r')}
+                    </div>
+                </div>
+            `;
+        }
+        return `
+            <div class="w-head"><span class="w-title">${IC.cpu} Sistem</span><span class="mono w-sub">${m.ramUsed ?? 0}/${m.ramTotal ?? 0} GB · ${netLbl}</span></div>
+            <div class="rings-grid">
+                ${buildRingSvg(cpu, '#38BDF8', 'CPU', null)}
+                ${buildRingSvg(ram, '#818CF8', 'RAM', null)}
+                ${buildRingSvg(Math.min(100, Math.round(rx / 120)), '#34D399', 'Ağ', null)}
+            </div>
+        `;
+    }
+
+    /* 7. CALENDAR */
+    if (w.kind === 'calendar') {
+        const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        const note = state.agendaNotes?.[todayKey] || '';
+        if (variant === 'month') {
+            const yr = now.getFullYear(), mo = now.getMonth();
+            const firstDow = (new Date(yr, mo, 1).getDay() + 6) % 7;
+            const daysInMo = new Date(yr, mo + 1, 0).getDate();
+            const prevDays = new Date(yr, mo, 0).getDate();
+            const cells = [];
+            for (let i = firstDow - 1; i >= 0; i--) cells.push(`<div class="cal-m-cell muted num">${prevDays - i}</div>`);
+            for (let d = 1; d <= daysInMo; d++) {
+                const dk = `${yr}-${String(mo + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const hasNote = Boolean(state.agendaNotes?.[dk]);
+                const isToday = d === now.getDate();
+                cells.push(`<div class="cal-m-cell num ${isToday ? 'today' : ''} ${hasNote ? 'note' : ''}">${d}</div>`);
+            }
+            while (cells.length % 7 !== 0) cells.push(`<div class="cal-m-cell muted num">${(cells.length % 7) + 1}</div>`);
+            return `
+                <div class="w-head"><span class="w-title">${IC.calendar} ${escHtml(months[mo])} ${yr}</span><span class="w-sub">${now.getDate()}</span></div>
+                <div class="cal-month-grid">
+                    ${['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'].map(d => `<div class="cal-m-dow">${d}</div>`).join('')}
+                    ${cells.join('')}
+                </div>
+            `;
+        }
+        return `
+            <div class="w-head"><span class="w-title">${IC.calendar} Takvim</span><span class="w-sub">${escHtml(months[now.getMonth()])} ${now.getFullYear()}</span></div>
+            <div style="display:flex;align-items:center;gap:14px;">
+                <div class="cal-day-num num">${now.getDate()}</div>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-size:14px;font-weight:700;">${escHtml(days[now.getDay()])}</div>
+                    <div class="w-sub" style="margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${note ? escHtml(note) : 'Bugün için plan notu yok'}</div>
+                </div>
+            </div>
+        `;
+    }
+
+    /* 8. STICKY NOTES */
+    if (w.kind === 'notes') {
+        return `
+            <div class="w-head"><span class="w-title">${IC.note} Hızlı Not</span><span class="w-sub">Otomatik Kayıt</span></div>
+            <textarea class="note-ta" data-note-wid="${escHtml(w.id)}" placeholder="Notunuzu yazın..."
+                onfocus="send('requestWidgetFocus')"
+                onblur="send('releaseWidgetFocus');saveWidgetNote('${escHtml(w.id)}',this.value)"
+                onpointerdown="event.stopPropagation()">${escHtml(w.noteText || '')}</textarea>
+        `;
+    }
+
+    /* 9. POMODORO */
+    if (w.kind === 'pomodoro') {
+        const f = state.focus || { running: false, seconds: 1500, label: '25:00' };
+        const pct = Math.max(0, Math.min(100, Math.round(((1500 - (f.seconds || 0)) / 1500) * 100)));
+        return `
+            <div class="w-head"><span class="w-title">${IC.timer} Odak Zamanlayıcı</span><span class="w-badge">${f.running ? 'Aktif' : 'Hazır'}</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                <div style="font-size:36px;font-weight:800;letter-spacing:-0.03em;" class="num">${escHtml(f.label || '25:00')}</div>
+                <div style="display:flex;gap:6px;" onpointerdown="event.stopPropagation()">
+                    <button class="w-btn primary" onclick="send('toggleFocus')">${f.running ? 'Duraklat' : 'Başlat'}</button>
+                    <button class="w-ibtn" onclick="send('resetFocus')" title="Sıfırla">${IC.refresh}</button>
+                </div>
+            </div>
+            <div class="bar-track" style="margin-top:10px;"><div class="bar-fill" style="width:${pct}%;"></div></div>
+        `;
+    }
+
+    /* 10. QUICK LAUNCHER (SAFE INDEX-BASED — ZERO INLINE PATH ESCAPING!) */
+    if (w.kind === 'launcher') {
+        const pins = (state.pinnedShortcuts || []).slice(0, w.size === 'S' ? 4 : 8);
+        return `
+            <div class="w-head"><span class="w-title">${IC.grid} Hızlı Başlatıcı</span><span class="w-sub">${pins.length} kısayol</span></div>
+            <div class="ln-grid" onpointerdown="event.stopPropagation()">
+                ${pins.map((p, idx) => `<button class="ln-btn" onclick="launchPinnedIndex(${idx})" title="${escHtml(p.name)}">
+                    ${p.icon ? `<img src="data:image/png;base64,${p.icon}"/>` : `<span style="width:22px;height:22px;border-radius:6px;background:rgba(var(--a1-rgb),0.18);color:var(--accent-1);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;">${escHtml((p.name || 'A')[0].toUpperCase())}</span>`}
+                    <span>${escHtml(p.name)}</span>
+                </button>`).join('')}
+            </div>
+        `;
+    }
+
+    /* 11. TODO LIST */
+    if (w.kind === 'todo') {
+        const todos = state.todos || [];
+        return `
+            <div class="w-head"><span class="w-title">${IC.list} Görevler</span><span class="w-sub num">${todos.filter(t => !t.done).length} açık</span></div>
+            <div class="td-inp-row" onpointerdown="event.stopPropagation()">
+                <input class="td-inp" id="tdInp-${escHtml(w.id)}" placeholder="Yeni görev ekle..."
+                    onfocus="send('requestWidgetFocus')" onblur="send('releaseWidgetFocus')"
+                    onkeydown="if(event.key==='Enter')submitTodo('${escHtml(w.id)}')"/>
+                <button class="w-btn primary" onclick="submitTodo('${escHtml(w.id)}')">Ekle</button>
+            </div>
+            <div class="td-list" onpointerdown="event.stopPropagation()">
+                ${todos.length === 0 ? `<div class="w-sub" style="padding:8px 2px;">Henüz görev yok.</div>` : todos.slice(0, 6).map(t => `
+                    <div class="td-row">
+                        <button class="td-chk ${t.done ? 'done' : ''}" onclick="send('toggleTodo',{id:'${escHtml(t.id)}'})">${t.done ? IC.check.replace('<svg ','<svg width="10" height="10" ') : ''}</button>
+                        <span class="td-txt ${t.done ? 'done' : ''}" onclick="send('toggleTodo',{id:'${escHtml(t.id)}'})">${escHtml(t.text)}</span>
+                        <button class="w-ibtn danger" style="width:20px;height:20px;" onclick="send('removeTodo',{id:'${escHtml(t.id)}'})">${IC.close}</button>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    /* 12. MARKET & FX */
+    if (w.kind === 'market') {
+        const mk = state.market || {};
+        const rows = [
+            { k: 'USD/TRY', v: mk.usdTry ? mk.usdTry.toFixed(2) + ' ₺' : '--' },
+            { k: 'EUR/TRY', v: mk.eurTry ? mk.eurTry.toFixed(2) + ' ₺' : '--' },
+            { k: 'BTC', v: mk.btcUsd ? '$' + Math.round(mk.btcUsd).toLocaleString('tr-TR') : '--' },
+            { k: 'ETH', v: mk.ethUsd ? '$' + Math.round(mk.ethUsd).toLocaleString('tr-TR') : '--' }
+        ];
+        return `
+            <div class="w-head">
+                <span class="w-title">${IC.chart} Piyasa & Döviz</span>
+                <button class="w-ibtn" style="width:22px;height:22px;" onpointerdown="event.stopPropagation()" onclick="send('refreshMarket')" title="Yenile">${IC.refresh}</button>
+            </div>
+            <div class="mkt-grid">
+                ${rows.map(r => `<div class="mkt-chip"><div class="w-sub">${r.k}</div><div class="num" style="font-size:14px;font-weight:800;margin-top:2px;">${r.v}</div></div>`).join('')}
+            </div>
+        `;
+    }
+
+    /* 13. COUNTDOWN */
+    if (w.kind === 'countdown') {
+        const cd = state.countdown || { title: 'Hedef', targetDate: '2026-12-31' };
+        const diffDays = Math.max(0, Math.ceil((new Date(cd.targetDate + 'T00:00:00') - now) / 86400000));
+        return `
+            <div class="w-head">
+                <span class="w-title">${IC.flag} Geri Sayım</span>
+                <button class="w-ibtn" style="width:22px;height:22px;" onpointerdown="event.stopPropagation()" onclick="countdownEditOpen=!countdownEditOpen;renderWidgets(true);" title="Düzenle">${IC.sliders}</button>
+            </div>
+            ${countdownEditOpen ? `
+                <div style="display:flex;flex-direction:column;gap:6px;" onpointerdown="event.stopPropagation()">
+                    <input class="td-inp" id="cdTitle" value="${escHtml(cd.title)}" onfocus="send('requestWidgetFocus')" onblur="send('releaseWidgetFocus')"/>
+                    <input class="td-inp" id="cdDate" type="date" value="${escHtml(cd.targetDate)}" onfocus="send('requestWidgetFocus')" onblur="send('releaseWidgetFocus')"/>
+                    <button class="w-btn primary" onclick="saveCountdownForm()">Kaydet</button>
+                </div>
+            ` : `
+                <div style="display:flex;align-items:baseline;gap:10px;">
+                    <div style="font-size:42px;font-weight:800;color:var(--accent-1);line-height:1;" class="num">${isNaN(diffDays) ? 0 : diffDays}</div>
+                    <div>
+                        <div style="font-size:13px;font-weight:700;">gün kaldı</div>
+                        <div class="w-sub">${escHtml(cd.title)} · ${escHtml(cd.targetDate)}</div>
+                    </div>
+                </div>
+            `}
+        `;
+    }
+
+    /* 14. STORAGE & NET */
+    if (w.kind === 'storage-net') {
+        const disks = (state.disks || []).slice(0, 3);
+        return `
+            <div class="w-head">
+                <span class="w-title">${IC.disk} Disk & Depolama</span>
+                <button class="w-ibtn" style="width:22px;height:22px;" onpointerdown="event.stopPropagation()" onclick="send('refreshLocalAi')">${IC.refresh}</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+                ${disks.length === 0 ? `<div class="w-sub">Diskler taranıyor...</div>` : disks.map(d => {
+                    const pct = Math.round(d.usedPercent || 0);
+                    return `<div>
+                        <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;">
+                            <span style="font-weight:700;">${escHtml(d.drive)}</span>
+                            <span class="num w-sub">${(d.freeGb || 0).toFixed(0)} GB boş · ${pct}%</span>
+                        </div>
+                        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;${pct > 88 ? 'background:#FB7185;' : ''}"></div></div>
+                    </div>`;
+                }).join('')}
+            </div>
+        `;
+    }
+
+    /* 15. QUOTE */
+    if (w.kind === 'quote') {
+        const q = QUOTES_TR[(now.getDate() + quoteOffset) % QUOTES_TR.length];
+        return `
+            <div class="w-head">
+                <span class="w-title">${IC.quote} İlham</span>
+                <button class="w-ibtn" style="width:22px;height:22px;" onpointerdown="event.stopPropagation()" onclick="quoteOffset++;renderWidgets(true);" title="Sonraki Söz">${IC.refresh}</button>
+            </div>
+            <div class="quote-body">“${escHtml(q.text)}”</div>
+            <div class="w-sub" style="margin-top:8px;font-weight:600;">— ${escHtml(q.author)}</div>
+        `;
+    }
+
+    /* 16. LOCAL AI MONITOR */
+    if (w.kind === 'local-ai') {
+        const la = state.localAi || {};
+        return `
+            <div class="w-head">
+                <span class="w-title">${IC.brain} Yerel AI</span>
+                <button class="w-ibtn" style="width:22px;height:22px;" onpointerdown="event.stopPropagation()" onclick="send('refreshLocalAi')">${IC.refresh}</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;font-size:11.5px;">
+                <div class="ai-row"><span style="flex:1;font-weight:600;">Ollama</span><span class="w-badge" style="${la.ollamaRunning ? 'color:#34D399;border-color:rgba(52,211,153,0.35);' : ''}">${la.ollamaRunning ? 'Çalışıyor' : 'Kapalı'}</span></div>
+                <div class="ai-row"><span style="flex:1;font-weight:600;">LM Studio</span><span class="w-badge" style="${la.lmStudioRunning ? 'color:#34D399;border-color:rgba(52,211,153,0.35);' : ''}">${la.lmStudioRunning ? 'Çalışıyor' : 'Kapalı'}</span></div>
+                ${la.activeModel ? `<div class="w-sub mono" style="padding:2px 4px;">Model: ${escHtml(la.activeModel)}</div>` : ''}
+            </div>
+        `;
+    }
+
+    /* 17. AUDIO MIXER (MASTER + OUTPUTS + PER-APP SESSIONS) */
+    if (w.kind === 'audio-mixer') {
+        const aud = state.audio || { volume: 50, muted: false, device: 'Ses Çıkışı' };
+        const outs = (state.audioOutputs || []).slice(0, 3);
+        const sess = (state.audioSessions || []).slice(0, 3);
+        return `
+            <div class="w-head"><span class="w-title">${aud.muted ? IC.mute : IC.vol} Ses Mikseri</span><span class="num w-sub">${aud.muted ? 'Sessiz' : aud.volume + '%'}</span></div>
+            <div class="mix-row" onpointerdown="event.stopPropagation()" style="margin-bottom:8px;">
+                <button class="w-ibtn" style="width:24px;height:24px;" onclick="send('toggleMute')">${aud.muted ? IC.mute : IC.vol}</button>
+                <input type="range" min="0" max="100" value="${aud.volume}" oninput="send('setVolume',{value:+this.value})" />
+                <span class="num" style="width:30px;text-align:right;font-weight:700;">${aud.volume}%</span>
+            </div>
+            ${sess.map(s => `
+                <div class="mix-row" onpointerdown="event.stopPropagation()" style="margin-bottom:5px;">
+                    <span style="width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-2);">${escHtml(s.name)}</span>
+                    <input type="range" min="0" max="100" value="${s.volume}" oninput="send('setAppVolume',{pid:${s.pid},value:+this.value})" />
+                    <span class="num" style="width:30px;text-align:right;font-size:10px;">${s.volume}%</span>
+                </div>
+            `).join('')}
+            ${outs.length > 1 ? `
+                <div class="mix-outs" onpointerdown="event.stopPropagation()">
+                    ${outs.map(o => `<button class="mix-out-chip ${o.isDefault ? 'active' : ''}" onclick="send('setAudioOutputDevice',{id:'${escHtml(o.id)}'})" title="${escHtml(o.fullName || o.name)}">${escHtml(o.name)}</button>`).join('')}
+                </div>
+            ` : `<div class="w-sub" style="margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(aud.device || '')}</div>`}
+        `;
+    }
+
+    /* 18. FOCUS RINGS (3 ACTIVITY RINGS) */
+    if (w.kind === 'focus-rings') {
+        const fs = state.focusStats || { completedMins: 0, goalMins: 90 };
+        const todos = state.todos || [];
+        const doneCnt = todos.filter(t => t.done).length;
+        const focusPct = Math.min(100, Math.round(((fs.completedMins || 0) / Math.max(15, fs.goalMins || 90)) * 100));
+        const todoPct = todos.length > 0 ? Math.min(100, Math.round((doneCnt / todos.length) * 100)) : 0;
+        const f = state.focus || { running: false, label: '25:00' };
+        const ring = (r, p, col) => {
+            const c = 2 * Math.PI * r;
+            return `<circle cx="42" cy="42" r="${r}" fill="none" stroke="${col}" stroke-opacity="0.16" stroke-width="5"/><circle cx="42" cy="42" r="${r}" fill="none" stroke="${col}" stroke-width="5" stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${(c*(1-p/100)).toFixed(1)}" transform="rotate(-90 42 42)"/>`;
+        };
+        return `
+            <div class="w-head"><span class="w-title">${IC.timer} Odak Halkaları</span><span class="num w-sub">${fs.completedMins || 0}/${fs.goalMins || 90} dk</span></div>
+            <div style="display:flex;align-items:center;gap:14px;">
+                <svg viewBox="0 0 84 84" width="78" height="78" style="flex-shrink:0;">
+                    ${ring(36, focusPct, '#FB7185')}
+                    ${ring(26, todoPct, '#34D399')}
+                    ${ring(16, f.running ? 75 : 20, '#38BDF8')}
+                </svg>
+                <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;">
+                    <div style="font-size:11px;"><span style="color:#FB7185;font-weight:700;">Odak:</span> <span class="num">${fs.completedMins || 0} dk</span></div>
+                    <div style="font-size:11px;"><span style="color:#34D399;font-weight:700;">Görev:</span> <span class="num">${doneCnt}/${todos.length}</span></div>
+                    <div style="display:flex;gap:5px;margin-top:4px;" onpointerdown="event.stopPropagation()">
+                        <button class="w-btn primary" style="height:23px;font-size:10px;" onclick="send('toggleFocus')">${f.running ? 'Duraklat' : 'Başlat'}</button>
+                        <button class="w-btn" style="height:23px;font-size:10px;" onclick="send('logFocusMinutes',{delta:15})">+15 dk</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    /* 19. PHOTO FRAME */
+    if (w.kind === 'photo-frame') {
+        const uri = state.widgetPhotos?.[w.id] || '';
+        const frameCls = variant === 'polaroid' ? 'polaroid' : (variant === 'gallery-mat' ? 'gallery-mat' : '');
+        return `
+            <div class="w-head"><span class="w-title">${IC.photo} Fotoğraf</span><button class="w-btn" style="height:22px;font-size:10px;" onpointerdown="event.stopPropagation()" onclick="send('pickWidgetPhoto',{id:'${escHtml(w.id)}'})">Değiştir</button></div>
+            <div class="photo-box ${frameCls} ${uri ? '' : 'empty'}" onpointerdown="event.stopPropagation()">
+                ${uri
+                    ? `<img src="${uri}"/>`
+                    : `<span style="width:26px;height:26px;color:var(--accent-1);opacity:0.85;">${IC.photo}</span><span class="w-sub">Görsel seçmek için tıklayın</span>`
+                }
+                <button class="w-btn primary photo-pick-btn" style="height:24px;font-size:10px;" onclick="send('pickWidgetPhoto',{id:'${escHtml(w.id)}'})">Fotoğraf Seç</button>
+            </div>
+        `;
+    }
+
+    /* 20. QUICK DROP & CLIPBOARD */
+    if (w.kind === 'quick-drop') {
+        const clips = (state.clipboard || []).slice(0, 3);
+        return `
+            <div class="w-head"><span class="w-title">${IC.spark} Hızlı Araç & Pano</span><span class="w-sub">${clips.length} öğe</span></div>
+            <div class="qdrop-grid" onpointerdown="event.stopPropagation()">
+                <button class="w-btn" style="height:26px;padding:0;font-size:10px;" onclick="send('startScreenOcr')" title="OCR Metin">${IC.scanText}<span>OCR</span></button>
+                <button class="w-btn" style="height:26px;padding:0;font-size:10px;" onclick="send('startColorPicker')" title="Renk Seç">${IC.pipette}<span>Renk</span></button>
+                <button class="w-btn" style="height:26px;padding:0;font-size:10px;" onclick="send('startGifRecording')" title="GIF Kaydet">${IC.record}<span>GIF</span></button>
+                <button class="w-btn" style="height:26px;padding:0;font-size:10px;" onclick="send('pickAndShareQr')" title="QR Gönder">${IC.qr}<span>QR</span></button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;" onpointerdown="event.stopPropagation()">
+                ${clips.length === 0 ? `<div class="w-sub">Pano geçmişi boş.</div>` : clips.map(c => `
+                    <div class="qdrop-clip" onclick="send('copyClipById',{id:${c.id}})" title="Panoya kopyala">${escHtml(c.preview || c.text || 'Görsel')}</div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    return `<div class="w-sub">${escHtml(w.kind)}</div>`;
+}
+
+function launchPinnedIndex(idx) {
+    const p = (state?.pinnedShortcuts || [])[idx];
+    if (p && p.path) send('launchPath', { path: p.path });
+}
+function saveWidgetNote(id, txt) {
+    send('updateDesktopWidget', { id, noteText: txt });
+}
+function submitTodo(wid) {
+    const el = document.getElementById('tdInp-' + wid);
+    if (!el) return;
+    const txt = el.value.trim();
+    if (!txt) return;
+    el.value = '';
+    send('addTodo', { text: txt });
+}
+function saveCountdownForm() {
+    const title = document.getElementById('cdTitle')?.value?.trim() || 'Hedef';
+    const targetDate = document.getElementById('cdDate')?.value || '2026-12-31';
+    countdownEditOpen = false;
+    send('saveCountdown', { title, targetDate });
+}
+function cycleSize(id, cur) {
+    const next = cur === 'S' ? 'M' : (cur === 'M' ? 'L' : 'S');
+    send('updateDesktopWidget', { id, size: next });
+}
+function cycleVariant(id, kind, cur) {
+    const list = VARIANT_CATALOG[kind] || [];
+    if (list.length <= 1) return;
+    const norm = normalizeVariant(kind, cur);
+    const idx = Math.max(0, list.findIndex(x => x.id === norm));
+    const next = list[(idx + 1) % list.length].id;
+    send('updateDesktopWidget', { id, variant: next });
+}
+
+/* ═══════════ DIRECT RIGHT-CLICK PRO INSPECTOR ═══════════ */
+function openWidgetInspector(e, wid) {
+    e.preventDefault();
+    e.stopPropagation();
+    inspectorWid = wid;
+    const vw = window.innerWidth || 1920;
+    const vh = window.innerHeight || 1080;
+    inspectorPos = {
+        x: Math.max(12, Math.min(vw - 304, e.clientX + 8)),
+        y: Math.max(12, Math.min(vh - 360, e.clientY + 8))
+    };
+    renderInspector();
+    scheduleHitRects();
+}
+function closeWidgetInspector() {
+    if (!inspectorWid) return;
+    inspectorWid = null;
+    const el = document.getElementById('widgetInspector');
+    if (el) { el.classList.remove('open'); el.innerHTML = ''; }
+    scheduleHitRects();
+}
+function renderInspector() {
+    const el = document.getElementById('widgetInspector');
+    if (!el || !inspectorWid || !state) return;
+    const w = (state.widgets || []).find(x => x.id === inspectorWid);
+    if (!w) { closeWidgetInspector(); return; }
+    const curSkin = w.skin || 'glass';
+    const curVar = normalizeVariant(w.kind, w.variant);
+    const vars = VARIANT_CATALOG[w.kind] || [];
+    const curOp = Math.round((typeof w.opacity === 'number' ? w.opacity : 1) * 100);
+
+    el.style.left = inspectorPos.x + 'px';
+    el.style.top = inspectorPos.y + 'px';
+    el.innerHTML = `
+        <div class="insp-head">
+            <div style="font-size:12.5px;font-weight:700;">${escHtml(KIND_LABELS[w.kind] || w.kind)} · Pro Stil</div>
+            <button class="w-ibtn" style="width:22px;height:22px;" onclick="closeWidgetInspector()">${IC.close}</button>
+        </div>
+        <div class="insp-sec">
+            <div class="insp-lbl">Tasarım Arketipi</div>
+            <div class="insp-chips">
+                ${SKIN_META.map(s => `<button class="insp-chip ${curSkin === s.id ? 'active' : ''}" onclick="setWidgetProp('${escHtml(w.id)}',{skin:'${s.id}'})">${s.name}</button>`).join('')}
+            </div>
+        </div>
+        ${vars.length > 1 ? `
+        <div class="insp-sec">
+            <div class="insp-lbl">Görünüm Tasarımı</div>
+            <div class="insp-chips">
+                ${vars.map(v => `<button class="insp-chip ${curVar === v.id ? 'active' : ''}" onclick="setWidgetProp('${escHtml(w.id)}',{variant:'${v.id}'})">${v.name}</button>`).join('')}
+            </div>
+        </div>` : ''}
+        <div class="insp-sec">
+            <div class="insp-lbl">Boyut</div>
+            <div class="insp-chips">
+                ${['S','M','L'].map(sz => `<button class="insp-chip ${(w.size || 'M') === sz ? 'active' : ''}" style="min-width:44px;" onclick="setWidgetProp('${escHtml(w.id)}',{size:'${sz}'})">${sz}</button>`).join('')}
+            </div>
+        </div>
+        <div class="insp-sec">
+            <div style="display:flex;justify-content:space-between;"><span class="insp-lbl">Saydamlık</span><span class="num" style="font-size:10.5px;color:var(--text-2);">${curOp}%</span></div>
+            <input class="insp-range" type="range" min="45" max="100" value="${curOp}" oninput="previewWidgetOpacity('${escHtml(w.id)}',this.value)" onchange="setWidgetProp('${escHtml(w.id)}',{opacity:Number(this.value)/100})"/>
+        </div>
+        ${w.kind === 'photo-frame' ? `
+        <div class="insp-sec">
+            <button class="w-btn primary" style="width:100%;" onclick="send('pickWidgetPhoto',{id:'${escHtml(w.id)}'});closeWidgetInspector();">${IC.photo}<span>Bilgisayardan Fotoğraf Seç</span></button>
+        </div>` : ''}
+        <div class="insp-foot">
+            <button class="w-btn ${w.pinnedTop ? 'primary' : ''}" onclick="setWidgetProp('${escHtml(w.id)}',{pinnedTop:${!w.pinnedTop}})">${IC.pin} Üstte Tut</button>
+            <button class="w-btn" onclick="send('setWidgetEditMode',{active:${!state.widgetEditMode}});closeWidgetInspector();">Taşı</button>
+            <button class="w-ibtn danger" onclick="send('removeDesktopWidget',{id:'${escHtml(w.id)}'});closeWidgetInspector();" title="Widget'ı Kaldır">${IC.trash}</button>
+        </div>
+    `;
+    el.classList.add('open');
+}
+function setWidgetProp(id, patch) {
+    if (state?.widgets) {
+        const w = state.widgets.find(x => x.id === id);
+        if (w) Object.assign(w, patch);
+        renderWidgets(true);
+        renderInspector();
+    }
+    send('updateDesktopWidget', { id, ...patch });
+}
+function previewWidgetOpacity(id, val) {
+    const card = document.querySelector(`.widget-card[data-wid="${CSS.escape(id)}"]`);
+    if (card) card.style.opacity = (Number(val) / 100).toFixed(2);
+}
+
+function renderWidgets(force) {
+    if (!state) return;
+    applyTheme(state.theme, state.cornerRadiusPreset, state.ecoModeActive);
+    document.body.classList.toggle('edit-mode', Boolean(state.widgetEditMode));
+
+    const sig = JSON.stringify({
+        edit: state.widgetEditMode,
+        locked: state.widgetsLocked,
+        eco: Boolean(state.ecoModeActive),
+        theme: state.theme?.id,
+        rad: state.cornerRadiusPreset,
+        widgets: state.widgets,
+        media: state.media ? `${state.media.title}|${state.media.isPlaying}|${Boolean(state.media.artwork)}` : null,
+        bat: state.battery,
+        bts: state.btDevices,
+        audio: state.audio,
+        outs: state.audioOutputs,
+        sess: state.audioSessions,
+        clips: state.clipboard,
+        fstats: state.focusStats,
+        photos: Object.keys(state.widgetPhotos || {}).map(k => `${k}:${(state.widgetPhotos[k]||'').length}`),
+        met: state.metrics ? `${state.metrics.cpu}|${state.metrics.ramPct}|${state.metrics.rxKbps}` : null,
+        weath: state.weather,
+        focus: state.focus,
+        ai: state.aiSnapshots,
+        todos: state.todos,
+        countdown: state.countdown,
+        cdEdit: countdownEditOpen,
+        qOff: quoteOffset,
+        market: state.market,
+        localAi: state.localAi,
+        disks: state.disks,
+        notes: state.agendaNotes,
+        pins: (state.pinnedShortcuts || []).length
+    });
+    if (!force && sig === lastRenderSig) {
+        updateLiveClockDom();
+        return;
+    }
+    lastRenderSig = sig;
+
+    const canvas = document.getElementById('canvas');
+    const widgets = state.widgets || [];
+    canvas.innerHTML = widgets.map(w => {
+        const pos = resolveWidgetXY(w);
+        const skin = w.skin || 'glass';
+        const opStyle = typeof w.opacity === 'number' ? `opacity:${w.opacity.toFixed(2)};` : '';
+        return `
+            <div class="widget-card w-sz-${escHtml(w.size || 'M')} skin-${escHtml(skin)}"
+                 data-wid="${escHtml(w.id)}"
+                 style="left:${pos.left}px;top:${pos.top}px;${opStyle}"
+                 oncontextmenu="openWidgetInspector(event,'${escHtml(w.id)}')"
+                 onpointerdown="startWidgetDrag(event,'${escHtml(w.id)}')">
+                <div class="w-edit-bar" onpointerdown="event.stopPropagation()">
+                    <div style="display:flex;gap:3px;align-items:center;">
+                        <button class="w-ibtn" style="width:22px;height:21px;font-size:10px;font-weight:700;" onclick="cycleSize('${escHtml(w.id)}','${escHtml(w.size||'M')}')" title="Boyut: S/M/L">${escHtml(w.size||'M')}</button>
+                        <button class="w-btn" style="height:21px;padding:0 7px;font-size:9.5px;" onclick="openWidgetInspector(event,'${escHtml(w.id)}')" title="Arketip & Stil Denetçisi">${IC.sliders} Stil</button>
+                    </div>
+                    <div style="display:flex;gap:3px;align-items:center;">
+                        <button class="w-ibtn ${w.pinnedTop ? 'active' : ''}" style="width:21px;height:21px;" onclick="send('updateDesktopWidget',{id:'${escHtml(w.id)}',pinnedTop:${!w.pinnedTop}})" title="Her Zaman Üstte">${IC.pin}</button>
+                        <button class="w-ibtn danger" style="width:21px;height:21px;" onclick="send('removeDesktopWidget',{id:'${escHtml(w.id)}'})" title="Kaldır">${IC.close}</button>
+                    </div>
+                </div>
+                ${buildWidgetInner(w)}
+            </div>
+        `;
+    }).join('');
+
+    if (inspectorWid) renderInspector();
+    scheduleHitRects();
+}
+
+function updateLiveClockDom() {
+    const now = new Date();
+    const clk = state?.clock || `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    const [hh, mm] = clk.split(':');
+    const ss = String(now.getSeconds()).padStart(2, '0');
+    document.querySelectorAll('[data-clock-live]').forEach(el => {
+        if (el.querySelector('[data-clock-ss]')) {
+            el.firstChild.nodeValue = `${hh}:${mm}`;
+        } else {
+            el.textContent = `${hh}:${mm}`;
+        }
+    });
+    document.querySelectorAll('[data-clock-hh]').forEach(el => { el.textContent = hh || '00'; });
+    document.querySelectorAll('[data-clock-mm]').forEach(el => { el.textContent = mm || '00'; });
+    document.querySelectorAll('[data-clock-ss]').forEach(el => { el.textContent = ss; });
+    document.querySelectorAll('[data-clock-bar]').forEach(el => { el.style.width = `${((now.getSeconds() / 59) * 100).toFixed(1)}%`; });
+    document.querySelectorAll('[id^="dmLed-"]').forEach(el => {
+        el.innerHTML = renderDotMatrix5x7Svg(`${hh}:${mm}`, 'var(--accent-1)');
+    });
+    const hDeg = (((now.getHours() % 12) + now.getMinutes() / 60) * 30).toFixed(1);
+    const mDeg = ((now.getMinutes() + now.getSeconds() / 60) * 6).toFixed(1);
+    const sDeg = (now.getSeconds() * 6).toFixed(1);
+    document.querySelectorAll('[data-chrono-h]').forEach(el => el.setAttribute('transform', `rotate(${hDeg} 50 50)`));
+    document.querySelectorAll('[data-chrono-m]').forEach(el => el.setAttribute('transform', `rotate(${mDeg} 50 50)`));
+    document.querySelectorAll('[data-chrono-s]').forEach(el => el.setAttribute('transform', `rotate(${sDeg} 50 50)`));
+}
+
+function startWidgetDrag(e, id) {
+    if (!state?.widgetEditMode || state?.widgetsLocked || e.button !== 0) return;
+    if (e.target.closest('button, input, textarea, .w-edit-bar')) return;
+    closeWidgetInspector();
+    const el = e.currentTarget;
+    const r = el.getBoundingClientRect();
+    dragCtx = { id, el, offX: e.clientX - r.left, offY: e.clientY - r.top, curX: r.left, curY: r.top };
+    el.classList.add('dragging');
+    el.setPointerCapture?.(e.pointerId);
+}
+
+document.addEventListener('pointerdown', e => {
+    if (inspectorWid && !e.target.closest('#widgetInspector')) {
+        closeWidgetInspector();
+    }
+});
+
+document.addEventListener('pointermove', e => {
+    if (!dragCtx) return;
+    const rawX = e.clientX - dragCtx.offX;
+    const rawY = e.clientY - dragCtx.offY;
+    const snapX = Math.max(12, Math.min(window.innerWidth - dragCtx.el.offsetWidth - 12, Math.round(rawX / 16) * 16));
+    const snapY = Math.max(12, Math.min(window.innerHeight - dragCtx.el.offsetHeight - 12, Math.round(rawY / 16) * 16));
+    dragCtx.curX = snapX;
+    dragCtx.curY = snapY;
+    dragCtx.el.style.left = snapX + 'px';
+    dragCtx.el.style.top = snapY + 'px';
+});
+
+function finishWidgetDrag() {
+    if (!dragCtx) return;
+    const d = dragCtx;
+    dragCtx = null;
+    d.el.classList.remove('dragging');
+    const vw = window.innerWidth || 1920;
+    const saveX = (d.curX > vw * 0.55) ? (d.curX - vw) : d.curX;
+    send('updateDesktopWidget', { id: d.id, x: Math.round(saveX), y: Math.round(d.curY) });
+    scheduleHitRects();
+}
+document.addEventListener('pointerup', finishWidgetDrag);
+document.addEventListener('pointercancel', finishWidgetDrag);
+
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+        if (inspectorWid) closeWidgetInspector();
+        else if (state?.widgetEditMode) send('setWidgetEditMode', { active: false });
+    }
+});
+
+window.addEventListener('resize', () => { renderWidgets(true); scheduleHitRects(); });
+
+if (typeof ResizeObserver !== 'undefined') {
+    const ro = new ResizeObserver(scheduleHitRects);
+    ro.observe(document.documentElement);
+    const cv = document.getElementById('canvas');
+    if (cv) ro.observe(cv);
+}
+
+window.chrome.webview.addEventListener('message', e => {
+    const msg = e.data;
+    if (msg.type === 'state') {
+        state = msg.payload;
+        renderWidgets(false);
+    } else if (msg.type === 'clockTick') {
+        if (state && msg.clock) {
+            state.clock = msg.clock;
+            updateLiveClockDom();
+        }
+    } else if (msg.type === 'widgetVisibility') {
+        document.body.classList.toggle('widgets-paused', Boolean(msg.paused));
+    } else if (msg.type === 'syncLayout') {
+        renderWidgets(true);
+        scheduleHitRects();
+    }
+});
+
+function signalUiReady() {
+    try { window.chrome.webview.postMessage({ type: 'uiReady' }); } catch (_) {}
+}
+signalUiReady();
+const _wRetry = setInterval(() => {
+    if (state) { clearInterval(_wRetry); return; }
+    signalUiReady();
+}, 450);
+</script>
+</body>
+</html>

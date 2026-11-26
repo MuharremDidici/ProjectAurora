@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 use std::sync::Once;
-use aurora_core::{compute_appbar_strip_rect, compute_dock_reserved_work_area, PhysicalRect};
+use aurora_core::{
+    compute_appbar_strip_rect_for_arch, compute_dock_reserved_work_area_for_arch, PhysicalRect,
+};
 use windows::core::{w, HSTRING, PCWSTR};
 use windows::Win32::Foundation::{BOOL, HWND, LPARAM, LRESULT, RECT, WPARAM};
 use windows::Win32::Graphics::Dwm::{DwmGetWindowAttribute, DWMWA_CLOAKED, DWMWA_EXTENDED_FRAME_BOUNDS};
@@ -8,7 +10,7 @@ use windows::Win32::Graphics::Gdi::{
     GetMonitorInfoW, MonitorFromWindow, HMONITOR, MONITORINFOEXW, MONITOR_DEFAULTTONEAREST,
 };
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
-use windows::Win32::UI::Input::KeyboardAndMouse::EnableWindow;
+use windows::Win32::UI::Input::KeyboardAndMouse::{EnableWindow, GetAsyncKeyState, VK_MENU};
 use windows::Win32::UI::Shell::{
     SHAppBarMessage, ABE_BOTTOM, ABE_LEFT, ABE_RIGHT, ABM_NEW, ABM_QUERYPOS, ABM_REMOVE,
     ABM_SETPOS, ABM_SETSTATE, ABS_AUTOHIDE, APPBARDATA,
@@ -17,7 +19,8 @@ use windows::Win32::UI::WindowsAndMessaging::{
     CreateWindowExW, DefWindowProcW, DestroyWindow, EnumWindows, FindWindowExW, FindWindowW,
     GetClassNameW, GetWindowLongPtrW, GetWindowRect, GetWindowThreadProcessId, IsIconic, IsWindow,
     IsWindowVisible, IsZoomed, RegisterClassW, RegisterWindowMessageW, SendNotifyMessageW,
-    SetLayeredWindowAttributes, SetWindowPos, ShowWindow, SystemParametersInfoW, GWL_EXSTYLE,
+    SetLayeredWindowAttributes, SetWindowPos, ShowWindow, ShowWindowAsync, SystemParametersInfoW,
+    GWL_EXSTYLE,
     HWND_BROADCAST, HWND_BOTTOM, LWA_ALPHA, SPI_SETWORKAREA, SWP_ASYNCWINDOWPOS, SWP_HIDEWINDOW,
     SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSENDCHANGING, SWP_NOSIZE, SWP_NOZORDER, SWP_SHOWWINDOW,
     SW_HIDE, SW_SHOW, SW_SHOWNOACTIVATE, SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS, WM_SETTINGCHANGE,
@@ -92,6 +95,10 @@ impl NativeAppBarManager {
             return;
         }
         unsafe {
+            // Do not send cross-process SW_HIDE to explorer.exe while Alt is held (Alt+Tab switch).
+            if (GetAsyncKeyState(VK_MENU.0 as i32) as u16 & 0x8000) != 0 {
+                return;
+            }
             if let Some(h) = changed_hwnd {
                 if !h.0.is_null() && is_native_taskbar_window(h) && IsWindowVisible(h).as_bool() {
                     hide_tray_window(h);
@@ -150,6 +157,7 @@ impl NativeAppBarManager {
         dock_scale_percent: i32,
         reserve: bool,
         dock_density: &str,
+        shell_architecture: &str,
         force_reapply: bool,
     ) -> bool {
         if !self.native_suppressed {
@@ -172,16 +180,45 @@ impl NativeAppBarManager {
             })
             .collect::<Vec<_>>()
             .join(";");
-        let sig = format!("{reserve}|{dock_edge}|{dock_scale_percent}|{dock_density}|{mon_sig}");
+        let sig = format!("{reserve}|{dock_edge}|{dock_scale_percent}|{dock_density}|{shell_architecture}|{mon_sig}");
 
         if !force_reapply && self.last_signature.as_deref() == Some(sig.as_str()) {
             let healthy = if !reserve {
                 self.slots.is_empty()
+                    && monitors.iter().all(|m| {
+                        let b = m.descriptor.bounds;
+                        try_get_monitor_work_area(m.hmonitor).is_some_and(|live| {
+                            live.left == b.x
+                                && live.top == b.y
+                                && live.right == b.right()
+                                && live.bottom == b.bottom()
+                        })
+                    })
             } else {
                 monitors.iter().all(|m| {
-                    self.slots
+                    let slot_ok = self
+                        .slots
                         .get(&m.descriptor.device_id)
-                        .is_some_and(|s| unsafe { IsWindow(s.hwnd).as_bool() })
+                        .is_some_and(|s| unsafe { IsWindow(s.hwnd).as_bool() });
+                    let desired_wa = compute_dock_reserved_work_area_for_arch(
+                        m.descriptor.bounds,
+                        m.descriptor.scale_factor(),
+                        dock_edge,
+                        dock_scale_percent,
+                        true,
+                        dock_density,
+                        shell_architecture,
+                    );
+                    let wa_ok = try_get_monitor_work_area(m.hmonitor).is_some_and(|live| {
+                        let live_pr = PhysicalRect::new(
+                            live.left,
+                            live.top,
+                            live.right - live.left,
+                            live.bottom - live.top,
+                        );
+                        !is_work_area_edge_mismatched(live_pr, desired_wa, dock_edge)
+                    });
+                    slot_ok && wa_ok
                 })
             };
             if healthy {
@@ -232,30 +269,61 @@ impl NativeAppBarManager {
         };
 
         for m in &monitors {
-            let strip = compute_appbar_strip_rect(
+            let strip = compute_appbar_strip_rect_for_arch(
                 m.descriptor.bounds,
                 m.descriptor.scale_factor(),
                 dock_edge,
                 dock_scale_percent,
                 dock_density,
+                shell_architecture,
             );
-            let desired_wa = compute_dock_reserved_work_area(
+            let desired_wa = compute_dock_reserved_work_area_for_arch(
                 m.descriptor.bounds,
                 m.descriptor.scale_factor(),
                 dock_edge,
                 dock_scale_percent,
                 true,
                 dock_density,
+                shell_architecture,
             );
+            // If an external bar or prior buggy reservation over-clipped this monitor's work area,
+            // reset its work area cleanly to full monitor bounds before re-applying exact strip!
+            if let Some(live_before) = try_get_monitor_work_area(m.hmonitor) {
+                let over_reserved = match edge_u32 {
+                    ABE_LEFT => live_before.left > desired_wa.x + 2,
+                    ABE_RIGHT => live_before.right < desired_wa.right() - 2,
+                    _ => live_before.bottom < desired_wa.bottom() - 2,
+                };
+                if over_reserved {
+                    let b = m.descriptor.bounds;
+                    let mut full = RECT {
+                        left: b.x,
+                        top: b.y,
+                        right: b.right(),
+                        bottom: b.bottom(),
+                    };
+                    unsafe {
+                        let _ = SystemParametersInfoW(
+                            SPI_SETWORKAREA,
+                            0,
+                            Some(&mut full as *mut _ as *mut _),
+                            SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS(0),
+                        );
+                    }
+                }
+            }
+
             let registered = self.ensure_and_position_slot(&m.descriptor.device_id, m.descriptor.bounds, edge_u32, strip);
             let needs_fallback = if !registered {
                 true
             } else if let Some(live) = try_get_monitor_work_area(m.hmonitor) {
-                match edge_u32 {
-                    ABE_LEFT => live.left < m.descriptor.bounds.x + strip.width - 2,
-                    ABE_RIGHT => live.right > m.descriptor.bounds.right() - strip.width + 2,
-                    _ => live.bottom > m.descriptor.bounds.bottom() - strip.height + 2,
-                }
+                let live_pr = PhysicalRect::new(
+                    live.left,
+                    live.top,
+                    live.right - live.left,
+                    live.bottom - live.top,
+                );
+                is_work_area_edge_mismatched(live_pr, desired_wa, dock_edge)
             } else {
                 false
             };
@@ -344,11 +412,14 @@ impl NativeAppBarManager {
                 ..Default::default()
             };
             SHAppBarMessage(ABM_QUERYPOS, &mut abd);
-            match u_edge {
-                ABE_LEFT => abd.rc.right = abd.rc.left + strip.width,
-                ABE_RIGHT => abd.rc.left = abd.rc.right - strip.width,
-                _ => abd.rc.top = abd.rc.bottom - strip.height,
-            }
+            // Pin directly to the monitor-edge strip so an external taskbar or prior reservation
+            // can NEVER cause ABM_QUERYPOS -> ABM_SETPOS to double-stack (e.g. 104px bottom gap)!
+            abd.rc = RECT {
+                left: strip.x,
+                top: strip.y,
+                right: strip.right(),
+                bottom: strip.bottom(),
+            };
             SHAppBarMessage(ABM_SETPOS, &mut abd);
             let _ = SetWindowPos(
                 slot.hwnd,
@@ -574,8 +645,7 @@ unsafe fn hide_tray_window(hwnd: HWND) {
     if hwnd.0.is_null() {
         return;
     }
-    let _ = windows::Win32::UI::WindowsAndMessaging::ShowWindowAsync(hwnd, SW_HIDE);
-    let _ = ShowWindow(hwnd, SW_HIDE);
+    let _ = ShowWindowAsync(hwnd, SW_HIDE);
     let _ = SetWindowPos(
         hwnd,
         HWND_BOTTOM,
@@ -593,8 +663,51 @@ unsafe fn suppress_all_tray_windows() {
     }
 }
 
+/// Checks whether a live monitor WorkArea deviates (either over-reserved OR under-reserved)
+/// from Aurora's desired pixel-flush dock WorkArea by more than 2 pixels.
+pub fn is_work_area_edge_mismatched(
+    live: PhysicalRect,
+    desired: PhysicalRect,
+    dock_edge: &str,
+) -> bool {
+    if dock_edge.eq_ignore_ascii_case("Left") {
+        (live.x - desired.x).abs() > 2
+    } else if dock_edge.eq_ignore_ascii_case("Right") {
+        (live.right() - desired.right()).abs() > 2
+    } else {
+        (live.bottom() - desired.bottom()).abs() > 2
+    }
+}
+
 /// Standalone `--restore-taskbar` recovery helper (invoked by detached crash watchdog or user shortcut).
 pub fn restore_taskbar_standalone() {
     let mut mgr = NativeAppBarManager::new();
     mgr.restore_native_taskbar();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn detects_both_over_and_under_reserved_work_area() {
+        let desired_bottom = PhysicalRect::new(0, 0, 2560, 1388); // 52px bottom dock
+        let over_reserved = PhysicalRect::new(0, 0, 2560, 1336);  // 104px gap bug!
+        let under_reserved = PhysicalRect::new(0, 0, 2560, 1440); // 0px reserved
+        let exact = PhysicalRect::new(0, 0, 2560, 1388);
+
+        assert!(is_work_area_edge_mismatched(over_reserved, desired_bottom, "Bottom"));
+        assert!(is_work_area_edge_mismatched(under_reserved, desired_bottom, "Bottom"));
+        assert!(!is_work_area_edge_mismatched(exact, desired_bottom, "Bottom"));
+
+        let desired_left = PhysicalRect::new(58, 0, 2502, 1440);
+        let over_left = PhysicalRect::new(116, 0, 2444, 1440);
+        assert!(is_work_area_edge_mismatched(over_left, desired_left, "Left"));
+        assert!(!is_work_area_edge_mismatched(desired_left, desired_left, "Left"));
+
+        let desired_right = PhysicalRect::new(0, 0, 2502, 1440);
+        let over_right = PhysicalRect::new(0, 0, 2444, 1440);
+        assert!(is_work_area_edge_mismatched(over_right, desired_right, "Right"));
+        assert!(!is_work_area_edge_mismatched(desired_right, desired_right, "Right"));
+    }
 }

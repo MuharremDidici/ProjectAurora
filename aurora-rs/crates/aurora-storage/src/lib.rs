@@ -4,6 +4,7 @@ pub mod clipboard_db;
 pub mod logger;
 pub mod prefs;
 pub mod updater;
+pub mod widgets_store;
 
 pub use aurora_db::*;
 pub use aux_state::*;
@@ -11,6 +12,7 @@ pub use clipboard_db::*;
 pub use logger::*;
 pub use prefs::*;
 pub use updater::*;
+pub use widgets_store::*;
 
 use std::path::PathBuf;
 

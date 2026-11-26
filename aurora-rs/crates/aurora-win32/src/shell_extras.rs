@@ -11,24 +11,26 @@ use windows::Win32::Graphics::Gdi::{
     BITMAPINFO, BITMAPINFOHEADER, BI_RGB, DIB_RGB_COLORS, HBITMAP,
 };
 use windows::Win32::System::Com::{
-    CoCreateInstance, CoInitializeEx, CoTaskMemFree, CLSCTX_INPROC_SERVER, COINIT_APARTMENTTHREADED,
+    CoCreateInstance, CoInitializeEx, CoTaskMemFree, CLSCTX_ALL, CLSCTX_INPROC_SERVER,
+    CLSCTX_LOCAL_SERVER, COINIT_APARTMENTTHREADED,
 };
 use windows::Win32::System::DataExchange::{CloseClipboard, GetClipboardData, OpenClipboard};
 use windows::Win32::System::Memory::{GlobalLock, GlobalUnlock};
 use windows::Win32::System::Registry::{
     RegCloseKey, RegCreateKeyExW, RegDeleteValueW, RegOpenKeyExW, RegQueryValueExW,
-    RegSetValueExW, HKEY, HKEY_CURRENT_USER, KEY_READ, KEY_WRITE, REG_OPTION_NON_VOLATILE, REG_SZ,
+    RegSetValueExW, HKEY, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, KEY_READ, KEY_WRITE,
+    REG_OPTION_NON_VOLATILE, REG_SZ,
 };
 use windows::Win32::UI::Input::KeyboardAndMouse::{
     SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, VIRTUAL_KEY,
     VK_CONTROL, VK_LWIN, VK_TAB,
 };
 use windows::Win32::UI::Shell::{
-    FileOpenDialog, IEnumShellItems, IFileOpenDialog, IShellItem, IShellItemImageFactory,
-    SHCreateItemFromParsingName, SHGetKnownFolderItem, ShellExecuteW, BHID_EnumItems,
-    FOLDERID_AppsFolder, FOS_FORCEFILESYSTEM, FOS_PICKFOLDERS, KF_FLAG_DEFAULT, SIGDN_FILESYSPATH,
-    SIGDN_NORMALDISPLAY, SIGDN_PARENTRELATIVEPARSING, SIIGBF_BIGGERSIZEOK, SIIGBF_ICONONLY,
-    SIIGBF_RESIZETOFIT,
+    ApplicationActivationManager, FileOpenDialog, IApplicationActivationManager, IEnumShellItems,
+    IFileOpenDialog, IShellItem, IShellItemImageFactory, SHCreateItemFromParsingName,
+    SHGetKnownFolderItem, ShellExecuteW, AO_NONE, BHID_EnumItems, FOLDERID_AppsFolder,
+    FOS_FORCEFILESYSTEM, FOS_PICKFOLDERS, KF_FLAG_DEFAULT, SIGDN_FILESYSPATH, SIGDN_NORMALDISPLAY,
+    SIGDN_PARENTRELATIVEPARSING, SIIGBF_BIGGERSIZEOK, SIIGBF_ICONONLY, SIIGBF_RESIZETOFIT,
 };
 use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
 
@@ -183,7 +185,7 @@ pub fn build_full_installed_app_catalog(include_icons: bool) -> Vec<InstalledApp
             seen_settings_icon.clone()
         } else {
             let exe = target.split('|').next().unwrap_or(target);
-            extract_icon_png_base64(None, exe)
+            extract_icon_png_base64(None, exe, None)
         };
         let id = format!("{kind}-{}", by_name.len());
         by_name.insert(
@@ -344,7 +346,7 @@ fn scan_shortcut_dir(
         }
         let path_str = p.to_string_lossy().to_string();
         let icon_base64 = if include_icons {
-            extract_shell_path_icon_base64(&path_str, 32).or_else(|| extract_icon_png_base64(None, &path_str))
+            extract_shell_path_icon_base64(&path_str, 32).or_else(|| extract_icon_png_base64(None, &path_str, None))
         } else {
             None
         };
@@ -512,11 +514,19 @@ fn resolve_executable_path(raw: &str) -> Option<String> {
     None
 }
 
-/// Extracts a crisp high-DPI PNG (base64) icon for any running HWND, executable path, `appsfolder:<AUMID>`,
-/// or `ms-settings:` URI — guaranteed never to return a blank transparent image!
-pub fn extract_icon_png_base64(hwnd_opt: Option<isize>, exe_path: &str) -> Option<String> {
+/// Extracts a crisp high-DPI PNG (base64) icon for any running HWND, executable path, native MSIX `aumid_opt`,
+/// `appsfolder:<AUMID>`, or `ms-settings:` URI — guaranteed never to return a blank or generic WindowsApps `.exe` placeholder!
+pub fn extract_icon_png_base64(hwnd_opt: Option<isize>, exe_path: &str, aumid_opt: Option<&str>) -> Option<String> {
     let trimmed = exe_path.trim();
     let lower = trimmed.to_ascii_lowercase();
+
+    // 0. Priority #1: Native MSIX / UWP / Store AppUserModelID (`GetApplicationUserModelId`) -> crisp full-color AppsFolder icon!
+    if let Some(aumid) = aumid_opt.map(str::trim).filter(|s| !s.is_empty()) {
+        let shell_uri = format!(r"shell:AppsFolder\{aumid}");
+        if let Some(b64) = extract_shell_path_icon_base64(&shell_uri, 48) {
+            return Some(b64);
+        }
+    }
 
     // 1. Direct UWP / MSIX / Store AppsFolder AUMID (`appsfolder:...`) or `ms-settings:`
     if let Some(aumid) = trimmed
@@ -545,6 +555,24 @@ pub fn extract_icon_png_base64(hwnd_opt: Option<isize>, exe_path: &str) -> Optio
         }
     }
 
+    // 1b. ACL-protected `\WindowsApps\<PackageFullName>\...` protection:
+    //     Read `AppxManifest.xml` logo asset directly & NEVER cache a generic white `.exe` placeholder icon!
+    let is_windows_apps_pkg = lower.contains(r"\windowsapps\");
+    if is_windows_apps_pkg {
+        if let Some(b64) = extract_windowsapps_manifest_logo_base64(trimmed) {
+            return Some(b64);
+        }
+        // Only try live HWND window icon (never SHGetFileInfoW on ACL-protected WindowsApps exe!)
+        if let Some(h) = hwnd_opt {
+            if let Some((w, h_px, premul)) = extract_icon_bgra(Some(h), "") {
+                if let Some(b64) = encode_bgra_to_png_base64(w, h_px, &premul, true) {
+                    return Some(b64);
+                }
+            }
+        }
+        return None;
+    }
+
     // 2. Resolve bare filenames (`msedge.exe`, `powershell.exe`, `notepad.exe`) to full real paths
     let resolved = resolve_executable_path(trimmed);
     let best_path = resolved.as_deref().unwrap_or(trimmed);
@@ -569,6 +597,79 @@ pub fn extract_icon_png_base64(hwnd_opt: Option<isize>, exe_path: &str) -> Optio
     // 5. Final shell fallback on original string (never extract generic ApplicationFrameHost icon!)
     if !best_path.is_empty() && !is_app_frame_host {
         return extract_shell_path_icon_base64(best_path, 48);
+    }
+    None
+}
+
+/// Fallback for MSIX packages under `\WindowsApps\<PackageFullName>\...`:
+/// Reads `AppxManifest.xml` to locate `Square44x44Logo` / `Logo` high-DPI PNG assets.
+fn extract_windowsapps_manifest_logo_base64(exe_path: &str) -> Option<String> {
+    let mut cur = Path::new(exe_path).parent()?;
+    let mut pkg_root = None;
+    for _ in 0..4 {
+        if cur.join("AppxManifest.xml").is_file() {
+            pkg_root = Some(cur.to_path_buf());
+            break;
+        }
+        let Some(p) = cur.parent() else { break };
+        cur = p;
+    }
+    let root = pkg_root?;
+    let xml = std::fs::read_to_string(root.join("AppxManifest.xml")).ok()?;
+    let candidates = [
+        extract_xml_attr(&xml, "Square44x44Logo"),
+        extract_xml_attr(&xml, "Square150x150Logo"),
+        extract_xml_tag(&xml, "Logo"),
+    ];
+    for rel in candidates.into_iter().flatten() {
+        let rel_clean = rel.replace('/', "\\");
+        let full = root.join(&rel_clean);
+        if let Some(b64) = load_best_scaled_png_base64(&full) {
+            return Some(b64);
+        }
+    }
+    None
+}
+
+fn extract_xml_attr(xml: &str, attr: &str) -> Option<String> {
+    let needle = format!("{attr}=\"");
+    let start = xml.find(&needle)? + needle.len();
+    let end = xml[start..].find('"')?;
+    Some(xml[start..start + end].trim().to_string())
+}
+
+fn extract_xml_tag(xml: &str, tag: &str) -> Option<String> {
+    let open = format!("<{tag}>");
+    let close = format!("</{tag}>");
+    let start = xml.find(&open)? + open.len();
+    let end = xml[start..].find(&close)?;
+    Some(xml[start..start + end].trim().to_string())
+}
+
+fn load_best_scaled_png_base64(base_path: &Path) -> Option<String> {
+    let parent = base_path.parent()?;
+    let stem = base_path.file_stem()?.to_string_lossy().to_string();
+    let ext = base_path.extension().and_then(|s| s.to_str()).unwrap_or("png");
+    let try_names = [
+        format!("{stem}.targetsize-48_altform-unplated.{ext}"),
+        format!("{stem}.targetsize-48.{ext}"),
+        format!("{stem}.scale-200.{ext}"),
+        format!("{stem}.scale-150.{ext}"),
+        format!("{stem}.scale-125.{ext}"),
+        format!("{stem}.scale-100.{ext}"),
+        format!("{stem}.{ext}"),
+    ];
+    for name in try_names {
+        let cand = parent.join(name);
+        if cand.is_file() {
+            if let Ok(img) = image::open(&cand) {
+                let resized = img.resize_exact(48, 48, image::imageops::FilterType::Lanczos3);
+                let mut out = Cursor::new(Vec::with_capacity(2048));
+                if resized.write_to(&mut out, image::ImageFormat::Png).is_ok() {
+                    return Some(base64::engine::general_purpose::STANDARD.encode(out.into_inner()));
+                }
+            }
+        }
     }
     None
 }
@@ -609,67 +710,285 @@ pub fn encode_bgra_to_png_base64(w: u32, h: u32, bgra: &[u8], premultiplied: boo
     Some(base64::engine::general_purpose::STANDARD.encode(out.into_inner()))
 }
 
-/// Full OmniSearch / Dock / Tray launcher supporting `appsfolder:<AUMID>`, `cmdrun:<cmd>`,
-/// `reveal:<path>`, `exe|args`, `.lnk`, `.exe`, `ms-settings:`, `https://`, and folders!
-pub fn launch_target(raw_target: &str) -> bool {
-    let target = raw_target.trim();
-    if target.is_empty() {
-        return false;
+/// Activates a UWP / MSIX / Store application via native Windows COM
+/// `IApplicationActivationManager::ActivateApplication` (with ShellExecuteW & explorer fallback).
+pub fn activate_aumid(aumid: &str, args: &str) -> Result<(), String> {
+    let id = aumid.trim();
+    if id.is_empty() {
+        return Err("Boş uygulama kimliği (AUMID).".into());
     }
 
-    // 1. UWP / MSIX / Store AppsFolder AUMID
-    if let Some(app_id) = target.strip_prefix("appsfolder:").or_else(|| target.strip_prefix("APPSFOLDER:")) {
-        let id = app_id.trim();
-        if id.is_empty() {
-            return false;
+    // Primary path: Official Windows COM IApplicationActivationManager (works reliably for Store/MSIX/Electron AUMIDs)
+    let com_ok = unsafe {
+        let _ = CoInitializeEx(None, COINIT_APARTMENTTHREADED);
+        let mgr_res: windows::core::Result<IApplicationActivationManager> =
+            CoCreateInstance(&ApplicationActivationManager, None, CLSCTX_LOCAL_SERVER)
+                .or_else(|_| CoCreateInstance(&ApplicationActivationManager, None, CLSCTX_ALL));
+        if let Ok(mgr) = mgr_res {
+            let w_id = HSTRING::from(id);
+            let w_args = HSTRING::from(args.trim());
+            let args_ptr = if args.trim().is_empty() {
+                PCWSTR::null()
+            } else {
+                PCWSTR(w_args.as_ptr())
+            };
+            mgr.ActivateApplication(&w_id, args_ptr, AO_NONE).is_ok()
+        } else {
+            false
         }
-        return std::process::Command::new("explorer.exe")
-            .arg(format!("shell:AppsFolder\\{id}"))
-            .spawn()
-            .is_ok();
+    };
+    if com_ok {
+        return Ok(());
+    }
+
+    // Secondary path: ShellExecuteW on shell:AppsFolder\<id>
+    let shell_uri = format!("shell:AppsFolder\\{id}");
+    let w_uri = HSTRING::from(&shell_uri);
+    let h = unsafe { ShellExecuteW(None, PCWSTR::null(), &w_uri, PCWSTR::null(), PCWSTR::null(), SW_SHOWNORMAL) };
+    if h.0 as isize > 32 {
+        return Ok(());
+    }
+
+    // Final fallback: explorer.exe shell:AppsFolder\<id>
+    std::process::Command::new("explorer.exe")
+        .arg(&shell_uri)
+        .spawn()
+        .map(|_| ())
+        .map_err(|e| format!("MSIX/Store uygulaması başlatılamadı ({id}): {e}"))
+}
+
+/// Checks Windows `App Paths` registry keys (HKCU + HKLM) to resolve bare app names like `chrome.exe`.
+fn resolve_app_paths_registry(exe_name: &str) -> Option<String> {
+    let trimmed = exe_name.trim().trim_matches('"');
+    if trimmed.is_empty() || trimmed.contains('\\') || trimmed.contains('/') || trimmed.contains(':') {
+        return None;
+    }
+    let key_name = if trimmed.to_ascii_lowercase().ends_with(".exe") {
+        trimmed.to_string()
+    } else {
+        format!("{trimmed}.exe")
+    };
+    let subkey = format!("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\{key_name}");
+    let w_sub = HSTRING::from(&subkey);
+    for root in [HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE] {
+        unsafe {
+            let mut hkey = HKEY::default();
+            if RegOpenKeyExW(root, &w_sub, 0, KEY_READ, &mut hkey).is_ok() {
+                let mut buf = [0u16; 520];
+                let mut sz = (buf.len() * 2) as u32;
+                let ok = RegQueryValueExW(
+                    hkey,
+                    PCWSTR::null(),
+                    None,
+                    None,
+                    Some(buf.as_mut_ptr() as *mut u8),
+                    Some(&mut sz),
+                )
+                .is_ok();
+                let _ = RegCloseKey(hkey);
+                if ok && sz >= 2 {
+                    let len = (sz as usize / 2).min(buf.len());
+                    let s = String::from_utf16_lossy(&buf[..len])
+                        .trim_end_matches('\0')
+                        .trim()
+                        .trim_matches('"')
+                        .to_string();
+                    if !s.is_empty() && Path::new(&s).exists() {
+                        return Some(s);
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
+/// Deterministically reconstructs a backslash-stripped Windows path such as
+/// `C:UsersLenovoAppDataLocalProgramsantigravityAntigravity.exe` by matching actual
+/// filesystem directory entries segment-by-segment from the drive root!
+pub fn repair_corrupted_windows_path(raw: &str) -> Option<String> {
+    let trimmed = raw.trim().trim_matches('"');
+    let bytes = trimmed.as_bytes();
+    if bytes.len() < 4 || !bytes[0].is_ascii_alphabetic() || bytes[1] != b':' {
+        return None;
+    }
+    // Already exists as-is
+    if Path::new(trimmed).exists() {
+        return None;
+    }
+    // Only run segment reconstruction when backslashes were stripped (zero `\` and `/`)
+    if trimmed.contains('\\') || trimmed.contains('/') {
+        return None;
+    }
+    let drive_root = PathBuf::from(format!("{}:\\", trimmed.chars().next()?));
+    if !drive_root.is_dir() {
+        return None;
+    }
+    let remainder = &trimmed[2..];
+    if remainder.is_empty() {
+        return None;
+    }
+
+    fn walk_reconstruct(
+        dir: &Path,
+        rem_lower: &str,
+        depth: usize,
+        budget: &mut usize,
+    ) -> Option<PathBuf> {
+        if rem_lower.is_empty() {
+            return Some(dir.to_path_buf());
+        }
+        if depth >= 16 || *budget == 0 {
+            return None;
+        }
+        *budget -= 1;
+
+        let rd = std::fs::read_dir(dir).ok()?;
+        let mut candidates: Vec<(String, PathBuf, bool)> = Vec::new();
+        for entry in rd.flatten() {
+            let name = entry.file_name().to_string_lossy().to_string();
+            if name.is_empty() {
+                continue;
+            }
+            let name_low = name.to_ascii_lowercase();
+            if rem_lower.starts_with(&name_low) {
+                let is_dir = entry.file_type().map(|t| t.is_dir()).unwrap_or(false);
+                candidates.push((name_low, entry.path(), is_dir));
+            }
+        }
+        // Prefer longest segment match first (greedy, deterministic)
+        candidates.sort_by_key(|a| std::cmp::Reverse(a.0.len()));
+        for (name_low, path, is_dir) in candidates {
+            let next_rem = &rem_lower[name_low.len()..];
+            if next_rem.is_empty() {
+                if path.exists() {
+                    return Some(path);
+                }
+            } else if is_dir {
+                if let Some(found) = walk_reconstruct(&path, next_rem, depth + 1, budget) {
+                    return Some(found);
+                }
+            }
+        }
+        None
+    }
+
+    let rem_lower = remainder.to_ascii_lowercase();
+    let mut budget = 256usize;
+    walk_reconstruct(&drive_root, &rem_lower, 0, &mut budget)
+        .map(|p| p.to_string_lossy().to_string())
+}
+
+/// Returns true if a path points inside the protected `C:\Program Files\WindowsApps\` sandbox
+/// where direct `ShellExecuteW` fails with `ERROR_ACCESS_DENIED` and `appsfolder:<AUMID>` must be used.
+pub fn is_windows_apps_sandbox_path(path: &str) -> bool {
+    let low = path.to_ascii_lowercase();
+    low.contains("\\windowsapps\\") || low.contains("/windowsapps/")
+}
+
+/// Full OmniSearch / Dock / Tray launcher supporting `appsfolder:<AUMID>`, `cmdrun:<cmd>`,
+/// `reveal:<path>`, `exe|args`, `.lnk`, `.exe`, `ms-settings:`, `https://`, and folders,
+/// returning a detailed `Result<(), String>` so callers can fall back or show feedback!
+pub fn launch_target_with_args(raw_target: &str, extra_args: &str) -> Result<(), String> {
+    let target = raw_target.trim();
+    if target.is_empty() {
+        return Err("Boş başlatma hedefi.".into());
+    }
+
+    // 1. UWP / MSIX / Store AppsFolder AUMID (COM IApplicationActivationManager!)
+    if let Some(app_id) = target.strip_prefix("appsfolder:").or_else(|| target.strip_prefix("APPSFOLDER:")) {
+        return activate_aumid(app_id, extra_args);
     }
 
     // 2. PowerShell quick command (`> ipconfig`, `> ping 1.1.1.1`)
     if let Some(cmd) = target.strip_prefix("cmdrun:") {
         let cmd = cmd.trim();
         if cmd.is_empty() {
-            return false;
+            return Err("Boş komut.".into());
         }
         return std::process::Command::new("powershell.exe")
             .args(["-NoExit", "-Command", cmd])
             .spawn()
-            .is_ok();
+            .map(|_| ())
+            .map_err(|e| format!("Komut başlatılamadı: {e}"));
     }
 
     // 3. Reveal file in File Explorer (`reveal:<path>`)
     if let Some(path) = target.strip_prefix("reveal:") {
         let p = path.trim();
         if p.is_empty() {
-            return false;
+            return Err("Boş dosya yolu.".into());
         }
         return std::process::Command::new("explorer.exe")
             .arg(format!("/select,\"{p}\""))
             .spawn()
-            .is_ok();
+            .map(|_| ())
+            .map_err(|e| format!("Dosya Gezgini açılamadı: {e}"));
     }
 
     // 4. Compound `exe|arguments`
-    if let Some((exe, args)) = target.split_once('|') {
-        let w_exe = HSTRING::from(exe.trim());
-        let w_args = HSTRING::from(args.trim());
-        let h = unsafe { ShellExecuteW(None, PCWSTR::null(), &w_exe, &w_args, PCWSTR::null(), SW_SHOWNORMAL) };
-        return h.0 as isize > 32;
-    }
+    let (exe_raw, combined_args) = if let Some((exe, inline_args)) = target.split_once('|') {
+        let a = inline_args.trim();
+        let b = extra_args.trim();
+        let merged = match (a.is_empty(), b.is_empty()) {
+            (true, true) => String::new(),
+            (false, true) => a.to_string(),
+            (true, false) => b.to_string(),
+            (false, false) => format!("{a} {b}"),
+        };
+        (exe.trim().to_string(), merged)
+    } else {
+        (target.to_string(), extra_args.trim().to_string())
+    };
 
-    // 5. Standard ShellExecuteW (with working directory if file exists)
-    let w_target = HSTRING::from(target);
-    let w_dir = Path::new(target)
+    // 5. Auto-repair backslash-stripped local paths on the fly if encountered
+    let resolved_exe = if let Some(repaired) = repair_corrupted_windows_path(&exe_raw) {
+        repaired
+    } else {
+        exe_raw
+    };
+
+    // 6. Standard ShellExecuteW (with working directory if file exists)
+    let w_target = HSTRING::from(&resolved_exe);
+    let w_args = HSTRING::from(&combined_args);
+    let args_ptr = if combined_args.is_empty() {
+        PCWSTR::null()
+    } else {
+        PCWSTR(w_args.as_ptr())
+    };
+    let w_dir = Path::new(&resolved_exe)
         .parent()
         .filter(|d| d.is_dir())
         .map(|d| HSTRING::from(d.to_string_lossy().as_ref()));
     let dir_ptr = w_dir.as_ref().map_or(PCWSTR::null(), |s| PCWSTR(s.as_ptr()));
-    let h = unsafe { ShellExecuteW(None, PCWSTR::null(), &w_target, PCWSTR::null(), dir_ptr, SW_SHOWNORMAL) };
-    h.0 as isize > 32
+    let h = unsafe { ShellExecuteW(None, PCWSTR::null(), &w_target, args_ptr, dir_ptr, SW_SHOWNORMAL) };
+    let code = h.0 as isize;
+    if code > 32 {
+        return Ok(());
+    }
+
+    // 7. Bare command fallback via Windows App Paths registry (e.g. `chrome.exe`, `winword.exe`)
+    if let Some(reg_path) = resolve_app_paths_registry(&resolved_exe) {
+        let w_reg = HSTRING::from(&reg_path);
+        let w_rdir = Path::new(&reg_path)
+            .parent()
+            .filter(|d| d.is_dir())
+            .map(|d| HSTRING::from(d.to_string_lossy().as_ref()));
+        let rdir_ptr = w_rdir.as_ref().map_or(PCWSTR::null(), |s| PCWSTR(s.as_ptr()));
+        let h2 = unsafe { ShellExecuteW(None, PCWSTR::null(), &w_reg, args_ptr, rdir_ptr, SW_SHOWNORMAL) };
+        if h2.0 as isize > 32 {
+            return Ok(());
+        }
+    }
+
+    Err(format!(
+        "Uygulama başlatılamadı (kod {code}): {resolved_exe}"
+    ))
+}
+
+/// Backward-compatible boolean launcher wrapper.
+pub fn launch_target(raw_target: &str) -> bool {
+    launch_target_with_args(raw_target, "").is_ok()
 }
 
 /// Native Windows COM Folder Picker (`IFileOpenDialog` + `FOS_PICKFOLDERS`) for `+ Klasör Ekle`!
@@ -876,6 +1195,11 @@ pub fn open_recycle_bin() {
 
 pub fn open_task_view() {
     send_key_combo(&[VK_LWIN, VK_TAB]);
+}
+
+/// Opens Windows 11's native Notification Center (Win+N) reliably with zero duplicate toasts.
+pub fn open_windows_notification_center() {
+    send_key_combo(&[VK_LWIN, VIRTUAL_KEY(b'N' as u16)]);
 }
 
 pub fn create_virtual_desktop() {

@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use aurora_core::{BackgroundTrayApp, PrivacySnapshot, SystemMetricsSnapshot, TopProcessInfo};
 use windows::core::PCWSTR;
 use windows::Win32::Foundation::{CloseHandle, FILETIME, HWND};
@@ -12,6 +12,7 @@ use windows::Win32::System::Power::{
 use windows::Win32::System::ProcessStatus::{GetProcessMemoryInfo, PROCESS_MEMORY_COUNTERS};
 use windows::Win32::System::Registry::{
     RegCloseKey, RegEnumKeyExW, RegOpenKeyExW, RegQueryValueExW, HKEY, HKEY_CURRENT_USER, KEY_READ,
+    REG_EXPAND_SZ, REG_SZ, REG_VALUE_TYPE,
 };
 use windows::Win32::System::SystemInformation::{GlobalMemoryStatusEx, MEMORYSTATUSEX};
 use windows::Win32::System::Threading::{
@@ -307,9 +308,129 @@ pub fn terminate_user_process_safe(name: &str, pid: u32) -> bool {
     false
 }
 
-/// Discovers active background tray & resident user applications (Steam, Discord, Spotify,
-/// NVIDIA, OneDrive, Lenovo Vantage, PowerToys, Vanguard, Logitech, Docker, VPNs, etc.)
-/// excluding processes that already have visible windows on the Dock, with real WorkingSet MB!
+fn read_reg_string_value(hkey: HKEY, name: &str) -> Option<String> {
+    let wide_name: Vec<u16> = name.encode_utf16().chain(std::iter::once(0)).collect();
+    let mut ty = REG_VALUE_TYPE::default();
+    let mut bytes_len = 0u32;
+    unsafe {
+        let rc = RegQueryValueExW(
+            hkey,
+            PCWSTR(wide_name.as_ptr()),
+            None,
+            Some(&mut ty),
+            None,
+            Some(&mut bytes_len),
+        );
+        if rc.is_err() || bytes_len < 2 || (ty != REG_SZ && ty != REG_EXPAND_SZ) {
+            return None;
+        }
+        let mut buf = vec![0u16; (bytes_len as usize).div_ceil(2) + 1];
+        let rc2 = RegQueryValueExW(
+            hkey,
+            PCWSTR(wide_name.as_ptr()),
+            None,
+            Some(&mut ty),
+            Some(buf.as_mut_ptr() as *mut u8),
+            Some(&mut bytes_len),
+        );
+        if rc2.is_err() {
+            return None;
+        }
+        let end = buf.iter().position(|&c| c == 0).unwrap_or(buf.len());
+        let s = String::from_utf16_lossy(&buf[..end]).trim().to_string();
+        if s.is_empty() { None } else { Some(s) }
+    }
+}
+
+fn is_generic_tray_tooltip(tip: &str) -> bool {
+    let low = tip.trim().to_ascii_lowercase();
+    low.is_empty()
+        || low.starts_with("notifyicon")
+        || low == "not connected"
+        || low == "ready"
+        || low == "filtre tuşları"
+}
+
+/// Reads active Windows 11 system tray registrations from `HKCU\Control Panel\NotifyIconSettings`
+/// keyed by lowercase executable stem (`(best_tooltip, raw_path)`).
+pub fn read_windows_notify_icon_registry() -> HashMap<String, (String, String)> {
+    let mut out: HashMap<String, (String, String)> = HashMap::new();
+    let subkey: Vec<u16> = "Control Panel\\NotifyIconSettings"
+        .encode_utf16()
+        .chain(std::iter::once(0))
+        .collect();
+    unsafe {
+        let mut root = HKEY::default();
+        if RegOpenKeyExW(HKEY_CURRENT_USER, PCWSTR(subkey.as_ptr()), 0, KEY_READ, &mut root).is_err() {
+            return out;
+        }
+        let mut idx = 0u32;
+        let mut name_buf = [0u16; 260];
+        loop {
+            let mut name_len = name_buf.len() as u32;
+            let rc = RegEnumKeyExW(
+                root,
+                idx,
+                windows::core::PWSTR(name_buf.as_mut_ptr()),
+                &mut name_len,
+                None,
+                windows::core::PWSTR::null(),
+                None,
+                None,
+            );
+            if rc.is_err() {
+                break;
+            }
+            idx += 1;
+            let mut item_key = HKEY::default();
+            if RegOpenKeyExW(root, PCWSTR(name_buf.as_ptr()), 0, KEY_READ, &mut item_key).is_ok() {
+                if let Some(exe_path) = read_reg_string_value(item_key, "ExecutablePath") {
+                    let leaf = exe_path.rsplit(['\\', '/']).next().unwrap_or("");
+                    let stem = leaf
+                        .trim_end_matches(".exe")
+                        .trim_end_matches(".EXE")
+                        .to_ascii_lowercase();
+                    if !stem.is_empty() {
+                        let tip = read_reg_string_value(item_key, "InitialTooltip").unwrap_or_default();
+                        let entry = out.entry(stem).or_insert_with(|| (String::new(), exe_path.clone()));
+                        if (is_generic_tray_tooltip(&entry.0) && !is_generic_tray_tooltip(&tip))
+                            || (entry.0.is_empty() && !tip.trim().is_empty())
+                        {
+                            entry.0 = tip.trim().to_string();
+                        }
+                    }
+                }
+                let _ = RegCloseKey(item_key);
+            }
+        }
+        let _ = RegCloseKey(root);
+    }
+    out
+}
+
+fn title_case_tray_stem(stem: &str) -> String {
+    let mut words = Vec::new();
+    for part in stem.split(['_', '-', '.']) {
+        let p = part.trim();
+        if p.is_empty() || p.eq_ignore_ascii_case("root") || p.eq_ignore_ascii_case("app") {
+            continue;
+        }
+        let mut ch = p.chars();
+        if let Some(first) = ch.next() {
+            words.push(format!("{}{}", first.to_uppercase(), ch.as_str()));
+        }
+    }
+    if words.is_empty() {
+        stem.to_string()
+    } else {
+        words.join(" ")
+    }
+}
+
+/// Discovers active Windows 11 system tray & resident user applications using real Windows
+/// `NotifyIconSettings` registrations cross-referenced with running processes + `KNOWN_TRAY`
+/// friendly names, keeping live tray apps (WhatsApp, Spotify, Teams, MuMuPlayer, GlobalProtect,
+/// NVIDIA, Vanguard, Security, Docker, RustWTM, etc.) visible just like Windows 11's tray.
 pub fn query_background_tray_apps(visible_window_procs: &HashSet<String>) -> Vec<BackgroundTrayApp> {
     const KNOWN_TRAY: &[(&str, &str, &str)] = &[
         ("steam", "Steam", "Oyun Platformu"),
@@ -319,8 +440,8 @@ pub fn query_background_tray_apps(visible_window_procs: &HashSet<String>) -> Vec
         ("onedrive", "OneDrive", "Bulut Senkron"),
         ("lghub", "Logitech G HUB", "Donanım"),
         ("lghub_agent", "Logitech G HUB", "Donanım"),
-        ("nvcontainer", "NVIDIA App", "Grafik"),
-        ("nvdisplay.container", "NVIDIA", "Grafik"),
+        ("nvcontainer", "NVIDIA Ayarları", "Grafik"),
+        ("nvdisplay.container", "NVIDIA Ayarları", "Grafik"),
         ("nvidia overlay", "NVIDIA Overlay", "Grafik"),
         ("radeonsoftware", "AMD Adrenalin", "Grafik"),
         ("igcctray", "Intel Graphics", "Grafik"),
@@ -329,6 +450,7 @@ pub fn query_background_tray_apps(visible_window_procs: &HashSet<String>) -> Vec
         ("obs64", "OBS Studio", "Yayın / Kayıt"),
         ("telegram", "Telegram", "Mesajlaşma"),
         ("whatsapp", "WhatsApp", "Mesajlaşma"),
+        ("whatsapp.root", "WhatsApp", "Mesajlaşma"),
         ("teams", "Microsoft Teams", "İletişim"),
         ("ms-teams", "Microsoft Teams", "İletişim"),
         ("docker desktop", "Docker Desktop", "Konteyner"),
@@ -347,6 +469,7 @@ pub fn query_background_tray_apps(visible_window_procs: &HashSet<String>) -> Vec
         ("wireguard", "WireGuard", "VPN / Ağ"),
         ("nordvpn", "NordVPN", "VPN / Ağ"),
         ("protonvpn", "Proton VPN", "VPN / Ağ"),
+        ("pangpa", "GlobalProtect VPN", "VPN / Ağ"),
         ("bitwarden", "Bitwarden", "Parola Kasası"),
         ("1password", "1Password", "Parola Kasası"),
         ("keepassxc", "KeePassXC", "Parola Kasası"),
@@ -356,14 +479,16 @@ pub fn query_background_tray_apps(visible_window_procs: &HashSet<String>) -> Vec
         ("rtss", "RivaTuner", "Performans"),
         ("steelseriesgg", "SteelSeries GG", "Ses / Donanım"),
         ("lenovovantage", "Lenovo Vantage", "Sistem"),
+        ("batterywidgethost", "Lenovo Pil Araçları", "Donanım"),
         ("imcontroller", "Lenovo System", "Sistem"),
         ("securityhealthsystray", "Windows Güvenliği", "Güvenlik"),
         ("phoneexperiencehost", "Telefon Bağlantısı", "Cihazlar"),
         ("yourphone", "Telefon Bağlantısı", "Cihazlar"),
         ("chatgpt", "ChatGPT", "Yapay Zeka"),
         ("claude", "Claude", "Yapay Zeka"),
-        ("antigravity", "Antigravity", "IDE"),
-        ("code", "VS Code", "IDE"),
+        ("mumunxmain", "MuMuPlayer", "Emülatör"),
+        ("rustwtm", "RustWTM", "Sistem / Görev"),
+        ("rdpwin", "Secret Server RDP", "Uzak Masaüstü"),
         ("dbeaver", "DBeaver", "Veritabanı"),
         ("f.lux", "f.lux", "Ekran"),
         ("earrumpet", "EarTrumpet", "Ses"),
@@ -372,9 +497,35 @@ pub fn query_background_tray_apps(visible_window_procs: &HashSet<String>) -> Vec
         ("idm", "IDM", "İndirme"),
         ("idman", "Internet Download Manager", "İndirme"),
     ];
+    const SKIP_NOISE_STEMS: &[&str] = &[
+        "explorer",
+        "aurora",
+        "msedge",
+        "chrome",
+        "brave",
+        "firefox",
+        "opera",
+        "vivaldi",
+        "applicationframehost",
+        "shellexperiencehost",
+        "startmenuexperiencehost",
+        "searchhost",
+        "textinputhost",
+        "runtimebroker",
+        "systemsettings",
+        "monotificationux",
+        "svchost",
+        "conhost",
+        "dllhost",
+        "cmd",
+        "powershell",
+        "pwsh",
+        "windowsterminal",
+    ];
+    const EDITOR_NOISE_STEMS: &[&str] = &["antigravity", "code", "cursor", "devenv", "idea64"];
 
-    let mut by_name: std::collections::HashMap<String, BackgroundTrayApp> =
-        std::collections::HashMap::new();
+    let notify_reg = read_windows_notify_icon_registry();
+    let mut by_name: HashMap<String, BackgroundTrayApp> = HashMap::new();
 
     unsafe {
         let Ok(snap) = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0) else {
@@ -392,19 +543,56 @@ pub fn query_background_tray_apps(visible_window_procs: &HashSet<String>) -> Vec
                     .trim_end_matches(".exe")
                     .trim_end_matches(".EXE")
                     .to_ascii_lowercase();
-                if let Some(&(_, friendly, sub)) = KNOWN_TRAY.iter().find(|&&(k, _, _)| k == stem) {
-                    if !visible_window_procs.contains(&stem) {
+
+                if !stem.is_empty()
+                    && !SKIP_NOISE_STEMS.contains(&stem.as_str())
+                    && !(EDITOR_NOISE_STEMS.contains(&stem.as_str())
+                        && visible_window_procs.contains(&stem))
+                {
+                    let resolved: Option<(String, String)> =
+                        if let Some(&(_, friendly, sub)) = KNOWN_TRAY.iter().find(|&&(k, _, _)| k == stem) {
+                            Some((friendly.to_string(), sub.to_string()))
+                        } else if let Some((tip, _)) = notify_reg.get(&stem) {
+                            let clean_tip = tip
+                                .split(['·', '\n', '\r'])
+                                .next()
+                                .unwrap_or("")
+                                .trim();
+                            let friendly = if !is_generic_tray_tooltip(clean_tip) && clean_tip.len() >= 2 && clean_tip.len() <= 36 {
+                                clean_tip.to_string()
+                            } else {
+                                title_case_tray_stem(&stem)
+                            };
+                            let sub = if visible_window_procs.contains(&stem) {
+                                "Tepside Aktif".to_string()
+                            } else {
+                                "Arka Plan".to_string()
+                            };
+                            Some((friendly, sub))
+                        } else {
+                            None
+                        };
+
+                    if let Some((friendly, sub)) = resolved {
                         let mem_mb = query_process_ws_mb(pe.th32ProcessID);
-                        let entry = by_name.entry(friendly.to_string()).or_insert_with(|| {
-                            let (_, full_path) =
+                        let key_low = friendly.to_ascii_lowercase();
+                        let entry = by_name.entry(key_low).or_insert_with(|| {
+                            let (_, mut full_path) =
                                 crate::windows_catalog::query_process_image(pe.th32ProcessID);
+                            if full_path.is_empty() {
+                                if let Some((_, reg_path)) = notify_reg.get(&stem) {
+                                    if !reg_path.starts_with('{') {
+                                        full_path = reg_path.clone();
+                                    }
+                                }
+                            }
                             BackgroundTrayApp {
-                                id: format!("tray-{}", friendly.to_ascii_lowercase().replace(' ', "-")),
-                                name: friendly.into(),
+                                id: format!("tray-{}", stem),
+                                name: friendly.clone(),
                                 executable_path: full_path,
                                 process_id: pe.th32ProcessID,
                                 memory_mb: 0,
-                                subtitle: sub.into(),
+                                subtitle: sub,
                             }
                         });
                         entry.memory_mb = entry.memory_mb.saturating_add(mem_mb);
@@ -523,4 +711,20 @@ pub fn trigger_power_command(restart: bool) {
     let _ = std::process::Command::new("shutdown.exe")
         .args([flag, "/t", "0"])
         .spawn();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn notify_icon_registry_and_tray_query_return_deduplicated_apps() {
+        let reg = read_windows_notify_icon_registry();
+        assert!(reg.len() < 10_000);
+        let trays = query_background_tray_apps(&HashSet::new());
+        let mut names = HashSet::new();
+        for t in &trays {
+            assert!(names.insert(t.name.to_ascii_lowercase()), "duplicate tray app {}", t.name);
+        }
+    }
 }

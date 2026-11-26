@@ -12,7 +12,7 @@ members = [
 ]
 
 [workspace.package]
-version = "3.0.0"
+version = "7.2.0"
 edition = "2021"
 authors = ["Muharrem Didici • Project Aurora"]
 license = "MIT"
@@ -107,7 +107,9 @@ features = [
     "Win32_Media_Audio",
     "Win32_Media_Audio_Endpoints",
     "Win32_Storage_FileSystem",
+    "Win32_Storage_Packaging_Appx",
     "Win32_Security",
+    "Win32_Security_Cryptography",
     "Win32_Networking_WinSock",
     "Win32_NetworkManagement_IpHelper",
 ]

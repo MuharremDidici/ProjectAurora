@@ -71,28 +71,27 @@
       <span class="badge">AURORA BAĞIMSIZ KURTARMA REHBERİ (OFFLINE)</span>
       <h1>Windows 11 Görev Çubuğunu Geri Yükleme</h1>
       <p class="muted">
-        Project Aurora hiçbir zaman Windows Explorer (<code>explorer.exe</code>) işlemini değiştirmez, sonlandırmaz veya
-        belgelenmemiş kayıt defteri ayarlarına müdahale etmez. Aurora kapalı veya kaldırılmış olsa bile aşağıdaki adımlarla
-        Windows görev çubuğunuzu saniyeler içinde kalıcı görünür hale getirebilirsiniz.
+        Project Aurora (<code>aurora.exe</code>) hiçbir zaman Windows Explorer (<code>explorer.exe</code>) işlemini
+        değiştirmez veya sonlandırmaz; dahili Watchdog süreci beklenmedik bir çıkışta görev çubuğunu &lt;100 ms içinde
+        otomatik geri getirir. Aurora kapalı olsa bile aşağıdaki adımları kullanabilirsiniz.
       </p>
       <a class="btn" href="ms-settings:taskbar">Windows Görev Çubuğu Ayarlarını Aç</a>
     </div>
 
     <div class="card">
-      <h2>Adım 1 — Windows Görev Çubuğu Ayarlarını Açın</h2>
+      <h2>Adım 1 — Tek Komutla Geri Yükleme veya Windows Ayarları</h2>
       <ol>
-        <li>Klavyeden <kbd>Win</kbd> + <kbd>I</kbd> tuşlarına basarak <strong>Ayarlar</strong> uygulamasını açın (veya <kbd>Win</kbd> + <kbd>R</kbd> tuşlarına basıp <code>ms-settings:taskbar</code> yazarak <kbd>Enter</kbd>'a basın).</li>
-        <li><strong>Kişiselleştirme &rarr; Görev Çubuğu &rarr; Görev çubuğu davranışları</strong> bölümünü genişletin.</li>
-        <li><strong>Görev çubuğunu otomatik olarak gizle</strong> (<em>Automatically hide the taskbar</em>) seçeneğinin işaretini kaldırın.</li>
+        <li>Komut satırında <code>aurora.exe --restore-taskbar</code> (veya <code>Restore-Windows-Taskbar.cmd</code>) çalıştırın.</li>
+        <li>Alternatif olarak <kbd>Win</kbd> + <kbd>R</kbd> ile <code>ms-settings:taskbar</code> açıp <strong>Görev çubuğunu otomatik olarak gizle</strong> seçeneğini kapatın.</li>
       </ol>
     </div>
 
     <div class="card">
-      <h2>Adım 2 — Aurora Güvenli Mod veya Temiz Kaldırma</h2>
+      <h2>Adım 2 — Aurora Güvenli Mod &amp; Temiz Kaldırma</h2>
       <ul>
-        <li><strong>Güvenli Modda Başlatma:</strong> Komut satırından <code>Aurora.App.exe --safe-mode</code> çalıştırarak varsayılan kurtarma temasıyla ve minimum modüllerle açabilirsiniz.</li>
-        <li><strong>Başlangıçtan Kaldırma:</strong> <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Esc</kbd> ile Görev Yöneticisi'ni açıp <strong>Başlangıç uygulamaları</strong> sekmesinden <em>Project Aurora</em> öğesini devre dışı bırakabilirsiniz.</li>
-        <li><strong>Kullanıcı Verileri Konumu:</strong> Tüm yerel veriler yalnızca <code>%LOCALAPPDATA%\ProjectAurora</code> klasöründedir.</li>
+        <li><strong>Güvenli Modda Başlatma:</strong> <code>aurora.exe --safe-mode</code> (veya <code>Start-Aurora-SafeMode.cmd</code>) özgün görev çubuğunu gizlemeden güvenli oturum açar.</li>
+        <li><strong>Temiz Kaldırma:</strong> <code>"%LOCALAPPDATA%\Programs\ProjectAurora\uninstall.exe" --uninstall</code> veya Windows Yüklü Uygulamalar → <em>Project Aurora</em>.</li>
+        <li><strong>Kullanıcı Verileri Konumu:</strong> Tüm yerel veriler ve günlükler <code>%LOCALAPPDATA%\ProjectAurora</code> altındadır.</li>
       </ul>
     </div>
   </div>
