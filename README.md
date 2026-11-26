@@ -101,7 +101,7 @@
 
 ## Tek Tık Kurulum & Otomatik Yükseltme (Windows 11 x64 — 3.65 MB)
 
-1. [Releases (Son Sürüm)](https://github.com/MuharremDidici/ProjectAurora/releases/latest) sayfasından **`Aurora-Kurulum-v7.2.1-x64.exe`** dosyasını indirin.
+1. [Releases (Son Sürüm)](https://github.com/MuharremDidici/ProjectAurora/releases/latest) sayfasından **`Aurora-Kurulum-v7.2.2-x64.exe`** dosyasını indirin.
 2. Çift tıklayıp **"Kurulumu Başlat"** butonuna basın — **Yönetici izni (UAC) veya .NET kurulumu gerekmez** (~2 saniyede kurulur).
 3. **Eski Sürümlerden (`v2.x` .NET ve `v3.x+` Rust) Yükseltme:**
    - Mevcut kurulumlar uygulama içi **Güncelle** butonuyla `v7.2.0`'ı SHA-256 doğrulamalı olarak otomatik indirip kurar (`--update` ve `--silent` tam desteklidir).
@@ -133,7 +133,7 @@ cargo clippy --manifest-path .\aurora-rs\Cargo.toml --workspace --all-targets --
 cargo test --manifest-path .\aurora-rs\Cargo.toml --workspace
 
 # Tek dosya zstd-19 kurulum paketi ve SHA-256 manifesti (dist/)
-.\Build-Installer.ps1 -Version "7.2.1"
+.\Build-Installer.ps1 -Version "7.2.2"
 ```
 
 Diğer belgeler: [Sürüm Notları](RELEASE_NOTES.md) · [Mimari Özeti](docs/Architecture/Architecture_Overview.md) · [Kurulum & Dağıtım](docs/Product/Tek_Tik_Kurulum_ve_Dagitim_Kilavuzu.md) · [Kod İmzalama](docs/Kod-Imzalama-ve-Dagitim.md) · [Görev Çubuğu Kurtarma](docs/QA/Native_Taskbar_Recovery_Guide.md) · [ADR-013 Saf Rust](docs/ADR/ADR-013-Pure-Rust-Hybrid-Shell-Evolution.md)

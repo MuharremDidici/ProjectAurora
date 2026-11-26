@@ -1,5 +1,11 @@
 # Project Aurora — Sürüm Notları
 
+## v7.2.2
+> Summary: Çoklu pencere önizleme kartları (3D Yelpaze, Win11 Kartlar, Dairesel Küre, Yay Çemberi), Klasör Yığını ve Hızlı Aksiyon Çemberi seçim düzeltmesi + GitHub Releases CI otomasyon uyumluluğu; eski v2.x ve v3.x+ kurulumları doğrudan v7.2.2'ye tek tıkla yükseltebilir.
+
+### İyileştirmeler
+- **GitHub Releases CI & Test Dayanıklılığı:** Başsız Windows Server CI ortamlarında masaüstü Store AppX / DPAPI varsayımlarına takılan testler koruma altına alındı; Clippy ve test adımları bağımsız tanılanabilir adımlara ayrıldı ve `v7.2.2` doğrudan GitHub Releases üzerinden tüm eski sürümlere açıldı.
+
 ## v7.2.1
 > Summary: Çoklu pencere önizleme kartlarından (3D Yelpaze, Win11 Kartlar, Dairesel Küre, Yay Çemberi), Klasör Yığını ve Hızlı Aksiyon Çemberi'nden seçim yapıldığında pencere/öğe açılmamasını önleyen pointerdown dış-kapanma seçici düzeltmesi.
 

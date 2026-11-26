@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Yayınlanacak SemVer sürümü (ör. 7.2.1)'
+        description: 'Yayınlanacak SemVer sürümü (ör. 7.2.2)'
         required: true
-        default: '7.2.1'
+        default: '7.2.2'
       release_notes:
         description: 'Sürüm notları (isteğe bağlı)'
         required: false
@@ -88,11 +88,13 @@ jobs:
           Add-Content -Path $env:GITHUB_OUTPUT -Value "notes=$notes" -Encoding utf8NoBOM
           Add-Content -Path $env:GITHUB_OUTPUT -Value "body_path=$releaseBodyPath" -Encoding utf8NoBOM
 
-      - name: Strict Clippy & Automated Workspace Tests
+      - name: Strict Clippy
         shell: pwsh
-        run: |
-          cargo clippy --manifest-path .\aurora-rs\Cargo.toml --workspace --all-targets -- -D warnings
-          cargo test --manifest-path .\aurora-rs\Cargo.toml --workspace
+        run: cargo clippy --manifest-path .\aurora-rs\Cargo.toml --workspace --all-targets -- -D warnings
+
+      - name: Automated Workspace Tests
+        shell: pwsh
+        run: cargo test --manifest-path .\aurora-rs\Cargo.toml --workspace -- --nocapture
 
       - name: Build Self-Contained Native Rust Installer & SHA-256 Manifest
         shell: pwsh

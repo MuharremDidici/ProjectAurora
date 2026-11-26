@@ -24,7 +24,7 @@ if ([string]::IsNullOrWhiteSpace($Version) -and (Test-Path $manifestCargo)) {
         $Version = $Matches[1].Trim()
     }
 }
-if ([string]::IsNullOrWhiteSpace($Version)) { $Version = "7.2.1" }
+if ([string]::IsNullOrWhiteSpace($Version)) { $Version = "7.2.2" }
 
 $semver = $Version.Trim().TrimStart('v', 'V')
 $parts  = $semver.Split('.')
