@@ -1,5 +1,11 @@
 # Project Aurora — Sürüm Notları
 
+## v7.2.3
+> Summary: Çoklu pencere önizleme kartları (3D Yelpaze, Win11 Kartlar, Dairesel Küre, Yay Çemberi) seçim düzeltmesi, Alt+Tab odak bütünlüğü, tüm açılır menülerde tek tık dış kapanma ve eski v2.x / v3.x+ sürümlerinden doğrudan v7.2.3'e tek tık otomatik yükseltme.
+
+### İyileştirmeler
+- **Windows Kısa Yol (8.3) Test & CI Yayın Düzeltmesi:** `windowsapps_sandbox_detector_and_backslash_path_healer_work` testi `RUNNER~1` gibi Windows 8.3 geçici klasör kısaltmalarını `canonicalize` ile çözerek GitHub Actions CI yayın hattını yeşil hale getirir ve `v7.2.3` kurulumunu doğrudan `releases/latest` üzerinden yayınlar.
+
 ## v7.2.2
 > Summary: Çoklu pencere önizleme kartları (3D Yelpaze, Win11 Kartlar, Dairesel Küre, Yay Çemberi), Klasör Yığını ve Hızlı Aksiyon Çemberi seçim düzeltmesi + GitHub Releases CI otomasyon uyumluluğu; eski v2.x ve v3.x+ kurulumları doğrudan v7.2.2'ye tek tıkla yükseltebilir.
 

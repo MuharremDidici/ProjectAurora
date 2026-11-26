@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Yayınlanacak SemVer sürümü (ör. 7.2.2)'
+        description: 'Yayınlanacak SemVer sürümü (ör. 7.2.3)'
         required: true
-        default: '7.2.2'
+        default: '7.2.3'
       release_notes:
         description: 'Sürüm notları (isteğe bağlı)'
         required: false
@@ -94,7 +94,16 @@ jobs:
 
       - name: Automated Workspace Tests
         shell: pwsh
-        run: cargo test --manifest-path .\aurora-rs\Cargo.toml --workspace -- --nocapture
+        run: |
+          $out = & cargo test --manifest-path .\aurora-rs\Cargo.toml --workspace -- --nocapture 2>&1
+          $ec = $LASTEXITCODE
+          $out | ForEach-Object { Write-Host $_ }
+          if ($ec -ne 0) {
+            $out | Select-String -Pattern 'FAILED|panicked at|assertion' | Select-Object -First 10 | ForEach-Object {
+              Write-Host "::error::$($_.Line)"
+            }
+            exit $ec
+          }
 
       - name: Build Self-Contained Native Rust Installer & SHA-256 Manifest
         shell: pwsh

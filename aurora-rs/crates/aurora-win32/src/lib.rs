@@ -175,7 +175,14 @@ mod tests {
         let nested = base.join("NestedFolder").join("DemoApp.exe");
         let _ = std::fs::create_dir_all(nested.parent().unwrap());
         std::fs::write(&nested, b"test").unwrap();
-        let canonical = nested.to_string_lossy().to_string();
+        let canonical_raw = std::fs::canonicalize(&nested)
+            .unwrap_or_else(|_| nested.clone())
+            .to_string_lossy()
+            .to_string();
+        let canonical = canonical_raw
+            .strip_prefix(r"\\?\")
+            .unwrap_or(&canonical_raw)
+            .to_string();
         let stripped = canonical.replace('\\', "");
         let healed = repair_corrupted_windows_path(&stripped);
         let _ = std::fs::remove_dir_all(&base);
