@@ -7,13 +7,13 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Yayınlanacak SemVer sürümü (ör. 7.3.0)'
+        description: 'Yayınlanacak SemVer sürümü (ör. 8.0.0)'
         required: true
-        default: '7.3.0'
+        default: '8.0.0'
       release_notes:
         description: 'Sürüm notları (isteğe bağlı)'
         required: false
-        default: 'Project Aurora v7.2.0: Saf Rust Win32 + Tek Paylaşımlı WebView2 masaüstü kabuğu, 10 kabuk mimarisi, 6 Dinamik Ada stili, Alt Dock OmniSearch, gerçek Win11 sistem tepsisi, Alt+Tab odak bütünlüğü ve v2.x/v3.x+ tek tık otomatik yükseltme.'
+        default: 'Project Aurora v8.0.0: 26 WCAG AA+/AAA tema, %90+ hızlı delta ikon önbellekleme IPC, wpn_snap temizliği, akıllı OmniSearch (hesap/döviz/saat/komutlar), Dinamik Ada Canlı Sahne ve sıfır-hata kararlılığı.'
 
 permissions:
   contents: write

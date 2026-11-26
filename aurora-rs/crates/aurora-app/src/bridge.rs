@@ -24,12 +24,12 @@ use aurora_win32::{
     compute_next_volume_step, convert_image_file, create_virtual_desktop, cycle_keyboard_layout,
     effective_dock_folders, extract_title_progress_percent, focus_window, format_size,
     friendly_folder_name, is_startup_enabled, is_windows_apps_sandbox_path, launch_target,
-    launch_target_with_args, minimize_window, open_recycle_bin, open_task_view,
+    launch_target_with_args, lock_workstation, minimize_window, open_recycle_bin, open_task_view,
     open_windows_notification_center, render_qr_svg, repair_corrupted_windows_path,
     save_ai_api_key, seek_media_position_secs, send_ctrl_v_paste, send_media_command,
     set_alt_drag_enabled, set_awake_keep_alive, set_clipboard_text, set_snap_zones_enabled,
-    set_startup_enabled, terminate_user_process_safe, toggle_always_on_top,
-    trigger_lock_workstation, trigger_power_command, trigger_sleep, zip_shelf_files,
+    set_startup_enabled, sleep_system, switch_virtual_desktop_to_index, terminate_user_process_safe,
+    toggle_always_on_top, trigger_power_command, turn_off_monitors, zip_shelf_files,
     BrightnessController, CoreAudioController, DwmLivePreviewWindow, LanQrShareServer,
     NativeAppBarManager,
 };
@@ -1004,7 +1004,7 @@ impl RuntimeState {
             "cornerRadiusPreset": self.prefs.effective_corner_radius_preset(),
             "dockStartStyle": self.prefs.effective_dock_start_style(),
             "dockSilhouette": self.prefs.effective_dock_silhouette(),
-            "dockIndicatorStyle": effective_dock_indicator_style(&self.prefs),
+            "dockIndicatorStyle": self.prefs.effective_dock_indicator_style(),
             "shellArchitecture": self.prefs.effective_shell_architecture(),
             "islandStyle": self.prefs.effective_island_style(),
             "islandIdleMode": self.prefs.effective_island_idle_mode(),
@@ -1544,7 +1544,7 @@ impl RuntimeState {
             "cornerRadiusPreset": self.prefs.effective_corner_radius_preset(),
             "dockStartStyle": self.prefs.effective_dock_start_style(),
             "dockSilhouette": self.prefs.effective_dock_silhouette(),
-            "dockIndicatorStyle": effective_dock_indicator_style(&self.prefs),
+            "dockIndicatorStyle": self.prefs.effective_dock_indicator_style(),
             "shellArchitecture": self.prefs.effective_shell_architecture(),
             "islandStyle": self.prefs.effective_island_style(),
             "islandIdleMode": self.prefs.effective_island_idle_mode(),
@@ -2636,7 +2636,7 @@ pub fn handle_bridge_action(
                     *env.needs_state_push = true;
                 }
                 "task-view" => open_task_view(),
-                "lock" => trigger_lock_workstation(),
+                "lock" => lock_workstation(),
                 _ => {}
             }
         }
@@ -4293,7 +4293,11 @@ pub fn handle_bridge_action(
             let d = i64_prop(msg, "delta", 1) as i32;
             let total = env.state.virtual_desktop_count.max(2);
             env.state.virtual_desktop_index = ((env.state.virtual_desktop_index - 1 + d).rem_euclid(total)) + 1;
-            send_virtual_desktop_step(d >= 0);
+            if d >= 0 {
+                switch_virtual_desktop_to_index(0, 1);
+            } else {
+                switch_virtual_desktop_to_index(1, 0);
+            }
             *env.needs_state_push = true;
         }
         "switchVirtualDesktopIndex" => {
@@ -4354,12 +4358,12 @@ pub fn handle_bridge_action(
                 env.post_toast("Korumalı Süreç", "Kritik Windows süreci korunuyor.", None);
             }
         }
-        "lockPc" => trigger_lock_workstation(),
-        "sleepPc" => trigger_sleep(),
+        "lockPc" => lock_workstation(),
+        "sleepPc" => sleep_system(),
         "systemPower" => match str_prop(msg, "action") {
-            "lock" => trigger_lock_workstation(),
-            "sleep" => trigger_sleep(),
-            "display_off" => trigger_display_off(),
+            "lock" => lock_workstation(),
+            "sleep" => sleep_system(),
+            "display_off" => turn_off_monitors(),
             other => {
                 env.logger.warn("BRIDGE", "UNKNOWN_POWER_ACTION", &format!("Unhandled systemPower action: {other}"));
             }
@@ -4459,16 +4463,6 @@ fn use_clipboard_item(env: &mut BridgeEnv<'_>, item: &ClipboardVaultEntry) {
     } else if let Some(img) = &item.image_path {
         let _ = launch_target(img);
         env.post_toast("Pano Görseli Açıldı", &item.preview_text, None);
-    }
-}
-
-fn effective_dock_indicator_style(prefs: &ShellRuntimePreferences) -> &'static str {
-    match prefs.dock_indicator_style.as_str() {
-        "dot" => "dot",
-        "bar" => "bar",
-        "glow" => "glow",
-        "frame" => "frame",
-        _ => "pill",
     }
 }
 
@@ -4615,21 +4609,6 @@ fn open_safe_web_url(raw: &str) -> bool {
     (h.0 as isize) > 32
 }
 
-fn trigger_display_off() {
-    use windows::Win32::Foundation::{LPARAM, WPARAM};
-    use windows::Win32::UI::WindowsAndMessaging::{
-        SendNotifyMessageW, HWND_BROADCAST, SC_MONITORPOWER, WM_SYSCOMMAND,
-    };
-    unsafe {
-        let _ = SendNotifyMessageW(
-            HWND_BROADCAST,
-            WM_SYSCOMMAND,
-            WPARAM(SC_MONITORPOWER as usize),
-            LPARAM(2),
-        );
-    }
-}
-
 fn build_widget_preset(preset: &str) -> (&'static str, Vec<DesktopWidgetInstance>) {
     let mk = |idx: usize, kind: &str, variant: &str, skin: &str, size: &str, x: i32, y: i32| DesktopWidgetInstance {
         id: format!("w-p-{kind}-{idx}"),
@@ -4687,28 +4666,6 @@ fn build_widget_preset(preset: &str) -> (&'static str, Vec<DesktopWidgetInstance
     }
 }
 
-/// Non-blocking bounded virtual desktop stepper (local thin wrapper ready for win32-perf integration).
-fn switch_virtual_desktop_to_index(current: u32, target: u32) {
-    let diff = target as i32 - current as i32;
-    let steps = diff.unsigned_abs().min(8);
-    if steps == 0 {
-        return;
-    }
-    let right = diff > 0;
-    if steps == 1 {
-        send_virtual_desktop_step(right);
-    } else {
-        std::thread::spawn(move || {
-            for i in 0..steps {
-                if i > 0 {
-                    std::thread::sleep(std::time::Duration::from_millis(35));
-                }
-                send_virtual_desktop_step(right);
-            }
-        });
-    }
-}
-
 pub fn start_qr_for_path(env: &mut BridgeEnv<'_>, path: &str) {
     match env.qr_server.start_sharing(Path::new(path)) {
         Ok(info) => {
@@ -4746,33 +4703,6 @@ fn apply_awake_mode(env: &mut BridgeEnv<'_>, mode: &str) {
             set_awake_keep_alive(false);
         }
     }
-}
-
-fn send_virtual_desktop_step(right: bool) {
-    use windows::Win32::UI::Input::KeyboardAndMouse::{
-        SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, VK_CONTROL,
-        VK_LEFT, VK_LWIN, VK_RIGHT,
-    };
-    let arrow = if right { VK_RIGHT } else { VK_LEFT };
-    let key = |vk, up| INPUT {
-        r#type: INPUT_KEYBOARD,
-        Anonymous: INPUT_0 {
-            ki: KEYBDINPUT {
-                wVk: vk,
-                dwFlags: if up { KEYEVENTF_KEYUP } else { Default::default() },
-                ..Default::default()
-            },
-        },
-    };
-    let seq = [
-        key(VK_LWIN, false),
-        key(VK_CONTROL, false),
-        key(arrow, false),
-        key(arrow, true),
-        key(VK_CONTROL, true),
-        key(VK_LWIN, true),
-    ];
-    unsafe { let _ = SendInput(&seq, std::mem::size_of::<INPUT>() as i32); }
 }
 
 fn send_win_d() {
@@ -4970,7 +4900,7 @@ mod tests {
                 dock_indicator_style: sty.into(),
                 ..Default::default()
             };
-            assert_eq!(effective_dock_indicator_style(&prefs), sty);
+            assert_eq!(prefs.effective_dock_indicator_style(), sty);
         }
     }
 }

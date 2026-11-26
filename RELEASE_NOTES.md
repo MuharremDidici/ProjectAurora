@@ -1,5 +1,14 @@
 # Project Aurora — Sürüm Notları
 
+## v8.0.0
+> Summary: Flagship tasarım dili ve 26 WCAG AA+/AAA tema, yüzey başına revizyon bazlı `iconCacheDelta` IPC ile %90+ daha küçük görev çubuğu yükleri, otomatik `wpn_snap` anlık görüntü temizliği, akıllı OmniSearch (AST hesaplama, birim/döviz, dünya saatleri ve sistem komutları) ve sıfır-hata üretim kararlılığı.
+
+### Öne Çıkanlar
+- **Flagship Tasarım & 26 WCAG AA+/AAA Tema (`tokens.rs`, `crown.html`, `widgets.html`):** 6 yeni amiral gemisi tema (`oled-carbon`, `kyoto-paper`, `nordic-frost`, `rose-velvet`, `emerald-studio`, `alabaster-mist`) ile 26 temalık gruplu Stüdyo seçici, geliştirilmiş açık-mod kontrastı, yeni `world-clock` & `forecast-strip` masaüstü widget'ları, 5 hazır widget şablonu (`applyWidgetPreset`) ve 5 Dock gösterge stili (`dot`, `bar`, `glow`, `pill`, `frame`).
+- **%90+ Daha Hızlı Delta İkon IPC & Akıllı Boşta Kısma (`bridge.rs`, `main.rs`, `dock.html`, `crown.html`, `widgets.html`):** Yüzey başına FNV-1a revizyonlu `iconCacheDelta` önbelleği sayesinde tekrarlanan durum iletilerinde temel-64 ikon verisi yeniden gönderilmez; boşta CPU/RAM/ağ ve medya değişiklikleri fark eşiklemesiyle süzülür.
+- **Akıllı OmniSearch & Hızlı Aksiyonlar (`calc.rs`, `dock.html`):** Güvenli AST matematik değerlendirici, birim ve canlı döviz dönüştürücü, dünya saatleri (`saat tokyo/london/newyork`), `g/yt/gh` web kısayolları ve `> lock|sleep|odak|tema|zamanlayici` sistem komutları eklendi.
+- **Sıfır-Hata Sertleştirme & `wpn_snap` Temizliği (`aurora-win32`, `aurora-storage`, `aurora-core`, `webview_host.rs`):** Üretim kodundaki tüm `.unwrap()`/`panic!()` çağrıları kaldırıldı; ölü PID'lere ait `wpn_rs_*.db*` anlık görüntüleri başlangıçta ve çıkışta otomatik temizlenir; çoklu monitör Shift+Drag Snap Zone / OCR / Eyedropper / GIF yerleşimi, uyku/uyanma (`PowerResumed`) yeniden senkronizasyonu ve WinRT medya küçük resim önbelleği güçlendirildi.
+
 ## v7.3.0
 > Summary: Tam çerçevesiz Stüdyo Cam görev çubuğu ve masaüstü widget mimarisi, gerçek WinRT GSMTC medya zaman çizelgesi (0:00 —●—— 2:21) + canlı sürüklenebilir sarıcı (`mediaSeek`), iki satırlı istifli dock widget'ları ve başparmak topuzlu ince ses/parlaklık kaydırıcıları.
 
