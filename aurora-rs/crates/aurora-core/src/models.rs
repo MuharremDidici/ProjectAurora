@@ -380,7 +380,7 @@ fn default_dock_start_style() -> String { "icon".into() }
 fn default_dock_silhouette() -> String { "fixed".into() }
 fn default_dock_indicator_style() -> String { "pill".into() }
 fn default_dw_size() -> String { "normal".into() }
-fn default_dw_style() -> String { "pill".into() }
+fn default_dw_style() -> String { "clean".into() }
 fn default_dw_wheel() -> String { "default".into() }
 fn default_empty_wheel() -> String { "volume".into() }
 fn default_empty_dblclick() -> String { "show-desktop".into() }
@@ -467,6 +467,7 @@ pub const SUPPORTED_DESKTOP_WIDGET_KINDS: &[&str] = &[
     "pomodoro-studio",
     "currency-ticker",
     "quick-note",
+    "daily-brief",
 ];
 
 impl DesktopWidgetInstance {
@@ -477,7 +478,7 @@ impl DesktopWidgetInstance {
     }
 
     /// Normalizes widget fields (`kind`, `variant`, `skin`, `size`, coordinates, opacity, accent, note)
-    /// cleanly without panicking and with full support for all v7.3+ studio widget kinds/variants.
+    /// cleanly without panicking and with full support for all v8.1+ studio/atelier widget kinds/variants.
     pub fn normalize(&mut self) {
         let kind_norm = self.kind.trim().to_ascii_lowercase();
         self.kind = if kind_norm.is_empty() {
@@ -489,12 +490,15 @@ impl DesktopWidgetInstance {
         let var_norm = self.variant.trim().to_ascii_lowercase();
         self.variant = if var_norm.is_empty() || var_norm == "default" {
             match self.kind.as_str() {
-                "clock" => "swiss".into(),
+                "clock" => "editorial-hero".into(),
+                "daily-brief" => "brief".into(),
                 "media" | "studio-strip" => "studio-strip".into(),
                 "world-clock" => "world-clock".into(),
-                "weather" => "dynamic-sky".into(),
+                "weather" => "atmospheric".into(),
                 "forecast-strip" => "forecast-strip".into(),
-                "battery" | "system" | "focus-rings" => "rings".into(),
+                "battery" => "multi-ring".into(),
+                "system" => "cockpit".into(),
+                "focus-rings" => "rings".into(),
                 "habit-ring" => "habit-ring".into(),
                 "ai-quota" => "cards".into(),
                 "calendar" => "today".into(),
@@ -522,7 +526,7 @@ impl DesktopWidgetInstance {
         let skin_norm = self.skin.trim().to_ascii_lowercase();
         self.skin = if matches!(
             skin_norm.as_str(),
-            "frameless" | "glass" | "neoglass" | "braun" | "matrix" | "editorial"
+            "frameless" | "glass" | "neoglass" | "acrylic" | "braun" | "matrix" | "editorial"
         ) {
             skin_norm
         } else if matches!(self.kind.as_str(), "clock" | "world-clock") {
@@ -702,7 +706,31 @@ pub struct DockWidgetConfig {
     pub enabled: bool,
 }
 
+/// Curated list of supported bottom Dock micro-widget kinds.
+pub const SUPPORTED_DOCK_WIDGET_KINDS: &[&str] = &[
+    "clock",
+    "media",
+    "volume-slider",
+    "brightness-slider",
+    "mic-privacy",
+    "desktops",
+    "weather",
+    "ai-quota",
+    "battery",
+    "system",
+    "network",
+    "pomodoro",
+    "market",
+    "clipboard",
+    "quick-tools",
+];
+
 impl DockWidgetConfig {
+    pub fn is_supported_kind(&self) -> bool {
+        let k = self.kind.trim().to_ascii_lowercase();
+        SUPPORTED_DOCK_WIDGET_KINDS.contains(&k.as_str())
+    }
+
     pub fn effective_zone(&self) -> &'static str {
         match self.zone.as_str() {
             "far-left" => "far-left",
@@ -720,6 +748,33 @@ impl DockWidgetConfig {
     }
 
     pub fn normalize(&mut self) {
+        let kind_norm = self.kind.trim().to_ascii_lowercase();
+        self.kind = if kind_norm.is_empty() {
+            "clock".into()
+        } else {
+            kind_norm
+        };
+        let var_norm = self.variant.trim().to_ascii_lowercase();
+        self.variant = if var_norm.is_empty() || var_norm == "default" {
+            match self.kind.as_str() {
+                "clock" => "editorial-2line".into(),
+                "media" => "studio-bar".into(),
+                "weather" => "studio".into(),
+                "quick-tools" => "strip".into(),
+                "pomodoro" => "ring".into(),
+                "volume-slider" | "brightness-slider" => "bar".into(),
+                "mic-privacy" => "pill".into(),
+                "desktops" => "pills".into(),
+                "ai-quota" => "dots".into(),
+                "battery" | "system" => "studio".into(),
+                "network" => "speed".into(),
+                "market" => "ticker".into(),
+                "clipboard" => "latest".into(),
+                _ => "default".into(),
+            }
+        } else {
+            var_norm
+        };
         let z = self.effective_zone();
         self.zone = z.into();
         self.slot = if matches!(z, "after-apps" | "far-right") {
@@ -727,18 +782,27 @@ impl DockWidgetConfig {
         } else {
             "left".into()
         };
-        if !matches!(self.size.as_str(), "compact" | "normal" | "wide") {
-            self.size = "normal".into();
-        }
-        if !matches!(self.style_mode.as_str(), "pill" | "clean" | "tinted" | "glass" | "hardware") {
-            self.style_mode = "pill".into();
-        }
-        if !matches!(
-            self.wheel_action.as_str(),
+        let sz_norm = self.size.trim().to_ascii_lowercase();
+        self.size = if matches!(sz_norm.as_str(), "compact" | "normal" | "wide") {
+            sz_norm
+        } else {
+            "normal".into()
+        };
+        let sm_norm = self.style_mode.trim().to_ascii_lowercase();
+        self.style_mode = if matches!(sm_norm.as_str(), "pill" | "clean" | "tinted" | "glass" | "hardware") {
+            sm_norm
+        } else {
+            "clean".into()
+        };
+        let wa_norm = self.wheel_action.trim().to_ascii_lowercase();
+        self.wheel_action = if matches!(
+            wa_norm.as_str(),
             "default" | "volume" | "brightness" | "desktop" | "media" | "none"
         ) {
-            self.wheel_action = "default".into();
-        }
+            wa_norm
+        } else {
+            "default".into()
+        };
     }
 }
 
@@ -762,17 +826,18 @@ pub fn default_dock_widgets() -> Vec<DockWidgetConfig> {
     vec![
         mk_dw("dw-media", "media", "far-left", 0, "studio-bar", true),
         mk_dw("dw-weather", "weather", "far-left", 1, "studio", true),
-        mk_dw("dw-clock", "clock", "far-right", 0, "classic", true),
-        mk_dw("dw-volume", "volume-slider", "after-apps", 0, "bar", false),
-        mk_dw("dw-brightness", "brightness-slider", "after-apps", 1, "bar", false),
+        mk_dw("dw-clock", "clock", "far-right", 0, "editorial-2line", true),
+        mk_dw("dw-quick-tools", "quick-tools", "after-apps", 0, "strip", false),
+        mk_dw("dw-volume", "volume-slider", "after-apps", 1, "bar", false),
+        mk_dw("dw-brightness", "brightness-slider", "after-apps", 2, "bar", false),
         mk_dw("dw-mic", "mic-privacy", "before-apps", 0, "pill", false),
         mk_dw("dw-desktops", "desktops", "before-apps", 1, "pills", false),
         mk_dw("dw-ai", "ai-quota", "far-right", 1, "dots", false),
         mk_dw("dw-battery", "battery", "far-right", 2, "studio", false),
         mk_dw("dw-system", "system", "far-left", 2, "studio", false),
         mk_dw("dw-network", "network", "far-left", 3, "speed", false),
-        mk_dw("dw-pomodoro", "pomodoro", "before-apps", 2, "pill", false),
-        mk_dw("dw-market", "market", "after-apps", 2, "ticker", false),
+        mk_dw("dw-pomodoro", "pomodoro", "before-apps", 2, "ring", false),
+        mk_dw("dw-market", "market", "after-apps", 3, "ticker", false),
         mk_dw("dw-clipboard", "clipboard", "before-apps", 3, "latest", false),
     ]
 }
@@ -1027,7 +1092,7 @@ impl ShellRuntimePreferences {
     }
 
     pub fn effective_shell_architecture(&self) -> &'static str {
-        match self.shell_architecture.as_str() {
+        match self.shell_architecture.trim().to_ascii_lowercase().as_str() {
             "nothing-hardware" => "nothing-hardware",
             "linear-studio" => "linear-studio",
             "vision-orb" => "vision-orb",
@@ -1042,12 +1107,14 @@ impl ShellRuntimePreferences {
     }
 
     pub fn effective_island_style(&self) -> &'static str {
-        match self.island_style.as_str() {
+        match self.island_style.trim().to_ascii_lowercase().as_str() {
             "mac-notch" | "compact-notch" => "mac-notch",
-            "edge-horizon" => "edge-horizon",
-            "hardware-pod" => "hardware-pod",
-            "glass-bar" => "glass-bar",
-            "orbital-halo" => "orbital-halo",
+            "twin-split" => "twin-split",
+            "horizon-bar" | "glass-bar" => "horizon-bar",
+            "nothing-glyph" | "hardware-pod" => "nothing-glyph",
+            "orbital-ring" | "orbital-halo" => "orbital-ring",
+            "studio-strip" => "studio-strip",
+            "stealth-horizon" | "edge-horizon" => "stealth-horizon",
             _ => "liquid-pill",
         }
     }
@@ -1387,7 +1454,7 @@ mod tests {
     }
 
     #[test]
-    fn all_v7_architectures_and_island_styles_resolve_cleanly() {
+    fn all_v8_architectures_and_8_island_styles_resolve_cleanly() {
         let mut p = ShellRuntimePreferences::default();
         for arch in [
             "tahoe-glass", "nothing-hardware", "linear-studio", "vision-orb", "arc-split",
@@ -1397,10 +1464,21 @@ mod tests {
             assert_eq!(p.effective_shell_architecture(), arch);
         }
         for isl in [
-            "liquid-pill", "mac-notch", "edge-horizon", "hardware-pod", "glass-bar", "orbital-halo",
+            "liquid-pill", "mac-notch", "twin-split", "horizon-bar",
+            "nothing-glyph", "orbital-ring", "studio-strip", "stealth-horizon",
         ] {
             p.island_style = isl.into();
             assert_eq!(p.effective_island_style(), isl);
+        }
+        for (legacy_in, canonical) in [
+            ("compact-notch", "mac-notch"),
+            ("glass-bar", "horizon-bar"),
+            ("hardware-pod", "nothing-glyph"),
+            ("orbital-halo", "orbital-ring"),
+            ("edge-horizon", "stealth-horizon"),
+        ] {
+            p.island_style = legacy_in.into();
+            assert_eq!(p.effective_island_style(), canonical);
         }
     }
 
@@ -1487,6 +1565,90 @@ mod tests {
             assert_eq!(w.opacity, Some(0.45));
             assert_eq!(w.accent_hex, None);
         }
+    }
+
+    #[test]
+    fn daily_brief_quick_tools_and_v81_variants_normalize_cleanly() {
+        let mut brief = DesktopWidget {
+            id: "w-brief".into(),
+            kind: "  DAILY-BRIEF ".into(),
+            variant: "default".into(),
+            skin: "ACRYLIC".into(),
+            size: "M".into(),
+            x: -352,
+            y: 48,
+            opacity: None,
+            accent_hex: None,
+            pinned_top: false,
+            note_text: None,
+            photo_path: None,
+        };
+        brief.normalize();
+        assert!(brief.is_supported_kind());
+        assert_eq!(brief.kind, "daily-brief");
+        assert_eq!(brief.variant, "brief");
+        assert_eq!(brief.skin, "acrylic");
+
+        for (kind, variant) in [
+            ("clock", "editorial-hero"),
+            ("clock", "swiss-chrono"),
+            ("weather", "atmospheric"),
+            ("battery", "multi-ring"),
+            ("system", "cockpit"),
+        ] {
+            let mut w = DesktopWidget {
+                id: format!("w-{variant}"),
+                kind: kind.into(),
+                variant: format!("  {}  ", variant.to_uppercase()),
+                skin: "glass".into(),
+                size: "M".into(),
+                x: -352,
+                y: 48,
+                opacity: None,
+                accent_hex: None,
+                pinned_top: false,
+                note_text: None,
+                photo_path: None,
+            };
+            w.normalize();
+            assert!(w.is_supported_kind());
+            assert_eq!(w.variant, variant);
+        }
+
+        let mut qt = DockWidgetConfig {
+            id: "dw-quick-tools".into(),
+            kind: " Quick-Tools ".into(),
+            slot: String::new(),
+            zone: "after-apps".into(),
+            order: 0,
+            variant: String::new(),
+            size: "normal".into(),
+            style_mode: "invalid-style".into(),
+            wheel_action: "default".into(),
+            enabled: true,
+        };
+        qt.normalize();
+        assert!(qt.is_supported_kind());
+        assert_eq!(qt.kind, "quick-tools");
+        assert_eq!(qt.variant, "strip");
+        assert_eq!(qt.style_mode, "clean");
+        assert_eq!(qt.slot, "right");
+
+        let mut clk = DockWidgetConfig {
+            id: "dw-clock".into(),
+            kind: "clock".into(),
+            slot: "right".into(),
+            zone: "far-right".into(),
+            order: 0,
+            variant: " Editorial-2Line ".into(),
+            size: "normal".into(),
+            style_mode: "clean".into(),
+            wheel_action: "default".into(),
+            enabled: true,
+        };
+        clk.normalize();
+        assert_eq!(clk.variant, "editorial-2line");
+        assert!(default_dock_widgets().iter().any(|w| w.kind == "quick-tools"));
     }
 }
 

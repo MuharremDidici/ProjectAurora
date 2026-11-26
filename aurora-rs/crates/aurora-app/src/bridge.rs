@@ -1788,7 +1788,7 @@ impl<'a> BridgeEnv<'a> {
             widgets: self.state.widgets.clone(),
             ai_configs: self.state.ai_configs.clone(),
             dock_widgets: self.state.dock_widgets.clone(),
-            dock_widgets_schema_ver: 1,
+            dock_widgets_schema_ver: aurora_storage::CURRENT_DOCK_WIDGETS_SCHEMA_VER,
             todos: self.state.todos.clone(),
             countdown: self.state.countdown.clone(),
         });
@@ -2305,10 +2305,10 @@ pub fn handle_bridge_action(
             env.save_prefs();
             *env.needs_state_push = true;
         }
-        // ── v7.0 Next-Gen Shell Architectures (10 Distinct Styles) & Live Dynamic Island (6 Styles) ──
+        // ── v8.1 Flagship Shell Architectures (10 Distinct Styles) & Live Dynamic Island (8 Styles) ──
         "setShellArchitecture" => {
-            let raw = str_prop(msg, "arch");
-            let arch = match raw {
+            let raw = str_prop(msg, "arch").trim().to_ascii_lowercase();
+            let arch = match raw.as_str() {
                 "nothing-hardware" => "nothing-hardware",
                 "linear-studio" => "linear-studio",
                 "vision-orb" => "vision-orb",
@@ -2329,10 +2329,12 @@ pub fn handle_bridge_action(
             }
             .into();
             env.state.prefs.island_style = match arch {
-                "nothing-hardware" | "braun-atelier" => "hardware-pod",
-                "linear-studio" | "cockpit-hud" | "zen-ghost" => "edge-horizon",
-                "vision-orb" => "orbital-halo",
-                "swiss-editorial" => "glass-bar",
+                "nothing-hardware" => "nothing-glyph",
+                "braun-atelier" => "studio-strip",
+                "linear-studio" | "swiss-editorial" => "horizon-bar",
+                "arc-split" | "cockpit-hud" => "twin-split",
+                "zen-ghost" => "stealth-horizon",
+                "vision-orb" => "orbital-ring",
                 "fluent-mica" => "mac-notch",
                 _ => "liquid-pill",
             }
@@ -2357,12 +2359,14 @@ pub fn handle_bridge_action(
         }
         "setIslandConfig" => {
             if let Some(st) = msg.get("style").and_then(|v| v.as_str()) {
-                env.state.prefs.island_style = match st {
+                env.state.prefs.island_style = match st.trim().to_ascii_lowercase().as_str() {
                     "mac-notch" | "compact-notch" => "mac-notch",
-                    "edge-horizon" => "edge-horizon",
-                    "hardware-pod" => "hardware-pod",
-                    "glass-bar" => "glass-bar",
-                    "orbital-halo" => "orbital-halo",
+                    "twin-split" => "twin-split",
+                    "horizon-bar" | "glass-bar" => "horizon-bar",
+                    "nothing-glyph" | "hardware-pod" => "nothing-glyph",
+                    "orbital-ring" | "orbital-halo" => "orbital-ring",
+                    "studio-strip" => "studio-strip",
+                    "stealth-horizon" | "edge-horizon" => "stealth-horizon",
                     _ => "liquid-pill",
                 }
                 .into();
@@ -2759,15 +2763,16 @@ pub fn handle_bridge_action(
             *env.needs_state_push = true;
         }
         "addDesktopWidget" => {
-            let kind = str_prop(msg, "kind").trim();
+            let kind = str_prop(msg, "kind").trim().to_ascii_lowercase();
             if !kind.is_empty() {
-                let def_variant = match kind {
-                    "clock" => "swiss",
-                    "media" => "ambient",
-                    "battery" => "rings",
+                let def_variant = match kind.as_str() {
+                    "clock" => "editorial-hero",
+                    "daily-brief" => "brief",
+                    "media" | "studio-strip" => "studio-strip",
+                    "battery" => "multi-ring",
                     "ai-quota" => "cards",
                     "weather" => "atmospheric",
-                    "system" => "rings",
+                    "system" => "cockpit",
                     "calendar" => "today",
                     "notes" => "glass",
                     "pomodoro" => "ring",
@@ -2778,40 +2783,44 @@ pub fn handle_bridge_action(
                     "storage-net" => "bars",
                     "quote" => "editorial",
                     "local-ai" => "status",
+                    "audio-mixer" => "mixer",
+                    "focus-rings" => "rings",
+                    "photo-frame" => "polaroid",
+                    "quick-drop" => "drop",
+                    "world-clock" => "world-clock",
+                    "forecast-strip" => "forecast-strip",
+                    "habit-ring" => "habit-ring",
+                    "pomodoro-studio" => "pomodoro-studio",
+                    "currency-ticker" => "currency-ticker",
+                    "quick-note" => "quick-note",
                     _ => "default",
                 };
-                let variant_in = str_prop(msg, "variant");
+                let variant_in = str_prop(msg, "variant").trim().to_ascii_lowercase();
                 let variant = if variant_in.is_empty() {
-                    match kind {
-                        "audio-mixer" => "mixer",
-                        "focus-rings" => "rings",
-                        "photo-frame" => "polaroid",
-                        "quick-drop" => "drop",
-                        _ => def_variant,
-                    }
+                    def_variant.to_string()
                 } else {
                     variant_in
                 };
-                let skin_in = str_prop(msg, "skin");
-                let skin = match skin_in {
-                    "frameless" | "glass" | "neoglass" | "braun" | "matrix" | "editorial" => skin_in,
-                    _ => if kind == "clock" { "frameless" } else { "neoglass" },
+                let skin_in = str_prop(msg, "skin").trim().to_ascii_lowercase();
+                let skin = match skin_in.as_str() {
+                    "frameless" | "glass" | "neoglass" | "acrylic" | "braun" | "matrix" | "editorial" => skin_in.as_str(),
+                    _ => if kind == "clock" || kind == "world-clock" { "frameless" } else { "neoglass" },
                 };
-                let size_in = str_prop(msg, "size");
-                let size = match size_in {
-                    "S" | "M" | "L" => size_in,
+                let size_in = str_prop(msg, "size").trim().to_ascii_uppercase();
+                let size = match size_in.as_str() {
+                    "S" | "M" | "L" => size_in.as_str(),
                     _ => if kind == "ai-quota" { "L" } else { "M" },
                 };
                 let idx = env.state.widgets.len() as i32;
                 let col = (idx / 3) % 3;
                 let row = idx % 3;
-                let x = -344 - col * 336;
+                let x = -352 - col * 344;
                 let y = 48 + row * 196;
                 let id = format!("w-{}-{:x}", kind, env.now_ms ^ ((idx as u64 + 1) * 131));
-                env.state.widgets.push(DesktopWidgetInstance {
+                let mut widget = DesktopWidgetInstance {
                     id,
-                    kind: kind.into(),
-                    variant: variant.into(),
+                    kind: kind.clone(),
+                    variant,
                     skin: skin.into(),
                     size: size.into(),
                     x,
@@ -2819,18 +2828,22 @@ pub fn handle_bridge_action(
                     opacity: None,
                     accent_hex: None,
                     pinned_top: false,
-                    note_text: (kind == "notes").then(|| "Bugünkü notlarım...".into()),
+                    note_text: (kind == "notes" || kind == "quick-note").then(|| "Bugünkü notlarım...".into()),
                     photo_path: None,
-                });
+                };
+                widget.normalize();
+                env.state.widgets.push(widget);
                 env.state.prefs.widgets_enabled = true;
                 env.save_prefs();
                 env.save_widgets();
                 if kind == "ai-quota" {
                     let _ = env.bg_tx.try_send(BgCommand::RefreshAiQuota(env.state.ai_configs.clone()));
-                } else if kind == "market" {
+                } else if kind == "market" || kind == "currency-ticker" {
                     let _ = env.bg_tx.try_send(BgCommand::RefreshMarket);
-                } else if kind == "local-ai" || kind == "storage-net" {
+                } else if kind == "local-ai" || kind == "storage-net" || kind == "system" {
                     let _ = env.bg_tx.try_send(BgCommand::RefreshLocalAiAndDisks);
+                } else if kind == "daily-brief" || kind == "weather" || kind == "forecast-strip" {
+                    let _ = env.bg_tx.try_send(BgCommand::RefreshWeather);
                 }
                 env.post_toast("Widget Eklendi", "Masaüstünüze yerleştirildi. Düzenle ile taşıyabilirsiniz.", None);
                 *env.needs_widgets_sync = true;
@@ -2858,7 +2871,7 @@ pub fn handle_bridge_action(
                     }
                 }
                 if let Some(sk) = msg.get("skin").and_then(|v| v.as_str()) {
-                    if matches!(sk, "frameless" | "glass" | "neoglass" | "braun" | "matrix" | "editorial") {
+                    if matches!(sk, "frameless" | "glass" | "neoglass" | "acrylic" | "braun" | "matrix" | "editorial") {
                         w.skin = sk.into();
                     }
                 }
@@ -2971,7 +2984,7 @@ pub fn handle_bridge_action(
             env.state.widget_edit_mode = false;
             env.save_prefs();
             env.save_widgets();
-            if env.state.widgets.iter().any(|w| w.kind == "weather" || w.kind == "forecast-strip") {
+            if env.state.widgets.iter().any(|w| matches!(w.kind.as_str(), "weather" | "forecast-strip" | "daily-brief")) {
                 let _ = env.bg_tx.try_send(BgCommand::RefreshWeather);
             }
             if env.state.needs_ai_quota_poll() {
@@ -4625,40 +4638,51 @@ fn build_widget_preset(preset: &str) -> (&'static str, Vec<DesktopWidgetInstance
         photo_path: None,
     };
     match preset {
+        "atelier-showcase" => (
+            "Atelier Vitrin",
+            vec![
+                mk(0, "daily-brief", "brief", "acrylic", "M", -352, 48),
+                mk(1, "clock", "swiss-chrono", "frameless", "M", -704, 48),
+                mk(2, "media", "studio-strip", "neoglass", "M", -352, 232),
+                mk(3, "weather", "atmospheric", "glass", "M", -704, 232),
+                mk(4, "battery", "multi-ring", "glass", "M", -352, 416),
+                mk(5, "system", "cockpit", "braun", "M", -704, 416),
+            ],
+        ),
         "minimal-studio" => (
             "Minimal Stüdyo",
             vec![
-                mk(0, "clock", "swiss", "frameless", "M", -344, 48),
-                mk(1, "forecast-strip", "strip", "neoglass", "M", -344, 236),
-                mk(2, "studio-strip", "strip", "neoglass", "M", -344, 416),
+                mk(0, "clock", "editorial-hero", "frameless", "M", -352, 48),
+                mk(1, "daily-brief", "brief", "glass", "M", -352, 224),
+                mk(2, "media", "studio-strip", "neoglass", "M", -352, 412),
             ],
         ),
         "dev-cockpit" => (
             "Geliştirici Kokpit",
             vec![
-                mk(0, "clock", "dev-hex", "braun", "M", -348, 48),
-                mk(1, "system", "oscilloscope", "braun", "M", -348, 224),
-                mk(2, "ai-quota", "cards", "braun", "L", -348, 414),
-                mk(3, "local-ai", "models", "braun", "M", -692, 48),
+                mk(0, "clock", "world-clock", "braun", "M", -424, 48),
+                mk(1, "system", "cockpit", "braun", "M", -424, 224),
+                mk(2, "ai-quota", "cards", "braun", "L", -424, 414),
+                mk(3, "local-ai", "models", "braun", "M", -776, 48),
             ],
         ),
         "productivity" => (
             "Üretkenlik",
             vec![
-                mk(0, "focus-rings", "rings", "neoglass", "M", -348, 48),
-                mk(1, "pomodoro", "ring", "glass", "M", -348, 240),
-                mk(2, "todo", "list", "glass", "M", -348, 420),
-                mk(3, "calendar", "today", "glass", "M", -692, 48),
-                mk(4, "notes", "glass", "glass", "M", -692, 260),
+                mk(0, "daily-brief", "brief", "neoglass", "M", -352, 48),
+                mk(1, "pomodoro", "ring", "glass", "M", -352, 240),
+                mk(2, "todo", "list", "glass", "M", -352, 420),
+                mk(3, "calendar", "today", "glass", "M", -704, 48),
+                mk(4, "notes", "glass", "glass", "M", -704, 260),
             ],
         ),
         "media-lounge" => (
             "Medya Salonu",
             vec![
-                mk(0, "studio-strip", "strip", "neoglass", "M", -360, 48),
-                mk(1, "media", "poster", "neoglass", "L", -360, 210),
-                mk(2, "audio-mixer", "mixer", "glass", "M", -360, 440),
-                mk(3, "world-clock", "cities", "editorial", "M", -704, 48),
+                mk(0, "media", "studio-strip", "neoglass", "M", -424, 48),
+                mk(1, "media", "poster", "neoglass", "L", -424, 210),
+                mk(2, "audio-mixer", "mixer", "glass", "M", -776, 48),
+                mk(3, "battery", "multi-ring", "glass", "M", -776, 248),
             ],
         ),
         "clean" => ("Temiz Masaüstü", Vec::new()),
@@ -4883,15 +4907,42 @@ mod tests {
     }
 
     #[test]
-    fn desktop_widget_presets_cover_all_five_modes() {
+    fn desktop_widget_presets_cover_all_six_v81_modes() {
+        let (_, atelier) = build_widget_preset("atelier-showcase");
+        assert_eq!(atelier.len(), 6);
+        assert!(atelier.iter().any(|w| w.kind == "daily-brief" && w.variant == "brief" && w.skin == "acrylic"));
+        assert!(atelier.iter().any(|w| w.kind == "clock" && w.variant == "swiss-chrono"));
+        assert!(atelier.iter().any(|w| w.kind == "media" && w.variant == "studio-strip"));
+        assert!(atelier.iter().any(|w| w.kind == "weather" && w.variant == "atmospheric"));
+        assert!(atelier.iter().any(|w| w.kind == "battery" && w.variant == "multi-ring"));
+        assert!(atelier.iter().any(|w| w.kind == "system" && w.variant == "cockpit"));
+
         let (_, minimal) = build_widget_preset("minimal-studio");
         assert_eq!(minimal.len(), 3);
+        assert!(minimal.iter().any(|w| w.kind == "daily-brief"));
+        assert!(minimal.iter().any(|w| w.kind == "media" && w.variant == "studio-strip"));
+        assert!(minimal.iter().any(|w| w.kind == "clock" && w.variant == "editorial-hero"));
+
         let (_, dev) = build_widget_preset("dev-cockpit");
         assert_eq!(dev.len(), 4);
+        assert!(dev.iter().any(|w| w.kind == "system" && w.variant == "cockpit"));
+        assert!(dev.iter().any(|w| w.kind == "ai-quota"));
+        assert!(dev.iter().any(|w| w.kind == "clock" && w.variant == "world-clock"));
+
         let (_, prod) = build_widget_preset("productivity");
         assert_eq!(prod.len(), 5);
+        assert!(prod.iter().any(|w| w.kind == "daily-brief"));
+        assert!(prod.iter().any(|w| w.kind == "pomodoro"));
+        assert!(prod.iter().any(|w| w.kind == "todo"));
+        assert!(prod.iter().any(|w| w.kind == "calendar"));
+
         let (_, media) = build_widget_preset("media-lounge");
         assert_eq!(media.len(), 4);
+        assert!(media.iter().any(|w| w.kind == "media" && w.variant == "studio-strip"));
+        assert!(media.iter().any(|w| w.kind == "media" && w.variant == "poster"));
+        assert!(media.iter().any(|w| w.kind == "audio-mixer"));
+        assert!(media.iter().any(|w| w.kind == "battery" && w.variant == "multi-ring"));
+
         let (_, clean) = build_widget_preset("clean");
         assert!(clean.is_empty());
 
@@ -4902,5 +4953,35 @@ mod tests {
             };
             assert_eq!(prefs.effective_dock_indicator_style(), sty);
         }
+    }
+
+    #[test]
+    fn dock_state_emits_all_8_island_styles_and_quick_tools_widget() {
+        let mut state = mk_test_state();
+        for isl in [
+            "liquid-pill",
+            "mac-notch",
+            "twin-split",
+            "horizon-bar",
+            "nothing-glyph",
+            "orbital-ring",
+            "studio-strip",
+            "stealth-horizon",
+        ] {
+            state.prefs.island_style = isl.into();
+            let json_str = state.build_dock_state_json_for_surface(1, "MON1", true, 1000);
+            let v: Value = serde_json::from_str(&json_str).unwrap();
+            assert_eq!(v["payload"]["islandStyle"], isl);
+        }
+
+        let json_str = state.build_dock_state_json_for_surface(1, "MON1", true, 1000);
+        let v: Value = serde_json::from_str(&json_str).unwrap();
+        let dws = v["payload"]["dockWidgets"].as_array().unwrap();
+        assert!(dws.iter().any(|w| w["kind"] == "quick-tools"));
+        assert_eq!(
+            dws.iter().find(|w| w["kind"] == "clock").unwrap()["variant"],
+            "editorial-2line"
+        );
+        assert_eq!(dws.iter().filter(|w| w["enabled"] == true).count(), 3);
     }
 }
