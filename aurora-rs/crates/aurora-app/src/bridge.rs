@@ -126,6 +126,7 @@ pub struct RuntimeState {
     pub awake_until_ms: Option<u64>,
     pub focus_running: bool,
     pub focus_seconds: u32,
+    pub focus_preset_mins: u32,
     pub gif_recording: bool,
     pub gif_elapsed_secs: u32,
     pub keyboard_code: String,
@@ -149,6 +150,7 @@ pub struct RuntimeState {
     pub dock_popover_open_mons: HashSet<String>,
     pub dock_popover_opened_at_ms: u64,
     pub crown_stage_open: bool,
+    pub surface_icon_sent: HashMap<usize, HashMap<String, u64>>,
 }
 
 impl RuntimeState {
@@ -232,6 +234,7 @@ impl RuntimeState {
             awake_until_ms: None,
             focus_running: false,
             focus_seconds: 25 * 60,
+            focus_preset_mins: 25,
             gif_recording: false,
             gif_elapsed_secs: 0,
             keyboard_code: "TR".into(),
@@ -255,6 +258,7 @@ impl RuntimeState {
             dock_popover_open_mons: HashSet::new(),
             dock_popover_opened_at_ms: 0,
             crown_stage_open: false,
+            surface_icon_sent: HashMap::new(),
         }
     }
 
@@ -406,11 +410,28 @@ impl RuntimeState {
         repaired
     }
 
-    pub fn build_catalog_json(&self) -> String {
+    pub fn reset_surface_icon_cache(&mut self, surface_id: usize) {
+        self.surface_icon_sent.remove(&surface_id);
+    }
+
+    pub fn clear_dock_icon_caches(&mut self) {
+        self.surface_icon_sent.retain(|&sid, _| sid == 0 || sid == 100);
+    }
+
+    pub fn build_catalog_json_for_surface(&mut self, surface_id: usize) -> String {
+        let mut icon_delta = serde_json::Map::new();
         let apps: Vec<Value> = self
             .installed_apps
             .iter()
             .map(|a| {
+                let icon_key = format!("app:{}", a.id);
+                let icon = emit_cached_icon(
+                    &mut self.surface_icon_sent,
+                    surface_id,
+                    &icon_key,
+                    a.icon_base64.as_deref(),
+                    &mut icon_delta,
+                );
                 json!({
                     "id": a.id,
                     "name": a.name,
@@ -418,38 +439,27 @@ impl RuntimeState {
                     "category": a.category,
                     "keywords": a.keywords,
                     "kind": a.kind,
-                    "icon": a.icon_base64,
+                    "iconKey": icon_key,
+                    "icon": icon,
                 })
             })
             .collect();
 
-        let themes: Vec<Value> = built_in_themes()
-            .into_iter()
-            .map(|t| {
-                let is_light = t.color_mode == ColorMode::Light;
-                json!({
-                    "id": t.id,
-                    "name": t.display_name,
-                    "desc": t.description,
-                    "visualStyle": t.visual_style.as_str(),
-                    "styleTag": t.visual_style.style_tag_tr(),
-                    "mode": if is_light { "Açık" } else { "Koyu" },
-                    "isLight": is_light,
-                    "accent": t.colors.accent_primary,
-                    "accent2": t.colors.accent_secondary,
-                    "surface1": t.colors.surface1,
-                    "surface2": t.colors.surface2,
-                })
-            })
-            .collect();
+        let themes = build_themes_catalog_dto();
 
         json!({
             "type": "catalog",
             "installedApps": apps,
             "themes": themes,
             "frecency": self.frecency,
+            "iconCacheDelta": icon_delta,
         })
         .to_string()
+    }
+
+    #[allow(dead_code)]
+    pub fn build_catalog_json(&mut self) -> String {
+        self.build_catalog_json_for_surface(0)
     }
 
     fn build_theme_dto(&self) -> Value {
@@ -495,44 +505,22 @@ impl RuntimeState {
         exe_path: &str,
         aumid: Option<&str>,
     ) -> Option<&str> {
-        if let Some(b64) = self.icon_png_b64.get(key) {
-            return Some(b64.as_str());
-        }
-        let k_low = key.to_ascii_lowercase();
-        let d_low = display_name.to_ascii_lowercase();
-        let e_low = exe_path.to_ascii_lowercase();
-        let au_low = aumid.map(|s| s.trim().to_ascii_lowercase()).unwrap_or_default();
-        let pfn_low = au_low.split('!').next().unwrap_or("").to_string();
-        // Fast cross-match against the 300-item COM AppsFolder + StartMenu catalog!
-        for app in &self.installed_apps {
-            let Some(ref ic) = app.icon_base64 else {
-                continue;
-            };
-            let lp = app.launch_path.to_ascii_lowercase();
-            let an = app.name.to_ascii_lowercase();
-            if (!au_low.is_empty() && (lp == format!("appsfolder:{au_low}") || lp.contains(&au_low)))
-                || (!pfn_low.is_empty() && pfn_low.len() >= 8 && lp.contains(&pfn_low))
-                || (!e_low.is_empty() && lp == e_low)
-                || (!d_low.is_empty() && (an == d_low || an.contains(&d_low) || d_low.contains(&an)))
-                || (!k_low.is_empty()
-                    && (((k_low == "wt" || k_low == "windowsterminal") && an.contains("terminal"))
-                        || (k_low == "msedge" && an.contains("edge"))
-                        || (k_low == "whatsapp" && an.contains("whatsapp"))
-                        || (k_low == "ms-teams" && an.contains("teams"))
-                        || (k_low == "calculator" && (an.contains("hesap makinesi") || an.contains("calculator")))
-                        || (k_low == "store" && an.contains("microsoft store"))
-                        || (k_low == "explorer" && (an.contains("dosya gezgini") || an.contains("file explorer")))
-                        || (k_low == "powershell" && an.contains("powershell"))
-                        || (k_low == "code" && an.contains("visual studio code"))
-                        || (k_low.len() >= 4 && (an.contains(&k_low) || lp.contains(&k_low)))))
-            {
-                return Some(ic.as_str());
-            }
-        }
-        None
+        resolve_icon_from(
+            &self.icon_png_b64,
+            &self.installed_apps,
+            key,
+            display_name,
+            exe_path,
+            aumid,
+        )
     }
 
-    fn map_groups_dto(&self, filter_monitor_id: Option<&str>) -> Vec<Value> {
+    fn map_groups_dto_for_surface(
+        &mut self,
+        surface_id: usize,
+        filter_monitor_id: Option<&str>,
+        icon_delta: &mut serde_json::Map<String, Value>,
+    ) -> Vec<Value> {
         let groups = if let Some(mid) = filter_monitor_id {
             build_dock_groups_ordered(
                 &self.pinned_shortcuts,
@@ -566,11 +554,20 @@ impl RuntimeState {
                         })
                     })
                     .collect();
-                let icon = self.resolve_icon(
+                let icon_raw = resolve_icon_from(
+                    &self.icon_png_b64,
+                    &self.installed_apps,
                     &g.group_key,
                     &g.display_name,
                     &g.executable_path,
                     g.aumid.as_deref(),
+                );
+                let icon = emit_cached_icon(
+                    &mut self.surface_icon_sent,
+                    surface_id,
+                    &g.group_key,
+                    icon_raw,
+                    icon_delta,
                 );
                 let matched_audio = if !g.windows.is_empty() {
                     self.audio.app_sessions.iter().find(|s| {
@@ -591,6 +588,7 @@ impl RuntimeState {
                     "hasActive": g.has_active,
                     "hasAttention": g.needs_attention,
                     "progress": progress,
+                    "iconKey": g.group_key,
                     "icon": icon,
                     "audioPid": matched_audio.map(|s| s.process_id),
                     "audioVolume": matched_audio.map(|s| s.volume_percent),
@@ -730,10 +728,10 @@ impl RuntimeState {
             .collect()
     }
 
-    fn build_desktop_clipboard_dto(&self) -> Vec<Value> {
+    fn build_clipboard_dto(&self, limit: usize) -> Vec<Value> {
         self.clipboard_items
             .iter()
-            .take(5)
+            .take(limit)
             .map(|c| {
                 let short_text: String = if c.kind == "text" {
                     c.text_content.chars().take(200).collect()
@@ -748,6 +746,10 @@ impl RuntimeState {
                 })
             })
             .collect()
+    }
+
+    fn build_desktop_clipboard_dto(&self) -> Vec<Value> {
+        self.build_clipboard_dto(5)
     }
 
     fn build_notifications_dto(&self, limit: usize) -> Vec<Value> {
@@ -768,7 +770,12 @@ impl RuntimeState {
             .collect()
     }
 
-    fn build_trays_dto(&self, limit: usize) -> Vec<Value> {
+    fn build_trays_dto_for_surface(
+        &mut self,
+        surface_id: usize,
+        limit: usize,
+        icon_delta: &mut serde_json::Map<String, Value>,
+    ) -> Vec<Value> {
         self.tray_apps
             .iter()
             .take(limit)
@@ -796,13 +803,73 @@ impl RuntimeState {
                 } else {
                     None
                 };
-                let icon = self.resolve_icon(icon_key, &a.name, &a.executable_path, aumid);
+                let icon_raw = resolve_icon_from(
+                    &self.icon_png_b64,
+                    &self.installed_apps,
+                    icon_key,
+                    &a.name,
+                    &a.executable_path,
+                    aumid,
+                );
+                let icon = emit_cached_icon(
+                    &mut self.surface_icon_sent,
+                    surface_id,
+                    icon_key,
+                    icon_raw,
+                    icon_delta,
+                );
                 json!({
                     "key": a.id,
                     "name": a.name,
                     "subtitle": if a.subtitle.is_empty() { "Arka Plan" } else { a.subtitle.as_str() },
                     "memoryMb": a.memory_mb,
                     "canQuit": true,
+                    "iconKey": icon_key,
+                    "icon": icon,
+                })
+            })
+            .collect()
+    }
+
+    fn build_dock_open_windows_dto(
+        &mut self,
+        surface_id: usize,
+        filter_monitor_id: Option<&str>,
+        icon_delta: &mut serde_json::Map<String, Value>,
+    ) -> Vec<Value> {
+        self.open_windows
+            .iter()
+            .filter(|w| {
+                filter_monitor_id.is_none_or(|mid| {
+                    w.monitor_device_id.is_empty() || w.monitor_device_id.eq_ignore_ascii_case(mid)
+                })
+            })
+            .take(24)
+            .map(|w| {
+                let key = normalize_group_key(&w.process_name, &w.title);
+                let icon_raw = resolve_icon_from(
+                    &self.icon_png_b64,
+                    &self.installed_apps,
+                    &key,
+                    &w.process_name,
+                    &w.executable_path,
+                    w.aumid.as_deref(),
+                );
+                let icon = emit_cached_icon(
+                    &mut self.surface_icon_sent,
+                    surface_id,
+                    &key,
+                    icon_raw,
+                    icon_delta,
+                );
+                json!({
+                    "hwnd": w.hwnd,
+                    "title": w.title,
+                    "processName": w.process_name,
+                    "isTopMost": w.is_top_most,
+                    "isActive": w.is_active,
+                    "monitorId": w.monitor_device_id,
+                    "iconKey": key,
                     "icon": icon,
                 })
             })
@@ -828,13 +895,66 @@ impl RuntimeState {
                     "id": p.id,
                     "name": p.display_name,
                     "path": p.executable_path,
+                    "iconKey": stem,
                     "icon": icon,
                 })
             })
             .collect()
     }
 
-    pub fn build_dock_state_json(&self, mon_id: &str, is_primary: bool, now_ms: u64) -> String {
+    fn build_pinned_shortcuts_dto_for_surface(
+        &mut self,
+        surface_id: usize,
+        limit: usize,
+        icon_delta: &mut serde_json::Map<String, Value>,
+    ) -> Vec<Value> {
+        self.pinned_shortcuts
+            .iter()
+            .take(limit)
+            .map(|p| {
+                let stem = Path::new(&p.executable_path)
+                    .file_stem()
+                    .and_then(|s| s.to_str())
+                    .unwrap_or(&p.display_name)
+                    .to_ascii_lowercase();
+                let aumid = p
+                    .executable_path
+                    .strip_prefix("appsfolder:")
+                    .or_else(|| p.executable_path.strip_prefix("APPSFOLDER:"));
+                let icon_raw = resolve_icon_from(
+                    &self.icon_png_b64,
+                    &self.installed_apps,
+                    &stem,
+                    &p.display_name,
+                    &p.executable_path,
+                    aumid,
+                );
+                let icon = emit_cached_icon(
+                    &mut self.surface_icon_sent,
+                    surface_id,
+                    &stem,
+                    icon_raw,
+                    icon_delta,
+                );
+                json!({
+                    "id": p.id,
+                    "name": p.display_name,
+                    "path": p.executable_path,
+                    "iconKey": stem,
+                    "icon": icon,
+                })
+            })
+            .collect()
+    }
+
+    pub fn build_dock_state_json_for_surface(
+        &mut self,
+        surface_id: usize,
+        mon_id: &str,
+        is_primary: bool,
+        now_ms: u64,
+    ) -> String {
+        let mut icon_delta = serde_json::Map::new();
         let mode = self.prefs.effective_dock_mode();
         let filter = self.prefs.per_monitor_window_filter.then_some(mon_id);
         let (clock_str, short_date) = self.clock_and_short_date();
@@ -856,6 +976,10 @@ impl RuntimeState {
             }
             _ => "Kapalı".to_string(),
         };
+        let total_focus_secs = self.focus_preset_mins.clamp(5, 120).saturating_mul(60);
+        let tray_apps_dto = self.build_trays_dto_for_surface(surface_id, 32, &mut icon_delta);
+        let groups_dto = self.map_groups_dto_for_surface(surface_id, filter, &mut icon_delta);
+        let open_windows_dto = self.build_dock_open_windows_dto(surface_id, filter, &mut icon_delta);
         let payload = json!({
             "monitorId": mon_id,
             "isPrimary": is_primary,
@@ -880,7 +1004,7 @@ impl RuntimeState {
             "cornerRadiusPreset": self.prefs.effective_corner_radius_preset(),
             "dockStartStyle": self.prefs.effective_dock_start_style(),
             "dockSilhouette": self.prefs.effective_dock_silhouette(),
-            "dockIndicatorStyle": self.prefs.effective_dock_indicator_style(),
+            "dockIndicatorStyle": effective_dock_indicator_style(&self.prefs),
             "shellArchitecture": self.prefs.effective_shell_architecture(),
             "islandStyle": self.prefs.effective_island_style(),
             "islandIdleMode": self.prefs.effective_island_idle_mode(),
@@ -933,6 +1057,8 @@ impl RuntimeState {
             "focus": {
                 "running": self.focus_running,
                 "seconds": self.focus_seconds,
+                "totalSeconds": total_focus_secs,
+                "durationSecs": total_focus_secs,
                 "label": format!("{:02}:{:02}", self.focus_seconds / 60, self.focus_seconds % 60),
             },
             "market": self.market,
@@ -941,8 +1067,11 @@ impl RuntimeState {
                 "kind": c.kind,
                 "preview": c.preview_text,
             })),
+            "clipboard": self.build_clipboard_dto(15),
+            "todos": self.todos,
+            "countdown": self.countdown,
             "trayCount": self.tray_apps.len(),
-            "trayApps": self.build_trays_dto(32),
+            "trayApps": tray_apps_dto,
             "dockFolders": folders,
             "audio": {
                 "volume": self.audio.master_volume_percent,
@@ -950,6 +1079,7 @@ impl RuntimeState {
                 "device": self.audio.default_output_name,
             },
             "audioOutputs": self.build_audio_outputs_dto(),
+            "audioSessions": self.build_audio_sessions_dto(),
             "mic": {
                 "supported": self.audio.mic_supported,
                 "muted": self.audio.is_mic_muted,
@@ -976,13 +1106,22 @@ impl RuntimeState {
             "notifications": self.build_notifications_dto(8),
             "agendaNotes": self.agenda_notes,
             "theme": self.build_theme_dto(),
-            "groups": self.map_groups_dto(filter),
+            "themes": build_themes_catalog_dto(),
+            "openWindows": open_windows_dto,
+            "groups": groups_dto,
+            "iconCacheDelta": icon_delta,
         });
         json!({ "type": "state", "payload": payload }).to_string()
     }
 
+    #[allow(dead_code)]
+    pub fn build_dock_state_json(&mut self, mon_id: &str, is_primary: bool, now_ms: u64) -> String {
+        self.build_dock_state_json_for_surface(1, mon_id, is_primary, now_ms)
+    }
+
     pub fn build_widgets_state_json(&self) -> String {
         let (clock_str, short_date) = self.clock_and_short_date();
+        let total_focus_secs = self.focus_preset_mins.clamp(5, 120).saturating_mul(60);
         let payload = json!({
             "theme": self.build_theme_dto(),
             "shellArchitecture": self.prefs.effective_shell_architecture(),
@@ -1028,6 +1167,8 @@ impl RuntimeState {
             "focus": {
                 "running": self.focus_running,
                 "seconds": self.focus_seconds,
+                "totalSeconds": total_focus_secs,
+                "durationSecs": total_focus_secs,
                 "label": format!("{:02}:{:02}", self.focus_seconds / 60, self.focus_seconds % 60),
             },
             "pinnedShortcuts": self.build_pinned_shortcuts_dto(12),
@@ -1046,13 +1187,15 @@ impl RuntimeState {
         json!({ "type": "state", "payload": payload }).to_string()
     }
 
-    pub fn build_crown_state_json(
-        &self,
+    pub fn build_crown_state_json_for_surface(
+        &mut self,
+        surface_id: usize,
         mon_id: &str,
         mon_count: usize,
         native_tb_hidden: bool,
         now_ms: u64,
     ) -> String {
+        let mut icon_delta = serde_json::Map::new();
         let now = chrono::Local::now();
         let clock_str = if self.prefs.show_clock_seconds {
             now.format("%H:%M:%S").to_string()
@@ -1092,7 +1235,22 @@ impl RuntimeState {
             .iter()
             .take(18)
             .map(|w| {
-                let key = w.process_name.to_ascii_lowercase();
+                let key = normalize_group_key(&w.process_name, &w.title);
+                let icon_raw = resolve_icon_from(
+                    &self.icon_png_b64,
+                    &self.installed_apps,
+                    &key,
+                    &w.process_name,
+                    &w.executable_path,
+                    w.aumid.as_deref(),
+                );
+                let icon = emit_cached_icon(
+                    &mut self.surface_icon_sent,
+                    surface_id,
+                    &key,
+                    icon_raw,
+                    &mut icon_delta,
+                );
                 json!({
                     "hwnd": w.hwnd,
                     "title": w.title,
@@ -1100,7 +1258,8 @@ impl RuntimeState {
                     "isTopMost": w.is_top_most,
                     "isActive": w.is_active,
                     "monitorId": w.monitor_device_id,
-                    "icon": self.icon_png_b64.get(&key),
+                    "iconKey": key,
+                    "icon": icon,
                 })
             })
             .collect();
@@ -1111,14 +1270,31 @@ impl RuntimeState {
             .find(|w| w.is_active)
             .or_else(|| self.open_windows.iter().find(|w| w.hwnd == self.last_external_hwnd))
             .or_else(|| self.open_windows.first())
+            .cloned()
             .map(|w| {
-                let key = w.process_name.to_ascii_lowercase();
+                let key = normalize_group_key(&w.process_name, &w.title);
+                let icon_raw = resolve_icon_from(
+                    &self.icon_png_b64,
+                    &self.installed_apps,
+                    &key,
+                    &w.process_name,
+                    &w.executable_path,
+                    w.aumid.as_deref(),
+                );
+                let icon = emit_cached_icon(
+                    &mut self.surface_icon_sent,
+                    surface_id,
+                    &key,
+                    icon_raw,
+                    &mut icon_delta,
+                );
                 json!({
                     "hwnd": w.hwnd,
                     "title": w.title,
                     "processName": w.process_name,
                     "isTopMost": w.is_top_most,
-                    "icon": self.icon_png_b64.get(&key),
+                    "iconKey": key,
+                    "icon": icon,
                 })
             });
 
@@ -1163,30 +1339,26 @@ impl RuntimeState {
                 let size_label = std::fs::metadata(path)
                     .map(|m| if m.is_dir() { "Klasör".into() } else { format_size(m.len()) })
                     .unwrap_or_else(|_| "Dosya".into());
+                let icon_key = format!("shelf:{p}");
+                let icon = emit_cached_icon(
+                    &mut self.surface_icon_sent,
+                    surface_id,
+                    &icon_key,
+                    self.icon_png_b64.get(p).map(String::as_str),
+                    &mut icon_delta,
+                );
                 json!({
                     "name": name,
                     "path": p,
                     "sizeLabel": size_label,
-                    "icon": self.icon_png_b64.get(p),
-                })
-            })
-            .collect();
-
-        let trays: Vec<Value> = self
-            .tray_apps
-            .iter()
-            .map(|a| {
-                let icon = self.resolve_icon(&a.id, &a.name, &a.executable_path, None);
-                json!({
-                    "key": a.id,
-                    "name": a.name,
-                    "subtitle": if a.subtitle.is_empty() { "Arka Plan" } else { a.subtitle.as_str() },
-                    "memoryMb": a.memory_mb,
-                    "canQuit": true,
+                    "iconKey": icon_key,
                     "icon": icon,
                 })
             })
             .collect();
+
+        let trays = self.build_trays_dto_for_surface(surface_id, 64, &mut icon_delta);
+        let pinned_dto = self.build_pinned_shortcuts_dto_for_surface(surface_id, 18, &mut icon_delta);
 
         let clips: Vec<Value> = self
             .clipboard_items
@@ -1372,7 +1544,7 @@ impl RuntimeState {
             "cornerRadiusPreset": self.prefs.effective_corner_radius_preset(),
             "dockStartStyle": self.prefs.effective_dock_start_style(),
             "dockSilhouette": self.prefs.effective_dock_silhouette(),
-            "dockIndicatorStyle": self.prefs.effective_dock_indicator_style(),
+            "dockIndicatorStyle": effective_dock_indicator_style(&self.prefs),
             "shellArchitecture": self.prefs.effective_shell_architecture(),
             "islandStyle": self.prefs.effective_island_style(),
             "islandIdleMode": self.prefs.effective_island_idle_mode(),
@@ -1405,7 +1577,7 @@ impl RuntimeState {
             "disks": self.disks,
             "aiConfigs": self.ai_configs,
             "aiSnapshots": self.ai_snapshots,
-            "pinnedShortcuts": self.build_pinned_shortcuts_dto(18),
+            "pinnedShortcuts": pinned_dto,
             "hardwareOsdEnabled": self.prefs.hardware_osd_enabled,
             "altDragEnabled": self.prefs.alt_drag_enabled,
             "showClockSeconds": self.prefs.show_clock_seconds,
@@ -1465,6 +1637,9 @@ impl RuntimeState {
             "trayApps": trays,
             "focus": {
                 "running": self.focus_running,
+                "seconds": self.focus_seconds,
+                "totalSeconds": self.focus_preset_mins.clamp(5, 120).saturating_mul(60),
+                "durationSecs": self.focus_preset_mins.clamp(5, 120).saturating_mul(60),
                 "label": format!("{:02}:{:02}", self.focus_seconds / 60, self.focus_seconds % 60),
             },
             "theme": self.build_theme_dto(),
@@ -1528,9 +1703,21 @@ impl RuntimeState {
                 "summary": self.weather.condition_tr,
             },
             "notifications": notifs,
+            "iconCacheDelta": icon_delta,
         });
 
         json!({ "type": "state", "payload": payload }).to_string()
+    }
+
+    #[allow(dead_code)]
+    pub fn build_crown_state_json(
+        &mut self,
+        mon_id: &str,
+        mon_count: usize,
+        native_tb_hidden: bool,
+        now_ms: u64,
+    ) -> String {
+        self.build_crown_state_json_for_surface(0, mon_id, mon_count, native_tb_hidden, now_ms)
     }
 }
 
@@ -1623,7 +1810,11 @@ fn str_prop<'a>(v: &'a Value, key: &str) -> &'a str {
 
 fn i64_prop(v: &Value, key: &str, def: i64) -> i64 {
     v.get(key)
-        .and_then(|x| x.as_i64().or_else(|| x.as_f64().map(|f| f.round() as i64)))
+        .and_then(|x| {
+            x.as_i64()
+                .or_else(|| x.as_f64().map(|f| f.round() as i64))
+                .or_else(|| x.as_str().and_then(|s| s.trim().parse::<i64>().ok()))
+        })
         .unwrap_or(def)
 }
 
@@ -1848,9 +2039,16 @@ pub fn handle_bridge_action(
 
         // ── v4.0 Panel Routing (Start, Quick Controls, Calendar/Notifications, Tools, Settings, Widget Gallery) ──
         "openStartHub" => {
-            *env.popup_opened_at_ms = env.now_ms;
-            env.crown.focus_and_activate();
-            env.crown.post_json(r#"{"type":"toggleOmni"}"#);
+            if str_prop(msg, "target") == "dock" {
+                if let Some(d) = env.docks.iter_mut().find(|d| d.monitor_id.eq_ignore_ascii_case(source_mon_id)) {
+                    d.focus_for_inline_input();
+                    d.post_json(r#"{"type":"toggleOmni"}"#);
+                }
+            } else {
+                *env.popup_opened_at_ms = env.now_ms;
+                env.crown.focus_and_activate();
+                env.crown.post_json(r#"{"type":"toggleOmni"}"#);
+            }
         }
         "openQuickControls" => {
             if env.state.prefs.effective_show_dock_status() && !env.docks.is_empty() && str_prop(msg, "target") != "crown" {
@@ -2098,8 +2296,9 @@ pub fn handle_bridge_action(
         "setDockIndicatorStyle" => {
             let s = match str_prop(msg, "style") {
                 "dot" => "dot",
-                "frame" => "frame",
+                "bar" => "bar",
                 "glow" => "glow",
+                "frame" => "frame",
                 _ => "pill",
             };
             env.state.prefs.dock_indicator_style = s.into();
@@ -2191,6 +2390,15 @@ pub fn handle_bridge_action(
             }
             if let Some(pg) = msg.get("privacyGuard").and_then(|v| v.as_bool()) {
                 env.state.prefs.island_privacy_guard = pg;
+            }
+            if let Some(nm) = msg.get("notifMirror").and_then(|v| v.as_bool()) {
+                env.state.prefs.system_notification_bridge_enabled = nm;
+                env.state.prefs.notification_mode = if nm {
+                    "aurora-mirror".into()
+                } else {
+                    env.state.unread_notif_count = 0;
+                    "windows-native".into()
+                };
             }
             env.save_prefs();
             *env.needs_state_push = true;
@@ -2754,6 +2962,28 @@ pub fn handle_bridge_action(
             *env.needs_widgets_sync = true;
             *env.needs_state_push = true;
         }
+        "applyWidgetPreset" => {
+            let preset = str_prop(msg, "preset");
+            let (label, list) = build_widget_preset(preset);
+            env.state.widgets = list;
+            env.state.prefs.widgets_enabled = true;
+            env.state.prefs.widgets_locked = false;
+            env.state.widget_edit_mode = false;
+            env.save_prefs();
+            env.save_widgets();
+            if env.state.widgets.iter().any(|w| w.kind == "weather" || w.kind == "forecast-strip") {
+                let _ = env.bg_tx.try_send(BgCommand::RefreshWeather);
+            }
+            if env.state.needs_ai_quota_poll() {
+                let _ = env.bg_tx.try_send(BgCommand::RefreshAiQuota(env.state.ai_configs.clone()));
+            }
+            if env.state.needs_local_ai_or_disks_poll() {
+                let _ = env.bg_tx.try_send(BgCommand::RefreshLocalAiAndDisks);
+            }
+            env.post_toast("Widget Ön Ayarı Uygulandı", label, None);
+            *env.needs_widgets_sync = true;
+            *env.needs_state_push = true;
+        }
         "removeDesktopWidget" => {
             let id = str_prop(msg, "id");
             let before = env.state.widgets.len();
@@ -2998,11 +3228,11 @@ pub fn handle_bridge_action(
             let wins: Vec<isize> = env.state.open_windows.iter().take(2).map(|w| w.hwnd).collect();
             if let Some(&h0) = wins.first() {
                 match preset {
-                    "split" | "sideBySide" => {
+                    "split" | "sideBySide" | "split5050" | "code6535" | "studio3" => {
                         arrange_window(h0, "left");
                         if let Some(&h1) = wins.get(1) { arrange_window(h1, "right"); }
                     }
-                    "focus" | "center" => arrange_window(h0, "center"),
+                    "focus" | "center" | "zen75" => arrange_window(h0, "center"),
                     _ => arrange_window(h0, "max"),
                 }
             }
@@ -3190,9 +3420,24 @@ pub fn handle_bridge_action(
             }
         }
         "launchNewInstance" => {
-            let key = str_prop(msg, "key");
-            if let Some(g) = env.state.dock_groups.iter().find(|g| g.group_key == key).cloned() {
-                launch_dock_group_reliably(env, &g);
+            let key = str_prop(msg, "key").trim();
+            let path = str_prop(msg, "path").trim();
+            if !key.is_empty() {
+                if let Some(g) = env
+                    .state
+                    .dock_groups
+                    .iter()
+                    .find(|g| g.group_key.eq_ignore_ascii_case(key))
+                    .cloned()
+                {
+                    launch_dock_group_reliably(env, &g);
+                } else if !path.is_empty() {
+                    launch_path_with_fallback(env, path);
+                } else if let Some(resolved) = env.state.resolve_launch_fallback("", key, None) {
+                    launch_path_with_fallback(env, &resolved);
+                }
+            } else if !path.is_empty() {
+                launch_path_with_fallback(env, path);
             }
         }
         "closeAllGroupWindows" => {
@@ -3226,7 +3471,8 @@ pub fn handle_bridge_action(
                     let px_w = (260.0 * dw.dpi_scale as f64).round() as i32;
                     let px_h = (154.0 * dw.dpi_scale as f64).round() as i32;
                     let cx = dw.bounds_px.x + ((hl + hw * 0.5) * sx).round() as i32;
-                    let py = (dw.bounds_px.y + (ht * sy).round() as i32 - px_h - 10).max(12);
+                    let py = (dw.bounds_px.y + (ht * sy).round() as i32 - px_h - 10)
+                        .max(dw.bounds_px.y - px_h - 12);
                     if let Some(prev) = env.dwm_preview.as_mut() {
                         prev.show(hwnd, PhysicalRect::new(cx - px_w / 2, py, px_w, px_h));
                     }
@@ -3265,23 +3511,20 @@ pub fn handle_bridge_action(
 
         // ── OmniSearch, Launch & Local File Search ──
         "launchPath" => {
-            let p = str_prop(msg, "path");
+            let p = str_prop(msg, "path").trim();
             if !p.is_empty() {
                 *env.state.frecency.entry(p.to_string()).or_insert(0) += 1;
                 env.aux_store.save_frecency(&env.state.frecency);
-                let ok = if launch_target_with_args(p, "").is_ok() {
-                    true
-                } else if let Some(fallback) = env.state.resolve_launch_fallback(p, "", None) {
-                    launch_target_with_args(&fallback, "").is_ok()
-                } else {
-                    false
-                };
-                if !ok {
-                    env.logger.warn("LAUNCH", "LAUNCH_PATH_FAILED", &format!("Failed path='{p}'"));
-                    env.post_toast("Hedef Açılamadı", "Seçilen uygulama veya dosya yolu bulunamadı.", None);
-                }
+                launch_path_with_fallback(env, p);
                 let j = json!({ "type": "frecency", "frecency": env.state.frecency }).to_string();
                 env.crown.post_json(&j);
+            }
+        }
+        "openWebUrl" => {
+            let url = str_prop(msg, "url").trim();
+            if !open_safe_web_url(url) {
+                env.logger.warn("BRIDGE", "INVALID_WEB_URL", &format!("Rejected URL: '{url}'"));
+                env.post_toast("Geçersiz Web Adresi", "Yalnızca http:// veya https:// adresleri açılabilir.", None);
             }
         }
         "openUri" => {
@@ -3857,8 +4100,24 @@ pub fn handle_bridge_action(
         }
         "copyClipById" => {
             let id = i64_prop(msg, "id", -1);
-            if let Some(item) = env.state.clipboard_items.iter().find(|c| c.id == id).cloned() {
-                use_clipboard_item(env, &item);
+            if id >= 0 {
+                let found = env
+                    .state
+                    .clipboard_items
+                    .iter()
+                    .find(|c| c.id == id)
+                    .cloned()
+                    .or_else(|| {
+                        let expanded = env.clip_db.list("all", "", 200);
+                        let item = expanded.iter().find(|c| c.id == id).cloned();
+                        if item.is_some() {
+                            env.state.clipboard_items = expanded;
+                        }
+                        item
+                    });
+                if let Some(item) = found {
+                    use_clipboard_item(env, &item);
+                }
             }
         }
         "copyClipIndex" => {
@@ -3999,14 +4258,28 @@ pub fn handle_bridge_action(
         }
         "startFocusMinutes" => {
             let mins = i64_prop(msg, "minutes", 25).clamp(1, 120) as u32;
+            env.state.focus_preset_mins = mins.max(5);
             env.state.focus_seconds = mins * 60;
             env.state.focus_running = true;
+            *env.needs_state_push = true;
+        }
+        "setFocusPreset" => {
+            let mins = i64_prop(msg, "minutes", 25).clamp(5, 120) as u32;
+            let start = bool_prop(msg, "start");
+            env.state.focus_preset_mins = mins;
+            env.state.focus_seconds = mins * 60;
+            env.state.focus_running = start;
+            *env.needs_state_push = true;
+        }
+        "resetFocus" => {
+            env.state.focus_running = false;
+            env.state.focus_seconds = env.state.focus_preset_mins.clamp(5, 120) * 60;
             *env.needs_state_push = true;
         }
         "toggleFocus" => {
             env.state.focus_running = !env.state.focus_running;
             if env.state.focus_seconds == 0 {
-                env.state.focus_seconds = 25 * 60;
+                env.state.focus_seconds = env.state.focus_preset_mins.clamp(5, 120) * 60;
             }
             *env.needs_state_push = true;
         }
@@ -4024,13 +4297,14 @@ pub fn handle_bridge_action(
             *env.needs_state_push = true;
         }
         "switchVirtualDesktopIndex" => {
-            let target = i64_prop(msg, "index", 1).max(1) as i32;
-            let diff = target - env.state.virtual_desktop_index;
-            for _ in 0..diff.abs().min(8) {
-                send_virtual_desktop_step(diff > 0);
+            let total = env.state.virtual_desktop_count.max(1);
+            let target = (i64_prop(msg, "index", 1) as i32).clamp(1, total);
+            let current = env.state.virtual_desktop_index.clamp(1, total);
+            if target != current {
+                switch_virtual_desktop_to_index(current as u32, target as u32);
+                env.state.virtual_desktop_index = target;
+                *env.needs_state_push = true;
             }
-            env.state.virtual_desktop_index = target;
-            *env.needs_state_push = true;
         }
         "createVirtualDesktop" => {
             create_virtual_desktop();
@@ -4082,6 +4356,14 @@ pub fn handle_bridge_action(
         }
         "lockPc" => trigger_lock_workstation(),
         "sleepPc" => trigger_sleep(),
+        "systemPower" => match str_prop(msg, "action") {
+            "lock" => trigger_lock_workstation(),
+            "sleep" => trigger_sleep(),
+            "display_off" => trigger_display_off(),
+            other => {
+                env.logger.warn("BRIDGE", "UNKNOWN_POWER_ACTION", &format!("Unhandled systemPower action: {other}"));
+            }
+        },
         "restartPc" => trigger_power_command(true),
         "shutdownPc" => trigger_power_command(false),
 
@@ -4176,6 +4458,254 @@ fn use_clipboard_item(env: &mut BridgeEnv<'_>, item: &ClipboardVaultEntry) {
         }
     } else if let Some(img) = &item.image_path {
         let _ = launch_target(img);
+        env.post_toast("Pano Görseli Açıldı", &item.preview_text, None);
+    }
+}
+
+fn effective_dock_indicator_style(prefs: &ShellRuntimePreferences) -> &'static str {
+    match prefs.dock_indicator_style.as_str() {
+        "dot" => "dot",
+        "bar" => "bar",
+        "glow" => "glow",
+        "frame" => "frame",
+        _ => "pill",
+    }
+}
+
+fn icon_content_rev(b64: &str) -> u64 {
+    let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
+    for &b in b64.as_bytes() {
+        hash ^= b as u64;
+        hash = hash.wrapping_mul(0x0100_0000_01b3);
+    }
+    if hash == 0 { 1 } else { hash }
+}
+
+fn emit_cached_icon(
+    surface_icon_sent: &mut HashMap<usize, HashMap<String, u64>>,
+    surface_id: usize,
+    icon_key: &str,
+    icon_b64: Option<&str>,
+    icon_delta: &mut serde_json::Map<String, Value>,
+) -> Option<String> {
+    let b64 = icon_b64.filter(|s| !s.is_empty())?;
+    let rev = icon_content_rev(b64);
+    let sent = surface_icon_sent.entry(surface_id).or_default();
+    if sent.get(icon_key).copied() == Some(rev) {
+        return None;
+    }
+    sent.insert(icon_key.to_string(), rev);
+    icon_delta.insert(icon_key.to_string(), Value::String(b64.to_string()));
+    Some(b64.to_string())
+}
+
+fn resolve_icon_from<'a>(
+    icon_png_b64: &'a HashMap<String, String>,
+    installed_apps: &'a [InstalledAppEntry],
+    key: &str,
+    display_name: &str,
+    exe_path: &str,
+    aumid: Option<&str>,
+) -> Option<&'a str> {
+    if let Some(b64) = icon_png_b64.get(key) {
+        return Some(b64.as_str());
+    }
+    let k_low = key.to_ascii_lowercase();
+    let d_low = display_name.to_ascii_lowercase();
+    let e_low = exe_path.to_ascii_lowercase();
+    let au_low = aumid.map(|s| s.trim().to_ascii_lowercase()).unwrap_or_default();
+    let pfn_low = au_low.split('!').next().unwrap_or("").to_string();
+    // Fast cross-match against the 300-item COM AppsFolder + StartMenu catalog!
+    for app in installed_apps {
+        let Some(ref ic) = app.icon_base64 else {
+            continue;
+        };
+        let lp = app.launch_path.to_ascii_lowercase();
+        let an = app.name.to_ascii_lowercase();
+        if (!au_low.is_empty() && (lp == format!("appsfolder:{au_low}") || lp.contains(&au_low)))
+            || (!pfn_low.is_empty() && pfn_low.len() >= 8 && lp.contains(&pfn_low))
+            || (!e_low.is_empty() && lp == e_low)
+            || (!d_low.is_empty() && (an == d_low || an.contains(&d_low) || d_low.contains(&an)))
+            || (!k_low.is_empty()
+                && (((k_low == "wt" || k_low == "windowsterminal") && an.contains("terminal"))
+                    || (k_low == "msedge" && an.contains("edge"))
+                    || (k_low == "whatsapp" && an.contains("whatsapp"))
+                    || (k_low == "ms-teams" && an.contains("teams"))
+                    || (k_low == "calculator" && (an.contains("hesap makinesi") || an.contains("calculator")))
+                    || (k_low == "store" && an.contains("microsoft store"))
+                    || (k_low == "explorer" && (an.contains("dosya gezgini") || an.contains("file explorer")))
+                    || (k_low == "powershell" && an.contains("powershell"))
+                    || (k_low == "code" && an.contains("visual studio code"))
+                    || (k_low.len() >= 4 && (an.contains(&k_low) || lp.contains(&k_low)))))
+        {
+            return Some(ic.as_str());
+        }
+    }
+    None
+}
+
+fn build_themes_catalog_dto() -> Vec<Value> {
+    built_in_themes()
+        .into_iter()
+        .map(|t| {
+            let is_light = t.color_mode == ColorMode::Light;
+            json!({
+                "id": t.id,
+                "name": t.display_name,
+                "desc": t.description,
+                "visualStyle": t.visual_style.as_str(),
+                "styleTag": t.visual_style.style_tag_tr(),
+                "mode": if is_light { "Açık" } else { "Koyu" },
+                "isLight": is_light,
+                "accent": t.colors.accent_primary,
+                "accent2": t.colors.accent_secondary,
+                "surface1": t.colors.surface1,
+                "surface2": t.colors.surface2,
+            })
+        })
+        .collect()
+}
+
+fn launch_path_with_fallback(env: &mut BridgeEnv<'_>, p: &str) {
+    let ok = if launch_target_with_args(p, "").is_ok() {
+        true
+    } else if let Some(fallback) = env.state.resolve_launch_fallback(p, "", None) {
+        launch_target_with_args(&fallback, "").is_ok()
+    } else {
+        false
+    };
+    if !ok {
+        env.logger.warn("LAUNCH", "LAUNCH_PATH_FAILED", &format!("Failed path='{p}'"));
+        env.post_toast("Hedef Açılamadı", "Seçilen uygulama veya dosya yolu bulunamadı.", None);
+    }
+}
+
+fn is_safe_web_url(raw: &str) -> bool {
+    let trimmed = raw.trim();
+    if trimmed.is_empty() || trimmed.len() > 2048 {
+        return false;
+    }
+    if trimmed.chars().any(|c| c.is_control() || c.is_whitespace()) {
+        return false;
+    }
+    let low = trimmed.to_ascii_lowercase();
+    (low.starts_with("https://") && trimmed.len() > 8)
+        || (low.starts_with("http://") && trimmed.len() > 7)
+}
+
+fn open_safe_web_url(raw: &str) -> bool {
+    let trimmed = raw.trim();
+    if !is_safe_web_url(trimmed) {
+        return false;
+    }
+    use windows::core::{w, HSTRING, PCWSTR};
+    use windows::Win32::UI::Shell::ShellExecuteW;
+    use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
+    let w_url = HSTRING::from(trimmed);
+    let h = unsafe {
+        ShellExecuteW(
+            None,
+            w!("open"),
+            &w_url,
+            PCWSTR::null(),
+            PCWSTR::null(),
+            SW_SHOWNORMAL,
+        )
+    };
+    (h.0 as isize) > 32
+}
+
+fn trigger_display_off() {
+    use windows::Win32::Foundation::{LPARAM, WPARAM};
+    use windows::Win32::UI::WindowsAndMessaging::{
+        SendNotifyMessageW, HWND_BROADCAST, SC_MONITORPOWER, WM_SYSCOMMAND,
+    };
+    unsafe {
+        let _ = SendNotifyMessageW(
+            HWND_BROADCAST,
+            WM_SYSCOMMAND,
+            WPARAM(SC_MONITORPOWER as usize),
+            LPARAM(2),
+        );
+    }
+}
+
+fn build_widget_preset(preset: &str) -> (&'static str, Vec<DesktopWidgetInstance>) {
+    let mk = |idx: usize, kind: &str, variant: &str, skin: &str, size: &str, x: i32, y: i32| DesktopWidgetInstance {
+        id: format!("w-p-{kind}-{idx}"),
+        kind: kind.into(),
+        variant: variant.into(),
+        skin: skin.into(),
+        size: size.into(),
+        x,
+        y,
+        opacity: None,
+        accent_hex: None,
+        pinned_top: false,
+        note_text: (kind == "notes").then(|| "Bugünkü notlarım...".into()),
+        photo_path: None,
+    };
+    match preset {
+        "minimal-studio" => (
+            "Minimal Stüdyo",
+            vec![
+                mk(0, "clock", "swiss", "frameless", "M", -344, 48),
+                mk(1, "forecast-strip", "strip", "neoglass", "M", -344, 236),
+                mk(2, "studio-strip", "strip", "neoglass", "M", -344, 416),
+            ],
+        ),
+        "dev-cockpit" => (
+            "Geliştirici Kokpit",
+            vec![
+                mk(0, "clock", "dev-hex", "braun", "M", -348, 48),
+                mk(1, "system", "oscilloscope", "braun", "M", -348, 224),
+                mk(2, "ai-quota", "cards", "braun", "L", -348, 414),
+                mk(3, "local-ai", "models", "braun", "M", -692, 48),
+            ],
+        ),
+        "productivity" => (
+            "Üretkenlik",
+            vec![
+                mk(0, "focus-rings", "rings", "neoglass", "M", -348, 48),
+                mk(1, "pomodoro", "ring", "glass", "M", -348, 240),
+                mk(2, "todo", "list", "glass", "M", -348, 420),
+                mk(3, "calendar", "today", "glass", "M", -692, 48),
+                mk(4, "notes", "glass", "glass", "M", -692, 260),
+            ],
+        ),
+        "media-lounge" => (
+            "Medya Salonu",
+            vec![
+                mk(0, "studio-strip", "strip", "neoglass", "M", -360, 48),
+                mk(1, "media", "poster", "neoglass", "L", -360, 210),
+                mk(2, "audio-mixer", "mixer", "glass", "M", -360, 440),
+                mk(3, "world-clock", "cities", "editorial", "M", -704, 48),
+            ],
+        ),
+        "clean" => ("Temiz Masaüstü", Vec::new()),
+        _ => ("Minimal Stüdyo", default_starter_widgets()),
+    }
+}
+
+/// Non-blocking bounded virtual desktop stepper (local thin wrapper ready for win32-perf integration).
+fn switch_virtual_desktop_to_index(current: u32, target: u32) {
+    let diff = target as i32 - current as i32;
+    let steps = diff.unsigned_abs().min(8);
+    if steps == 0 {
+        return;
+    }
+    let right = diff > 0;
+    if steps == 1 {
+        send_virtual_desktop_step(right);
+    } else {
+        std::thread::spawn(move || {
+            for i in 0..steps {
+                if i > 0 {
+                    std::thread::sleep(std::time::Duration::from_millis(35));
+                }
+                send_virtual_desktop_step(right);
+            }
+        });
     }
 }
 
@@ -4205,7 +4735,7 @@ fn apply_awake_mode(env: &mut BridgeEnv<'_>, mode: &str) {
             env.state.awake_until_ms = Some(env.now_ms + 30 * 60_000);
             set_awake_keep_alive(true);
         }
-        "60m" => {
+        "60m" | "1h" => {
             env.state.awake_mode = "60m".into();
             env.state.awake_until_ms = Some(env.now_ms + 60 * 60_000);
             set_awake_keep_alive(true);
@@ -4295,5 +4825,152 @@ fn activate_tray_app(state: &RuntimeState, app: &BackgroundTrayApp) {
 
     if !app.executable_path.is_empty() {
         let _ = launch_target(&app.executable_path);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use aurora_core::{default_countdown, ShellRuntimePreferences};
+
+    fn mk_test_state() -> RuntimeState {
+        let mut state = RuntimeState::new(
+            UserPreferencesRecord::default(),
+            ShellRuntimePreferences::default(),
+            default_workspace_profiles(),
+            Vec::new(),
+            Vec::new(),
+            default_dock_widgets(),
+            Vec::new(),
+            default_countdown(),
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            HashMap::new(),
+            String::new(),
+            HashMap::new(),
+        );
+        state.installed_apps = vec![InstalledAppEntry {
+            id: "appsfolder-0".into(),
+            name: "Chrome".into(),
+            launch_path: r"C:\Apps\chrome.exe".into(),
+            category: "Tarayıcı".into(),
+            keywords: "chrome".into(),
+            kind: "app".into(),
+            icon_base64: Some("AAAA_CHROME_B64_PAYLOAD_TEST".repeat(40)),
+        }];
+        state.dock_groups = vec![DockAppGroup {
+            group_key: "chrome".into(),
+            display_name: "Chrome".into(),
+            executable_path: r"C:\Apps\chrome.exe".into(),
+            is_pinned: true,
+            pin_id: Some("pin-1".into()),
+            has_active: true,
+            needs_attention: false,
+            progress_percent: None,
+            aumid: None,
+            audio_pid: None,
+            audio_volume: None,
+            audio_muted: false,
+            windows: Vec::new(),
+        }];
+        state
+    }
+
+    #[test]
+    fn dock_and_catalog_icon_cache_slashes_repeat_payloads_and_resets_on_ui_ready() {
+        let mut state = mk_test_state();
+
+        // First push to dock surface 1 -> sends icon + iconCacheDelta
+        let p1 = state.build_dock_state_json_for_surface(1, "MON1", true, 1000);
+        let v1: Value = serde_json::from_str(&p1).unwrap();
+        let g1 = &v1["payload"]["groups"][0];
+        assert_eq!(g1["iconKey"], "chrome");
+        assert!(g1["icon"].as_str().is_some());
+        assert!(v1["payload"]["iconCacheDelta"]["chrome"].as_str().is_some());
+
+        // Second push to same surface -> icon is null & iconCacheDelta is empty
+        let p2 = state.build_dock_state_json_for_surface(1, "MON1", true, 2000);
+        let v2: Value = serde_json::from_str(&p2).unwrap();
+        assert!(v2["payload"]["groups"][0]["icon"].is_null());
+        assert_eq!(v2["payload"]["iconCacheDelta"].as_object().unwrap().len(), 0);
+        assert!(p2.len() < p1.len());
+
+        // Surface 2 (second monitor) still gets icon on its first sight!
+        let p_mon2 = state.build_dock_state_json_for_surface(2, "MON2", false, 2000);
+        let v_mon2: Value = serde_json::from_str(&p_mon2).unwrap();
+        assert!(v_mon2["payload"]["groups"][0]["icon"].as_str().is_some());
+        assert!(v_mon2["payload"]["iconCacheDelta"]["chrome"].as_str().is_some());
+
+        // Resetting surface 1 (on uiReady) causes icon to be sent again on next push
+        state.reset_surface_icon_cache(1);
+        let p3 = state.build_dock_state_json_for_surface(1, "MON1", true, 3000);
+        let v3: Value = serde_json::from_str(&p3).unwrap();
+        assert!(v3["payload"]["groups"][0]["icon"].as_str().is_some());
+        assert!(v3["payload"]["iconCacheDelta"]["chrome"].as_str().is_some());
+
+        // Catalog per-surface caching works identically
+        let c1 = state.build_catalog_json_for_surface(1);
+        let cv1: Value = serde_json::from_str(&c1).unwrap();
+        assert_eq!(cv1["installedApps"][0]["iconKey"], "app:appsfolder-0");
+        assert!(cv1["installedApps"][0]["icon"].as_str().is_some());
+        assert!(cv1["iconCacheDelta"]["app:appsfolder-0"].as_str().is_some());
+
+        let c2 = state.build_catalog_json_for_surface(1);
+        let cv2: Value = serde_json::from_str(&c2).unwrap();
+        assert!(cv2["installedApps"][0]["icon"].is_null());
+        assert_eq!(cv2["iconCacheDelta"].as_object().unwrap().len(), 0);
+    }
+
+    #[test]
+    fn dock_state_includes_omni_and_popover_fields_and_indicator_bar() {
+        let mut state = mk_test_state();
+        state.prefs.dock_indicator_style = "bar".into();
+        let json_str = state.build_dock_state_json_for_surface(1, "MON1", true, 1000);
+        let v: Value = serde_json::from_str(&json_str).unwrap();
+        let p = &v["payload"];
+        assert_eq!(p["dockIndicatorStyle"], "bar");
+        assert!(p["audioSessions"].is_array());
+        assert!(p["clipboard"].is_array());
+        assert!(p["todos"].is_array());
+        assert!(p["countdown"].is_object());
+        assert!(p["openWindows"].is_array());
+        assert!(p["themes"].is_array());
+        assert_eq!(p["focus"]["totalSeconds"], 1500);
+        assert_eq!(p["focus"]["durationSecs"], 1500);
+    }
+
+    #[test]
+    fn web_url_validator_allows_only_http_and_https() {
+        assert!(is_safe_web_url("https://www.google.com/search?q=aurora"));
+        assert!(is_safe_web_url("http://localhost:8080/health"));
+        assert!(!is_safe_web_url("javascript:alert(1)"));
+        assert!(!is_safe_web_url("file:///C:/Windows/System32/calc.exe"));
+        assert!(!is_safe_web_url("cmdrun:calc.exe"));
+        assert!(!is_safe_web_url("ms-settings:"));
+        assert!(!is_safe_web_url("https://"));
+        assert!(!is_safe_web_url("https://evil.com/a b"));
+    }
+
+    #[test]
+    fn desktop_widget_presets_cover_all_five_modes() {
+        let (_, minimal) = build_widget_preset("minimal-studio");
+        assert_eq!(minimal.len(), 3);
+        let (_, dev) = build_widget_preset("dev-cockpit");
+        assert_eq!(dev.len(), 4);
+        let (_, prod) = build_widget_preset("productivity");
+        assert_eq!(prod.len(), 5);
+        let (_, media) = build_widget_preset("media-lounge");
+        assert_eq!(media.len(), 4);
+        let (_, clean) = build_widget_preset("clean");
+        assert!(clean.is_empty());
+
+        for sty in ["dot", "bar", "glow", "pill", "frame"] {
+            let prefs = ShellRuntimePreferences {
+                dock_indicator_style: sty.into(),
+                ..Default::default()
+            };
+            assert_eq!(effective_dock_indicator_style(&prefs), sty);
+        }
     }
 }
