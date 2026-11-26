@@ -5989,7 +5989,7 @@ function renderAlternateHubStyle(hub, g, hubStyle, forceAnimate) {
                 <div class="arc-node ${w.isActive ? 'active-win' : ''}"
                      style="left:${p.x.toFixed(1)}px;top:${p.y.toFixed(1)}px;"
                      onmouseenter="radialSelectedHwnd=${w.hwnd};scheduleDwmPreview(${w.hwnd},false);"
-                     onclick="send('focusWindow',{hwnd:${w.hwnd}});closeRadialHub(true);"
+                     onclick="event.stopPropagation();send('focusWindow',{hwnd:${w.hwnd}});closeRadialHub(true);"
                      onauxclick="if(event.button===1){event.stopPropagation();send('closeWindow',{hwnd:${w.hwnd}});}">
                     ${g.icon ? `<img src="data:image/png;base64,${g.icon}"/>` : ''}
                     <span>${escHtml(shortOrbLabel(clean))}</span>
@@ -6040,7 +6040,7 @@ function renderAlternateHubStyle(hub, g, hubStyle, forceAnimate) {
                     <div class="fan3d-card ${w.isActive ? 'active-win' : ''}"
                          style="--fan-rot:${rot}deg;--fan-dy:${dy}px;--fan-ry:${ry}deg;--fan-z:${10 - Math.round(Math.abs(d))};"
                          onmouseenter="radialSelectedHwnd=${w.hwnd};scheduleDwmPreview(${w.hwnd},false);"
-                         onclick="send('focusWindow',{hwnd:${w.hwnd}});closeRadialHub(true);">
+                         onclick="event.stopPropagation();send('focusWindow',{hwnd:${w.hwnd}});closeRadialHub(true);">
                         <div class="wcard-top">
                             ${g.icon ? `<img src="data:image/png;base64,${g.icon}"/>` : ''}
                             <span class="wcard-title">${escHtml(shortOrbLabel(clean))}</span>
@@ -6065,7 +6065,7 @@ function renderAlternateHubStyle(hub, g, hubStyle, forceAnimate) {
                 return `
                     <div class="win-card ${w.isActive ? 'active-win' : ''}"
                          onmouseenter="radialSelectedHwnd=${w.hwnd};scheduleDwmPreview(${w.hwnd},false);"
-                         onclick="send('focusWindow',{hwnd:${w.hwnd}});closeRadialHub(true);">
+                         onclick="event.stopPropagation();send('focusWindow',{hwnd:${w.hwnd}});closeRadialHub(true);">
                         <div class="wcard-top">
                             ${g.icon ? `<img src="data:image/png;base64,${g.icon}"/>` : ''}
                             <span class="wcard-title">${escHtml(g.displayName)}</span>
@@ -6953,7 +6953,9 @@ document.addEventListener('pointerdown', (e) => {
         || widgetInspectorKind || quickWheelOpen || aiPopOpen || ctxMenuOpen;
     if (!anyOpen) return;
     if (e.target.closest(
-        '.dock-pop, .dock-ctx-menu, .quick-wheel-pop, .radial-hub, .folder-stack-card, ' +
+        '#radialHub, #folderStackCard, #quickWheelPop, #dockCtxMenu, #dockTrayPop, ' +
+        '#dockQuickControls, #dockCalNotif, #dockWidgetPicker, #dockWidgetInspector, #dockAiPop, ' +
+        '.dock-pop, .hub-shell-card, .fan3d-card, .win-card, .arc-node, .orb-node, ' +
         '.dock-item, .dock-pill, .dock-widget, .micro-btn, .tray-btn, button, input, select'
     )) {
         return;

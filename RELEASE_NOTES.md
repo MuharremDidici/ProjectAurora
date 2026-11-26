@@ -1,5 +1,11 @@
 # Project Aurora — Sürüm Notları
 
+## v7.2.1
+> Summary: Çoklu pencere önizleme kartlarından (3D Yelpaze, Win11 Kartlar, Dairesel Küre, Yay Çemberi), Klasör Yığını ve Hızlı Aksiyon Çemberi'nden seçim yapıldığında pencere/öğe açılmamasını önleyen pointerdown dış-kapanma seçici düzeltmesi.
+
+### Hata Düzeltmesi
+- **Çoklu Pencere & Klasör Seçim Düzeltmesi ([dock.html](aurora-rs/crates/aurora-app/ui/dock.html)):** Dock dış-tıklama kapatma dinleyicisi (`pointerdown`) yanlış sınıf isimleri (`.radial-hub`, `.folder-stack-card`, `.quick-wheel-pop`) yerine gerçek öğe kimlikleri ve kart seçicileri (`#radialHub`, `#folderStackCard`, `#quickWheelPop`, `.fan3d-card`, `.win-card`, `.arc-node`, `.orb-node`, `.hub-shell-card`) ile güncellendi; kart içi tıklamalara `event.stopPropagation()` eklendi. Artık Opera vb. çoklu pencere önizlemesinden seçilen pencere ilk tıklamada anında öne gelir.
+
 ## v7.2.0
 > Summary: Alt+Tab & tam ekran odak bütünlüğü, tüm Dock/Crown açılır menüleri için tek tıkla boşluğa basınca kapanma, v2.x (.NET) ve v3.x+ kurulumlarından sorunsuz tek tık otomatik yükseltme, GitHub Releases API yedekli güncelleyici ve dinamik PE sürüm bilgisi.
 

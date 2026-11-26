@@ -59,7 +59,7 @@ checksum = "d92bec98840b8f03a5ff5413de5293bfcd8bf96467cf5452609f939ec6f5de16"
 
 [[package]]
 name = "aurora-app"
-version = "7.2.0"
+version = "7.2.1"
 dependencies = [
  "anyhow",
  "aurora-core",
@@ -83,7 +83,7 @@ dependencies = [
 
 [[package]]
 name = "aurora-core"
-version = "7.2.0"
+version = "7.2.1"
 dependencies = [
  "serde",
  "serde_json",
@@ -91,7 +91,7 @@ dependencies = [
 
 [[package]]
 name = "aurora-render"
-version = "7.2.0"
+version = "7.2.1"
 dependencies = [
  "anyhow",
  "aurora-core",
@@ -103,7 +103,7 @@ dependencies = [
 
 [[package]]
 name = "aurora-setup"
-version = "7.2.0"
+version = "7.2.1"
 dependencies = [
  "anyhow",
  "aurora-core",
@@ -117,7 +117,7 @@ dependencies = [
 
 [[package]]
 name = "aurora-storage"
-version = "7.2.0"
+version = "7.2.1"
 dependencies = [
  "anyhow",
  "aurora-core",
@@ -133,7 +133,7 @@ dependencies = [
 
 [[package]]
 name = "aurora-surfaces"
-version = "7.2.0"
+version = "7.2.1"
 dependencies = [
  "aurora-core",
  "aurora-render",
@@ -144,7 +144,7 @@ dependencies = [
 
 [[package]]
 name = "aurora-ui"
-version = "7.2.0"
+version = "7.2.1"
 dependencies = [
  "aurora-core",
  "aurora-render",
@@ -154,7 +154,7 @@ dependencies = [
 
 [[package]]
 name = "aurora-win32"
-version = "7.2.0"
+version = "7.2.1"
 dependencies = [
  "anyhow",
  "aurora-core",
