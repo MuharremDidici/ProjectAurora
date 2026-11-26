@@ -37,7 +37,7 @@ pub fn aurora_logs_dir() -> PathBuf {
 }
 
 pub fn atomic_write_bytes(path: &std::path::Path, bytes: &[u8]) -> std::io::Result<()> {
-    if let Some(parent) = path.parent() {
+    if let Some(parent) = path.parent().filter(|p| !p.as_os_str().is_empty()) {
         std::fs::create_dir_all(parent)?;
     }
     let tmp = path.with_extension(format!(

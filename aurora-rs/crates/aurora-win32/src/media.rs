@@ -20,6 +20,48 @@ enum MediaReq {
     Seek(u32),
 }
 
+/// Builds the canonical track cache key (`title|artist|app_name`).
+pub fn media_track_cache_key(title: &str, artist: &str, app_name: &str) -> String {
+    format!("{title}|{artist}|{app_name}")
+}
+
+/// Single-slot track thumbnail cache owned by the WinRT MTA worker to avoid
+/// re-opening and re-reading `IRandomAccessStreamReference` streams on unchanged tracks.
+#[derive(Debug, Default, Clone)]
+pub struct MediaThumbnailCache {
+    last_key: Option<String>,
+    last_bytes: Option<Vec<u8>>,
+}
+
+impl MediaThumbnailCache {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn last_key(&self) -> Option<&str> {
+        self.last_key.as_deref()
+    }
+
+    pub fn get_or_fetch<F>(&mut self, title: &str, artist: &str, app_name: &str, fetch: F) -> Option<Vec<u8>>
+    where
+        F: FnOnce() -> Option<Vec<u8>>,
+    {
+        let key = media_track_cache_key(title, artist, app_name);
+        if self.last_key.as_deref() == Some(key.as_str()) {
+            return self.last_bytes.clone();
+        }
+        let bytes = fetch();
+        self.last_key = Some(key);
+        self.last_bytes = bytes.clone();
+        bytes
+    }
+
+    pub fn clear(&mut self) {
+        self.last_key = None;
+        self.last_bytes = None;
+    }
+}
+
 /// Persistent WinRT MTA (`RO_INIT_MULTITHREADED`) media worker.
 /// Calling WinRT `IAsyncOperation::get()` on an STA (`COINIT_APARTMENTTHREADED`) thread without
 /// a message pump can fail or stall; running GSMTC on a dedicated MTA thread guarantees instant,
@@ -33,6 +75,7 @@ fn media_worker_tx() -> &'static Sender<MediaReq> {
             .spawn(move || {
                 let _ = unsafe { RoInitialize(RO_INIT_MULTITHREADED) };
                 let mut cached_mgr: Option<GlobalSystemMediaTransportControlsSessionManager> = None;
+                let mut thumb_cache = MediaThumbnailCache::new();
 
                 while let Ok(req) = rx.recv() {
                     if cached_mgr.is_none() {
@@ -44,7 +87,7 @@ fn media_worker_tx() -> &'static Sender<MediaReq> {
                         MediaReq::Query(reply) => {
                             let snap = match cached_mgr.as_ref() {
                                 Some(mgr) => {
-                                    let res = query_from_manager(mgr);
+                                    let res = query_from_manager(mgr, &mut thumb_cache);
                                     if !res.has_session {
                                         // Refresh manager handle in case Shell / Media service restarted
                                         if let Some(fresh) =
@@ -52,7 +95,7 @@ fn media_worker_tx() -> &'static Sender<MediaReq> {
                                                 .ok()
                                                 .and_then(|op| op.get().ok())
                                         {
-                                            let r2 = query_from_manager(&fresh);
+                                            let r2 = query_from_manager(&fresh, &mut thumb_cache);
                                             cached_mgr = Some(fresh);
                                             r2
                                         } else {
@@ -62,7 +105,10 @@ fn media_worker_tx() -> &'static Sender<MediaReq> {
                                         res
                                     }
                                 }
-                                None => MediaSessionSnapshot::default(),
+                                None => {
+                                    thumb_cache.clear();
+                                    MediaSessionSnapshot::default()
+                                }
                             };
                             let _ = reply.send(snap);
                         }
@@ -137,7 +183,7 @@ pub fn compute_effective_timeline_secs(
 
 fn read_session_snapshot(
     session: &GlobalSystemMediaTransportControlsSession,
-) -> MediaSessionSnapshot {
+) -> (MediaSessionSnapshot, Option<IRandomAccessStreamReference>) {
     let playback_info = session.GetPlaybackInfo().ok();
     let status = playback_info.as_ref().and_then(|pi| pi.PlaybackStatus().ok());
     let is_playing = status == Some(GlobalSystemMediaTransportControlsSessionPlaybackStatus::Playing);
@@ -148,15 +194,12 @@ fn read_session_snapshot(
         .map(|h| friendly_media_app(&h.to_string()))
         .unwrap_or_else(|_| "Medya".into());
 
-    let (mut title, artist, thumb) = if let Ok(prop_op) = session.TryGetMediaPropertiesAsync() {
+    let (mut title, artist, thumb_ref) = if let Ok(prop_op) = session.TryGetMediaPropertiesAsync() {
         if let Ok(props) = prop_op.get() {
             let t = props.Title().map(|s| s.to_string()).unwrap_or_default().trim().to_string();
             let a = props.Artist().map(|s| s.to_string()).unwrap_or_default().trim().to_string();
-            let bytes = props
-                .Thumbnail()
-                .ok()
-                .and_then(|r| read_stream_ref_bytes(&r));
-            (t, a, bytes)
+            let r = props.Thumbnail().ok();
+            (t, a, r)
         } else {
             (String::new(), String::new(), None)
         }
@@ -190,27 +233,37 @@ fn read_session_snapshot(
             .and_then(|c| c.IsPlaybackPositionEnabled().ok())
             .unwrap_or(true);
 
-    MediaSessionSnapshot {
+    let snap = MediaSessionSnapshot {
         is_playing,
         has_session: !title.is_empty() || is_playing || is_paused,
         title,
         artist,
         app_name,
-        thumbnail_bytes: thumb,
+        thumbnail_bytes: None,
         position_secs,
         duration_secs,
         timeline_updated_ms: now_unix_ms,
         can_seek,
-    }
+    };
+    (snap, thumb_ref)
 }
 
 fn pick_best_session(
     mgr: &GlobalSystemMediaTransportControlsSessionManager,
-) -> Option<(GlobalSystemMediaTransportControlsSession, MediaSessionSnapshot)> {
-    let mut best: Option<(u8, GlobalSystemMediaTransportControlsSession, MediaSessionSnapshot)> = None;
+) -> Option<(
+    GlobalSystemMediaTransportControlsSession,
+    MediaSessionSnapshot,
+    Option<IRandomAccessStreamReference>,
+)> {
+    let mut best: Option<(
+        u8,
+        GlobalSystemMediaTransportControlsSession,
+        MediaSessionSnapshot,
+        Option<IRandomAccessStreamReference>,
+    )> = None;
 
     let mut consider = |sess: GlobalSystemMediaTransportControlsSession, is_current: bool| {
-        let snap = read_session_snapshot(&sess);
+        let (snap, thumb_ref) = read_session_snapshot(&sess);
         if !snap.has_session {
             return;
         }
@@ -234,11 +287,11 @@ fn pick_best_session(
         if is_current {
             score += 10;
         }
-        if snap.thumbnail_bytes.is_some() {
+        if thumb_ref.is_some() {
             score += 5;
         }
-        if best.as_ref().is_none_or(|(bs, _, _)| score > *bs) {
-            best = Some((score, sess, snap));
+        if best.as_ref().is_none_or(|(bs, _, _, _)| score > *bs) {
+            best = Some((score, sess, snap, thumb_ref));
         }
     };
 
@@ -254,15 +307,24 @@ fn pick_best_session(
         }
     }
 
-    best.map(|(_, s, snap)| (s, snap))
+    best.map(|(_, s, snap, thumb_ref)| (s, snap, thumb_ref))
 }
 
 fn query_from_manager(
     mgr: &GlobalSystemMediaTransportControlsSessionManager,
+    thumb_cache: &mut MediaThumbnailCache,
 ) -> MediaSessionSnapshot {
-    pick_best_session(mgr)
-        .map(|(_, snap)| snap)
-        .unwrap_or_default()
+    let Some((_, mut snap, thumb_ref)) = pick_best_session(mgr) else {
+        thumb_cache.clear();
+        return MediaSessionSnapshot::default();
+    };
+    snap.thumbnail_bytes = thumb_cache.get_or_fetch(
+        &snap.title,
+        &snap.artist,
+        &snap.app_name,
+        || thumb_ref.as_ref().and_then(read_stream_ref_bytes),
+    );
+    snap
 }
 
 fn dispatch_smtc_command(
@@ -270,7 +332,7 @@ fn dispatch_smtc_command(
     cmd: &str,
 ) -> bool {
     let target = pick_best_session(mgr)
-        .map(|(s, _)| s)
+        .map(|(s, _, _)| s)
         .or_else(|| mgr.GetCurrentSession().ok());
     let Some(session) = target else {
         return false;
@@ -288,7 +350,7 @@ fn dispatch_smtc_seek(
     target_secs: u32,
 ) -> bool {
     let target = pick_best_session(mgr)
-        .map(|(s, _)| s)
+        .map(|(s, _, _)| s)
         .or_else(|| mgr.GetCurrentSession().ok());
     let Some(session) = target else {
         return false;
@@ -402,5 +464,57 @@ mod tests {
         );
         assert_eq!(clamped_dur, 141);
         assert_eq!(clamped_pos, 141);
+    }
+
+    #[test]
+    fn media_thumbnail_cache_hits_on_unchanged_track_and_misses_on_track_change() {
+        let mut cache = MediaThumbnailCache::new();
+        let mut fetch_calls = 0usize;
+
+        let art_a = cache.get_or_fetch("Midnight City", "M83", "Spotify", || {
+            fetch_calls += 1;
+            Some(vec![0x89, 0x50, 0x4E, 0x47])
+        });
+        assert_eq!(fetch_calls, 1);
+        assert_eq!(art_a.as_deref(), Some(&[0x89, 0x50, 0x4E, 0x47][..]));
+        assert_eq!(cache.last_key(), Some("Midnight City|M83|Spotify"));
+
+        // Repeated 1.5s polls with identical track key MUST NOT re-read WinRT stream
+        for _ in 0..5 {
+            let cached = cache.get_or_fetch("Midnight City", "M83", "Spotify", || {
+                fetch_calls += 1;
+                Some(vec![1, 2, 3])
+            });
+            assert_eq!(fetch_calls, 1);
+            assert_eq!(cached.as_deref(), Some(&[0x89, 0x50, 0x4E, 0x47][..]));
+        }
+
+        // Changing title, artist, or app_name triggers a cache miss and fetches once
+        let art_b = cache.get_or_fetch("Outro", "M83", "Spotify", || {
+            fetch_calls += 1;
+            Some(vec![0xFF, 0xD8, 0xFF])
+        });
+        assert_eq!(fetch_calls, 2);
+        assert_eq!(art_b.as_deref(), Some(&[0xFF, 0xD8, 0xFF][..]));
+        assert_eq!(cache.last_key(), Some("Outro|M83|Spotify"));
+
+        // Repeated poll on new track hits cache
+        let _ = cache.get_or_fetch("Outro", "M83", "Spotify", || {
+            fetch_calls += 1;
+            None
+        });
+        assert_eq!(fetch_calls, 2);
+
+        // Switching app_name misses cache
+        let art_c = cache.get_or_fetch("Outro", "M83", "Opera", || {
+            fetch_calls += 1;
+            None
+        });
+        assert_eq!(fetch_calls, 3);
+        assert!(art_c.is_none());
+
+        // Clear resets cache
+        cache.clear();
+        assert!(cache.last_key().is_none());
     }
 }

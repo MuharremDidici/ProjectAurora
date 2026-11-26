@@ -4,13 +4,17 @@ use aurora_core::{AppWindowEntry, SystemToastNotification};
 use chrono::{DateTime, Utc};
 use rusqlite::{Connection, OpenFlags};
 use windows::core::{PCWSTR, HSTRING};
+use windows::Win32::Foundation::CloseHandle;
 use windows::Win32::System::Com::{CoCreateInstance, CLSCTX_LOCAL_SERVER};
+use windows::Win32::System::Threading::{
+    GetExitCodeProcess, OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION,
+};
 use windows::Win32::UI::Shell::{
     ApplicationActivationManager, IApplicationActivationManager, ShellExecuteW, AO_NONE,
 };
 use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
 
-use crate::windows_catalog::focus_window;
+use crate::windows_catalog::{focus_window, query_process_image};
 
 /// Schema-adaptive Windows 11 `wpndatabase.db` reader with shared-read WAL snapshot (never locks WpnUserService!).
 /// Tracks `(len, mtime)` of `wpndatabase.db` + `-wal` so idle ticks perform ZERO disk copies & ZERO SQLite opens!
@@ -50,10 +54,18 @@ impl WpnNotificationBridge {
         let local = std::env::var_os("LOCALAPPDATA")
             .map(PathBuf::from)
             .unwrap_or_else(|| PathBuf::from("."));
+        let snap_dir = local.join(r"ProjectAurora\cache\wpn_snap");
+        Self::with_snap_dir(custom_db_path, snap_dir)
+    }
+
+    pub fn with_snap_dir(custom_db_path: Option<PathBuf>, snap_dir: PathBuf) -> Self {
+        let local = std::env::var_os("LOCALAPPDATA")
+            .map(PathBuf::from)
+            .unwrap_or_else(|| PathBuf::from("."));
         let wpn_db_path = custom_db_path.unwrap_or_else(|| {
             local.join(r"Microsoft\Windows\Notifications\wpndatabase.db")
         });
-        let snap_dir = local.join(r"ProjectAurora\cache\wpn_snap");
+        cleanup_stale_wpn_snapshots(&snap_dir, std::process::id(), false);
         Self {
             wpn_db_path,
             snap_dir,
@@ -120,6 +132,73 @@ impl WpnNotificationBridge {
         }
         arrived
     }
+}
+
+impl Drop for WpnNotificationBridge {
+    fn drop(&mut self) {
+        cleanup_stale_wpn_snapshots(&self.snap_dir, std::process::id(), true);
+    }
+}
+
+/// Parses the PID from snapshot filenames matching `wpn_rs_<pid>.db*` (`.db`, `.db-wal`, `.db-shm`, `.db-journal`).
+pub fn parse_wpn_snap_pid(file_name: &str) -> Option<u32> {
+    let rest = file_name.strip_prefix("wpn_rs_")?;
+    let (pid_str, suffix) = rest.split_once(".db")?;
+    if !suffix.is_empty() && !suffix.starts_with('-') {
+        return None;
+    }
+    pid_str.parse::<u32>().ok()
+}
+
+fn is_live_aurora_pid(pid: u32) -> bool {
+    if pid == 0 {
+        return false;
+    }
+    if pid == std::process::id() {
+        return true;
+    }
+    unsafe {
+        let Ok(hproc) = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid) else {
+            return false;
+        };
+        let mut exit_code = 0u32;
+        let still_running = GetExitCodeProcess(hproc, &mut exit_code).is_ok() && exit_code == 259;
+        let _ = CloseHandle(hproc);
+        if !still_running {
+            return false;
+        }
+    }
+    let (stem, _) = query_process_image(pid);
+    stem.to_ascii_lowercase().contains("aurora")
+}
+
+/// Removes stale `wpn_rs_*.db*` snapshot files belonging to dead/non-Aurora PIDs (and `current_pid` when `remove_current_pid` is true).
+pub fn cleanup_stale_wpn_snapshots(snap_dir: &Path, current_pid: u32, remove_current_pid: bool) -> usize {
+    let Ok(rd) = std::fs::read_dir(snap_dir) else {
+        return 0;
+    };
+    let mut removed = 0usize;
+    for entry in rd.flatten() {
+        let path = entry.path();
+        if !path.is_file() {
+            continue;
+        }
+        let Some(name) = path.file_name().and_then(|n| n.to_str()) else {
+            continue;
+        };
+        let Some(pid) = parse_wpn_snap_pid(name) else {
+            continue;
+        };
+        let should_remove = if pid == current_pid {
+            remove_current_pid
+        } else {
+            !is_live_aurora_pid(pid)
+        };
+        if should_remove && std::fs::remove_file(&path).is_ok() {
+            removed += 1;
+        }
+    }
+    removed
 }
 
 pub fn read_toasts_from_sqlite(db_path: &Path) -> Vec<SystemToastNotification> {
@@ -348,7 +427,7 @@ fn filetime_to_utc(ft: i64) -> DateTime<Utc> {
 
 fn unix_to_filetime(unix_secs: i64) -> i64 {
     const EPOCH_DIFF: i64 = 116_444_736_000_000_000;
-    unix_secs * 10_000_000 + EPOCH_DIFF
+    unix_secs.saturating_mul(10_000_000).saturating_add(EPOCH_DIFF)
 }
 
 #[cfg(test)]
@@ -363,5 +442,45 @@ mod tests {
         assert_eq!(body, "Derleme tamamlandı");
         assert_eq!(try_extract_launch_uri(&launch, &act).unwrap(), "antigravity-ide://open?id=42");
         assert!(try_extract_launch_uri("chatId=905551112233@s.whatsapp.net", "foreground").is_none());
+    }
+
+    #[test]
+    fn wpn_snap_cleans_stale_pid_files_on_new_and_own_files_on_drop() {
+        let cur_pid = std::process::id();
+        let dir = std::env::temp_dir().join(format!("aurora_wpn_snap_test_{cur_pid}"));
+        let _ = std::fs::remove_dir_all(&dir);
+        assert!(std::fs::create_dir_all(&dir).is_ok());
+
+        // Stale dead PID files + non-snapshot file + current PID file
+        let dead_pid = 999_999_991u32;
+        let dead_db = dir.join(format!("wpn_rs_{dead_pid}.db"));
+        let dead_wal = dir.join(format!("wpn_rs_{dead_pid}.db-wal"));
+        let dead_shm = dir.join(format!("wpn_rs_{dead_pid}.db-shm"));
+        let cur_db = dir.join(format!("wpn_rs_{cur_pid}.db"));
+        let unrelated = dir.join("keep_me.txt");
+
+        for p in [&dead_db, &dead_wal, &dead_shm, &cur_db, &unrelated] {
+            assert!(std::fs::write(p, b"snap").is_ok());
+        }
+
+        let bridge = WpnNotificationBridge::with_snap_dir(None, dir.clone());
+        assert!(!dead_db.exists(), "stale .db must be cleaned on new()");
+        assert!(!dead_wal.exists(), "stale .db-wal must be cleaned on new()");
+        assert!(!dead_shm.exists(), "stale .db-shm must be cleaned on new()");
+        assert!(cur_db.exists(), "current live PID snapshot must stay alive until Drop");
+        assert!(unrelated.exists(), "unrelated files must never be deleted");
+
+        // Re-create a stale file and current wal before Drop
+        let cur_wal = dir.join(format!("wpn_rs_{cur_pid}.db-wal"));
+        assert!(std::fs::write(&cur_wal, b"wal").is_ok());
+        assert!(std::fs::write(&dead_db, b"dead2").is_ok());
+
+        drop(bridge);
+        assert!(!cur_db.exists(), "current PID .db must be cleaned on Drop");
+        assert!(!cur_wal.exists(), "current PID .db-wal must be cleaned on Drop");
+        assert!(!dead_db.exists(), "stale PID .db must be cleaned on Drop");
+        assert!(unrelated.exists(), "unrelated files must still exist after Drop");
+
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }

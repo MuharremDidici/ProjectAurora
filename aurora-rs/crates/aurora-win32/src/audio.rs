@@ -6,8 +6,8 @@ use windows::Win32::Media::Audio::Endpoints::{
     IAudioEndpointVolume, IAudioEndpointVolumeCallback, IAudioEndpointVolumeCallback_Impl,
 };
 use windows::Win32::Media::Audio::{
-    eCapture, eConsole, eMultimedia, eRender, IAudioSessionControl2, IAudioSessionManager2,
-    IMMDevice, IMMDeviceEnumerator, ISimpleAudioVolume, MMDeviceEnumerator,
+    eCapture, eConsole, eMultimedia, eRender, AudioSessionStateExpired, IAudioSessionControl2,
+    IAudioSessionManager2, IMMDevice, IMMDeviceEnumerator, ISimpleAudioVolume, MMDeviceEnumerator,
     AUDIO_VOLUME_NOTIFICATION_DATA, DEVICE_STATE_ACTIVE,
 };
 use windows::Win32::System::Com::{
@@ -122,6 +122,9 @@ impl CoreAudioController {
                         let mut seen_pids = std::collections::HashSet::new();
                         for i in 0..count {
                             let Ok(ctrl) = sess_enum.GetSession(i) else { continue };
+                            if ctrl.GetState().is_ok_and(|s| s == AudioSessionStateExpired) {
+                                continue;
+                            }
                             let Ok(ctrl2) = ctrl.cast::<IAudioSessionControl2>() else { continue };
                             let pid = ctrl2.GetProcessId().unwrap_or(0);
                             if pid == 0 || !seen_pids.insert(pid) {
@@ -333,13 +336,6 @@ impl CoreAudioController {
         let wide: Vec<u16> = device_id.encode_utf16().chain(std::iter::once(0)).collect();
         unsafe {
             let mut raw_ptr: *mut std::ffi::c_void = std::ptr::null_mut();
-            let hr = windows::Win32::System::Com::CoCreateInstance(
-                &clsid,
-                None,
-                CLSCTX_ALL,
-            );
-            // Fallback raw CoCreateInstance via ole32 if needed
-            let _ = hr as windows::core::Result<windows::core::IUnknown>;
             let ok = raw_co_create_policy_config(&clsid, &iid, &mut raw_ptr);
             if ok && !raw_ptr.is_null() {
                 let vtbl = *(raw_ptr as *const *const IPolicyConfigVtbl);

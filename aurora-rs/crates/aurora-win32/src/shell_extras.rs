@@ -15,15 +15,15 @@ use windows::Win32::System::Com::{
     CLSCTX_LOCAL_SERVER, COINIT_APARTMENTTHREADED,
 };
 use windows::Win32::System::DataExchange::{CloseClipboard, GetClipboardData, OpenClipboard};
-use windows::Win32::System::Memory::{GlobalLock, GlobalUnlock};
+use windows::Win32::System::Memory::{GlobalLock, GlobalSize, GlobalUnlock};
 use windows::Win32::System::Registry::{
     RegCloseKey, RegCreateKeyExW, RegDeleteValueW, RegOpenKeyExW, RegQueryValueExW,
     RegSetValueExW, HKEY, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, KEY_READ, KEY_WRITE,
     REG_OPTION_NON_VOLATILE, REG_SZ,
 };
 use windows::Win32::UI::Input::KeyboardAndMouse::{
-    SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, VIRTUAL_KEY,
-    VK_CONTROL, VK_LWIN, VK_TAB,
+    SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_EXTENDEDKEY,
+    KEYEVENTF_KEYUP, VIRTUAL_KEY, VK_CONTROL, VK_LEFT, VK_LWIN, VK_RIGHT, VK_TAB,
 };
 use windows::Win32::UI::Shell::{
     ApplicationActivationManager, FileOpenDialog, IApplicationActivationManager, IEnumShellItems,
@@ -1171,7 +1171,10 @@ pub fn convert_image_file(src_path: &str, target_format: &str) -> Result<String,
 
 /// Generates a crisp inline SVG markup for LAN QR AirDrop (matches `CrownScript`'s `qrShare.svg`).
 pub fn render_qr_svg(modules: &[bool], size: usize) -> String {
-    if size == 0 || modules.len() < size * size {
+    let Some(cell_count) = size.checked_mul(size) else {
+        return String::new();
+    };
+    if size == 0 || modules.len() < cell_count {
         return String::new();
     }
     let quiet = 2usize;
@@ -1204,6 +1207,52 @@ pub fn open_windows_notification_center() {
 
 pub fn create_virtual_desktop() {
     send_key_combo(&[VK_LWIN, VK_CONTROL, VIRTUAL_KEY(b'D' as u16)]);
+}
+
+/// Computes `(move_right, bounded_steps)` for switching from `current` to `target` virtual desktop.
+pub fn compute_virtual_desktop_steps(current: u32, target: u32) -> (bool, u32) {
+    if current == target {
+        return (true, 0);
+    }
+    let steps = current.abs_diff(target).min(16);
+    (target > current, steps)
+}
+
+/// Switches Windows Virtual Desktop from `current` index to `target` index using safe,
+/// bounded, non-blocking `Ctrl+Win+Left/Right` stepping via a single atomic `SendInput` batch.
+pub fn switch_virtual_desktop_to_index(current: u32, target: u32) {
+    let (move_right, steps) = compute_virtual_desktop_steps(current, target);
+    if steps == 0 {
+        return;
+    }
+    let arrow = if move_right { VK_RIGHT } else { VK_LEFT };
+    let make = |vk: VIRTUAL_KEY, up: bool, extended: bool| INPUT {
+        r#type: INPUT_KEYBOARD,
+        Anonymous: INPUT_0 {
+            ki: KEYBDINPUT {
+                wVk: vk,
+                dwFlags: match (up, extended) {
+                    (false, false) => Default::default(),
+                    (true, false) => KEYEVENTF_KEYUP,
+                    (false, true) => KEYEVENTF_EXTENDEDKEY,
+                    (true, true) => KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP,
+                },
+                ..Default::default()
+            },
+        },
+    };
+    let mut seq = Vec::with_capacity(4 + (steps as usize) * 2);
+    seq.push(make(VK_CONTROL, false, false));
+    seq.push(make(VK_LWIN, false, false));
+    for _ in 0..steps {
+        seq.push(make(arrow, false, true));
+        seq.push(make(arrow, true, true));
+    }
+    seq.push(make(VK_LWIN, true, false));
+    seq.push(make(VK_CONTROL, true, false));
+    unsafe {
+        let _ = SendInput(&seq, std::mem::size_of::<INPUT>() as i32);
+    }
 }
 
 pub fn send_ctrl_v_paste() {
@@ -1272,34 +1321,46 @@ pub fn try_get_clipboard_image_png() -> Option<(i32, i32, Vec<u8>, String)> {
             let h_abs = hdr.biHeight.abs();
             let top_down = hdr.biHeight < 0;
             let bpp = hdr.biBitCount;
-            let out = if w > 0 && w <= 4096 && h_abs > 0 && h_abs <= 4096 && (bpp == 24 || bpp == 32) {
+            let dib_size = GlobalSize(hglob);
+            let out = if w > 0
+                && w <= 4096
+                && h_abs > 0
+                && h_abs <= 4096
+                && (bpp == 24 || bpp == 32)
+                && hdr.biSize as usize >= std::mem::size_of::<BITMAPINFOHEADER>()
+            {
                 let header_bytes = hdr.biSize as usize
                     + if hdr.biCompression == 3 { 12 } else { 0 };
-                let src = (ptr as *const u8).add(header_bytes);
                 let stride = (w as usize * bpp as usize).div_ceil(32) * 4;
-                let mut rgba = vec![0u8; (w as usize) * (h_abs as usize) * 4];
-                for y in 0..(h_abs as usize) {
-                    let sy = if top_down { y } else { (h_abs as usize) - 1 - y };
-                    let row = src.add(sy * stride);
-                    for x in 0..(w as usize) {
-                        let dst_i = (y * (w as usize) + x) * 4;
-                        let src_i = x * (bpp as usize / 8);
-                        rgba[dst_i] = *row.add(src_i + 2);
-                        rgba[dst_i + 1] = *row.add(src_i + 1);
-                        rgba[dst_i + 2] = *row.add(src_i);
-                        rgba[dst_i + 3] = 255;
+                let required = header_bytes.saturating_add(stride.saturating_mul(h_abs as usize));
+                if dib_size != 0 && dib_size < required {
+                    None
+                } else {
+                    let src = (ptr as *const u8).add(header_bytes);
+                    let mut rgba = vec![0u8; (w as usize) * (h_abs as usize) * 4];
+                    for y in 0..(h_abs as usize) {
+                        let sy = if top_down { y } else { (h_abs as usize) - 1 - y };
+                        let row = src.add(sy * stride);
+                        for x in 0..(w as usize) {
+                            let dst_i = (y * (w as usize) + x) * 4;
+                            let src_i = x * (bpp as usize / 8);
+                            rgba[dst_i] = *row.add(src_i + 2);
+                            rgba[dst_i + 1] = *row.add(src_i + 1);
+                            rgba[dst_i + 2] = *row.add(src_i);
+                            rgba[dst_i + 3] = 255;
+                        }
                     }
+                    image::RgbaImage::from_raw(w as u32, h_abs as u32, rgba).and_then(|img| {
+                        let dyn_img = image::DynamicImage::ImageRgba8(img);
+                        let mut full_png = Cursor::new(Vec::new());
+                        dyn_img.write_to(&mut full_png, image::ImageFormat::Png).ok()?;
+                        let thumb = dyn_img.thumbnail(140, 84);
+                        let mut thumb_png = Cursor::new(Vec::new());
+                        thumb.write_to(&mut thumb_png, image::ImageFormat::Png).ok()?;
+                        let thumb_b64 = base64::engine::general_purpose::STANDARD.encode(thumb_png.into_inner());
+                        Some((w, h_abs, full_png.into_inner(), thumb_b64))
+                    })
                 }
-                image::RgbaImage::from_raw(w as u32, h_abs as u32, rgba).and_then(|img| {
-                    let dyn_img = image::DynamicImage::ImageRgba8(img);
-                    let mut full_png = Cursor::new(Vec::new());
-                    dyn_img.write_to(&mut full_png, image::ImageFormat::Png).ok()?;
-                    let thumb = dyn_img.thumbnail(140, 84);
-                    let mut thumb_png = Cursor::new(Vec::new());
-                    thumb.write_to(&mut thumb_png, image::ImageFormat::Png).ok()?;
-                    let thumb_b64 = base64::engine::general_purpose::STANDARD.encode(thumb_png.into_inner());
-                    Some((w, h_abs, full_png.into_inner(), thumb_b64))
-                })
             } else {
                 None
             };
@@ -1357,5 +1418,9 @@ mod tests {
         assert_eq!(friendly_folder_name(r"C:\Users\Demo\Downloads"), "İndirilenler");
         let svg = render_qr_svg(&[true, false, false, true], 2);
         assert!(svg.starts_with("<svg") && svg.contains("<rect"));
+        assert_eq!(compute_virtual_desktop_steps(1, 1), (true, 0));
+        assert_eq!(compute_virtual_desktop_steps(1, 4), (true, 3));
+        assert_eq!(compute_virtual_desktop_steps(5, 2), (false, 3));
+        assert_eq!(compute_virtual_desktop_steps(0, 999), (true, 16));
     }
 }
