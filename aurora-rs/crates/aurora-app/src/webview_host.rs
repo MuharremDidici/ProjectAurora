@@ -70,6 +70,7 @@ pub enum SurfaceMessage {
     },
     DisplayChanged,
     PowerChanged,
+    PowerResumed,
     ClipboardChanged,
     TaskbarRecreated,
 }
@@ -181,7 +182,9 @@ impl HitState {
                 }
                 base
             };
-            let _ = SetWindowRgn(hwnd, combined, true);
+            if SetWindowRgn(hwnd, combined, true) == 0 {
+                let _ = DeleteObject(combined);
+            }
         }
         self.last_rgn = Some(target);
     }
@@ -728,6 +731,7 @@ impl WebViewOverlaySurface {
                     0,
                     SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE,
                 );
+                let _ = self.controller.NotifyParentWindowPositionChanged();
             }
         }
     }
@@ -816,8 +820,27 @@ impl WebViewOverlaySurface {
         self.hit_state.borrow().force_interactive
     }
 
-    /// Forces immediate `SetWindowRgn` recomputation + DOM layout sync (e.g. after monitor hot-plug or sleep resume).
+    /// Forces immediate `SetWindowRgn` recomputation + Z-order restore + DOM layout sync (e.g. after monitor hot-plug or sleep resume).
     pub fn force_resync_region(&mut self) {
+        if !self.suppressed_fullscreen {
+            let z_after = if self.is_desktop_layer && !self.desktop_elevated {
+                HWND_BOTTOM
+            } else {
+                HWND_TOPMOST
+            };
+            unsafe {
+                let _ = SetWindowPos(
+                    self.hwnd,
+                    z_after,
+                    0,
+                    0,
+                    0,
+                    0,
+                    SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE,
+                );
+                let _ = self.controller.NotifyParentWindowPositionChanged();
+            }
+        }
         {
             let mut hs = self.hit_state.borrow_mut();
             hs.last_rgn = None;
@@ -1007,8 +1030,7 @@ unsafe extern "system" fn host_wnd_proc(
                 let _ = bridge.tx.try_send(SurfaceMessage::PowerChanged);
                 post_wake_ui(bridge.wake_hwnd);
             } else if evt == 0x07 /* PBT_APMRESUMESUSPEND */ || evt == 0x12 /* PBT_APMRESUMEAUTOMATIC */ {
-                let _ = bridge.tx.try_send(SurfaceMessage::PowerChanged);
-                let _ = bridge.tx.try_send(SurfaceMessage::DisplayChanged);
+                let _ = bridge.tx.try_send(SurfaceMessage::PowerResumed);
                 post_wake_ui(bridge.wake_hwnd);
             }
         }

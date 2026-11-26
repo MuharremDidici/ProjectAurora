@@ -704,7 +704,7 @@ fn run_shell_host(
     monitors = enumerate_monitors();
 
     // 4. Create Primary Crown (1260x640) + Per-Monitor Docks (450px/460px) sharing ONE WebView2 renderer!
-    let primary_mon = monitors[0].clone();
+    let mut primary_mon = monitors[0].clone();
     let crown_bounds = compute_crown_bounds(&primary_mon);
     let mut crown = WebViewOverlaySurface::create(
         0,
@@ -836,6 +836,9 @@ fn run_shell_host(
     let mut last_local_ai_refresh = Instant::now() - Duration::from_secs(60);
     let mut last_day_night_check = Instant::now() - Duration::from_secs(120);
     let mut post_display_trim_at: Option<Instant> = None;
+    let mut snap_mon_bounds = primary_mon.descriptor.bounds;
+    let mut snap_mon_scale = primary_mon.descriptor.scale_factor() as f32;
+    let mut snap_work_area = primary_mon.descriptor.work_area;
     let mut last_crown_json = String::new();
     let mut last_dock_json: HashMap<String, String> = HashMap::new();
     let mut trimmed_boot_ws = false;
@@ -1025,8 +1028,12 @@ fn run_shell_host(
                         if !state.dock_popover_open_mons.is_empty() {
                             state.dock_popover_open_mons.clear();
                         }
-                        for d in &docks {
+                        for d in &mut docks {
+                            d.release_inline_input();
                             d.post_json(r#"{"type":"outsideDeactivate"}"#);
+                        }
+                        if let Some(ws) = widgets_surface.as_mut() {
+                            ws.release_inline_input();
                         }
                         if let Some(prev) = dwm_preview.as_mut() {
                             prev.hide();
@@ -1038,8 +1045,11 @@ fn run_shell_host(
                     if state.prefs.snap_zones_enabled {
                         state.snap_overlay_active = true;
                         state.active_snap_hwnd = hwnd;
-                        let wa = primary_mon.descriptor.work_area;
-                        let zones = compute_snap_zones(wa, state.prefs.effective_snap_preset(), 10);
+                        let target_mon = monitor_at_point(&monitors, px, py).unwrap_or(&primary_mon);
+                        snap_mon_bounds = target_mon.descriptor.bounds;
+                        snap_mon_scale = target_mon.descriptor.scale_factor() as f32;
+                        snap_work_area = target_mon.descriptor.work_area;
+                        let zones = compute_snap_zones(snap_work_area, state.prefs.effective_snap_preset(), 10);
                         state.snap_hover_idx = zones.iter().position(|(_, z)| {
                             px >= z.x && px <= z.right() && py >= z.y && py <= z.bottom()
                         });
@@ -1047,7 +1057,9 @@ fn run_shell_host(
                 }
                 ShellHookEvent::ShiftDragDropped { hwnd, px, py } => {
                     if state.snap_overlay_active {
-                        let wa = primary_mon.descriptor.work_area;
+                        let wa = monitor_at_point(&monitors, px, py)
+                            .map(|m| m.descriptor.work_area)
+                            .unwrap_or(snap_work_area);
                         let zones = compute_snap_zones(wa, state.prefs.effective_snap_preset(), 10);
                         if let Some((_, z)) = zones.iter().find(|(_, z)| {
                             px >= z.x && px <= z.right() && py >= z.y && py <= z.bottom()
@@ -1114,13 +1126,17 @@ fn run_shell_host(
             }
         }
 
-        // 5. Drain WebView2 Surface Messages (Ready, 128 Bridge Actions, Hotkeys, Deactivated, DisplayChanged)
+        // 5. Drain WebView2 Surface Messages (Ready, Bridge Actions, Hotkeys, Deactivated, DisplayChanged)
+        let mut coalesced_display_change = false;
+        let mut coalesced_power_change = false;
+        let mut coalesced_power_resume = false;
         while let Ok(smsg) = surf_rx.try_recv() {
             match smsg {
                 SurfaceMessage::Diag { surface_id, detail } => {
                     logger.info("UI", "SURFACE_DIAG", &format!("surface={surface_id} {detail}"));
                 }
                 SurfaceMessage::Ready { surface_id, source } => {
+                    state.reset_surface_icon_cache(surface_id);
                     if surface_id == 0 {
                         if source == "nav" {
                             crown_nav_done = true;
@@ -1129,8 +1145,9 @@ fn run_shell_host(
                             logger.info("UI", "SURFACE_READY", &format!("crown ready via {source}"));
                         }
                         crown_ready = true;
-                        crown.post_json(&state.build_catalog_json());
-                        let j = state.build_crown_state_json(
+                        crown.post_json(&state.build_catalog_json_for_surface(0));
+                        let j = state.build_crown_state_json_for_surface(
+                            0,
                             &crown.monitor_id,
                             monitors.len(),
                             appbar.is_native_taskbar_suppressed(),
@@ -1183,26 +1200,44 @@ fn run_shell_host(
                             dock_ui_ready.insert(surface_id);
                         }
                         let first_time = dock_ready.insert(surface_id);
-                        if let Some((idx, d)) = docks.iter().enumerate().find(|(_, d)| d.surface_id == surface_id) {
-                            let j = state.build_dock_state_json(&d.monitor_id, idx == 0, now_ms);
+                        if let Some((idx, mon_id, bx, by, bw, bh)) = docks
+                            .iter()
+                            .enumerate()
+                            .find(|(_, d)| d.surface_id == surface_id)
+                            .map(|(i, d)| {
+                                (
+                                    i,
+                                    d.monitor_id.clone(),
+                                    d.bounds_px.x,
+                                    d.bounds_px.y,
+                                    d.bounds_px.width,
+                                    d.bounds_px.height,
+                                )
+                            })
+                        {
+                            let cat_j = state.build_catalog_json_for_surface(surface_id);
+                            let j = state.build_dock_state_json_for_surface(
+                                surface_id,
+                                &mon_id,
+                                idx == 0,
+                                now_ms,
+                            );
                             if first_time || source == "uiReady" {
                                 logger.info(
                                     "UI",
                                     "SURFACE_READY",
                                     &format!(
-                                        "dock surface={surface_id} mon={} bounds=({},{},{}x{}) ready via {source} payload_bytes={}",
-                                        d.monitor_id,
-                                        d.bounds_px.x,
-                                        d.bounds_px.y,
-                                        d.bounds_px.width,
-                                        d.bounds_px.height,
+                                        "dock surface={surface_id} mon={mon_id} bounds=({bx},{by},{bw}x{bh}) ready via {source} payload_bytes={}",
                                         j.len()
                                     ),
                                 );
                             }
-                            d.post_json(&j);
-                            last_dock_json.insert(d.monitor_id.clone(), j);
-                            d.post_json(r#"{"type":"syncLayout"}"#);
+                            if let Some(d) = docks.iter().find(|d| d.surface_id == surface_id) {
+                                d.post_json(&cat_j);
+                                d.post_json(&j);
+                                last_dock_json.insert(mon_id, j);
+                                d.post_json(r#"{"type":"syncLayout"}"#);
+                            }
                         }
                     }
                 }
@@ -1276,47 +1311,84 @@ fn run_shell_host(
                     _ => {}
                 },
                 SurfaceMessage::Deactivated { surface_id } => {
-                    if surface_id == 0
-                        && crown.is_interactive()
-                        && now_ms.saturating_sub(popup_opened_at_ms) >= 200
-                        && !is_window_owned_by(get_foreground_hwnd(), crown.hwnd)
-                    {
-                        crown.release_interactive();
-                        crown.post_json(r#"{"type":"outsideDeactivate"}"#);
-                        state.crown_stage_open = false;
-                        trim_process_working_set();
+                    let fg = get_foreground_hwnd();
+                    if surface_id == 0 {
+                        if crown.is_interactive()
+                            && now_ms.saturating_sub(popup_opened_at_ms) >= 200
+                            && !is_window_owned_by(fg, crown.hwnd)
+                        {
+                            crown.release_interactive();
+                            crown.post_json(r#"{"type":"outsideDeactivate"}"#);
+                            state.crown_stage_open = false;
+                            crown_ever_focused = false;
+                            popup_opened_prev_fg = 0;
+                            prev_crown_interactive = false;
+                            trim_process_working_set();
+                        }
+                    } else if surface_id == WIDGETS_SURFACE_ID {
+                        if let Some(ws) = widgets_surface.as_mut() {
+                            if !is_window_owned_by(fg, ws.hwnd) {
+                                ws.release_inline_input();
+                            }
+                        }
+                    } else if let Some(d) = docks.iter_mut().find(|d| d.surface_id == surface_id) {
+                        if !is_window_owned_by(fg, d.hwnd) {
+                            d.release_inline_input();
+                        }
                     }
                 }
                 SurfaceMessage::PowerChanged => {
-                    let fresh = MetricsSampler::new().sample(false);
-                    state.metrics.battery_present = fresh.battery_present;
-                    state.metrics.battery_percent = fresh.battery_percent;
-                    state.metrics.is_charging = fresh.is_charging;
-                    needs_state_push = true;
+                    coalesced_power_change = true;
+                }
+                SurfaceMessage::PowerResumed => {
+                    coalesced_power_resume = true;
+                    coalesced_power_change = true;
+                    coalesced_display_change = true;
                 }
                 SurfaceMessage::ClipboardChanged => {
                     let _ = bg_tx.try_send(BgCommand::CheckClipboard);
                 }
                 SurfaceMessage::DisplayChanged | SurfaceMessage::TaskbarRecreated => {
-                    monitors = enumerate_monitors();
-                    last_crown_json.clear();
-                    last_dock_json.clear();
-                    last_widgets_json.clear();
-                    crown.force_resync_region();
-                    for d in &mut docks {
-                        d.force_resync_region();
-                    }
-                    if let Some(ws) = widgets_surface.as_mut() {
-                        ws.force_resync_region();
-                    }
-                    post_display_trim_at = Some(Instant::now() + Duration::from_secs(5));
-                    let _ = bg_tx.try_send(BgCommand::RefreshSlowHardware);
-                    needs_taskbar_sync = true;
-                    needs_bounds_sync = true;
-                    catalog_changed = true;
-                    needs_state_push = true;
+                    coalesced_display_change = true;
                 }
             }
+        }
+        if coalesced_power_change {
+            let fresh = MetricsSampler::new().sample(false);
+            state.metrics.battery_present = fresh.battery_present;
+            state.metrics.battery_percent = fresh.battery_percent;
+            state.metrics.is_charging = fresh.is_charging;
+            needs_state_push = true;
+        }
+        if coalesced_power_resume {
+            aurora_win32::set_awake_keep_alive(state.awake_mode != "off");
+            let fresh_audio = audio.get_snapshot();
+            if state.audio != fresh_audio {
+                state.audio = fresh_audio;
+            }
+            let _ = bg_tx.try_send(BgCommand::RefreshWeather);
+        }
+        if coalesced_display_change {
+            monitors = enumerate_monitors();
+            if let Some(m0) = monitors.first() {
+                primary_mon = m0.clone();
+            }
+            last_crown_json.clear();
+            last_dock_json.clear();
+            last_widgets_json.clear();
+            crown.force_resync_region();
+            for d in &mut docks {
+                d.force_resync_region();
+            }
+            if let Some(ws) = widgets_surface.as_mut() {
+                ws.force_resync_region();
+            }
+            post_display_trim_at = Some(Instant::now() + Duration::from_secs(5));
+            let _ = bg_tx.try_send(BgCommand::RefreshSlowHardware);
+            needs_taskbar_sync = true;
+            needs_bounds_sync = true;
+            catalog_changed = true;
+            needs_state_push = true;
         }
 
         // 6. Drain Background Worker Replies
@@ -1833,8 +1905,20 @@ fn run_shell_host(
         }
         let want_overlay = state.active_snip_mode.is_some() || state.snap_overlay_active;
         if want_overlay && transient_overlay.is_none() {
-            let mon_bounds = primary_mon.descriptor.bounds;
-            let mon_scale = primary_mon.descriptor.scale_factor() as f32;
+            let (mon_bounds, mon_scale) = if state.snap_overlay_active {
+                (snap_mon_bounds, snap_mon_scale)
+            } else {
+                let mut cpt = POINT::default();
+                let target_mon = if unsafe { GetCursorPos(&mut cpt).is_ok() } {
+                    monitor_at_point(&monitors, cpt.x, cpt.y).unwrap_or(&primary_mon)
+                } else {
+                    &primary_mon
+                };
+                (
+                    target_mon.descriptor.bounds,
+                    target_mon.descriptor.scale_factor() as f32,
+                )
+            };
             if let Ok(ov) = TransientD2DOverlay::open(mon_bounds, mon_scale) {
                 if state.active_snip_mode.is_some() {
                     ov.win.set_click_through(false);
@@ -1853,6 +1937,9 @@ fn run_shell_host(
 
         if let Some(ov) = transient_overlay.as_mut() {
             let snip_active = state.active_snip_mode.is_some();
+            if !snip_active && state.snap_overlay_active {
+                let _ = ov.win.set_bounds_px(&ov.gpu, snap_mon_bounds, snap_mon_scale);
+            }
             ov.win.set_click_through(!snip_active);
             ov.win.set_allow_activate(snip_active);
             let scale = ov.win.dpi_scale.max(1.0);
@@ -1947,7 +2034,7 @@ fn run_shell_host(
                     state.prefs.effective_snap_preset(),
                     state.snap_overlay_active,
                     state.snap_hover_idx,
-                    primary_mon.descriptor.work_area,
+                    snap_work_area,
                     &eff.colors.accent_primary,
                 );
             }
@@ -2136,10 +2223,11 @@ fn run_shell_host(
                 if state.focus_seconds > 0 {
                     state.focus_seconds -= 1;
                 } else {
+                    let mins = state.focus_preset_mins.clamp(5, 120);
                     state.focus_running = false;
-                    state.focus_seconds = 25 * 60;
-                    state.focus_completed_mins = state.focus_completed_mins.saturating_add(25);
-                    post_toast_json(&crown, "Odak Tamamlandı", "25 dakikalık seans bitti!", "");
+                    state.focus_seconds = mins * 60;
+                    state.focus_completed_mins = state.focus_completed_mins.saturating_add(mins);
+                    post_toast_json(&crown, "Odak Tamamlandı", &format!("{mins} dakikalık seans bitti!"), "");
                 }
                 needs_state_push = true;
             }
@@ -2231,6 +2319,7 @@ fn run_shell_host(
             needs_state_push = true;
         }
         if needs_bounds_sync && !monitors.is_empty() {
+            primary_mon = monitors[0].clone();
             let p_mon = &monitors[0];
             crown.set_bounds_px(
                 compute_crown_bounds(p_mon),
@@ -2239,6 +2328,7 @@ fn run_shell_host(
             let edge = state.prefs.effective_dock_edge();
             let tb_hidden = appbar.is_native_taskbar_suppressed();
             if docks.len() != monitors.len() {
+                state.clear_dock_icon_caches();
                 docks = create_dock_surfaces(
                     &wv_env,
                     &ui_dir,
@@ -2255,11 +2345,15 @@ fn run_shell_host(
                 last_dock_json.clear();
             } else {
                 for (d, mon) in docks.iter_mut().zip(monitors.iter()) {
+                    let mon_changed = !d.monitor_id.eq_ignore_ascii_case(&mon.descriptor.device_id);
                     d.monitor_id = mon.descriptor.device_id.clone();
                     d.set_bounds_px(
                         compute_dock_bounds(mon, edge, tb_hidden),
                         mon.descriptor.scale_factor() as f32,
                     );
+                    if mon_changed {
+                        d.force_resync_region();
+                    }
                 }
             }
             if let Some(ws) = widgets_surface.as_mut() {
@@ -2369,8 +2463,15 @@ fn run_shell_host(
         }
 
         // 13. Change-Hashed State Push to Crown, Per-Monitor Docks & Desktop Widgets (zero redundant DOM churn!)
-        if needs_catalog_push && crown_ready {
-            crown.post_json(&state.build_catalog_json());
+        if needs_catalog_push {
+            if crown_ready {
+                crown.post_json(&state.build_catalog_json_for_surface(0));
+            }
+            for d in &docks {
+                if dock_ready.contains(&d.surface_id) {
+                    d.post_json(&state.build_catalog_json_for_surface(d.surface_id));
+                }
+            }
         }
         if needs_state_push {
             notif_mirror_active.store(
@@ -2379,7 +2480,8 @@ fn run_shell_host(
                 Ordering::Relaxed,
             );
             if crown_ready {
-                let cj = state.build_crown_state_json(
+                let cj = state.build_crown_state_json_for_surface(
+                    0,
                     &crown.monitor_id,
                     monitors.len(),
                     appbar.is_native_taskbar_suppressed(),
@@ -2394,7 +2496,12 @@ fn run_shell_host(
                 if !dock_ready.contains(&d.surface_id) {
                     continue;
                 }
-                let dj = state.build_dock_state_json(&d.monitor_id, idx == 0, now_ms);
+                let dj = state.build_dock_state_json_for_surface(
+                    d.surface_id,
+                    &d.monitor_id,
+                    idx == 0,
+                    now_ms,
+                );
                 if last_dock_json.get(&d.monitor_id).map(String::as_str) != Some(dj.as_str()) {
                     d.post_json(&dj);
                     last_dock_json.insert(d.monitor_id.clone(), dj);
@@ -2697,7 +2804,7 @@ fn spawn_background_workers(
 
             // Fast sub-50ms hardware, live media & tray boot scans FIRST (never block behind 300-app icon catalog!)
             let init_media = query_media_session();
-            let _ = reply_tx.send(BgReply::Media(init_media));
+            let _ = reply_tx.send(BgReply::Media(init_media.clone()));
             let init_bt = query_bluetooth_batteries();
             let _ = reply_tx.send(BgReply::Bluetooth(init_bt.clone()));
             let visible_procs: HashSet<String> = enumerate_open_windows(&HashSet::new(), &HashSet::new())
@@ -2724,6 +2831,11 @@ fn spawn_background_workers(
             let audio_poll = CoreAudioController::new();
             let mut last_audio_snap = audio_poll.get_snapshot();
             let mut last_bt_snapshot: Vec<BluetoothBatteryDevice> = init_bt;
+            let mut last_media_snap: MediaSessionSnapshot = init_media;
+            let mut last_privacy_snap: Option<PrivacySnapshot> = None;
+            let mut last_metrics_snap: Option<SystemMetricsSnapshot> = None;
+            let mut last_brightness_snap: Option<Vec<ExternalMonitorBrightness>> = None;
+            let mut last_metrics_push = Instant::now() - Duration::from_secs(10);
             let mut last_audio_tick = Instant::now();
             let mut last_tray_tick = Instant::now();
             let mut last_bt_tick = Instant::now();
@@ -2731,19 +2843,38 @@ fn spawn_background_workers(
             let mut last_weather_tick = Instant::now();
 
             loop {
-                // Unified 1.5s battery-friendly cadence: mtime-gated Toasts (opt-in) + Media + Privacy + Metrics
+                let mut should_wake = false;
+
+                // Unified 1.5s battery-friendly cadence: mtime-gated Toasts (opt-in) + diff-throttled Media/Privacy/Metrics
                 if notif_mirror_active.load(Ordering::Relaxed) {
                     let fresh = wpn.poll_new_toasts();
                     if !fresh.is_empty() {
                         let _ = reply_tx.send(BgReply::FreshNotifications(fresh));
-                        post_wake_ui(wake_hwnd);
+                        should_wake = true;
                     }
                 }
 
-                let _ = reply_tx.send(BgReply::Media(query_media_session()));
-                let _ = reply_tx.send(BgReply::Privacy(query_privacy_snapshot()));
-                let _ = reply_tx.send(BgReply::Metrics(metrics.sample(true)));
-                post_wake_ui(wake_hwnd);
+                let media_snap = query_media_session();
+                if media_meaningfully_changed(&last_media_snap, &media_snap) {
+                    last_media_snap = media_snap.clone();
+                    let _ = reply_tx.send(BgReply::Media(media_snap));
+                    should_wake = true;
+                }
+
+                let privacy_snap = query_privacy_snapshot();
+                if last_privacy_snap.as_ref() != Some(&privacy_snap) {
+                    last_privacy_snap = Some(privacy_snap.clone());
+                    let _ = reply_tx.send(BgReply::Privacy(privacy_snap));
+                    should_wake = true;
+                }
+
+                let cur_metrics = metrics.sample(true);
+                if should_push_metrics(last_metrics_snap.as_ref(), &cur_metrics, last_metrics_push.elapsed()) {
+                    last_metrics_snap = Some(cur_metrics.clone());
+                    last_metrics_push = Instant::now();
+                    let _ = reply_tx.send(BgReply::Metrics(cur_metrics));
+                    should_wake = true;
+                }
 
                 // 3s loop: Per-app audio sessions & mic mute (change-filtered, <0.5ms COM read)
                 if last_audio_tick.elapsed() >= Duration::from_secs(3) {
@@ -2752,7 +2883,7 @@ fn spawn_background_workers(
                     if fresh_audio != last_audio_snap {
                         last_audio_snap = fresh_audio.clone();
                         let _ = reply_tx.send(BgReply::AudioSnapshot(fresh_audio));
-                        post_wake_ui(wake_hwnd);
+                        should_wake = true;
                     }
                 }
 
@@ -2765,7 +2896,7 @@ fn spawn_background_workers(
                             .map(|w| w.process_name.to_ascii_lowercase())
                             .collect();
                     let _ = reply_tx.send(BgReply::TrayApps(query_background_tray_apps(&visible_procs)));
-                    post_wake_ui(wake_hwnd);
+                    should_wake = true;
                 }
 
                 // 8s loop: Live Connected Bluetooth Devices & Batteries (sub-3ms cfgmgr32 scan, change-filtered!)
@@ -2775,15 +2906,19 @@ fn spawn_background_workers(
                     if fresh_bt != last_bt_snapshot {
                         last_bt_snapshot = fresh_bt.clone();
                         let _ = reply_tx.send(BgReply::Bluetooth(fresh_bt));
-                        post_wake_ui(wake_hwnd);
+                        should_wake = true;
                     }
                 }
 
-                // 45s loop: External Monitor DDC/CI Brightness
+                // 45s loop: External Monitor DDC/CI Brightness (change-filtered!)
                 if last_slow_hw_tick.elapsed() >= Duration::from_secs(45) {
                     last_slow_hw_tick = Instant::now();
-                    let _ = reply_tx.send(BgReply::Brightness(brightness.discover()));
-                    post_wake_ui(wake_hwnd);
+                    let fresh_bri = brightness.discover();
+                    if last_brightness_snap.as_ref() != Some(&fresh_bri) {
+                        last_brightness_snap = Some(fresh_bri.clone());
+                        let _ = reply_tx.send(BgReply::Brightness(fresh_bri));
+                        should_wake = true;
+                    }
                 }
 
                 // 20m loop: Live Weather
@@ -2792,14 +2927,72 @@ fn spawn_background_workers(
                     let w = fetch_live_weather();
                     if w.valid {
                         let _ = reply_tx.send(BgReply::Weather(w));
-                        post_wake_ui(wake_hwnd);
+                        should_wake = true;
                     }
+                }
+
+                if should_wake {
+                    post_wake_ui(wake_hwnd);
                 }
 
                 std::thread::sleep(Duration::from_millis(1500));
             }
         })
         .ok();
+}
+
+fn monitor_at_point(
+    monitors: &[LiveMonitorHandle],
+    px: i32,
+    py: i32,
+) -> Option<&LiveMonitorHandle> {
+    monitors
+        .iter()
+        .find(|m| m.descriptor.bounds.contains(px, py))
+        .or_else(|| monitors.first())
+}
+
+fn media_meaningfully_changed(prev: &MediaSessionSnapshot, cur: &MediaSessionSnapshot) -> bool {
+    let predicted_pos = if prev.is_playing && prev.timeline_updated_ms > 0 {
+        let elapsed = ((cur.timeline_updated_ms - prev.timeline_updated_ms).max(0) / 1000) as u32;
+        let p = prev.position_secs.saturating_add(elapsed);
+        if prev.duration_secs > 0 { p.min(prev.duration_secs) } else { p }
+    } else {
+        prev.position_secs
+    };
+    prev.title != cur.title
+        || prev.artist != cur.artist
+        || prev.app_name != cur.app_name
+        || prev.is_playing != cur.is_playing
+        || prev.has_session != cur.has_session
+        || prev.duration_secs != cur.duration_secs
+        || prev.can_seek != cur.can_seek
+        || prev.thumbnail_bytes.is_some() != cur.thumbnail_bytes.is_some()
+        || prev.thumbnail_bytes.as_ref().map(Vec::len) != cur.thumbnail_bytes.as_ref().map(Vec::len)
+        || predicted_pos.abs_diff(cur.position_secs) >= 3
+}
+
+fn should_push_metrics(
+    prev_opt: Option<&SystemMetricsSnapshot>,
+    cur: &SystemMetricsSnapshot,
+    elapsed: Duration,
+) -> bool {
+    let Some(prev) = prev_opt else {
+        return true;
+    };
+    if elapsed >= Duration::from_secs(6) {
+        return true;
+    }
+    let cpu_delta = (cur.cpu_percent - prev.cpu_percent).abs() >= 2.0;
+    let ram_delta = (cur.ram_percent - prev.ram_percent).abs() >= 2.0;
+    let net_delta = (cur.net_down_mbps - prev.net_down_mbps).abs() >= 0.05
+        || (cur.net_up_mbps - prev.net_up_mbps).abs() >= 0.05
+        || (cur.net_down_mbps > 0.01) != (prev.net_down_mbps > 0.01)
+        || (cur.net_up_mbps > 0.01) != (prev.net_up_mbps > 0.01);
+    let battery_changed = cur.battery_present != prev.battery_present
+        || cur.battery_percent != prev.battery_percent
+        || cur.is_charging != prev.is_charging;
+    cpu_delta || ram_delta || net_delta || battery_changed
 }
 
 fn encode_widget_photo_data_uri(path: &str) -> Option<String> {
@@ -2814,4 +3007,44 @@ fn encode_widget_photo_data_uri(path: &str) -> Option<String> {
         "data:image/jpeg;base64,{}",
         base64::engine::general_purpose::STANDARD.encode(&buf)
     ))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn smart_idle_telemetry_throttles_small_cpu_ram_deltas_under_6s() {
+        let base = SystemMetricsSnapshot {
+            cpu_percent: 12.0,
+            ram_percent: 45.0,
+            net_down_mbps: 0.0,
+            net_up_mbps: 0.0,
+            battery_present: true,
+            battery_percent: 80,
+            is_charging: false,
+            ..Default::default()
+        };
+        assert!(should_push_metrics(None, &base, Duration::from_secs(0)));
+
+        let tiny_jitter = SystemMetricsSnapshot {
+            cpu_percent: 13.4,
+            ram_percent: 46.2,
+            ..base.clone()
+        };
+        assert!(!should_push_metrics(Some(&base), &tiny_jitter, Duration::from_millis(1500)));
+        assert!(should_push_metrics(Some(&base), &tiny_jitter, Duration::from_secs(6)));
+
+        let cpu_spike = SystemMetricsSnapshot { cpu_percent: 14.5, ..base.clone() };
+        assert!(should_push_metrics(Some(&base), &cpu_spike, Duration::from_millis(1500)));
+
+        let ram_spike = SystemMetricsSnapshot { ram_percent: 47.1, ..base.clone() };
+        assert!(should_push_metrics(Some(&base), &ram_spike, Duration::from_millis(1500)));
+
+        let net_burst = SystemMetricsSnapshot { net_down_mbps: 0.12, ..base.clone() };
+        assert!(should_push_metrics(Some(&base), &net_burst, Duration::from_millis(1500)));
+
+        let bat_drop = SystemMetricsSnapshot { battery_percent: 79, ..base.clone() };
+        assert!(should_push_metrics(Some(&base), &bat_drop, Duration::from_millis(1500)));
+    }
 }
