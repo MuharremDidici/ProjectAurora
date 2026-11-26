@@ -421,6 +421,10 @@ impl ShellState {
             artist: "M83 • Hurry Up, We're Dreaming".into(),
             app_name: "Spotify".into(),
             thumbnail_bytes: None,
+            position_secs: 64,
+            duration_secs: 243,
+            timeline_updated_ms: 0,
+            can_seek: true,
         };
         s.audio = AudioStateSnapshot {
             master_volume_percent: 72,

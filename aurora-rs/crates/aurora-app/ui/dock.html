@@ -2036,6 +2036,103 @@ body.ind-glow .dock-item.active .dock-dot {
     border-color: var(--accent-ring);
     color: var(--text-1);
 }
+/* Flagship Reference-Grade Borderless Studio Media & Stacked Micro-Widgets */
+.dw-media-studio {
+    height: calc(var(--item-sz) * 0.92);
+    padding: 0 6px;
+    gap: 8px;
+    cursor: default;
+}
+.dw-ms-art {
+    width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0; overflow: hidden;
+    background: linear-gradient(135deg, rgba(var(--a1-rgb), 0.25), rgba(var(--a2-rgb), 0.22));
+    border: 1px solid rgba(255,255,255,0.18);
+    display: inline-flex; align-items: center; justify-content: center;
+    box-shadow: 0 3px 10px -2px rgba(0, 0, 0, 0.42);
+    cursor: pointer;
+}
+.dw-ms-art img { width: 100%; height: 100%; object-fit: cover; }
+.dw-ms-meta {
+    display: flex; flex-direction: column; justify-content: center;
+    min-width: 0; max-width: 116px; line-height: 1.18; cursor: pointer; text-align: left;
+}
+.dw-pill.dw-sz-compact .dw-ms-meta { max-width: 84px; }
+.dw-pill.dw-sz-wide .dw-ms-meta { max-width: 164px; }
+.dw-ms-title {
+    font-size: 11.5px; font-weight: 650; color: var(--text-1); letter-spacing: -0.015em;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.dw-ms-artist {
+    font-size: 10px; font-weight: 500; color: var(--text-2);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.dw-ms-timeline {
+    display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0;
+}
+.dw-ms-time {
+    font-size: 10px; font-weight: 500; color: var(--text-2);
+    font-variant-numeric: tabular-nums; min-width: 25px;
+}
+.dw-ms-time.end { text-align: right; }
+.dw-seek-track {
+    position: relative; width: 82px; height: 18px;
+    display: inline-flex; align-items: center; cursor: pointer; flex-shrink: 0;
+}
+.dw-pill.dw-sz-compact .dw-seek-track { width: 54px; }
+.dw-pill.dw-sz-wide .dw-seek-track { width: 122px; }
+.dw-seek-rail {
+    position: relative; width: 100%; height: 3px; border-radius: 99px;
+    background: rgba(255, 255, 255, 0.22); overflow: visible;
+}
+body.mode-light .dw-seek-rail { background: rgba(15, 23, 42, 0.18); }
+.dw-seek-fill {
+    position: absolute; left: 0; top: 0; bottom: 0; border-radius: 99px;
+    background: var(--text-1); pointer-events: none; transition: width 0.12s linear;
+}
+.dw-seek-knob {
+    position: absolute; top: 50%; width: 9px; height: 9px; border-radius: 50%;
+    background: var(--text-1); transform: translate(-50%, -50%);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.48); pointer-events: none;
+    transition: transform 0.12s var(--ease);
+}
+.dw-seek-track:hover .dw-seek-knob { transform: translate(-50%, -50%) scale(1.24); }
+.dw-ms-ctrls {
+    display: inline-flex; align-items: center; gap: 2px; flex-shrink: 0;
+}
+.dw-ms-btn {
+    width: 23px; height: 24px; border-radius: 6px;
+    border: none; background: transparent; color: var(--text-1);
+    display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+    opacity: 0.86; transition: background 0.12s, opacity 0.12s, transform 0.1s;
+}
+.dw-ms-btn:hover { background: rgba(255, 255, 255, 0.12); opacity: 1; }
+body.mode-light .dw-ms-btn:hover { background: rgba(15, 23, 42, 0.08); }
+.dw-ms-btn:active { transform: scale(0.91); }
+.dw-ms-btn.box {
+    width: 26px; height: 26px; border-radius: 7px; opacity: 1;
+    background: rgba(255, 255, 255, 0.13);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.dw-ms-btn.box:hover { background: rgba(255, 255, 255, 0.21); }
+body.mode-light .dw-ms-btn.box {
+    background: rgba(15, 23, 42, 0.08);
+    border-color: rgba(15, 23, 42, 0.08);
+}
+.dw-ms-vol {
+    display: inline-flex; align-items: center; gap: 4px;
+    height: 26px; padding: 0 6px; border-radius: 7px;
+    border: none; background: transparent; color: var(--text-1);
+    font-size: 11px; font-weight: 650; cursor: pointer;
+    transition: background 0.12s;
+}
+.dw-ms-vol:hover { background: rgba(255, 255, 255, 0.10); }
+body.mode-light .dw-ms-vol:hover { background: rgba(15, 23, 42, 0.07); }
+.dw-stack-2 {
+    display: inline-flex; flex-direction: column; justify-content: center;
+    line-height: 1.15; text-align: left;
+}
+.dw-st-top { font-size: 11.5px; font-weight: 700; color: var(--text-1); }
+.dw-st-bot { font-size: 9.5px; font-weight: 500; color: var(--text-2); }
 .dw-add-btn {
     width: 24px; height: 24px; border-radius: 50%;
     border: 1px dashed var(--border-rim);
@@ -2559,9 +2656,13 @@ body.dock-edit-mode .dw-pill {
 }
 .dw-pill.dw-st-clean {
     background: transparent !important; border-color: transparent !important;
+    box-shadow: none !important;
 }
 .dw-pill.dw-st-clean:hover {
-    background: var(--bg-card-hover) !important; border-color: var(--border-subtle) !important;
+    background: rgba(255, 255, 255, 0.08) !important; border-color: rgba(255, 255, 255, 0.08) !important;
+}
+body.mode-light .dw-pill.dw-st-clean:hover {
+    background: rgba(15, 23, 42, 0.06) !important; border-color: rgba(15, 23, 42, 0.08) !important;
 }
 .dw-pill.dw-st-tinted {
     background: linear-gradient(135deg, rgba(var(--a1-rgb), 0.22), rgba(var(--a2-rgb), 0.14)) !important;
@@ -2616,16 +2717,22 @@ body.mode-light .dw-pill.dw-st-hardware {
 .dw-pill.dw-sz-compact .dw-slider-track { width: 44px; }
 .dw-pill.dw-sz-wide .dw-slider-track { width: 92px; }
 .dw-slider-rail {
-    position: relative; width: 100%; height: 5px; border-radius: 99px;
-    background: var(--bg-inset); border: 1px solid var(--border-subtle); overflow: hidden;
+    position: relative; width: 100%; height: 3.5px; border-radius: 99px;
+    background: rgba(255, 255, 255, 0.22); overflow: visible;
 }
+body.mode-light .dw-slider-rail { background: rgba(15, 23, 42, 0.18); }
 .dw-slider-fill {
     height: 100%; border-radius: 99px;
-    background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+    background: var(--text-1);
     pointer-events: none; transition: width 0.05s linear;
 }
-.dw-slider-fill.muted { background: var(--danger); opacity: 0.55; }
-.dw-slider-pct { font-size: 10px; font-weight: 800; color: var(--text-2); min-width: 24px; text-align: right; }
+.dw-slider-knob {
+    position: absolute; top: 50%; width: 9px; height: 9px; border-radius: 50%;
+    background: var(--text-1); transform: translate(-50%, -50%);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.48); pointer-events: none;
+}
+.dw-slider-fill.muted { background: var(--danger); opacity: 0.65; }
+.dw-slider-pct { font-size: 11px; font-weight: 650; color: var(--text-1); min-width: 30px; text-align: right; }
 
 .dw-mic-led {
     width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
@@ -3307,15 +3414,15 @@ const DOCK_ZONE_LABELS = {
 };
 const DOCK_WIDGET_META = {
     'clock':             { name: 'Saat',             icon: SVG.clock,    variants: [['classic','Klasik'], ['dot5x7','LED 5×7'], ['flip','Split-Flap'], ['analog','Kronograf'], ['matrix','Dot-Matrix'], ['world','Dünya']] },
-    'media':             { name: 'Müzik Çalar',      icon: SVG.musicSm,  variants: [['vinyl','Vinil Plak'], ['art-pill','Kapak & Dalga'], ['eq','Ekolayzer'], ['capsule','Kapsül']] },
+    'media':             { name: 'Müzik Çalar',      icon: SVG.musicSm,  variants: [['studio-bar','Stüdyo Bar'], ['art-pill','Kapak & Dalga'], ['vinyl','Vinil Plak'], ['eq','Ekolayzer'], ['capsule','Kapsül']] },
     'volume-slider':     { name: 'Ses Kaydırıcı',    icon: SVG.vol,      variants: [['bar','Kaydırıcı'], ['mini','Mini']] },
     'brightness-slider': { name: 'Parlaklık Barı',   icon: SVG.sun,      variants: [['bar','Kaydırıcı'], ['mini','Mini']] },
     'mic-privacy':       { name: 'Mikrofon & LED',   icon: SVG.mic,      variants: [['pill','Kapsül'], ['icon','Sadece İkon']] },
     'desktops':          { name: 'Sanal Masaüstü',   icon: SVG.desktop,  variants: [['pills','1·2·+'], ['compact','Kompakt']] },
-    'weather':           { name: 'Hava Durumu',      icon: SVG.cloud,    variants: [['pill','Kapsül']] },
+    'weather':           { name: 'Hava Durumu',      icon: SVG.cloud,    variants: [['studio','Stüdyo 2-Satır'], ['pill','Kapsül']] },
     'ai-quota':          { name: 'AI Kota',          icon: SVG.sparkles, variants: [['dots','3\'lü Durum'], ['rings','3\'lü Halka'], ['compact','Kompakt']] },
-    'battery':           { name: 'Pil & Bluetooth',  icon: SVG.battery,  variants: [['ring','Halka'], ['pill','Kapsül']] },
-    'system':            { name: 'CPU & RAM',        icon: SVG.cpu,      variants: [['bars','Çubuk'], ['spark','Canlı Eğri'], ['text','Metin']] },
+    'battery':           { name: 'Pil & Bluetooth',  icon: SVG.battery,  variants: [['studio','Stüdyo 2-Satır'], ['ring','Halka'], ['pill','Kapsül']] },
+    'system':            { name: 'CPU & RAM',        icon: SVG.cpu,      variants: [['studio','Stüdyo 2-Satır'], ['bars','Çubuk'], ['spark','Canlı Eğri'], ['text','Metin']] },
     'network':           { name: 'Ağ Hızı',          icon: SVG.activity, variants: [['speed','Canlı Hız']] },
     'pomodoro':          { name: 'Pomodoro',         icon: SVG.timer,    variants: [['pill','Sayaç']] },
     'market':            { name: 'Döviz & BTC',      icon: SVG.market,   variants: [['ticker','Kayan Kur']] },
@@ -4152,11 +4259,12 @@ function renderDockMicroWidgetHtml(w, zoneId, zoneIdx) {
         const vol = Number(state.audio?.volume ?? 50);
         const muted = Boolean(state.audio?.muted);
         const dev = state.audio?.device || 'Ses Çıkışı';
+        const showPct = muted ? 0 : Math.max(0, Math.min(100, Math.round(vol)));
         if (v === 'mini') {
             return `
                 <div class="${baseCls} num" ${dwAttrs} onclick="${guardClick}send('toggleMute')" onauxclick="if(event.button===1){event.stopPropagation();send('cycleAudioOutput');}" title="${escHtml(dev)} · Tıkla: Sessiz · Tekerlek: Ses · Orta Tık: Cihaz Değiştir">
                     <span style="color:${muted ? 'var(--danger)' : 'var(--accent-1)'};display:inline-flex;">${muted ? SVG.mute : SVG.vol}</span>
-                    <span>${muted ? 'Sessiz' : vol + '%'}</span>
+                    <span>${muted ? 'Sessiz' : '%' + showPct}</span>
                 </div>
             `;
         }
@@ -4164,20 +4272,20 @@ function renderDockMicroWidgetHtml(w, zoneId, zoneIdx) {
             <div class="${baseCls} dw-slider-pill num" ${dwAttrs} title="${escHtml(dev)} · Sürükle: Ses · İkon: Sessiz · Orta Tık: Çıkış Değiştir · Sağ Tık: Özelleştir">
                 <button class="dw-mini-act" style="color:${muted ? 'var(--danger)' : 'var(--text-1)'};" onpointerdown="event.stopPropagation();" onclick="event.stopPropagation();send('toggleMute');" onauxclick="if(event.button===1){event.stopPropagation();send('cycleAudioOutput');}" title="Sessiz / Aç (Orta Tık: Çıkış Değiştir)">${muted ? SVG.mute : SVG.vol}</button>
                 <div class="dw-slider-track" onpointerdown="startInlineSlider(event,'volume',this)" onclick="event.stopPropagation();">
-                    <div class="dw-slider-rail"><div class="dw-slider-fill ${muted ? 'muted' : ''}" style="width:${muted ? 0 : vol}%;"></div></div>
+                    <div class="dw-slider-rail"><div class="dw-slider-fill ${muted ? 'muted' : ''}" style="width:${showPct}%;"></div><span class="dw-slider-knob" style="left:${showPct}%;"></span></div>
                 </div>
-                <span class="dw-slider-pct">${muted ? '✕' : vol + '%'}</span>
+                <span class="dw-slider-pct">${muted ? '✕' : '%' + showPct}</span>
             </div>
         `;
     }
     if (w.kind === 'brightness-slider') {
         const mons = state.monitorBrightness || [];
-        const bri = mons.length > 0 ? Number(mons[0].percent ?? 80) : 80;
+        const bri = Math.max(0, Math.min(100, Math.round(mons.length > 0 ? Number(mons[0].percent ?? 80) : 80)));
         if (v === 'mini') {
             return `
                 <div class="${baseCls} num" ${dwAttrs} onclick="${guardClick}toggleQuickControls(event)" title="Ekran Parlaklığı %${bri} · Tekerlek: Ayarla · Sağ Tık: Özelleştir">
                     <span style="color:var(--warning);display:inline-flex;">${SVG.sun}</span>
-                    <span>${bri}%</span>
+                    <span>%${bri}</span>
                 </div>
             `;
         }
@@ -4185,9 +4293,9 @@ function renderDockMicroWidgetHtml(w, zoneId, zoneIdx) {
             <div class="${baseCls} dw-slider-pill num" ${dwAttrs} title="Parlaklık %${bri} · Kaydır veya Tekerlek · Sağ Tık: Özelleştir">
                 <span style="color:var(--warning);display:inline-flex;">${SVG.sun}</span>
                 <div class="dw-slider-track" onpointerdown="startInlineSlider(event,'brightness',this)" onclick="event.stopPropagation();">
-                    <div class="dw-slider-rail"><div class="dw-slider-fill" style="width:${bri}%;"></div></div>
+                    <div class="dw-slider-rail"><div class="dw-slider-fill" style="width:${bri}%;"></div><span class="dw-slider-knob" style="left:${bri}%;"></span></div>
                 </div>
-                <span class="dw-slider-pct">${bri}%</span>
+                <span class="dw-slider-pct">%${bri}</span>
             </div>
         `;
     }
@@ -4227,6 +4335,9 @@ function renderDockMicroWidgetHtml(w, zoneId, zoneIdx) {
     }
     if (w.kind === 'media') {
         const med = state.media;
+        const vol = Math.max(0, Math.min(100, Math.round(Number(state.audio?.volume ?? 50))));
+        const muted = Boolean(state.audio?.muted);
+        const audioDev = state.audio?.device || 'Ses Çıkışı';
         if (!med) {
             if (v === 'capsule') {
                 return `
@@ -4235,6 +4346,22 @@ function renderDockMicroWidgetHtml(w, zoneId, zoneIdx) {
                         <button class="dw-mini-act" onpointerdown="event.stopPropagation();" onclick="event.stopPropagation();send('mediaCmd',{cmd:'prev'});" title="Önceki">${SVG.prev}</button>
                         <button class="dw-mini-act" onpointerdown="event.stopPropagation();" onclick="event.stopPropagation();send('mediaCmd',{cmd:'play_pause'});" title="Oynat / Başlat">${SVG.play}</button>
                         <button class="dw-mini-act" onpointerdown="event.stopPropagation();" onclick="event.stopPropagation();send('mediaCmd',{cmd:'next'});" title="Sonraki">${SVG.next}</button>
+                    </div>
+                `;
+            }
+            if (v === 'studio-bar' || v === 'default') {
+                return `
+                    <div class="${baseCls} dw-media-studio" ${dwAttrs} onclick="${guardClick}send('mediaCmd',{cmd:'play_pause'})" title="Müzik Stüdyo · Oynatmak için tıklayın · Sağ Tık: Özelleştir">
+                        <span class="dw-ms-art">${SVG.musicSm}</span>
+                        <div class="dw-ms-meta">
+                            <span class="dw-ms-title">Medya Hazır</span>
+                            <span class="dw-ms-artist">Spotify · Tarayıcı</span>
+                        </div>
+                        <div class="dw-ms-ctrls" onpointerdown="event.stopPropagation()">
+                            <button class="dw-ms-btn" onclick="event.stopPropagation();send('mediaCmd',{cmd:'prev'});" title="Önceki">${SVG.prev}</button>
+                            <button class="dw-ms-btn box" onclick="event.stopPropagation();send('mediaCmd',{cmd:'play_pause'});" title="Oynat">${SVG.play}</button>
+                            <button class="dw-ms-btn" onclick="event.stopPropagation();send('mediaCmd',{cmd:'next'});" title="Sonraki">${SVG.next}</button>
+                        </div>
                     </div>
                 `;
             }
@@ -4252,7 +4379,10 @@ function renderDockMicroWidgetHtml(w, zoneId, zoneIdx) {
                 <div class="${baseCls}" ${dwAttrs} onclick="${guardClick}send('mediaCmd',{cmd:'play_pause'})" title="${escHtml(med.title)} — ${escHtml(med.artist || med.app)}">
                     <span class="dw-art-thumb">${med.artwork ? `<img src="data:image/jpeg;base64,${med.artwork}"/>` : SVG.musicSm}</span>
                     <span class="dw-eq ${playing ? '' : 'paused'}"><span></span><span></span><span></span></span>
-                    <span class="dw-media-txt">${escHtml(med.title)}</span>
+                    <span class="dw-stack-2" style="max-width:112px;">
+                        <span class="dw-st-top" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(med.title)}</span>
+                        <span class="dw-st-bot" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(med.artist || med.app || '')}</span>
+                    </span>
                     <button class="dw-mini-act" onpointerdown="event.stopPropagation();" onclick="event.stopPropagation();send('mediaCmd',{cmd:'next'});" title="Sonraki">${SVG.next}</button>
                 </div>
             `;
@@ -4276,11 +4406,49 @@ function renderDockMicroWidgetHtml(w, zoneId, zoneIdx) {
                 </div>
             `;
         }
+        if (v === 'vinyl') {
+            return `
+                <div class="${baseCls}" ${dwAttrs} onclick="${guardClick}send('mediaCmd',{cmd:'play_pause'})" title="${escHtml(med.title)} — Tıkla: Oynat/Duraklat">
+                    <span class="dw-vinyl-disc ${playing ? '' : 'paused'}">${med.artwork ? `<img src="data:image/jpeg;base64,${med.artwork}"/>` : ''}</span>
+                    <span class="dw-media-txt">${escHtml(med.title)}</span>
+                    <button class="dw-mini-act" onpointerdown="event.stopPropagation();" onclick="event.stopPropagation();send('mediaCmd',{cmd:'next'});" title="Sonraki">${SVG.next}</button>
+                </div>
+            `;
+        }
+        // Studio Bar (Default flagship reference strip)
+        const dur = Math.max(0, Number(med.durationSecs) || 0);
+        const pos = getDockLiveMediaPosSecs(med);
+        const pct = dur > 0 ? Math.max(0, Math.min(100, (pos / dur) * 100)) : 0;
+        const timelineHtml = dur > 0 ? `
+            <div class="dw-ms-timeline" onpointerdown="event.stopPropagation()">
+                <span class="dw-ms-time num" id="dwMediaPos">${formatDockMediaTime(pos)}</span>
+                <div class="dw-seek-track" onpointerdown="startMediaSeek(event,this,${dur})" onclick="event.stopPropagation()" title="Zaman Çubuğu: Sürükle veya Tıkla">
+                    <div class="dw-seek-rail">
+                        <div class="dw-seek-fill" id="dwMediaFill" style="width:${pct.toFixed(2)}%;"></div>
+                        <span class="dw-seek-knob" id="dwMediaKnob" style="left:${pct.toFixed(2)}%;"></span>
+                    </div>
+                </div>
+                <span class="dw-ms-time end num" id="dwMediaDur">${formatDockMediaTime(dur)}</span>
+            </div>
+        ` : `<span class="dw-eq ${playing ? '' : 'paused'}" style="margin:0 2px;"><span></span><span></span><span></span></span>`;
         return `
-            <div class="${baseCls}" ${dwAttrs} onclick="${guardClick}send('mediaCmd',{cmd:'play_pause'})" title="${escHtml(med.title)} — Tıkla: Oynat/Duraklat">
-                <span class="dw-vinyl-disc ${playing ? '' : 'paused'}">${med.artwork ? `<img src="data:image/jpeg;base64,${med.artwork}"/>` : ''}</span>
-                <span class="dw-media-txt">${escHtml(med.title)}</span>
-                <button class="dw-mini-act" onpointerdown="event.stopPropagation();" onclick="event.stopPropagation();send('mediaCmd',{cmd:'next'});" title="Sonraki">${SVG.next}</button>
+            <div class="${baseCls} dw-media-studio" ${dwAttrs} title="${escHtml(med.title)} — ${escHtml(med.artist || med.app || '')} · Sağ Tık: Özelleştir">
+                <span class="dw-ms-art" onclick="${guardClick}send('mediaCmd',{cmd:'play_pause'})" title="Oynat / Duraklat">${med.artwork ? `<img src="data:image/jpeg;base64,${med.artwork}"/>` : SVG.musicSm}</span>
+                <div class="dw-ms-meta" onclick="${guardClick}send('mediaCmd',{cmd:'play_pause'})">
+                    <span class="dw-ms-title">${escHtml(med.title)}</span>
+                    <span class="dw-ms-artist">${escHtml(med.artist || med.app || 'Medya')}</span>
+                </div>
+                ${timelineHtml}
+                <div class="dw-ms-ctrls" onpointerdown="event.stopPropagation()">
+                    <button class="dw-ms-btn" onclick="event.stopPropagation();send('mediaCmd',{cmd:'prev'});" title="Önceki">${SVG.prev}</button>
+                    <button class="dw-ms-btn box" onclick="event.stopPropagation();send('mediaCmd',{cmd:'play_pause'});" title="${playing ? 'Duraklat' : 'Oynat'}">${playing ? SVG.pause : SVG.play}</button>
+                    <button class="dw-ms-btn" onclick="event.stopPropagation();send('mediaCmd',{cmd:'next'});" title="Sonraki">${SVG.next}</button>
+                    <button class="dw-ms-btn box" style="${muted ? 'color:var(--danger);' : ''}" onclick="event.stopPropagation();send('toggleMute');" onauxclick="if(event.button===1){event.stopPropagation();send('cycleAudioOutput');}" title="Sessiz / Aç (Orta Tık: Çıkış Değiştir)">${muted ? SVG.mute : SVG.vol}</button>
+                </div>
+                <button class="dw-ms-vol num" onpointerdown="event.stopPropagation()" onclick="event.stopPropagation();send('toggleMute');" onauxclick="if(event.button===1){event.stopPropagation();send('cycleAudioOutput');}" title="${escHtml(audioDev)} · Ses %${vol} · Tıkla: Sessiz">
+                    <span style="display:inline-flex;opacity:0.86;${muted ? 'color:var(--danger);' : ''}">${muted ? SVG.mute : SVG.vol}</span>
+                    <span>%${muted ? 0 : vol}</span>
+                </button>
             </div>
         `;
     }
@@ -4290,7 +4458,12 @@ function renderDockMicroWidgetHtml(w, zoneId, zoneIdx) {
             return `<button class="${baseCls}" ${dwAttrs} onclick="${guardClick}send('toggleWeatherNet')" title="Hava Durumu (Yenile)"><span style="color:var(--warning);display:inline-flex;">${SVG.cloud}</span><span class="dw-sub">Hava</span></button>`;
         }
         const isSunny = /(açık|güneş|clear|sun)/i.test(wt.summary || '');
-        return `<button class="${baseCls} num" ${dwAttrs} onclick="${guardClick}send('openToolsHub',{tab:'telemetry'})" title="${escHtml(wt.city || '')} · ${escHtml(wt.summary || '')}"><span style="color:${isSunny ? 'var(--warning)' : 'var(--accent-1)'};display:inline-flex;">${isSunny ? SVG.sun : SVG.cloud}</span><span>${wt.temp}°</span></button>`;
+        const ic = `<span style="color:${isSunny ? 'var(--warning)' : 'var(--accent-1)'};display:inline-flex;">${isSunny ? SVG.sun : SVG.cloud}</span>`;
+        if (v === 'studio' || v === 'default') {
+            const sub = (wt.city || wt.summary || 'Canlı').slice(0, 12);
+            return `<button class="${baseCls} num" ${dwAttrs} onclick="${guardClick}send('openToolsHub',{tab:'telemetry'})" title="${escHtml(wt.city || '')} · ${escHtml(wt.summary || '')}">${ic}<span class="dw-stack-2"><span class="dw-st-top">${wt.temp}°</span><span class="dw-st-bot">${escHtml(sub)}</span></span></button>`;
+        }
+        return `<button class="${baseCls} num" ${dwAttrs} onclick="${guardClick}send('openToolsHub',{tab:'telemetry'})" title="${escHtml(wt.city || '')} · ${escHtml(wt.summary || '')}">${ic}<span>${wt.temp}°</span></button>`;
     }
     if (w.kind === 'ai-quota') {
         const snaps = state.aiSnapshots || [];
@@ -4331,17 +4504,23 @@ function renderDockMicroWidgetHtml(w, zoneId, zoneIdx) {
         const bat = state.battery || { present: false, percent: 100, charging: false };
         const bt = (state.btDevices || []).find(d => d.hasBattery);
         const pct = bt ? bt.percent : bat.percent;
-        const lbl = bt ? bt.name.slice(0, 7) : (bat.charging ? 'Şarj' : 'Pil');
-        if (v === 'pill') {
-            return `<button class="${baseCls} num" ${dwAttrs} onclick="${guardClick}toggleQuickControls(event)" title="${bt ? escHtml(bt.name) : 'Pil Durumu'}">${bt ? SVG.headphones : (bat.charging ? SVG.bolt : SVG.battery)}<span>${pct}%</span></button>`;
-        }
+        const lbl = bt ? bt.name.slice(0, 9) : (bat.charging ? 'Şarjda' : 'Pil');
         const dash = (44 * (1 - Math.max(0, Math.min(100, pct)) / 100)).toFixed(1);
+        const ringSvg = `<svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="7" fill="none" stroke="var(--border-subtle)" stroke-width="2.2"/><circle cx="9" cy="9" r="7" fill="none" stroke="${pct <= 20 ? 'var(--danger)' : 'var(--success)'}" stroke-width="2.2" stroke-dasharray="44" stroke-dashoffset="${dash}" stroke-linecap="round" transform="rotate(-90 9 9)"/></svg>`;
+        if (v === 'studio' || v === 'default') {
+            return `
+                <button class="${baseCls} num" ${dwAttrs} onclick="${guardClick}toggleQuickControls(event)" title="${bt ? escHtml(bt.name) : 'Pil Durumu'} (%${pct})">
+                    ${ringSvg}
+                    <span class="dw-stack-2"><span class="dw-st-top">%${pct}</span><span class="dw-st-bot">${escHtml(lbl)}</span></span>
+                </button>
+            `;
+        }
+        if (v === 'pill') {
+            return `<button class="${baseCls} num" ${dwAttrs} onclick="${guardClick}toggleQuickControls(event)" title="${bt ? escHtml(bt.name) : 'Pil Durumu'}">${bt ? SVG.headphones : (bat.charging ? SVG.bolt : SVG.battery)}<span>%${pct}</span></button>`;
+        }
         return `
             <button class="${baseCls} num" ${dwAttrs} onclick="${guardClick}toggleQuickControls(event)" title="${bt ? escHtml(bt.name) : 'Pil Durumu'} (${pct}%)">
-                <svg width="18" height="18" viewBox="0 0 18 18">
-                    <circle cx="9" cy="9" r="7" fill="none" stroke="var(--border-subtle)" stroke-width="2.2"/>
-                    <circle cx="9" cy="9" r="7" fill="none" stroke="${pct <= 20 ? 'var(--danger)' : 'var(--success)'}" stroke-width="2.2" stroke-dasharray="44" stroke-dashoffset="${dash}" stroke-linecap="round" transform="rotate(-90 9 9)"/>
-                </svg>
+                ${ringSvg}
                 <span>${escHtml(lbl)} ${pct}%</span>
             </button>
         `;
@@ -4349,6 +4528,17 @@ function renderDockMicroWidgetHtml(w, zoneId, zoneIdx) {
     if (w.kind === 'system') {
         const cpu = Number(state.metrics?.cpu || 0);
         const ram = Number(state.metrics?.ramPct || 0);
+        if (v === 'studio' || v === 'default') {
+            return `
+                <button class="${baseCls} num" ${dwAttrs} onclick="${guardClick}send('openToolsHub',{tab:'telemetry'})" title="CPU %${cpu} · RAM %${ram}">
+                    <span class="dw-sys-bars">
+                        <span class="dw-sys-bar" style="height:${Math.max(20, Math.min(100, cpu))}%;"></span>
+                        <span class="dw-sys-bar ram" style="height:${Math.max(20, Math.min(100, ram))}%;"></span>
+                    </span>
+                    <span class="dw-stack-2"><span class="dw-st-top">CPU %${cpu}</span><span class="dw-st-bot">RAM %${ram}</span></span>
+                </button>
+            `;
+        }
         if (v === 'spark') {
             return `<button class="${baseCls} num" ${dwAttrs} onclick="${guardClick}send('openToolsHub',{tab:'telemetry'})" title="CPU %${cpu} · RAM %${ram}">${renderDockSparkSvg(state.metrics?.cpuHist, state.metrics?.ramHist)}<span>${cpu}%</span></button>`;
         }
@@ -4483,7 +4673,7 @@ function renderWidgetInspectorPop() {
                 ${[['compact','Kompakt'],['normal','Normal'],['wide','Geniş']].map(([k,l]) => `<button class="dwi-btn ${curSize === k ? 'active' : ''}" onclick="send('updateDockWidget',{kind:'${sk}',size:'${k}'})">${l}</button>`).join('')}
             </div>
             <div class="dwi-seg c3">
-                ${[['pill','Kapsül'],['glass','Optik Cam'],['hardware','Donanım'],['clean','Çerçevesiz'],['tinted','Vurgulu']].map(([k,l]) => `<button class="dwi-btn ${curStyle === k ? 'active' : ''}" onclick="send('updateDockWidget',{kind:'${sk}',styleMode:'${k}'})">${l}</button>`).join('')}
+                ${[['clean','Çerçevesiz'],['glass','Optik Cam'],['pill','Kapsül'],['hardware','Donanım'],['tinted','Vurgulu']].map(([k,l]) => `<button class="dwi-btn ${curStyle === k ? 'active' : ''}" onclick="send('updateDockWidget',{kind:'${sk}',styleMode:'${k}'})">${l}</button>`).join('')}
             </div>
         </div>
         <div>
@@ -6306,6 +6496,77 @@ function startWidgetDrag(e, kind, startZone, startIdx) {
     };
 }
 
+function formatDockMediaTime(secs) {
+    const s = Math.max(0, Math.floor(Number(secs) || 0));
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const r = s % 60;
+    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
+    return `${m}:${String(r).padStart(2, '0')}`;
+}
+function getDockLiveMediaPosSecs(med) {
+    if (!med) return 0;
+    const dur = Math.max(0, Number(med.durationSecs) || 0);
+    let pos = Math.max(0, Number(med.positionSecs) || 0);
+    if (med.isPlaying && Number(med.timelineUpdatedMs) > 0) {
+        pos = Math.floor(pos + Math.max(0, (Date.now() - Number(med.timelineUpdatedMs)) / 1000));
+    }
+    return dur > 0 ? Math.min(dur, pos) : pos;
+}
+function tickDockMediaTimeline() {
+    if (window.__dockMediaSeeking) return;
+    const med = state?.media;
+    const dur = Math.max(0, Number(med?.durationSecs) || 0);
+    if (!med || dur <= 0) return;
+    const pos = getDockLiveMediaPosSecs(med);
+    const pct = Math.max(0, Math.min(100, (pos / dur) * 100)).toFixed(2) + '%';
+    const posEl = document.getElementById('dwMediaPos');
+    const fillEl = document.getElementById('dwMediaFill');
+    const knobEl = document.getElementById('dwMediaKnob');
+    if (posEl) posEl.textContent = formatDockMediaTime(pos);
+    if (fillEl) fillEl.style.width = pct;
+    if (knobEl) knobEl.style.left = pct;
+}
+function startMediaSeek(e, trackEl, durSecs) {
+    if (e.button !== 0 || state?.dockEditMode) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const dur = Math.max(1, Number(durSecs) || 0);
+    window.__dockMediaSeeking = true;
+    let lastSec = 0;
+    const applyClientX = (clientX) => {
+        const r = trackEl.getBoundingClientRect();
+        if (r.width <= 0) return;
+        const ratio = Math.max(0, Math.min(1, (clientX - r.left) / r.width));
+        lastSec = Math.round(ratio * dur);
+        const pct = (ratio * 100).toFixed(2) + '%';
+        const posEl = document.getElementById('dwMediaPos');
+        const fillEl = document.getElementById('dwMediaFill');
+        const knobEl = document.getElementById('dwMediaKnob');
+        if (posEl) posEl.textContent = formatDockMediaTime(lastSec);
+        if (fillEl) fillEl.style.width = pct;
+        if (knobEl) knobEl.style.left = pct;
+    };
+    applyClientX(e.clientX);
+    const onMove = (mv) => applyClientX(mv.clientX);
+    const onUp = (up) => {
+        applyClientX(up.clientX);
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        window.removeEventListener('pointercancel', onUp);
+        window.__dockMediaSeeking = false;
+        window.__suppressNextDockClick = Date.now() + 220;
+        if (state?.media) {
+            state.media.positionSecs = lastSec;
+            state.media.timelineUpdatedMs = Date.now();
+        }
+        send('mediaSeek', { positionSecs: lastSec });
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+}
+
 function startInlineSlider(e, mode, trackEl) {
     if (e.button !== 0 || state?.dockEditMode) return;
     e.preventDefault();
@@ -6316,8 +6577,10 @@ function startInlineSlider(e, mode, trackEl) {
         const pct = Math.max(mode === 'brightness' ? 5 : 0, Math.min(100, Math.round(((clientX - r.left) / r.width) * 100)));
         const fill = trackEl.querySelector('.dw-slider-fill');
         if (fill) { fill.style.width = `${pct}%`; fill.classList.remove('muted'); }
+        const knob = trackEl.querySelector('.dw-slider-knob');
+        if (knob) { knob.style.left = `${pct}%`; }
         const pctLbl = trackEl.parentElement?.querySelector('.dw-slider-pct');
-        if (pctLbl) pctLbl.textContent = `${pct}%`;
+        if (pctLbl) pctLbl.textContent = `%${pct}`;
         showScrubToast(mode, pct, clientX);
         const now = Date.now();
         if (forceSend || !scrubState || (now - scrubState.lastSent) >= 35) {
@@ -6931,6 +7194,7 @@ window.chrome.webview.addEventListener('message', e => {
                 as.setAttribute('transform', `rotate(${(now.getSeconds()*6).toFixed(1)} 14 14)`);
             }
         }
+        tickDockMediaTimeline();
     } else if (msg.type === 'toggleQuickControls') {
         toggleQuickControls(null);
     } else if (msg.type === 'toggleCalNotif') {

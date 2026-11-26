@@ -1,6 +1,6 @@
 <div align="center">
   <img src="assets/aurora-icon.png" alt="Project Aurora Logo" width="112" height="112" />
-  <h1>✦ Project Aurora v7.2</h1>
+  <h1>✦ Project Aurora v7.3</h1>
   <p><strong>Windows 11 için Saf Rust Motorlu Aurora OS Studio, Masaüstü Widget Motoru &amp; Kristal Görev Çubuğu</strong></p>
   <p>
     <a href="https://github.com/MuharremDidici/ProjectAurora/releases/latest">
@@ -14,7 +14,7 @@
   </p>
 </div>
 
-**Project Aurora v7.2**, Windows 11 için **.NET 10 ve harici DLL bağımlılığı olmadan** **Saf Rust Win32 / Direct2D motoru + tek paylaşımlı WebView2 renderer** üzerinde geliştirilmiş; **yönetici izni (UAC) gerektirmeyen**, `explorer.exe`'ye dokunmayan veya DLL enjekte etmeyen, **çoklu monitör + karma DPI** destekli yeni nesil masaüstü kabuğudur.
+**Project Aurora v7.3**, Windows 11 için **.NET 10 ve harici DLL bağımlılığı olmadan** **Saf Rust Win32 / Direct2D motoru + tek paylaşımlı WebView2 renderer** üzerinde geliştirilmiş; **yönetici izni (UAC) gerektirmeyen**, `explorer.exe`'ye dokunmayan veya DLL enjekte etmeyen, **çoklu monitör + karma DPI** destekli yeni nesil masaüstü kabuğudur.
 
 ---
 
@@ -22,7 +22,7 @@
 
 *Ölçüm ortamı: Windows 11 x64 (`2560×1440 @ 125%` DPI), saniyeli saat, canlı pil/Bluetooth, bildirim köprüsü ve olay-tabanlı pano aktif.*
 
-| Metrik | `v2.5.1` (C# .NET 10 + Çoklu WebView2) | **`v7.2` (Saf Rust + Tek Paylaşımlı WebView2)** | İyileşme |
+| Metrik | `v2.5.1` (C# .NET 10 + Çoklu WebView2) | **`v7.3` (Saf Rust + Tek Paylaşımlı WebView2)** | İyileşme |
 | --- | ---: | ---: | ---: |
 | **Çalışma Zamanı / Harici DLL** | .NET 10 (~198 MB, 220+ DLL) | **Saf Rust (1 `.exe`, 0 harici DLL)** | **%100 Bağımsız** |
 | **Toplam WorkingSet RAM (Boşta)** | 490.1 MB | **53.0 MB** (`aurora.exe` 8.0 MB) | **9.2× Daha Düşük** |
@@ -33,7 +33,11 @@
 
 ---
 
-## v7.2 Başlıca Yetenekler
+## v7.3 Başlıca Yetenekler
+
+- **Stüdyo Cam Çerçevesiz Widget Mimarisi & Gerçek WinRT Zaman Çubuğu (`v7.3.0`):**
+  - Tam çerçevesiz Dock ve Masaüstü Stüdyo Müzik Çubuğu (`0:00 —●—— 2:21` gerçek WinRT GSMTC zaman çizelgesi + canlı sürüklenebilir `mediaSeek` sarıcı, buzlu cam kontroller, ses seviyesi göstergesi).
+  - İki satırlı Stüdyo Hava Durumu / Pil / CPU-RAM Dock widget'ları, başparmak topuzlu ince ses/parlaklık kaydırıcıları ve Dinamik Ada Canlı Sahne mini zaman çubuğu.
 
 - **10 Özgün Kabuk Tasarım Mimarisi (Renklerden Bağımsız):** `Tahoe Cam`, `Nothing Donanım`, `Linear Stüdyo` *(ultra-ince `40 px` WorkArea)*, `Vision Küre`, `Arc Bölünmüş`, `Braun Atölye`, `Swiss Editoryal`, `Cockpit HUD`, `Fluent Mica` ve `Zen Hayalet` — her biri özgün yerleşim, kart geometrisi ve etkileşim diliyle gelir.
 - **Yeni Nesil Dinamik Ada (`Aurora Crown`) & 4 Sekmeli Canlı Sahne:**
@@ -101,7 +105,7 @@
 
 ## Tek Tık Kurulum & Otomatik Yükseltme (Windows 11 x64 — 3.65 MB)
 
-1. [Releases (Son Sürüm)](https://github.com/MuharremDidici/ProjectAurora/releases/latest) sayfasından **`Aurora-Kurulum-v7.2.3-x64.exe`** dosyasını indirin.
+1. [Releases (Son Sürüm)](https://github.com/MuharremDidici/ProjectAurora/releases/latest) sayfasından **`Aurora-Kurulum-v7.3.0-x64.exe`** dosyasını indirin.
 2. Çift tıklayıp **"Kurulumu Başlat"** butonuna basın — **Yönetici izni (UAC) veya .NET kurulumu gerekmez** (~2 saniyede kurulur).
 3. **Eski Sürümlerden (`v2.x` .NET ve `v3.x+` Rust) Yükseltme:**
    - Mevcut kurulumlar uygulama içi **Güncelle** butonuyla `v7.2.0`'ı SHA-256 doğrulamalı olarak otomatik indirip kurar (`--update` ve `--silent` tam desteklidir).
@@ -133,7 +137,7 @@ cargo clippy --manifest-path .\aurora-rs\Cargo.toml --workspace --all-targets --
 cargo test --manifest-path .\aurora-rs\Cargo.toml --workspace
 
 # Tek dosya zstd-19 kurulum paketi ve SHA-256 manifesti (dist/)
-.\Build-Installer.ps1 -Version "7.2.3"
+.\Build-Installer.ps1 -Version "7.3.0"
 ```
 
 Diğer belgeler: [Sürüm Notları](RELEASE_NOTES.md) · [Mimari Özeti](docs/Architecture/Architecture_Overview.md) · [Kurulum & Dağıtım](docs/Product/Tek_Tik_Kurulum_ve_Dagitim_Kilavuzu.md) · [Kod İmzalama](docs/Kod-Imzalama-ve-Dagitim.md) · [Görev Çubuğu Kurtarma](docs/QA/Native_Taskbar_Recovery_Guide.md) · [ADR-013 Saf Rust](docs/ADR/ADR-013-Pure-Rust-Hybrid-Shell-Evolution.md)

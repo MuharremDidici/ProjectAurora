@@ -1,5 +1,13 @@
 # Project Aurora — Sürüm Notları
 
+## v7.3.0
+> Summary: Tam çerçevesiz Stüdyo Cam görev çubuğu ve masaüstü widget mimarisi, gerçek WinRT GSMTC medya zaman çizelgesi (0:00 —●—— 2:21) + canlı sürüklenebilir sarıcı (`mediaSeek`), iki satırlı istifli dock widget'ları ve başparmak topuzlu ince ses/parlaklık kaydırıcıları.
+
+### Öne Çıkanlar
+- **Gerçek WinRT Medya Zaman Çubuğu & Sarıcı (`media.rs`, `bridge.rs`):** Windows Global System Media Transport Controls (`GetTimelineProperties` & `TryChangePlaybackPositionAsync`) ile gerçek parça süresi, anlık konum ve sürükle/tıkla sarıcı desteği eklendi.
+- **Referans Seviyesi Stüdyo Cam Müzik Çubuğu (`dock.html`, `widgets.html`):** Albüm kapağı, 2 satırlı başlık/sanatçı, canlı zaman çizelgesi, buzlu cam kontroller (`|< [||] >|` + sessiz) ve `%vol` göstergesi tek kusursuz çerçevesiz şeritte birleşti; masaüstü `studio-strip` + diğer medya arketipleri ve Dinamik Ada Canlı Sahne de gerçek zaman çubuğuna kavuştu.
+- **Çerçevesiz Dock & 2 Satırlı Stüdyo Widget'ları (`models.rs`, `widgets_store.rs`):** Dock widget'ları varsayılan `clean` (çerçevesiz), `studio` hava durumu/pil/CPU-RAM ve topuzlu ince ses/parlaklık çubuklarıyla güncellendi; tek seferlik şema geçişiyle mevcut kullanıcı tercihleri korunur.
+
 ## v7.2.3
 > Summary: Çoklu pencere önizleme kartları (3D Yelpaze, Win11 Kartlar, Dairesel Küre, Yay Çemberi) seçim düzeltmesi, Alt+Tab odak bütünlüğü, tüm açılır menülerde tek tık dış kapanma ve eski v2.x / v3.x+ sürümlerinden doğrudan v7.2.3'e tek tık otomatik yükseltme.
 

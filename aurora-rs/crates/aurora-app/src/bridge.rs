@@ -26,7 +26,7 @@ use aurora_win32::{
     friendly_folder_name, is_startup_enabled, is_windows_apps_sandbox_path, launch_target,
     launch_target_with_args, minimize_window, open_recycle_bin, open_task_view,
     open_windows_notification_center, render_qr_svg, repair_corrupted_windows_path,
-    save_ai_api_key, send_ctrl_v_paste, send_media_command,
+    save_ai_api_key, seek_media_position_secs, send_ctrl_v_paste, send_media_command,
     set_alt_drag_enabled, set_awake_keep_alive, set_clipboard_text, set_snap_zones_enabled,
     set_startup_enabled, terminate_user_process_safe, toggle_always_on_top,
     trigger_lock_workstation, trigger_power_command, trigger_sleep, zip_shelf_files,
@@ -632,6 +632,10 @@ impl RuntimeState {
                 "artist": self.media.artist,
                 "isPlaying": self.media.is_playing,
                 "artwork": art,
+                "positionSecs": self.media.position_secs,
+                "durationSecs": self.media.duration_secs,
+                "timelineUpdatedMs": self.media.timeline_updated_ms,
+                "canSeek": self.media.can_seek,
             }))
         } else {
             None
@@ -1313,6 +1317,10 @@ impl RuntimeState {
                 "artist": self.media.artist,
                 "isPlaying": self.media.is_playing,
                 "artwork": art,
+                "positionSecs": self.media.position_secs,
+                "durationSecs": self.media.duration_secs,
+                "timelineUpdatedMs": self.media.timeline_updated_ms,
+                "canSeek": self.media.can_seek,
             }))
         } else {
             None
@@ -1593,6 +1601,7 @@ impl<'a> BridgeEnv<'a> {
             widgets: self.state.widgets.clone(),
             ai_configs: self.state.ai_configs.clone(),
             dock_widgets: self.state.dock_widgets.clone(),
+            dock_widgets_schema_ver: 1,
             todos: self.state.todos.clone(),
             countdown: self.state.countdown.clone(),
         });
@@ -3715,9 +3724,28 @@ pub fn handle_bridge_action(
             };
             send_media_command(norm);
             if norm == "play_pause" {
+                let now_ms = chrono::Utc::now().timestamp_millis();
+                if env.state.media.is_playing && env.state.media.timeline_updated_ms > 0 {
+                    let elapsed = ((now_ms - env.state.media.timeline_updated_ms).max(0) / 1000) as u32;
+                    let next_pos = env.state.media.position_secs.saturating_add(elapsed);
+                    env.state.media.position_secs = if env.state.media.duration_secs > 0 {
+                        next_pos.min(env.state.media.duration_secs)
+                    } else {
+                        next_pos
+                    };
+                }
+                env.state.media.timeline_updated_ms = now_ms;
                 env.state.media.is_playing = !env.state.media.is_playing;
                 *env.needs_state_push = true;
             }
+        }
+        "mediaSeek" => {
+            let pos = i64_prop(msg, "positionSecs", 0).max(0) as u32;
+            seek_media_position_secs(pos);
+            let dur = env.state.media.duration_secs;
+            env.state.media.position_secs = if dur > 0 { pos.min(dur) } else { pos };
+            env.state.media.timeline_updated_ms = chrono::Utc::now().timestamp_millis();
+            *env.needs_state_push = true;
         }
         "toggleWifi" => {
             let _ = launch_target("ms-settings:network-wifi");

@@ -1,5 +1,5 @@
 use std::sync::OnceLock;
-use std::time::Duration;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use aurora_core::MediaSessionSnapshot;
 use crossbeam_channel::{bounded, unbounded, Sender};
@@ -17,6 +17,7 @@ use windows::Win32::UI::Input::KeyboardAndMouse::{
 enum MediaReq {
     Query(Sender<MediaSessionSnapshot>),
     Command(String),
+    Seek(u32),
 }
 
 /// Persistent WinRT MTA (`RO_INIT_MULTITHREADED`) media worker.
@@ -73,6 +74,11 @@ fn media_worker_tx() -> &'static Sender<MediaReq> {
                                 send_hardware_media_key(&cmd);
                             }
                         }
+                        MediaReq::Seek(target_secs) => {
+                            if let Some(mgr) = cached_mgr.as_ref() {
+                                let _ = dispatch_smtc_seek(mgr, target_secs);
+                            }
+                        }
                     }
                 }
             });
@@ -98,13 +104,42 @@ pub fn send_media_command(cmd: &str) {
     let _ = media_worker_tx().send(MediaReq::Command(cmd.to_string()));
 }
 
+/// Seeks playback position (in seconds relative to `StartTime`) on the active SMTC media session.
+pub fn seek_media_position_secs(target_secs: u32) {
+    let _ = media_worker_tx().send(MediaReq::Seek(target_secs));
+}
+
+pub fn compute_effective_timeline_secs(
+    start_100ns: i64,
+    end_100ns: i64,
+    pos_100ns: i64,
+    last_updated_filetime_100ns: i64,
+    now_unix_ms: i64,
+    is_playing: bool,
+) -> (u32, u32) {
+    let duration_secs = ((end_100ns - start_100ns).max(0) / 10_000_000) as u32;
+    let raw_pos = ((pos_100ns - start_100ns).max(0) / 10_000_000) as u32;
+    const WIN_EPOCH_DIFF_100NS: i64 = 116_444_736_000_000_000;
+    let effective_pos = if is_playing
+        && duration_secs > 0
+        && last_updated_filetime_100ns > WIN_EPOCH_DIFF_100NS
+    {
+        let last_upd_ms = (last_updated_filetime_100ns - WIN_EPOCH_DIFF_100NS) / 10_000;
+        let elapsed_secs = ((now_unix_ms - last_upd_ms).clamp(0, 86_400_000) / 1000) as u32;
+        raw_pos.saturating_add(elapsed_secs).min(duration_secs)
+    } else if duration_secs > 0 {
+        raw_pos.min(duration_secs)
+    } else {
+        raw_pos
+    };
+    (effective_pos, duration_secs)
+}
+
 fn read_session_snapshot(
     session: &GlobalSystemMediaTransportControlsSession,
 ) -> MediaSessionSnapshot {
-    let status = session
-        .GetPlaybackInfo()
-        .and_then(|pi| pi.PlaybackStatus())
-        .ok();
+    let playback_info = session.GetPlaybackInfo().ok();
+    let status = playback_info.as_ref().and_then(|pi| pi.PlaybackStatus().ok());
     let is_playing = status == Some(GlobalSystemMediaTransportControlsSessionPlaybackStatus::Playing);
     let is_paused = status == Some(GlobalSystemMediaTransportControlsSessionPlaybackStatus::Paused);
 
@@ -133,6 +168,28 @@ fn read_session_snapshot(
         title = app_name.clone();
     }
 
+    let now_unix_ms = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_millis() as i64)
+        .unwrap_or(0);
+    let (position_secs, duration_secs) = session
+        .GetTimelineProperties()
+        .ok()
+        .map(|tl| {
+            let start = tl.StartTime().map(|t| t.Duration).unwrap_or(0);
+            let end = tl.EndTime().map(|t| t.Duration).unwrap_or(0);
+            let pos = tl.Position().map(|t| t.Duration).unwrap_or(0);
+            let upd = tl.LastUpdatedTime().map(|t| t.UniversalTime).unwrap_or(0);
+            compute_effective_timeline_secs(start, end, pos, upd, now_unix_ms, is_playing)
+        })
+        .unwrap_or((0, 0));
+    let can_seek = duration_secs > 0
+        && playback_info
+            .as_ref()
+            .and_then(|pi| pi.Controls().ok())
+            .and_then(|c| c.IsPlaybackPositionEnabled().ok())
+            .unwrap_or(true);
+
     MediaSessionSnapshot {
         is_playing,
         has_session: !title.is_empty() || is_playing || is_paused,
@@ -140,6 +197,10 @@ fn read_session_snapshot(
         artist,
         app_name,
         thumbnail_bytes: thumb,
+        position_secs,
+        duration_secs,
+        timeline_updated_ms: now_unix_ms,
+        can_seek,
     }
 }
 
@@ -222,6 +283,29 @@ fn dispatch_smtc_command(
     }
 }
 
+fn dispatch_smtc_seek(
+    mgr: &GlobalSystemMediaTransportControlsSessionManager,
+    target_secs: u32,
+) -> bool {
+    let target = pick_best_session(mgr)
+        .map(|(s, _)| s)
+        .or_else(|| mgr.GetCurrentSession().ok());
+    let Some(session) = target else {
+        return false;
+    };
+    let start_100ns = session
+        .GetTimelineProperties()
+        .ok()
+        .and_then(|tl| tl.StartTime().ok())
+        .map(|ts| ts.Duration)
+        .unwrap_or(0);
+    let requested = start_100ns.saturating_add((target_secs as i64).saturating_mul(10_000_000));
+    session
+        .TryChangePlaybackPositionAsync(requested)
+        .and_then(|o| o.get())
+        .unwrap_or(false)
+}
+
 fn send_hardware_media_key(cmd: &str) {
     let vk: VIRTUAL_KEY = match cmd {
         "play_pause" => VK_MEDIA_PLAY_PAUSE,
@@ -285,5 +369,38 @@ fn friendly_media_app(aumid: &str) -> String {
         "Apple Music".into()
     } else {
         aumid.split(['!', '.', '\\']).next().unwrap_or("Medya").to_string()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn timeline_interpolation_clamps_to_duration_cleanly() {
+        const DIFF: i64 = 116_444_736_000_000_000;
+        let now_ms = 1_760_000_000_000i64;
+        let upd_filetime = DIFF + (now_ms - 5_000) * 10_000;
+        let (pos, dur) = compute_effective_timeline_secs(
+            0,
+            141 * 10_000_000,
+            10 * 10_000_000,
+            upd_filetime,
+            now_ms,
+            true,
+        );
+        assert_eq!(dur, 141);
+        assert_eq!(pos, 15);
+
+        let (clamped_pos, clamped_dur) = compute_effective_timeline_secs(
+            0,
+            141 * 10_000_000,
+            139 * 10_000_000,
+            upd_filetime,
+            now_ms,
+            true,
+        );
+        assert_eq!(clamped_dur, 141);
+        assert_eq!(clamped_pos, 141);
     }
 }

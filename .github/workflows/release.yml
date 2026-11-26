@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Yayınlanacak SemVer sürümü (ör. 7.2.3)'
+        description: 'Yayınlanacak SemVer sürümü (ör. 7.3.0)'
         required: true
-        default: '7.2.3'
+        default: '7.3.0'
       release_notes:
         description: 'Sürüm notları (isteğe bağlı)'
         required: false

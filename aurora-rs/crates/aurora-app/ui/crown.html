@@ -3077,6 +3077,28 @@ function buildMicroDeckHtml() {
                             <div style="font-size:10px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m ? escHtml(m.artist || m.app) : 'Spotify veya tarayıcı hazır'}</div>
                         </div>
                     </div>
+                    ${(() => {
+                        const dur = Number(m?.durationSecs || 0);
+                        if (!m || dur <= 0) return '';
+                        const basePos = Number(m?.positionSecs || 0);
+                        const elapsed = m.isPlaying && m.timelineUpdatedMs ? Math.max(0, Math.floor((Date.now() - m.timelineUpdatedMs) / 1000)) : 0;
+                        const pos = Math.min(dur, basePos + elapsed);
+                        const pct = Math.max(0, Math.min(100, (pos / dur) * 100)).toFixed(1);
+                        const fmt = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+                        return `
+                            <div style="display:flex;align-items:center;gap:6px;margin:2px 0;">
+                                <span class="num" style="font-size:9.5px;color:var(--text-3);min-width:26px;">${fmt(pos)}</span>
+                                <div style="position:relative;flex:1;height:12px;display:flex;align-items:center;cursor:pointer;"
+                                     onclick="const r=this.getBoundingClientRect();if(r.width>0){const s=Math.max(0,Math.min(${dur},Math.round(((event.clientX-r.left)/r.width)*${dur})));send('mediaSeek',{positionSecs:s});}">
+                                    <div style="position:relative;width:100%;height:3px;border-radius:99px;background:var(--border-rim);overflow:hidden;">
+                                        <div style="width:${pct}%;height:100%;background:var(--text-1);border-radius:99px;"></div>
+                                    </div>
+                                    <span style="position:absolute;left:${pct}%;top:50%;width:8px;height:8px;border-radius:50%;background:var(--text-1);transform:translate(-50%,-50%);box-shadow:0 1px 3px rgba(0,0,0,0.4);"></span>
+                                </div>
+                                <span class="num" style="font-size:9.5px;color:var(--text-3);min-width:26px;text-align:right;">${fmt(dur)}</span>
+                            </div>
+                        `;
+                    })()}
                     <div style="display:flex;align-items:center;justify-content:space-between;gap:4px;">
                         <div style="display:inline-flex;gap:4px;">
                             <button class="micro-btn" style="width:24px;height:24px;" onclick="send('mediaCmd',{cmd:'prev'})" title="Önceki">${SVG.prev}</button>

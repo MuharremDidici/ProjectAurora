@@ -398,6 +398,60 @@ body.mode-light .med-ambient-bg { filter: blur(28px) saturate(135%) brightness(1
 .med-artist { font-size: 11.5px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
 .med-ctrls { display: flex; align-items: center; gap: 6px; margin-top: 9px; }
 
+/* Studio Reference-Grade Seek Bar & Borderless Horizontal Strip */
+.w-seek-row {
+    display: flex; align-items: center; gap: 7px; margin-top: 7px; width: 100%;
+}
+.w-seek-time {
+    font-size: 10px; font-weight: 600; color: var(--text-2);
+    font-variant-numeric: tabular-nums; min-width: 26px;
+}
+.w-seek-time.end { text-align: right; }
+.w-seek-track {
+    position: relative; flex: 1; height: 16px;
+    display: flex; align-items: center; cursor: pointer;
+}
+.w-seek-rail {
+    position: relative; width: 100%; height: 3px; border-radius: 99px;
+    background: rgba(255, 255, 255, 0.22);
+}
+body.mode-light .widget-card:not(.skin-frameless) .w-seek-rail {
+    background: rgba(15, 23, 42, 0.18);
+}
+.w-seek-fill {
+    position: absolute; left: 0; top: 0; bottom: 0; border-radius: 99px;
+    background: var(--text-1); pointer-events: none; transition: width 0.12s linear;
+}
+.w-seek-knob {
+    position: absolute; top: 50%; width: 9px; height: 9px; border-radius: 50%;
+    background: var(--text-1); transform: translate(-50%, -50%);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45); pointer-events: none;
+    transition: transform 0.12s var(--ease);
+}
+.w-seek-track:hover .w-seek-knob { transform: translate(-50%, -50%) scale(1.24); }
+.med-strip-row {
+    display: flex; align-items: center; gap: 11px; min-width: 0;
+}
+.med-strip-ctrls {
+    display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0;
+}
+.w-ms-btn {
+    width: 25px; height: 26px; border-radius: 7px;
+    border: none; background: transparent; color: var(--text-1);
+    display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+    opacity: 0.88; transition: background 0.12s, opacity 0.12s, transform 0.1s;
+}
+.w-ms-btn:hover { background: rgba(255,255,255,0.12); opacity: 1; }
+.w-ms-btn.box {
+    width: 28px; height: 28px; border-radius: 8px; opacity: 1;
+    background: rgba(255,255,255,0.13); border: 1px solid rgba(255,255,255,0.08);
+}
+body.mode-light .widget-card:not(.skin-frameless) .w-ms-btn:hover { background: rgba(15,23,42,0.08); }
+body.mode-light .widget-card:not(.skin-frameless) .w-ms-btn.box {
+    background: rgba(15,23,42,0.08); border-color: rgba(15,23,42,0.08);
+}
+.w-ms-btn svg { width: 13px; height: 13px; }
+
 /* Animated 5-Bar Equalizer */
 .eq-bars { display: inline-flex; align-items: flex-end; gap: 2.5px; height: 13px; }
 .eq-bars i {
@@ -740,6 +794,7 @@ const VARIANT_CATALOG = {
         { id: 'hero', name: 'Duvar Kağıdı' }
     ],
     media: [
+        { id: 'studio-strip', name: 'Stüdyo Cam Şerit' },
         { id: 'poster', name: 'Tam Kapak Poster' },
         { id: 'tp7', name: 'TE TP-7 Disk' },
         { id: 'cassette', name: 'Kaset Deck' },
@@ -1237,13 +1292,73 @@ function buildWidgetInner(w) {
         `;
     }
 
-    /* 2. MEDIA PLAYER (4 PRO DESIGNS) */
+    /* 2. MEDIA PLAYER (STUDIO REFERENCE + PRO DESIGNS) */
+    function renderMediaSeekBarHtml(m, extraCls = '') {
+        const dur = Math.max(0, Number(m?.durationSecs) || 0);
+        if (dur <= 0) return '';
+        const pos = getWidgetLiveMediaPos(m);
+        const pct = Math.max(0, Math.min(100, (pos / dur) * 100));
+        return `
+            <div class="w-seek-row ${extraCls}" data-live-media-seek="1" data-dur="${dur}" onpointerdown="event.stopPropagation()">
+                <span class="w-seek-time num" data-live-media-pos>${formatMediaClockTime(pos)}</span>
+                <div class="w-seek-track" onpointerdown="startWidgetMediaSeek(event,this,${dur})" title="Sarıcı: Tıkla veya Sürükle">
+                    <div class="w-seek-rail">
+                        <div class="w-seek-fill" data-live-media-fill style="width:${pct.toFixed(2)}%;"></div>
+                        <span class="w-seek-knob" data-live-media-knob style="left:${pct.toFixed(2)}%;"></span>
+                    </div>
+                </div>
+                <span class="w-seek-time end num">${formatMediaClockTime(dur)}</span>
+            </div>
+        `;
+    }
+    window.startWidgetMediaSeek = function(e, trackEl, durSecs) {
+        if (e.button !== 0) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const dur = Math.max(1, Number(durSecs) || 0);
+        const row = trackEl.closest('[data-live-media-seek]');
+        const posEl = row?.querySelector('[data-live-media-pos]');
+        const fillEl = row?.querySelector('[data-live-media-fill]');
+        const knobEl = row?.querySelector('[data-live-media-knob]');
+        window.__widgetMediaSeeking = true;
+        let lastSec = 0;
+        const applyX = (clientX) => {
+            const rect = trackEl.getBoundingClientRect();
+            const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / Math.max(1, rect.width)));
+            lastSec = Math.round(ratio * dur);
+            const pct = (ratio * 100).toFixed(2) + '%';
+            if (fillEl) fillEl.style.width = pct;
+            if (knobEl) knobEl.style.left = pct;
+            if (posEl) posEl.textContent = formatMediaClockTime(lastSec);
+        };
+        applyX(e.clientX);
+        const onMove = (mv) => applyX(mv.clientX);
+        const onUp = (up) => {
+            applyX(up.clientX);
+            window.removeEventListener('pointermove', onMove);
+            window.removeEventListener('pointerup', onUp);
+            window.removeEventListener('pointercancel', onUp);
+            window.__widgetMediaSeeking = false;
+            if (state.media) {
+                state.media.positionSecs = lastSec;
+                state.media.timelineUpdatedMs = Date.now();
+            }
+            send('mediaSeek', { positionSecs: lastSec });
+        };
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp);
+        window.addEventListener('pointercancel', onUp);
+    };
+
     if (w.kind === 'media') {
         const m = state.media;
         const playing = Boolean(m?.isPlaying);
         const title = m?.title || 'Çalan Medya Yok';
         const artist = m?.artist || (m?.app || 'Spotify · Tarayıcı · Medya');
         const artSrc = m?.artwork ? `data:image/jpeg;base64,${m.artwork}` : null;
+        const vol = Math.max(0, Math.min(100, Math.round(state.audio?.volume ?? 50)));
+        const muted = Boolean(state.audio?.muted);
+        const seekBar = renderMediaSeekBarHtml(m);
         const ctrls = `
             <div class="med-ctrls" onpointerdown="event.stopPropagation()">
                 <button class="w-ibtn" onclick="send('mediaCmd',{cmd:'prev'})" title="Önceki">${IC.prev}</button>
@@ -1252,6 +1367,30 @@ function buildWidgetInner(w) {
                 <div class="eq-bars ${playing ? 'play' : ''}" style="margin-left:auto;"><i></i><i></i><i></i><i></i></div>
             </div>
         `;
+        if (variant === 'studio-strip') {
+            return `
+                <div class="med-strip-row">
+                    <div class="med-art" style="width:36px;height:36px;border-radius:8px;flex-shrink:0;">${artSrc ? `<img src="${artSrc}"/>` : `<span style="width:16px;height:16px;color:var(--accent-1);">${IC.music}</span>`}</div>
+                    <div style="min-width:96px;max-width:148px;flex:0 1 138px;">
+                        <div class="med-title" style="font-size:12.5px;line-height:1.2;">${escHtml(title)}</div>
+                        <div class="med-artist" style="font-size:10.5px;margin-top:2px;">${escHtml(artist)}</div>
+                    </div>
+                    <div style="flex:1;min-width:110px;">
+                        ${seekBar || `<div class="eq-bars ${playing ? 'play' : ''}" style="margin:0 auto;"><i></i><i></i><i></i><i></i></div>`}
+                    </div>
+                    <div class="med-strip-ctrls" onpointerdown="event.stopPropagation()">
+                        <button class="w-ms-btn" onclick="send('mediaCmd',{cmd:'prev'})" title="Önceki">${IC.prev}</button>
+                        <button class="w-ms-btn box" onclick="send('mediaCmd',{cmd:'play_pause'})" title="${playing ? 'Duraklat' : 'Oynat'}">${playing ? IC.pause : IC.play}</button>
+                        <button class="w-ms-btn" onclick="send('mediaCmd',{cmd:'next'})" title="Sonraki">${IC.next}</button>
+                        <button class="w-ms-btn box" style="${muted ? 'color:var(--danger);' : ''}" onclick="send('toggleMute')" onauxclick="if(event.button===1){event.stopPropagation();send('cycleAudioOutput');}" title="Sessiz / Aç">${muted ? IC.mute : IC.vol}</button>
+                    </div>
+                    <div class="med-strip-ctrls num" style="gap:4px;font-size:11.5px;font-weight:700;cursor:pointer;" onpointerdown="event.stopPropagation()" onclick="send('toggleMute')" onauxclick="if(event.button===1){event.stopPropagation();send('cycleAudioOutput');}" title="Ses %${vol} · Tıkla: Sessiz">
+                        <span style="width:14px;height:14px;display:inline-flex;opacity:0.85;${muted ? 'color:var(--danger);' : ''}">${muted ? IC.mute : IC.vol}</span>
+                        <span>%${muted ? 0 : vol}</span>
+                    </div>
+                </div>
+            `;
+        }
         if (variant === 'turntable') {
             return `
                 <div class="w-head"><span class="w-title">${IC.music} Pikap Stüdyo</span><span class="w-sub">${playing ? 'Çalıyor' : 'Hazır'}</span></div>
@@ -1270,6 +1409,7 @@ function buildWidgetInner(w) {
                     <div style="flex:1;min-width:0;">
                         <div class="med-title">${escHtml(title)}</div>
                         <div class="med-artist">${escHtml(artist)}</div>
+                        ${seekBar}
                         ${ctrls}
                     </div>
                 </div>
@@ -1287,7 +1427,8 @@ function buildWidgetInner(w) {
                         </div>
                         <div class="med-title" style="font-size:15px;">${escHtml(title)}</div>
                         <div class="med-artist" style="color:rgba(255,255,255,0.75);">${escHtml(artist)}</div>
-                        <div class="med-ctrls" style="margin-top:10px;" onpointerdown="event.stopPropagation()">
+                        ${seekBar}
+                        <div class="med-ctrls" style="margin-top:8px;" onpointerdown="event.stopPropagation()">
                             <button class="w-ibtn" style="background:rgba(255,255,255,0.14);border-color:rgba(255,255,255,0.22);color:#FFF;" onclick="send('mediaCmd',{cmd:'prev'})">${IC.prev}</button>
                             <button class="w-btn primary" style="height:26px;padding:0 13px;" onclick="send('mediaCmd',{cmd:'play_pause'})">${playing ? IC.pause : IC.play}</button>
                             <button class="w-ibtn" style="background:rgba(255,255,255,0.14);border-color:rgba(255,255,255,0.22);color:#FFF;" onclick="send('mediaCmd',{cmd:'next'})">${IC.next}</button>
@@ -1309,6 +1450,7 @@ function buildWidgetInner(w) {
                             <div class="med-title mono" style="font-size:11.5px;color:#FFF;">${escHtml(title)}</div>
                             <div class="med-artist mono" style="font-size:9.5px;color:#94A3B8;">${escHtml(artist)}</div>
                         </div>
+                        ${seekBar}
                         ${ctrls}
                     </div>
                 </div>
@@ -1327,7 +1469,7 @@ function buildWidgetInner(w) {
                         </div>
                         ${reelSvg}
                     </div>
-                    <div style="height:3px;border-radius:99px;background:rgba(255,255,255,0.1);overflow:hidden;"><div style="width:${playing ? '64%' : '20%'};height:100%;background:var(--accent-1);"></div></div>
+                    ${seekBar || `<div style="height:3px;border-radius:99px;background:rgba(255,255,255,0.1);overflow:hidden;"><div style="width:${playing ? '64%' : '20%'};height:100%;background:var(--accent-1);"></div></div>`}
                 </div>
                 ${ctrls}
             `;
@@ -1339,6 +1481,7 @@ function buildWidgetInner(w) {
                 <div class="med-title">${escHtml(title)}</div>
                 <div class="med-artist" style="margin-bottom:6px;">${escHtml(artist)}</div>
                 ${renderOscilloscopeSvg(fakeWave, 'var(--accent-1)', 260, 34, w.id + 'mw')}
+                ${seekBar}
                 ${ctrls}
             `;
         }
@@ -1367,6 +1510,7 @@ function buildWidgetInner(w) {
                     <div style="flex:1;min-width:0;">
                         <div class="med-title">${escHtml(title)}</div>
                         <div class="med-artist">${escHtml(artist)}</div>
+                        ${seekBar}
                         ${ctrls}
                     </div>
                 </div>
@@ -2024,7 +2168,7 @@ function renderWidgets(force) {
         theme: state.theme?.id,
         rad: state.cornerRadiusPreset,
         widgets: state.widgets,
-        media: state.media ? `${state.media.title}|${state.media.isPlaying}|${Boolean(state.media.artwork)}` : null,
+        media: state.media ? `${state.media.title}|${state.media.isPlaying}|${Boolean(state.media.artwork)}|${state.media.positionSecs || 0}|${state.media.durationSecs || 0}` : null,
         bat: state.battery,
         bts: state.btDevices,
         audio: state.audio,
@@ -2084,6 +2228,24 @@ function renderWidgets(force) {
     scheduleHitRects();
 }
 
+function formatMediaClockTime(secs) {
+    const s = Math.max(0, Math.floor(Number(secs) || 0));
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const r = s % 60;
+    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
+    return `${m}:${String(r).padStart(2, '0')}`;
+}
+function getWidgetLiveMediaPos(m) {
+    if (!m) return 0;
+    const dur = Math.max(0, Number(m.durationSecs) || 0);
+    let pos = Math.max(0, Number(m.positionSecs) || 0);
+    if (m.isPlaying && Number(m.timelineUpdatedMs) > 0) {
+        pos = Math.floor(pos + Math.max(0, (Date.now() - Number(m.timelineUpdatedMs)) / 1000));
+    }
+    return dur > 0 ? Math.min(dur, pos) : pos;
+}
+
 function updateLiveClockDom() {
     const now = new Date();
     const clk = state?.clock || `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
@@ -2109,6 +2271,21 @@ function updateLiveClockDom() {
     document.querySelectorAll('[data-chrono-h]').forEach(el => el.setAttribute('transform', `rotate(${hDeg} 50 50)`));
     document.querySelectorAll('[data-chrono-m]').forEach(el => el.setAttribute('transform', `rotate(${mDeg} 50 50)`));
     document.querySelectorAll('[data-chrono-s]').forEach(el => el.setAttribute('transform', `rotate(${sDeg} 50 50)`));
+
+    if (!window.__widgetMediaSeeking && state?.media && Number(state.media.durationSecs) > 0) {
+        const dur = Number(state.media.durationSecs);
+        const pos = getWidgetLiveMediaPos(state.media);
+        const pct = Math.max(0, Math.min(100, (pos / dur) * 100)).toFixed(2) + '%';
+        const txt = formatMediaClockTime(pos);
+        document.querySelectorAll('[data-live-media-seek]').forEach(row => {
+            const p = row.querySelector('[data-live-media-pos]');
+            const f = row.querySelector('[data-live-media-fill]');
+            const k = row.querySelector('[data-live-media-knob]');
+            if (p) p.textContent = txt;
+            if (f) f.style.width = pct;
+            if (k) k.style.left = pct;
+        });
+    }
 }
 
 function startWidgetDrag(e, id) {

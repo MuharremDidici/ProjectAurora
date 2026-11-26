@@ -224,6 +224,14 @@ pub struct MediaSessionSnapshot {
     pub artist: String,
     pub app_name: String,
     pub thumbnail_bytes: Option<Vec<u8>>,
+    #[serde(default)]
+    pub position_secs: u32,
+    #[serde(default)]
+    pub duration_secs: u32,
+    #[serde(default)]
+    pub timeline_updated_ms: i64,
+    #[serde(default)]
+    pub can_seek: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -622,7 +630,7 @@ fn mk_dw(id: &str, kind: &str, zone: &str, order: i32, variant: &str, enabled: b
         order,
         variant: variant.into(),
         size: "normal".into(),
-        style_mode: "pill".into(),
+        style_mode: "clean".into(),
         wheel_action: "default".into(),
         enabled,
     }
@@ -630,16 +638,16 @@ fn mk_dw(id: &str, kind: &str, zone: &str, order: i32, variant: &str, enabled: b
 
 pub fn default_dock_widgets() -> Vec<DockWidgetConfig> {
     vec![
-        mk_dw("dw-media", "media", "far-left", 0, "vinyl", true),
-        mk_dw("dw-weather", "weather", "far-left", 1, "pill", true),
+        mk_dw("dw-media", "media", "far-left", 0, "studio-bar", true),
+        mk_dw("dw-weather", "weather", "far-left", 1, "studio", true),
         mk_dw("dw-clock", "clock", "far-right", 0, "classic", true),
         mk_dw("dw-volume", "volume-slider", "after-apps", 0, "bar", false),
         mk_dw("dw-brightness", "brightness-slider", "after-apps", 1, "bar", false),
         mk_dw("dw-mic", "mic-privacy", "before-apps", 0, "pill", false),
         mk_dw("dw-desktops", "desktops", "before-apps", 1, "pills", false),
         mk_dw("dw-ai", "ai-quota", "far-right", 1, "dots", false),
-        mk_dw("dw-battery", "battery", "far-right", 2, "ring", false),
-        mk_dw("dw-system", "system", "far-left", 2, "bars", false),
+        mk_dw("dw-battery", "battery", "far-right", 2, "studio", false),
+        mk_dw("dw-system", "system", "far-left", 2, "studio", false),
         mk_dw("dw-network", "network", "far-left", 3, "speed", false),
         mk_dw("dw-pomodoro", "pomodoro", "before-apps", 2, "pill", false),
         mk_dw("dw-market", "market", "after-apps", 2, "ticker", false),

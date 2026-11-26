@@ -1396,12 +1396,23 @@ fn run_shell_host(
                     }
                 },
                 BgReply::Media(m) => {
+                    let predicted_pos = if state.media.is_playing && state.media.timeline_updated_ms > 0 {
+                        let elapsed = ((m.timeline_updated_ms - state.media.timeline_updated_ms).max(0) / 1000) as u32;
+                        let p = state.media.position_secs.saturating_add(elapsed);
+                        if state.media.duration_secs > 0 { p.min(state.media.duration_secs) } else { p }
+                    } else {
+                        state.media.position_secs
+                    };
+                    let timeline_changed = state.media.duration_secs != m.duration_secs
+                        || state.media.can_seek != m.can_seek
+                        || predicted_pos.abs_diff(m.position_secs) >= 3;
                     if state.media.title != m.title
                         || state.media.artist != m.artist
                         || state.media.app_name != m.app_name
                         || state.media.is_playing != m.is_playing
                         || state.media.has_session != m.has_session
                         || state.media.thumbnail_bytes.is_some() != m.thumbnail_bytes.is_some()
+                        || timeline_changed
                     {
                         state.media = m;
                         needs_state_push = true;
@@ -1445,6 +1456,7 @@ fn run_shell_host(
                             widgets_store.save(&WidgetsPersistenceDoc {
                                 widgets: state.widgets.clone(),
                                 dock_widgets: state.dock_widgets.clone(),
+                                dock_widgets_schema_ver: 1,
                                 todos: state.todos.clone(),
                                 countdown: state.countdown.clone(),
                                 ai_configs: state.ai_configs.clone(),

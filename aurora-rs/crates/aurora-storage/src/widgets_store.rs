@@ -21,6 +21,8 @@ pub struct WidgetsPersistenceDoc {
     pub todos: Vec<TodoItem>,
     #[serde(default = "default_countdown")]
     pub countdown: CountdownConfig,
+    #[serde(default)]
+    pub dock_widgets_schema_ver: u8,
 }
 
 impl Default for WidgetsPersistenceDoc {
@@ -31,6 +33,7 @@ impl Default for WidgetsPersistenceDoc {
             dock_widgets: default_dock_widgets(),
             todos: Vec::new(),
             countdown: default_countdown(),
+            dock_widgets_schema_ver: 1,
         }
     }
 }
@@ -68,6 +71,21 @@ impl WidgetsLayoutStore {
         }
         // Ensure all 14 Pro bottom Dock micro-widgets exist and normalize 4-zone fields on upgrade
         let mut upgraded = false;
+        if doc.dock_widgets_schema_ver < 1 {
+            doc.dock_widgets_schema_ver = 1;
+            upgraded = true;
+            for dw in &mut doc.dock_widgets {
+                if dw.style_mode == "pill" {
+                    dw.style_mode = "clean".into();
+                }
+                if dw.kind == "media" && dw.variant == "vinyl" {
+                    dw.variant = "studio-bar".into();
+                }
+                if dw.kind == "weather" && dw.variant == "pill" {
+                    dw.variant = "studio".into();
+                }
+            }
+        }
         for w in &mut doc.dock_widgets {
             let before_z = w.zone.clone();
             w.normalize();
@@ -174,6 +192,36 @@ mod tests {
         assert_eq!(loaded.todos.len(), 1);
         assert_eq!(loaded.todos[0].text, "Aurora v4.2 incele");
         assert_eq!(loaded.countdown.title, "Lansman");
+
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    #[test]
+    fn legacy_dock_widgets_migrate_to_studio_clean_once() {
+        let tmp = std::env::temp_dir().join(format!("aurora_dw_mig_{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&tmp);
+        std::fs::create_dir_all(&tmp).unwrap();
+        let legacy_json = r#"{
+            "dockWidgets": [
+                {"id":"dw-media","kind":"media","slot":"left","zone":"far-left","order":0,"variant":"vinyl","size":"normal","styleMode":"pill","wheelAction":"default","enabled":true},
+                {"id":"dw-weather","kind":"weather","slot":"left","zone":"far-left","order":1,"variant":"pill","size":"normal","styleMode":"pill","wheelAction":"default","enabled":true}
+            ]
+        }"#;
+        std::fs::write(tmp.join("widgets_layout.json"), legacy_json).unwrap();
+        let store = WidgetsLayoutStore::new(Some(tmp.clone()));
+        let mut doc = store.load();
+        assert_eq!(doc.dock_widgets_schema_ver, 1);
+        let med = doc.dock_widgets.iter().find(|w| w.kind == "media").unwrap();
+        assert_eq!(med.variant, "studio-bar");
+        assert_eq!(med.style_mode, "clean");
+        let wth = doc.dock_widgets.iter().find(|w| w.kind == "weather").unwrap();
+        assert_eq!(wth.variant, "studio");
+
+        // User changes style back to pill afterwards -> schema_ver == 1 preserves override!
+        doc.dock_widgets.iter_mut().find(|w| w.kind == "media").unwrap().style_mode = "pill".into();
+        store.save(&doc);
+        let reloaded = store.load();
+        assert_eq!(reloaded.dock_widgets.iter().find(|w| w.kind == "media").unwrap().style_mode, "pill");
 
         let _ = std::fs::remove_dir_all(&tmp);
     }
