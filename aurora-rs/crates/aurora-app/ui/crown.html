@@ -214,7 +214,7 @@ body.style-mono-matrix .wcag-pill {
 body.style-mono-matrix .pill-btn {
     border-radius: 999px;
     border: 1px solid rgba(255, 255, 255, 0.14);
-    font-family: var(--font-ui);
+    font-family: var(--font);
     font-size: 11px;
     font-weight: 600;
 }
@@ -2074,124 +2074,277 @@ body.mode-light .wg-thumb.sk-matrix {
 }
 .ai-key-inp:focus { border-color: var(--accent-1); }
 
-/* ========== v6.0 DYNAMIC ISLAND FORM FACTORS, DUAL-WING, MICRO-DECK & ARCHITECTURES ========== */
+/* ========== v8.1 8 FLAGSHIP DYNAMIC ISLAND FORM FACTORS, CONCAVE EARS, TWIN-SPLIT & MICRO-DECK ========== */
 .crown-row {
     display: inline-flex; align-items: flex-start; justify-content: center; gap: 10px;
     pointer-events: none;
 }
 .crown-wing {
     pointer-events: auto;
-    margin-top: 7px; height: 28px; padding: 0 11px;
+    margin-top: 8px; height: 28px; padding: 0 11px;
     border-radius: 999px;
     display: inline-flex; align-items: center; gap: 6px;
     font-size: 11px; font-weight: 700; color: var(--text-1);
     cursor: pointer;
-    box-shadow: 0 10px 26px -6px rgba(0, 0, 0, 0.56);
+    box-shadow: 0 10px 26px -6px rgba(0, 0, 0, 0.50);
     animation: popDown 0.22s var(--spring);
 }
 .crown-wing[hidden] { display: none !important; }
-body.isl-hardware-pod .crown-wing { border-radius: 10px; font-family: var(--font-mono); }
-body.isl-compact-notch .crown-wing { margin-top: 0; border-radius: 0 0 14px 14px; height: 26px; }
+body.mode-light .crown-wing {
+    box-shadow: 0 8px 20px -6px rgba(15, 23, 42, 0.18), inset 0 1px 0 rgba(255,255,255,0.85);
+}
 
-/* 6 Dynamic Island Form Factors (Resting + Expanded Live Command Stage) */
-body.isl-liquid-pill #crown.droplet {
-    margin-top: 8px !important; height: 28px !important; min-height: 28px;
+/* 1. LIQUID PILL — Organic living capsule with ambient album glow & live waveform */
+body.isl-liquid-pill #crown.droplet:not(.osd-active):not(.rec-live):not(.bt-popin):not(.notif-morph) {
+    margin-top: 8px !important; height: 30px !important; min-height: 30px;
     border-top: 1px solid var(--border-rim) !important;
     border-radius: 999px !important; padding: 0 14px !important;
+    box-shadow:
+        0 12px 30px -8px rgba(0, 0, 0, 0.58),
+        0 0 22px -6px var(--accent-glow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.28) !important;
+}
+body.isl-liquid-pill #crown.droplet.media-ambient-live:not(.osd-active):not(.rec-live):not(.bt-popin):not(.notif-morph) {
+    background:
+        radial-gradient(ellipse 75% 120% at 15% 50%, rgba(var(--a1-rgb), 0.26), transparent 65%),
+        radial-gradient(ellipse 65% 120% at 85% 50%, rgba(var(--a2-rgb), 0.20), transparent 65%),
+        linear-gradient(165deg, var(--bg-glass-1), var(--bg-glass-2)) !important;
+    box-shadow:
+        0 14px 34px -8px rgba(0, 0, 0, 0.62),
+        0 0 26px -4px var(--accent-glow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.34) !important;
 }
 body.isl-liquid-pill #crown.droplet::after { display: none !important; }
 
-body.isl-mac-notch #crown.droplet {
-    margin-top: 0 !important; height: 27px !important; min-width: 176px;
-    background: #06070B !important; color: #F8FAFC !important;
-    border: 1px solid rgba(255, 255, 255, 0.14) !important; border-top: none !important;
-    border-radius: 0 0 18px 18px !important; padding: 0 16px !important;
-    box-shadow: 0 8px 22px -6px rgba(0, 0, 0, 0.72) !important;
-    position: relative;
+/* 2. MAC NOTCH — Flush top-edge obsidian notch with SVG concave inverse-rounded bezier ears */
+body.isl-mac-notch #crown.droplet:not(.bt-popin):not(.notif-morph),
+body.isl-mac-notch #crown.live-stage {
+    --text-1: #F8FAFC;
+    --text-2: #CBD5E1;
+    --bg-card: rgba(255, 255, 255, 0.075);
+    --bg-card-hover: rgba(255, 255, 255, 0.13);
+    --bg-inset: rgba(255, 255, 255, 0.06);
+    --border-rim: rgba(255, 255, 255, 0.16);
+    --border-subtle: rgba(255, 255, 255, 0.10);
+    margin-top: 0 !important;
+    background: #06070B !important;
+    color: #F8FAFC !important;
+    border: 1px solid rgba(255, 255, 255, 0.11) !important;
+    border-top: none !important;
+    overflow: visible !important;
+}
+body.isl-mac-notch #crown.droplet:not(.osd-active):not(.rec-live):not(.bt-popin):not(.notif-morph) {
+    height: 28px !important; min-width: 196px;
+    border-radius: 0 0 16px 16px !important; padding: 0 16px !important;
+    box-shadow: 0 10px 26px -6px rgba(0, 0, 0, 0.78) !important;
 }
 body.isl-mac-notch #crown.droplet::before,
-body.isl-mac-notch #crown.live-stage::before {
-    content: ""; position: absolute; top: 0; left: -12px; width: 12px; height: 12px;
-    background: radial-gradient(circle at 0 100%, transparent 11.5px, #06070B 12px);
-    pointer-events: none;
-}
 body.isl-mac-notch #crown.droplet::after,
-body.isl-mac-notch #crown.live-stage::after {
-    content: ""; position: absolute; top: 0; right: -12px; left: auto !important;
-    width: 12px !important; height: 12px !important; opacity: 1 !important;
-    background: radial-gradient(circle at 100% 100%, transparent 11.5px, #06070B 12px) !important;
+body.isl-mac-notch #crown.live-stage::before,
+body.isl-mac-notch #crown.live-stage::after { display: none !important; content: none !important; }
+body.isl-mac-notch #crown.live-stage {
+    border-radius: 0 0 24px 24px !important;
+    background: linear-gradient(180deg, #06070B 0%, #0C101C 100%) !important;
+    box-shadow: 0 22px 54px -10px rgba(0, 0, 0, 0.86) !important;
+}
+.notch-ear {
+    position: absolute; top: 0; width: 14px; height: 14px;
+    pointer-events: none; z-index: 2;
+}
+.notch-ear-l { left: -14px; }
+.notch-ear-r { right: -14px; }
+.notch-cam-dot {
+    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    background: radial-gradient(circle at 35% 35%, #38BDF8 0%, #1E293B 45%, #020617 100%);
+    box-shadow: 0 0 0 1.5px rgba(255,255,255,0.12);
+}
+
+/* 3. TWIN SPLIT — Two separate floating top-center micro-capsules with transparent gap, fusing on hover */
+body.isl-twin-split #crown.droplet.isl-twin-host {
+    margin-top: 8px !important;
+    height: 30px !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    overflow: visible !important;
+    display: inline-flex !important;
+    align-items: center;
+    gap: 10px !important;
+    border-radius: 0 !important;
+}
+body.isl-twin-split #crown.droplet.isl-twin-host::after { display: none !important; }
+.twin-cap {
+    height: 30px; border-radius: 999px; padding: 0 12px;
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 11px; font-weight: 700; color: var(--text-1);
+    cursor: pointer; white-space: nowrap;
+    transition: transform 0.22s var(--spring), border-color 0.16s, box-shadow 0.2s;
+}
+.twin-cap:hover { border-color: var(--accent-ring); transform: translateY(-0.5px); }
+body.isl-twin-split #crown.live-stage {
+    animation: twinFuse 0.24s var(--spring) !important;
+}
+@keyframes twinFuse {
+    from { opacity: 0.72; transform: scaleX(0.86) scaleY(0.72); letter-spacing: 0.04em; }
+    to { opacity: 1; transform: scaleX(1) scaleY(1); letter-spacing: normal; }
+}
+
+/* 4. HORIZON BAR — Ultra-thin frosted studio glass ribbon with crisp hairline progress */
+body.isl-horizon-bar #crown.droplet:not(.osd-active):not(.rec-live):not(.bt-popin):not(.notif-morph) {
+    margin-top: 6px !important; height: 28px !important;
+    min-width: 396px; max-width: min(550px, calc(100vw - 32px));
+    border-radius: 12px !important; padding: 0 14px !important;
+    border-top: 1px solid var(--border-rim) !important;
+    justify-content: space-between; gap: 12px;
+}
+body.isl-horizon-bar #crown.droplet::after { display: none !important; }
+.horizon-prog-rail {
+    position: absolute; left: 10px; right: 10px; bottom: 0; height: 2px;
+    border-radius: 99px; background: rgba(148, 163, 184, 0.22); overflow: hidden;
     pointer-events: none;
 }
-body.isl-mac-notch #crown.live-stage {
-    margin-top: 0 !important; border-top: none !important;
-    border-radius: 0 0 26px 26px !important;
-    background: linear-gradient(180deg, #06070B, rgba(12, 16, 28, 0.96)) !important;
-    position: relative;
+.horizon-prog-fill {
+    height: 100%; border-radius: 99px;
+    background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+    transition: width 0.28s ease;
 }
 
-body.isl-edge-horizon #crown.droplet:not(.osd-active):not(.rec-live):not(.bt-popin):not(.notif-morph):not(.privacy-alert) {
-    margin-top: 0 !important; height: 4px !important; min-width: 126px !important;
-    padding: 0 !important; border-top: none !important; border: none !important;
-    border-radius: 0 0 8px 8px !important;
-    background: linear-gradient(90deg, rgba(var(--a1-rgb),0.55), var(--accent-1), var(--accent-2), rgba(var(--a2-rgb),0.55)) !important;
-    box-shadow: 0 4px 14px var(--accent-glow) !important;
-    opacity: 0.90;
-}
-body.isl-edge-horizon #crown.droplet:not(.osd-active):not(.rec-live):not(.bt-popin):not(.notif-morph):not(.privacy-alert) > * {
-    opacity: 0; pointer-events: none;
-}
-body.isl-edge-horizon #crown.droplet.auto-stealth-idle { opacity: 0.48 !important; }
-body.isl-edge-horizon #crown.live-stage { border-top: 2px solid var(--accent-1) !important; }
-
-body.isl-hardware-pod #crown.droplet {
-    margin-top: 7px !important; height: 28px !important;
-    background: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), #0B0D12 !important;
-    background-size: 8px 8px, 100% 100% !important;
-    border: 1px solid rgba(255,255,255,0.18) !important;
-    border-radius: 9px !important; padding: 0 13px !important;
+/* 5. NOTHING GLYPH — Industrial dot-matrix LED capsule with segmented glyph arcs & mono readout */
+body.isl-nothing-glyph #crown.droplet:not(.osd-active):not(.rec-live):not(.bt-popin):not(.notif-morph) {
+    margin-top: 7px !important; height: 31px !important;
+    background: radial-gradient(rgba(255,255,255,0.065) 1px, transparent 1px), #0B0D12 !important;
+    background-size: 7px 7px, 100% 100% !important;
+    border: 1px solid rgba(255,255,255,0.20) !important;
+    border-radius: 10px !important; padding: 0 13px !important;
     font-family: var(--font-mono);
+    color: #F8FAFC !important;
+    gap: 9px;
 }
-body.mode-light.isl-hardware-pod #crown.droplet {
-    background: radial-gradient(rgba(15,23,42,0.07) 1px, transparent 1px), #F1EFEA !important;
-    background-size: 8px 8px, 100% 100% !important;
-    border-color: rgba(15,23,42,0.18) !important;
-    color: #14171F !important;
+body.mode-light.isl-nothing-glyph #crown.droplet:not(.osd-active):not(.rec-live):not(.bt-popin):not(.notif-morph) {
+    background: radial-gradient(rgba(15,23,42,0.08) 1px, transparent 1px), #F2EFE9 !important;
+    background-size: 7px 7px, 100% 100% !important;
+    border-color: rgba(15,23,42,0.20) !important;
+    color: #111827 !important;
 }
-body.isl-hardware-pod #crown.droplet::after { display: none !important; }
-body.isl-hardware-pod #crown.live-stage {
+body.isl-nothing-glyph #crown.droplet::after { display: none !important; }
+body.isl-nothing-glyph #crown.live-stage {
     border-radius: 14px !important; font-family: var(--font-mono);
     background: radial-gradient(rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(180deg, #101218, #08090D) !important;
-    background-size: 10px 10px, 100% 100% !important;
+    background-size: 9px 9px, 100% 100% !important;
 }
-body.mode-light.isl-hardware-pod #crown.live-stage {
+body.mode-light.isl-nothing-glyph #crown.live-stage {
     background: radial-gradient(rgba(15,23,42,0.06) 1px, transparent 1px), linear-gradient(180deg, #FAF8F4, #ECE8E0) !important;
-    background-size: 10px 10px, 100% 100% !important;
+    background-size: 9px 9px, 100% 100% !important;
     border-color: rgba(15,23,42,0.18) !important;
 }
-
-body.isl-glass-bar #crown.droplet:not(.osd-active):not(.rec-live):not(.bt-popin):not(.notif-morph) {
-    margin-top: 7px !important; height: 30px !important; min-width: 344px;
-    border-radius: 14px !important; padding: 0 13px !important;
-    border-top: 1px solid var(--border-rim) !important;
-    justify-content: space-between; gap: 10px;
+.glyph-arc-svg { width: 20px; height: 20px; flex-shrink: 0; display: block; }
+.glyph-led-dot {
+    width: 6px; height: 6px; border-radius: 50%; background: #EF4444;
+    box-shadow: 0 0 8px #EF4444; flex-shrink: 0;
 }
-body.isl-glass-bar #crown.droplet::after { display: none !important; }
 
-body.isl-orbital-halo #crown.droplet:not(.osd-active):not(.rec-live):not(.bt-popin):not(.notif-morph):not(.privacy-alert) {
-    margin-top: 7px !important; width: 34px !important; min-width: 34px !important; height: 34px !important;
+/* 6. ORBITAL RING — Floating circular orb with album art / live focus ring that blooms outward on hover */
+body.isl-orbital-ring #crown.droplet:not(.osd-active):not(.rec-live):not(.bt-popin):not(.notif-morph):not(.privacy-alert) {
+    margin-top: 7px !important; width: 38px !important; min-width: 38px !important; height: 38px !important;
     padding: 0 !important; border-radius: 50% !important; justify-content: center;
     border: 1.5px solid rgba(255, 255, 255, 0.34) !important;
-    box-shadow: 0 10px 26px -6px rgba(0, 0, 0, 0.62), 0 0 18px -4px var(--accent-glow) !important;
+    box-shadow: 0 10px 26px -6px rgba(0, 0, 0, 0.60), 0 0 18px -4px var(--accent-glow) !important;
 }
-body.mode-light.isl-orbital-halo #crown.droplet:not(.osd-active):not(.rec-live):not(.bt-popin):not(.notif-morph):not(.privacy-alert) {
-    border-color: rgba(15, 23, 42, 0.22) !important;
-    box-shadow: 0 8px 22px -6px rgba(15, 23, 42, 0.24), 0 0 14px -4px var(--accent-glow) !important;
+body.mode-light.isl-orbital-ring #crown.droplet:not(.osd-active):not(.rec-live):not(.bt-popin):not(.notif-morph):not(.privacy-alert) {
+    border-color: rgba(15, 23, 42, 0.20) !important;
+    box-shadow: 0 8px 22px -6px rgba(15, 23, 42, 0.22), 0 0 14px -4px var(--accent-glow) !important;
 }
-body.isl-orbital-halo #crown.droplet::after { display: none !important; }
-.orb-halo-ring {
-    width: 14px; height: 14px; border-radius: 50%;
-    border: 2px solid var(--accent-1); box-shadow: 0 0 10px var(--accent-glow);
+body.isl-orbital-ring #crown.droplet::after { display: none !important; }
+body.isl-orbital-ring #crown.live-stage {
+    animation: orbBloom 0.24s var(--spring) !important;
 }
+@keyframes orbBloom {
+    from { opacity: 0.65; transform: scale(0.45); border-radius: 999px; }
+    to { opacity: 1; transform: scale(1); }
+}
+@keyframes orbSpin { to { transform: rotate(360deg); } }
+.orb-ring-wrap {
+    position: relative; width: 34px; height: 34px;
+    display: inline-flex; align-items: center; justify-content: center;
+}
+.orb-ring-svg { position: absolute; inset: 0; width: 34px; height: 34px; transform: rotate(-90deg); }
+.orb-art-disc {
+    width: 22px; height: 22px; border-radius: 50%; object-fit: cover;
+    animation: orbSpin 10s linear infinite;
+}
+body.eco-mode .orb-art-disc { animation-play-state: paused !important; }
+.orb-core-dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #FFFFFF 0%, var(--accent-1) 55%, var(--accent-2) 100%);
+    box-shadow: 0 0 10px var(--accent-glow);
+}
+
+/* 7. STUDIO STRIP — Borderless studio horizontal strip: art + 2-line title/artist + progress + quick tools */
+body.isl-studio-strip #crown.droplet:not(.osd-active):not(.rec-live):not(.bt-popin):not(.notif-morph) {
+    margin-top: 6px !important; height: 44px !important;
+    min-width: 396px; max-width: min(548px, calc(100vw - 32px));
+    border-radius: 15px !important; padding: 4px 10px 5px 6px !important;
+    border: 1px solid var(--border-subtle) !important;
+    gap: 9px;
+}
+body.mode-light.isl-studio-strip #crown.droplet:not(.osd-active):not(.rec-live):not(.bt-popin):not(.notif-morph) {
+    background: rgba(255, 255, 255, 0.86) !important;
+    border-color: rgba(20, 22, 26, 0.10) !important;
+    box-shadow: 0 10px 28px -8px rgba(20, 22, 26, 0.16), inset 0 1px 0 rgba(255,255,255,0.95) !important;
+}
+body.isl-studio-strip #crown.droplet::after { display: none !important; }
+.strip-art {
+    width: 32px; height: 32px; border-radius: 9px; object-fit: cover; flex-shrink: 0;
+    background: var(--accent-soft); color: var(--accent-1);
+    display: inline-flex; align-items: center; justify-content: center;
+}
+.strip-meta {
+    flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 1px;
+}
+.strip-title {
+    font-size: 11.5px; font-weight: 700; color: var(--text-1);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.15;
+}
+.strip-sub {
+    font-size: 9.8px; color: var(--text-2);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.15;
+}
+.strip-tools {
+    display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0;
+}
+.strip-tool-btn {
+    width: 24px; height: 24px; border-radius: 7px; border: none;
+    background: transparent; color: var(--text-2);
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: background 0.14s, color 0.14s;
+}
+.strip-tool-btn:hover { background: var(--bg-card-hover); color: var(--text-1); }
+.strip-tool-btn.active { background: var(--accent-tint); color: var(--accent-1); }
+
+/* 8. STEALTH HORIZON — Razor-thin 3px glowing top-edge ambient beacon gliding into deck on hover/event */
+body.isl-stealth-horizon #crown.droplet:not(.osd-active):not(.rec-live):not(.bt-popin):not(.notif-morph):not(.privacy-alert) {
+    margin-top: 0 !important; width: 144px !important; min-width: 144px !important; height: 3px !important;
+    padding: 0 !important; border: none !important;
+    border-radius: 0 0 6px 6px !important;
+    background: linear-gradient(90deg, rgba(var(--a1-rgb),0.48), var(--accent-1), var(--accent-2), rgba(var(--a2-rgb),0.48)) !important;
+    box-shadow: 0 3px 14px var(--accent-glow) !important;
+    opacity: 0.92;
+}
+body.isl-stealth-horizon #crown.droplet:not(.osd-active):not(.rec-live):not(.bt-popin):not(.notif-morph):not(.privacy-alert) > * {
+    opacity: 0; pointer-events: none;
+}
+body.isl-stealth-horizon #crown.droplet.auto-stealth-idle { opacity: 0.50 !important; }
+body.isl-stealth-horizon #crown.live-stage {
+    border-top: 2px solid var(--accent-1) !important;
+    animation: stealthGlide 0.22s var(--spring) !important;
+}
+@keyframes stealthGlide {
+    from { opacity: 0.7; transform: translateY(-10px) scaleY(0.65); }
+    to { opacity: 1; transform: translateY(0) scaleY(1); }
+}
+
 .snap-tile-grid {
     display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px;
 }
@@ -2214,40 +2367,41 @@ body.isl-orbital-halo #crown.droplet::after { display: none !important; }
 /* Instant 1-Hover Live Command Stage */
 #crown.live-stage {
     margin-top: 7px;
-    width: min(506px, calc(100vw - 24px));
-    border-radius: 24px; padding: 10px 12px;
+    width: min(560px, calc(100vw - 24px));
+    border-radius: 24px; padding: 11px 13px;
     display: flex; flex-direction: column; gap: 8px;
     animation: popDown 0.18s var(--spring);
 }
 .stage-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-.stage-tabs { display: flex; gap: 3px; background: var(--bg-inset); padding: 2.5px; border-radius: 999px; border: 1px solid var(--border-subtle); }
+.stage-tabs { display: flex; gap: 3px; background: var(--bg-inset); padding: 2.5px; border-radius: 999px; border: 1px solid var(--border-subtle); min-width: 0; overflow-x: auto; }
 .stage-tab {
     border: none; background: transparent; color: var(--text-2);
     font-family: var(--font); font-size: 10px; font-weight: 700;
     padding: 4px 9px; border-radius: 999px; cursor: pointer;
-    transition: background 0.14s, color 0.14s; white-space: nowrap;
+    transition: background 0.14s, color 0.14s; white-space: nowrap; flex-shrink: 0;
 }
 .stage-tab:hover { color: var(--text-1); }
 .stage-tab.active { background: var(--accent-1); color: var(--accent-ink); }
-.stage-actions { display: inline-flex; align-items: center; gap: 4px; }
-.stage-bento { display: grid; grid-template-columns: 1.15fr 1fr; gap: 8px; }
+.stage-actions { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.stage-bento { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 8px; }
 .stage-card {
     padding: 9px 10px; border-radius: 15px;
     background: var(--bg-inset); border: 1px solid var(--border-subtle);
     display: flex; flex-direction: column; gap: 7px; min-width: 0;
 }
-.stage-act-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; height: 100%; }
+.stage-act-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; height: 100%; }
 .stage-act-btn {
     border: 1px solid var(--border-subtle); background: var(--bg-card); color: var(--text-1);
     border-radius: 10px; padding: 6px 8px; cursor: pointer; font-family: var(--font);
-    font-size: 10.5px; font-weight: 700; display: flex; align-items: center; gap: 6px;
+    font-size: 10.5px; font-weight: 700; display: flex; align-items: center; gap: 6px; min-width: 0;
     transition: background 0.13s, border-color 0.13s, transform 0.12s;
 }
+.stage-act-btn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .stage-act-btn:hover { background: var(--bg-card-hover); border-color: var(--accent-ring); transform: translateY(-0.5px); }
 .stage-act-btn.active { background: var(--accent-soft); border-color: var(--accent-1); color: var(--accent-1); }
 .stage-strip {
     display: flex; align-items: center; justify-content: space-between; gap: 6px;
-    padding-top: 2px; border-top: 1px solid var(--border-subtle);
+    padding-top: 5px; border-top: 1px solid var(--border-subtle);
 }
 .stage-clip-chip {
     flex: 1; min-width: 0; height: 24px; padding: 0 8px; border-radius: 8px;
@@ -2263,6 +2417,77 @@ body.isl-orbital-halo #crown.droplet::after { display: none !important; }
     font-family: var(--font); font-size: 11px; line-height: 1.38; outline: none; user-select: text;
 }
 .stage-scratch:focus { border-color: var(--accent-1); }
+
+/* 1-Click Ada Tasarimi Quick Switcher inside Expanded Dynamic Island Deck */
+.island-qs-wrap {
+    display: flex; flex-direction: column; gap: 5px;
+    padding: 7px 9px; border-radius: 13px;
+    background: var(--bg-inset); border: 1px solid var(--border-subtle);
+}
+.island-qs-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-2);
+}
+.island-qs-grid {
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px;
+}
+.island-qs-chip {
+    display: inline-flex; align-items: center; gap: 5px; min-width: 0;
+    height: 24px; padding: 0 7px; border-radius: 8px;
+    border: 1px solid var(--border-subtle); background: var(--bg-card); color: var(--text-2);
+    font-family: var(--font); font-size: 10px; font-weight: 700;
+    cursor: pointer; transition: border-color 0.13s, background 0.13s, color 0.13s;
+}
+.island-qs-chip:hover { color: var(--text-1); border-color: var(--border-rim); background: var(--bg-card-hover); }
+.island-qs-chip.active {
+    background: var(--accent-soft); border-color: var(--accent-1); color: var(--accent-1);
+}
+.island-qs-chip svg { width: 14px; height: 10px; flex-shrink: 0; display: block; }
+.island-qs-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Light Mode Crispness for Live Stage & Design Gallery Cards */
+body.mode-light .stage-card,
+body.mode-light .island-qs-wrap {
+    background: rgba(255, 255, 255, 0.72);
+    border-color: rgba(20, 22, 26, 0.09);
+}
+body.mode-light .stage-act-btn,
+body.mode-light .stage-clip-chip,
+body.mode-light .snap-tile,
+body.mode-light .island-qs-chip {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: rgba(20, 22, 26, 0.11);
+    box-shadow: 0 1px 2px rgba(20, 22, 26, 0.05);
+}
+body.mode-light .stage-act-btn:hover,
+body.mode-light .stage-clip-chip:hover,
+body.mode-light .snap-tile:hover,
+body.mode-light .island-qs-chip:hover {
+    background: #FFFFFF;
+    border-color: var(--accent-1);
+}
+body.mode-light .island-qs-chip.active,
+body.mode-light .stage-act-btn.active {
+    background: var(--accent-soft);
+    border-color: var(--accent-1);
+    color: var(--accent-1);
+}
+body.mode-light .arch-card,
+body.mode-light .bundle-btn,
+body.mode-light .wg-vcard,
+body.mode-light .theme-card {
+    background: rgba(255, 255, 255, 0.76);
+    border-color: rgba(20, 22, 26, 0.10);
+}
+body.mode-light .arch-card.active,
+body.mode-light .theme-card.active {
+    background: var(--accent-soft);
+    border-color: var(--accent-1);
+}
+body.mode-light .arch-diag {
+    background: linear-gradient(160deg, rgba(var(--a1-rgb),0.08), rgba(var(--a2-rgb),0.05)), rgba(241, 245, 249, 0.85);
+    border-color: rgba(20, 22, 26, 0.09);
+}
 
 /* Automatic Live Morph Cards inside Droplet */
 #crown.droplet.bt-popin {
@@ -2307,41 +2532,65 @@ body.isl-orbital-halo #crown.droplet::after { display: none !important; }
 }
 .md-todo-inp:focus { border-color: var(--accent-1); }
 
-/* 10 Shell Architecture Cards in Appearance Studio */
+/* 8 Dock Designs & 8 Dynamic Island Designs Gallery Cards */
 .arch-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .arch-card {
     padding: 8px 9px; border-radius: 13px; text-align: left;
     border: 1px solid var(--border-subtle); background: var(--bg-inset);
     color: var(--text-1); cursor: pointer; font-family: var(--font);
-    display: flex; flex-direction: column; gap: 6px;
+    display: flex; flex-direction: column; gap: 6px; min-width: 0;
     transition: border-color 0.15s, background 0.15s, transform 0.13s var(--ease);
 }
 .arch-card:hover { border-color: var(--border-rim); transform: translateY(-1px); background: var(--bg-card-hover); }
 .arch-card.active { border-color: var(--accent-1); background: var(--accent-soft); box-shadow: 0 0 0 1px var(--accent-ring); }
-.arch-card strong { font-size: 11.5px; font-weight: 800; display: block; }
+.arch-card-head { display: flex; align-items: center; justify-content: space-between; gap: 5px; min-width: 0; }
+.arch-card strong { font-size: 11.5px; font-weight: 800; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .arch-card span { font-size: 9.8px; color: var(--text-2); line-height: 1.25; display: block; }
+.arch-badge {
+    font-size: 8.5px; font-weight: 800; padding: 1.5px 6px; border-radius: 99px;
+    background: var(--accent-soft); color: var(--accent-1); flex-shrink: 0; white-space: nowrap;
+}
 .arch-diag {
     width: 100%; height: 42px; border-radius: 8px;
     background: linear-gradient(160deg, rgba(var(--a1-rgb),0.10), rgba(var(--a2-rgb),0.06)), var(--bg-card);
     border: 1px solid var(--border-subtle); overflow: hidden; display: block;
 }
 
-/* 6-Style Island Form Cards + Curated Bundle Row */
-.isl-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
-.bundle-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+/* 8-Style Island Form Cards + 6 Curated Widget Packs */
+.isl-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
+.bundle-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
 .bundle-btn {
-    padding: 8px 10px; border-radius: 11px; text-align: left;
+    padding: 9px 10px; border-radius: 12px; text-align: left;
     border: 1px solid var(--border-subtle); background: var(--bg-inset);
     color: var(--text-1); cursor: pointer; font-family: var(--font);
-    transition: border-color 0.14s, background 0.14s;
+    display: flex; flex-direction: column; gap: 5px; min-width: 0;
+    transition: border-color 0.14s, background 0.14s, transform 0.12s;
 }
-.bundle-btn:hover { border-color: var(--accent-1); background: var(--accent-soft); }
-.bundle-btn strong { font-size: 11.5px; font-weight: 700; display: block; }
-.bundle-btn span { font-size: 10px; color: var(--text-2); }
+.bundle-btn:hover { border-color: var(--accent-1); background: var(--accent-soft); transform: translateY(-1px); }
+.bundle-btn strong { font-size: 11.5px; font-weight: 800; display: block; }
+.bundle-btn span { font-size: 9.8px; color: var(--text-2); line-height: 1.25; display: block; }
+.bundle-wire {
+    width: 100%; height: 30px; border-radius: 7px;
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+    display: flex; align-items: center; gap: 4px; padding: 0 7px; overflow: hidden;
+}
+.bundle-wire-pill {
+    height: 16px; border-radius: 4px; background: rgba(var(--a1-rgb), 0.16);
+    border: 1px solid rgba(var(--a1-rgb), 0.34);
+    display: inline-flex; align-items: center; padding: 0 5px;
+    font-size: 8.5px; font-weight: 700; color: var(--accent-1); white-space: nowrap;
+}
+.wg-thumb.sk-acrylic,
 .wg-thumb.sk-neoglass {
     background: linear-gradient(160deg, rgba(255,255,255,0.16), rgba(var(--a1-rgb),0.10) 55%, rgba(0,0,0,0.22));
     border-color: rgba(255,255,255,0.26);
     box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.38), 0 8px 18px -6px rgba(0,0,0,0.4);
+}
+body.mode-light .wg-thumb.sk-acrylic,
+body.mode-light .wg-thumb.sk-neoglass {
+    background: linear-gradient(160deg, rgba(255,255,255,0.92), rgba(var(--a1-rgb),0.10) 70%, rgba(226,232,240,0.75));
+    border-color: rgba(20,22,26,0.14);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.95), 0 6px 14px -6px rgba(20,22,26,0.12);
 }
         </style>
         </head>
@@ -2546,9 +2795,10 @@ let activeTab = 'control';
 let deckMode = 'settings'; // 'settings' | 'tools' | 'control'
 let settingsSection = 'appearance'; // 'appearance' | 'taskbar' | 'widgets' | 'island' | 'windows' | 'system'
 let themeCategoryFilter = 'all'; // 'all' | 'glass' | 'minimal' | 'mood' | 'tech'
+let themeModeFilter = 'all'; // 'all' | 'dark' | 'light'
 let widgetStudioTab = 'dock'; // 'dock' | 'desktop'
 let expandedDockWidgetKind = null;
-let gallerySkinPreset = 'neoglass'; // 'frameless' | 'glass' | 'neoglass' | 'braun' | 'matrix' | 'editorial'
+let gallerySkinPreset = 'acrylic'; // 'frameless' | 'glass' | 'acrylic' | 'braun' | 'matrix' | 'editorial'
 let lastThemeIdApplied = '';
 let microDeckOpen = false;
 let microDeckTab = 'live'; // 'live' | 'vault' | 'focus' | 'tools'
@@ -2559,9 +2809,26 @@ let notifMorphTimer = null;
 
 function getInstalledApps() { return appCatalog.length ? appCatalog : (state?.installedApps || []); }
 function getThemesList() {
+    const fbMap = new Map(BUILTIN_THEMES_26.map(t => [t.id, t]));
     const raw = themesCatalog.length ? themesCatalog : (state?.themes || []);
     if (!raw.length) return BUILTIN_THEMES_26;
-    const byId = new Map(raw.map(t => [t.id, t]));
+    const byId = new Map();
+    for (const item of raw) {
+        const fb = fbMap.get(item.id) || {};
+        const isLight = typeof item.isLight === 'boolean'
+            ? item.isLight
+            : (item.colorMode === 'Light' || item.mode === 'Açık' || Boolean(fb.isLight));
+        byId.set(item.id, {
+            ...fb,
+            ...item,
+            isLight,
+            mode: item.mode || (isLight ? 'Açık' : 'Koyu'),
+            accent: item.accent || fb.accent || '#38BDF8',
+            accent2: item.accent2 || fb.accent2 || '#818CF8',
+            surface1: item.surface1 || fb.surface1 || (isLight ? '#F8FAFC' : '#0F172A'),
+            surface2: item.surface2 || fb.surface2 || (isLight ? '#EEF2F6' : '#162038')
+        });
+    }
     for (const fb of BUILTIN_THEMES_26) {
         if (!byId.has(fb.id)) byId.set(fb.id, fb);
     }
@@ -2697,9 +2964,9 @@ function reportHitRects() {
                 const y = Math.min(r.top, 8);
                 rects.push({ x: Math.max(0, x - 4), y: Math.max(0, y - 4), w: w + 8, h: h + 8 });
             } else if (id === 'crown' && (crownHovered || microDeckOpen || crownPinned) && !omniOpen) {
-                const targetW = Math.min(508, Math.max(320, vw - 24));
+                const targetW = Math.min(564, Math.max(320, vw - 24));
                 const w = Math.max(r.width, targetW);
-                const h = Math.max(r.bottom, 152);
+                const h = Math.max(r.bottom, 224);
                 const x = Math.min(r.left, (vw - w) * 0.5);
                 rects.push({ x: Math.max(0, x - 12), y: 0, w: w + 24, h: h + 14 });
             } else if (id === 'omnibar' && omniOpen) {
@@ -2712,8 +2979,8 @@ function reportHitRects() {
                 const h = Math.max(r.bottom, 58);
                 rects.push({ x: Math.max(0, r.left - 18), y: 0, w: r.width + 36, h: h + 10 });
             } else {
-                const padX = (id === 'crown' && !expanded && !crownHovered) ? 22 : 6;
-                const padB = (id === 'crown' && !expanded && !crownHovered) ? 10 : 6;
+                const padX = (id === 'crown' && !expanded && !crownHovered) ? 24 : 6;
+                const padB = (id === 'crown' && !expanded && !crownHovered) ? 13 : 6;
                 const yTop = (id === 'crown' && !expanded) ? 0 : Math.max(0, r.top - 4);
                 const extraTop = Math.max(0, r.top - yTop);
                 rects.push({ x: Math.max(0, r.left - padX), y: yTop, w: r.width + padX * 2, h: r.height + extraTop + padB });
@@ -2735,7 +3002,26 @@ function reportHitRects() {
 
 const ALL_VISUAL_STYLES = ['liquid-glass', 'bento-silk', 'linear-precision', 'mono-matrix', 'spatial-vision', 'cyber-prism', 'high-contrast'];
 const ALL_SHELL_ARCHS = ['tahoe-glass', 'nothing-hardware', 'linear-studio', 'vision-orb', 'arc-split', 'braun-atelier', 'swiss-editorial', 'cockpit-hud', 'fluent-mica', 'zen-ghost'];
-const ALL_ISLAND_STYLES = ['liquid-pill', 'mac-notch', 'edge-horizon', 'hardware-pod', 'glass-bar', 'orbital-halo'];
+const ALL_ISLAND_STYLES = ['liquid-pill', 'mac-notch', 'twin-split', 'horizon-bar', 'nothing-glyph', 'orbital-ring', 'studio-strip', 'stealth-horizon'];
+function normalizeIslandStyle(raw) {
+    const s = String(raw || 'liquid-pill').toLowerCase();
+    if (s === 'compact-notch' || s === 'mac-notch') return 'mac-notch';
+    if (s === 'edge-horizon' || s === 'stealth-horizon') return 'stealth-horizon';
+    if (s === 'hardware-pod' || s === 'nothing-glyph') return 'nothing-glyph';
+    if (s === 'glass-bar' || s === 'horizon-bar') return 'horizon-bar';
+    if (s === 'orbital-halo' || s === 'orbital-ring') return 'orbital-ring';
+    if (s === 'twin-split') return 'twin-split';
+    if (s === 'studio-strip') return 'studio-strip';
+    return 'liquid-pill';
+}
+function setIslandStyleLive(styleId) {
+    const norm = normalizeIslandStyle(styleId);
+    if (state) state.islandStyle = norm;
+    lastDropletSig = '';
+    lastExpandedSig = '';
+    renderAll();
+    send('setIslandConfig', { style: norm });
+}
 const CURATED_ACCENT_PRESETS = [
     { name: 'Buz Mavisi', a1: '#38BDF8', a2: '#818CF8' },
     { name: 'Zümrüt', a1: '#10B981', a2: '#34D399' },
@@ -2785,7 +3071,7 @@ function applyThemeVars(t) {
         document.body.classList.toggle('arch-' + a, a === archId);
     }
     const rawIsl = state?.islandStyle || 'liquid-pill';
-    const islStyle = rawIsl === 'compact-notch' ? 'mac-notch' : rawIsl;
+    const islStyle = normalizeIslandStyle(rawIsl);
     for (const is of ALL_ISLAND_STYLES) {
         document.body.classList.toggle('isl-' + is, is === islStyle);
     }
@@ -3001,7 +3287,9 @@ function computeExpandedDeckSignature() {
     };
     if (deckMode === 'settings') {
         core.themeCategoryFilter = themeCategoryFilter;
+        core.themeModeFilter = themeModeFilter;
         core.widgetStudioTab = widgetStudioTab;
+        core.gallerySkinPreset = gallerySkinPreset;
         core.settings = [
             state.shellArchitecture, state.islandStyle, state.islandIdleMode,
             state.islandBtPopin, state.islandPrivacyGuard,
@@ -3167,6 +3455,95 @@ function getOsdToneClass(osd) {
     return 'osd-' + osd.kind;
 }
 
+const ISLAND_DESIGN_CATALOG = [
+    {
+        id: 'liquid-pill',
+        short: 'Sıvı Kapsül',
+        name: 'Sıvı Kapsül (Liquid Pill)',
+        desc: 'Albüm parıltılı organik yüzen kapsül, canlı dalga formu ve ikiz kanat.',
+        miniSvg: `<svg viewBox="0 0 24 14"><rect x="3" y="3" width="18" height="8" rx="4" fill="currentColor" opacity="0.88"/></svg>`,
+        svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><ellipse cx="90" cy="21" rx="46" ry="13" fill="var(--accent-1)" opacity="0.16"/><rect x="44" y="12" width="68" height="18" rx="9" fill="var(--accent-1)" opacity="0.88"/><rect x="118" y="13" width="22" height="16" rx="8" fill="currentColor" opacity="0.20" stroke="currentColor" stroke-opacity="0.38" stroke-width="0.8"/><path d="M55 24v-6M59 25v-8M63 23v-4" stroke="#FFF" stroke-width="1.6" stroke-linecap="round"/></svg>`
+    },
+    {
+        id: 'mac-notch',
+        short: 'Çentik',
+        name: 'MacBook Çentik (Bezier)',
+        desc: 'Üst kenara yapışık, SVG içbükey bezier kulaklı mat obsidian donanım çentiği.',
+        miniSvg: `<svg viewBox="0 0 24 14"><path d="M2 0 H22 Q19 0 18 4 L17 9 Q16 11 14 11 H10 Q8 11 7 9 L6 4 Q5 0 2 0 Z" fill="currentColor" opacity="0.9"/></svg>`,
+        svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><line x1="0" y1="0.5" x2="180" y2="0.5" stroke="currentColor" stroke-opacity="0.22"/><path d="M46 0 H134 C126 0 124 4 123 11 L122 17 Q120 22 114 22 H66 Q60 22 58 17 L57 11 C56 4 54 0 46 0 Z" fill="#090B10" stroke="var(--accent-1)" stroke-opacity="0.6" stroke-width="0.9"/><circle cx="90" cy="11" r="2.6" fill="#38BDF8"/></svg>`
+    },
+    {
+        id: 'twin-split',
+        short: 'İkiz Kapsül',
+        name: 'İkiz Ayrık (Twin Split)',
+        desc: 'Şeffaf boşluklu iki ayrı mikro-kapsül; üzerine gelince akıcı biçimde birleşir.',
+        miniSvg: `<svg viewBox="0 0 24 14"><rect x="2" y="3" width="9" height="8" rx="4" fill="currentColor" opacity="0.9"/><rect x="14" y="3" width="8" height="8" rx="4" fill="currentColor" opacity="0.55"/></svg>`,
+        svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="28" y="13" width="58" height="16" rx="8" fill="var(--accent-1)" opacity="0.86"/><rect x="96" y="13" width="56" height="16" rx="8" fill="currentColor" opacity="0.22" stroke="currentColor" stroke-opacity="0.4" stroke-width="0.9"/><circle cx="38" cy="21" r="3" fill="#FFF" opacity="0.85"/><rect x="106" y="19" width="32" height="4" rx="2" fill="currentColor" opacity="0.55"/></svg>`
+    },
+    {
+        id: 'horizon-bar',
+        short: 'Ufuk Barı',
+        name: 'Ufuk Cam Şeridi (Horizon)',
+        desc: 'Üst ortada ultra ince buzlu cam şeridi, alt kenarda net ilerleme çizgisi.',
+        miniSvg: `<svg viewBox="0 0 24 14"><rect x="1" y="4" width="22" height="6" rx="2.5" fill="currentColor" opacity="0.82"/><line x1="3" y1="12" x2="17" y2="12" stroke="currentColor" stroke-width="1.5"/></svg>`,
+        svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="14" y="12" width="152" height="16" rx="7" fill="currentColor" opacity="0.16" stroke="currentColor" stroke-opacity="0.38" stroke-width="0.9"/><rect x="22" y="18" width="44" height="4" rx="2" fill="var(--accent-1)"/><rect x="76" y="18" width="26" height="4" rx="2" fill="currentColor" opacity="0.4"/><rect x="118" y="18" width="38" height="4" rx="2" fill="currentColor" opacity="0.55"/><line x1="22" y1="27" x2="112" y2="27" stroke="var(--accent-1)" stroke-width="1.8" stroke-linecap="round"/></svg>`
+    },
+    {
+        id: 'nothing-glyph',
+        short: 'Glyph LED',
+        name: 'Nothing Glyph Matris',
+        desc: 'Endüstriyel nokta matris kapsül, parçalı Glyph LED yayları ve mono veri.',
+        miniSvg: `<svg viewBox="0 0 24 14"><rect x="2" y="3" width="20" height="8" rx="3" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="7" cy="7" r="1.6" fill="#EF4444"/><line x1="11" y1="7" x2="19" y2="7" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 1.5"/></svg>`,
+        svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="38" y="11" width="104" height="20" rx="6" fill="currentColor" opacity="0.18" stroke="currentColor" stroke-opacity="0.55" stroke-width="1"/><path d="M51 16 A6 6 0 0 1 57 21 M57 23 A6 6 0 0 1 51 26" fill="none" stroke="var(--accent-1)" stroke-width="1.6" stroke-linecap="round"/><circle cx="51" cy="21" r="2.3" fill="#EF4444"/><rect x="66" y="19" width="64" height="4" rx="1" fill="currentColor" opacity="0.58"/></svg>`
+    },
+    {
+        id: 'orbital-ring',
+        short: 'Yörünge',
+        name: 'Yörünge Halkası (Orbital)',
+        desc: 'Albüm kapağı ve odak halkası taşıyan dairesel küre; dokununca dışa çiçeklenir.',
+        miniSvg: `<svg viewBox="0 0 24 14"><circle cx="12" cy="7" r="5.5" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="7" r="2.2" fill="currentColor"/></svg>`,
+        svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><circle cx="90" cy="21" r="14" fill="currentColor" opacity="0.15" stroke="currentColor" stroke-opacity="0.25" stroke-width="1"/><circle cx="90" cy="21" r="14" fill="none" stroke="var(--accent-1)" stroke-width="2" stroke-dasharray="62 26" stroke-linecap="round"/><circle cx="90" cy="21" r="7" fill="var(--accent-1)" opacity="0.88"/></svg>`
+    },
+    {
+        id: 'studio-strip',
+        short: 'Stüdyo Şerit',
+        name: 'Stüdyo Yatay Şerit',
+        desc: 'Çerçevesiz stüdyo şeridi: kapak + 2 satır başlık + canlı ilerleme + hızlı araçlar.',
+        miniSvg: `<svg viewBox="0 0 24 14"><rect x="2" y="2" width="20" height="10" rx="3" fill="currentColor" opacity="0.2" stroke="currentColor" stroke-width="1"/><rect x="4" y="4" width="5" height="6" rx="1.2" fill="currentColor"/><line x1="11" y1="5.5" x2="19" y2="5.5" stroke="currentColor" stroke-width="1.4"/><line x1="11" y1="8.5" x2="16" y2="8.5" stroke="currentColor" stroke-width="1.2" opacity="0.6"/></svg>`,
+        svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="14" y="9" width="152" height="24" rx="8" fill="currentColor" opacity="0.14" stroke="currentColor" stroke-opacity="0.32" stroke-width="0.9"/><rect x="20" y="13" width="16" height="16" rx="4" fill="var(--accent-1)" opacity="0.85"/><rect x="42" y="15" width="54" height="4" rx="2" fill="currentColor" opacity="0.72"/><rect x="42" y="22" width="38" height="3" rx="1.5" fill="currentColor" opacity="0.38"/><circle cx="136" cy="21" r="4" fill="var(--accent-1)" opacity="0.8"/><circle cx="150" cy="21" r="4" fill="currentColor" opacity="0.45"/></svg>`
+    },
+    {
+        id: 'stealth-horizon',
+        short: 'Gizli Ufuk',
+        name: 'Gizli Ufuk Işığı (3px)',
+        desc: 'Boştayken üst kenarda 3px ışıklı çizgi; fare veya olayda komuta sahnesine kayar.',
+        miniSvg: `<svg viewBox="0 0 24 14"><rect x="4" y="1" width="16" height="2.6" rx="1.3" fill="currentColor"/><rect x="6" y="7" width="12" height="5" rx="2" fill="currentColor" opacity="0.25"/></svg>`,
+        svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="42" y="2" width="96" height="3.5" rx="1.75" fill="var(--accent-1)"/><rect x="48" y="15" width="84" height="15" rx="7" fill="currentColor" opacity="0.14" stroke="var(--accent-1)" stroke-opacity="0.45" stroke-width="0.8" stroke-dasharray="3 2"/></svg>`
+    }
+];
+
+function buildMacNotchEarsSvg() {
+    return `
+        <svg class="notch-ear notch-ear-l" viewBox="0 0 14 14" aria-hidden="true"><path d="M0 0 L14 0 L14 14 C14 6.268 7.732 0 0 0 Z" fill="#06070B"/></svg>
+        <svg class="notch-ear notch-ear-r" viewBox="0 0 14 14" aria-hidden="true"><path d="M0 0 L14 0 C6.268 0 0 6.268 0 14 L0 0 Z" fill="#06070B"/></svg>
+    `;
+}
+
+function buildNothingGlyphArcSvg(pct) {
+    const p = Math.max(0, Math.min(100, Number(pct) || 0));
+    const segs = [
+        ['M12 2 A10 10 0 0 1 19.8 5.8', p >= 15],
+        ['M21.2 8.2 A10 10 0 0 1 21.2 15.8', p >= 35],
+        ['M19.8 18.2 A10 10 0 0 1 12 22', p >= 55],
+        ['M9.5 21.7 A10 10 0 0 1 2.8 16.5', p >= 75],
+        ['M2.2 13.8 A10 10 0 0 1 9.5 2.3', p >= 90]
+    ];
+    return `<svg class="glyph-arc-svg" viewBox="0 0 24 24" aria-hidden="true">
+        ${segs.map(([d, on]) => `<path d="${d}" fill="none" stroke="${on ? 'var(--accent-1)' : 'currentColor'}" stroke-opacity="${on ? '0.96' : '0.24'}" stroke-width="2" stroke-linecap="round"/>`).join('')}
+        <circle cx="12" cy="12" r="2.8" fill="${p > 0 ? '#EF4444' : 'var(--accent-1)'}"/>
+    </svg>`;
+}
+
 function buildMicroDeckHtml() {
     const m = state.media;
     const outs = (state.audioOutputs || []).slice(0, 3);
@@ -3174,30 +3551,32 @@ function buildMicroDeckHtml() {
     const activeWin = state.activeWindow;
     const shelf = (state.dropShelf || []).slice(0, 4);
     const curTab = ['live', 'vault', 'focus', 'tools'].includes(microDeckTab) ? microDeckTab : 'live';
+    const curIsl = normalizeIslandStyle(state.islandStyle);
+    const curIslMeta = ISLAND_DESIGN_CATALOG.find(x => x.id === curIsl) || ISLAND_DESIGN_CATALOG[0];
     const tabs = [
         ['live', 'Canlı Sahne'],
         ['vault', 'Pano & Raf'],
         ['focus', 'Pencere & Odak'],
-        ['tools', 'Hızlı Araç']
+        ['tools', 'Hızlı Araçlar']
     ];
     let body = '';
     if (curTab === 'vault') {
         body = `
             <div style="display:flex;gap:5px;">
-                <button class="pill-btn accent" style="flex:1;height:26px;font-size:10.5px;justify-content:center;" onclick="send('pickShelfFile')">${SVG.plus}<span>Dosya Ekle</span></button>
-                <button class="pill-btn" style="flex:1;height:26px;font-size:10.5px;justify-content:center;" onclick="crownHovered=false;microDeckOpen=false;renderAll();syncFocusDemand();send('pickAndShareQr');">${SVG.qr}<span>QR Paylaş</span></button>
-                <button class="pill-btn subtle" style="height:26px;font-size:10px;" onclick="openToolsModal('shelf')">Tüm Pano →</button>
+                <button class="pill-btn accent" style="flex:1;height:27px;font-size:10.5px;justify-content:center;" onclick="send('pickShelfFile')">${SVG.plus}<span>Dosya Ekle</span></button>
+                <button class="pill-btn" style="flex:1;height:27px;font-size:10.5px;justify-content:center;" onclick="crownHovered=false;microDeckOpen=false;renderAll();syncFocusDemand();send('pickAndShareQr');">${SVG.qr}<span>QR Paylaş</span></button>
+                <button class="pill-btn subtle" style="height:27px;font-size:10px;" onclick="openToolsModal('shelf')">Tüm Pano →</button>
             </div>
-            ${clips.length > 0 ? `<div style="display:flex;flex-direction:column;gap:4px;">${clips.map(c => `<div class="clip-item" style="margin:0;padding:5px 8px;" onclick="send('copyClipById',{id:${c.id}})">${SVG.copy}<span style="overflow:hidden;text-overflow:ellipsis;">${escHtml(c.preview || c.text || 'Görsel')}</span></div>`).join('')}</div>` : '<div style="font-size:10.5px;color:var(--text-2);">Pano geçmişi boş.</div>'}
-            ${shelf.length > 0 ? `<div style="display:flex;flex-direction:column;gap:4px;">${shelf.slice(0, 2).map((f, idx) => `<div class="clip-item" style="margin:0;padding:4px 8px;justify-content:space-between;" onclick="send('openShelfFile',{index:${idx}})">${SVG.inbox}<span style="flex:1;overflow:hidden;text-overflow:ellipsis;">${escHtml(f.name)}</span><button class="micro-btn" style="width:20px;height:20px;" onclick="event.stopPropagation();crownHovered=false;microDeckOpen=false;renderAll();syncFocusDemand();send('shareShelfFileQr',{index:${idx}})">${SVG.qr}</button></div>`).join('')}</div>` : ''}
+            ${clips.length > 0 ? `<div style="display:flex;flex-direction:column;gap:4px;">${clips.map(c => `<div class="clip-item" style="margin:0;padding:5px 8px;" onclick="send('copyClipById',{id:${c.id}})">${SVG.copy}<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(c.preview || c.text || 'Görsel')}</span><span style="font-size:9.5px;color:var(--text-2);flex-shrink:0;">${escHtml(c.time || '')}</span></div>`).join('')}</div>` : '<div style="font-size:10.5px;color:var(--text-2);">Pano geçmişi boş.</div>'}
+            ${shelf.length > 0 ? `<div style="display:flex;flex-direction:column;gap:4px;">${shelf.slice(0, 2).map((f, idx) => `<div class="clip-item" style="margin:0;padding:4px 8px;justify-content:space-between;" onclick="send('openShelfFile',{index:${idx}})">${SVG.inbox}<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(f.name)}</span><button class="micro-btn" style="width:20px;height:20px;" onclick="event.stopPropagation();crownHovered=false;microDeckOpen=false;renderAll();syncFocusDemand();send('shareShelfFileQr',{index:${idx}})">${SVG.qr}</button></div>`).join('')}</div>` : ''}
         `;
     } else if (curTab === 'focus') {
         const vdList = (state.virtualDesktop?.list || []).slice(0, 4);
         const fRun = Boolean(state.focus?.running);
         const fDurMins = Math.round((state.focus?.durationSecs || state.focus?.totalSeconds || 1500) / 60);
         body = `
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 9px;border-radius:10px;background:var(--bg-inset);border:1px solid var(--border-subtle);">
-                <span style="font-size:11px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${activeWin ? escHtml(activeWin.title || activeWin.processName) : 'Aktif pencere bekleniyor'}</span>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 9px;border-radius:10px;background:var(--bg-inset);border:1px solid var(--border-subtle);min-width:0;">
+                <span style="flex:1;min-width:0;font-size:11px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${activeWin ? escHtml(activeWin.title || activeWin.processName) : 'Aktif pencere bekleniyor'}</span>
                 <div style="display:inline-flex;gap:4px;align-items:center;flex-shrink:0;">
                     ${vdList.map(d => `<button class="pill-btn ${d.current?'accent':''}" style="height:21px;font-size:9.5px;padding:0 6px;" onclick="send('switchVirtualDesktopIndex',{index:${d.index}})" title="${escHtml(d.name)}">M${d.index}</button>`).join('')}
                     <button class="micro-btn" style="width:21px;height:21px;" onclick="send('createVirtualDesktop')" title="Yeni Sanal Masaüstü">${SVG.plus}</button>
@@ -3224,12 +3603,12 @@ function buildMicroDeckHtml() {
         `;
     } else if (curTab === 'tools') {
         body = `
-            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;">
-                <button class="pill-btn" style="height:27px;padding:0 6px;font-size:10px;justify-content:center;" onclick="crownHovered=false;microDeckOpen=false;renderAll();syncFocusDemand();send('startScreenOcr');">${SVG.scanText}<span>OCR</span></button>
-                <button class="pill-btn" style="height:27px;padding:0 6px;font-size:10px;justify-content:center;" onclick="crownHovered=false;microDeckOpen=false;renderAll();syncFocusDemand();send('startColorPicker');">${SVG.pipette}<span>Renk</span></button>
-                <button class="pill-btn" style="height:27px;padding:0 6px;font-size:10px;justify-content:center;" onclick="crownHovered=false;microDeckOpen=false;renderAll();syncFocusDemand();send('startGifRecording');">${SVG.record}<span>GIF</span></button>
-                <button class="pill-btn" style="height:27px;padding:0 6px;font-size:10px;justify-content:center;" onclick="crownHovered=false;microDeckOpen=false;renderAll();syncFocusDemand();send('launchPath',{path:'ms-screenclip:'});">${SVG.scissors}<span>Alıntı</span></button>
-                <button class="pill-btn" style="height:27px;padding:0 6px;font-size:10px;justify-content:center;" onclick="crownHovered=false;microDeckOpen=false;renderAll();syncFocusDemand();send('pickAndShareQr');">${SVG.qr}<span>QR</span></button>
+            <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;">
+                <button class="pill-btn" style="height:28px;padding:0 6px;font-size:10px;justify-content:center;" onclick="crownHovered=false;microDeckOpen=false;renderAll();syncFocusDemand();send('startScreenOcr');">${SVG.scanText}<span>OCR</span></button>
+                <button class="pill-btn" style="height:28px;padding:0 6px;font-size:10px;justify-content:center;" onclick="crownHovered=false;microDeckOpen=false;renderAll();syncFocusDemand();send('startColorPicker');">${SVG.pipette}<span>Renk</span></button>
+                <button class="pill-btn" style="height:28px;padding:0 6px;font-size:10px;justify-content:center;" onclick="crownHovered=false;microDeckOpen=false;renderAll();syncFocusDemand();send('startGifRecording');">${SVG.record}<span>GIF</span></button>
+                <button class="pill-btn" style="height:28px;padding:0 6px;font-size:10px;justify-content:center;" onclick="crownHovered=false;microDeckOpen=false;renderAll();syncFocusDemand();send('launchPath',{path:'ms-screenclip:'});">${SVG.scissors}<span>Alıntı</span></button>
+                <button class="pill-btn" style="height:28px;padding:0 6px;font-size:10px;justify-content:center;" onclick="crownHovered=false;microDeckOpen=false;renderAll();syncFocusDemand();send('pickAndShareQr');">${SVG.qr}<span>QR</span></button>
             </div>
             <textarea id="stageScratch" class="stage-scratch" placeholder="Hızlı karalama notu (otomatik kaydedilir)..." onfocus="send('requestInteractiveFocus')" onblur="if(!isAnyPopupOpen())send('releaseInteractiveFocus')" oninput="scratchText=this.value;send('saveScratchpad',{text:this.value});">${escHtml(scratchText || state.scratchpad || '')}</textarea>
         `;
@@ -3293,13 +3672,27 @@ function buildMicroDeckHtml() {
         `;
     }
     return `
+        ${curIsl === 'mac-notch' ? buildMacNotchEarsSvg() : ''}
         <div class="stage-head">
             <div class="stage-tabs">${tabs.map(([id, lbl]) => `<button class="stage-tab ${curTab===id?'active':''}" onclick="event.stopPropagation();microDeckTab='${id}';renderAll();">${lbl}</button>`).join('')}</div>
             <div class="stage-actions">
                 <button class="micro-btn" style="width:25px;height:25px;" onclick="event.stopPropagation();openOmni();" title="Başlat & Ara (Win)">${SVG.search}</button>
                 <button class="micro-btn" style="width:25px;height:25px;" onclick="event.stopPropagation();openSettingsModal('widgets');" title="Widget Stüdyosu">${SVG.grid}</button>
-                <button class="micro-btn" style="width:25px;height:25px;" onclick="event.stopPropagation();openSettingsModal('appearance');" title="Mimari & Ayarlar">${SVG.settings}</button>
+                <button class="micro-btn" style="width:25px;height:25px;" onclick="event.stopPropagation();openSettingsModal('appearance');" title="Tasarım Galerisi & Ayarlar">${SVG.settings}</button>
                 <button class="micro-btn ${crownPinned?'active':''}" style="width:25px;height:25px;" onclick="event.stopPropagation();send('toggleCrownPinned');" title="${crownPinned?'Sabitlemeyi Kaldır':'Adayı Sabitle'}">${SVG.pin}</button>
+            </div>
+        </div>
+        <div class="island-qs-wrap">
+            <div class="island-qs-head">
+                <span>Ada Tasarımı (8 Stil)</span>
+                <span style="color:var(--accent-1);text-transform:none;letter-spacing:0;">${escHtml(curIslMeta.name)}</span>
+            </div>
+            <div class="island-qs-grid">
+                ${ISLAND_DESIGN_CATALOG.map(ic => `
+                    <button class="island-qs-chip ${curIsl===ic.id?'active':''}" data-island-style="${ic.id}" onclick="event.stopPropagation();setIslandStyleLive('${ic.id}');" title="${escHtml(ic.name)}">
+                        ${ic.miniSvg}<span>${escHtml(ic.short)}</span>
+                    </button>
+                `).join('')}
             </div>
         </div>
         <div class="md-body">${body}</div>
@@ -3447,7 +3840,8 @@ function renderAll() {
             const islandMode = state.crownVisibilityMode || 'Dynamic';
             const idleMode = state.islandIdleMode || 'media-ambient';
             const rawIslStyle = state.islandStyle || 'liquid-pill';
-            const islStyle = rawIslStyle === 'compact-notch' ? 'mac-notch' : rawIslStyle;
+            const islStyle = normalizeIslandStyle(rawIslStyle);
+            document.body.classList.toggle('eco-mode', Boolean(state.ecoModeActive));
             const media = state.media;
             const shelfCount = (state.dropShelf || []).length;
             const unread = state.notificationMode === 'aurora-mirror' ? Number(state.unreadNotifCount || 0) : 0;
@@ -3456,12 +3850,13 @@ function renderAll() {
             const micLive = Boolean(state.privacy?.mic);
             const privGuard = state.islandPrivacyGuard !== false && (camLive || micLive);
             const hasLiveActivity = Boolean(activeOsd || liveBtPopin || liveNotifMorph || (media && media.isPlaying) || state.focus.running || awakeOn || privGuard || unread > 0 || shelfCount > 0);
+            const notchEars = islStyle === 'mac-notch' ? buildMacNotchEarsSvg() : '';
 
             if (activeOsd) {
                 updateCrownWing(false);
                 lastDropletSig = '';
                 crown.className = 'glass-shell droplet osd-active ' + getOsdToneClass(activeOsd);
-                crown.innerHTML = buildOsdInnerHtml(activeOsd);
+                crown.innerHTML = notchEars + buildOsdInnerHtml(activeOsd);
             } else if (liveBtPopin) {
                 updateCrownWing(false);
                 lastDropletSig = '';
@@ -3501,47 +3896,125 @@ function renderAll() {
                 const ramNow = Math.round(state.metrics?.ramPct || 0);
                 const wtTemp = state.weather?.live ? `${Math.round(state.weather.temp)}°` : '';
                 const stealthIdle = idleMode === 'auto-stealth' && !hasLiveActivity;
-                const dSig = `${islandMode}|${idleMode}|${islStyle}|${Boolean(media && media.isPlaying)}|${media?.title || ''}|${state.activeWindow?.processName || ''}|${privGuard}|${cpuNow}|${ramNow}|${wtTemp}|${unread}|${shelfCount}|${state.focus.running ? state.focus.label : ''}`;
+                const mediaDur = Number(media?.durationSecs || 0);
+                const mediaPos = mediaDur > 0 ? Math.min(mediaDur, Number(media?.positionSecs || 0)) : 0;
+                const mediaPct = mediaDur > 0 ? Math.max(4, Math.min(100, Math.round((mediaPos / mediaDur) * 100))) : 0;
+                const focusDur = Number(state.focus?.durationSecs || state.focus?.totalSeconds || 1500);
+                const focusSec = Number(state.focus?.seconds || 0);
+                const focusPct = state.focus?.running && focusDur > 0 ? Math.max(5, Math.min(100, Math.round(((focusDur - focusSec) / focusDur) * 100))) : 0;
+                const dSig = `${islandMode}|${idleMode}|${islStyle}|${Boolean(media && media.isPlaying)}|${media?.title || ''}|${mediaPct}|${state.activeWindow?.processName || ''}|${privGuard}|${cpuNow}|${ramNow}|${wtTemp}|${unread}|${shelfCount}|${state.focus.running ? state.focus.label : ''}|${awakeOn ? state.awake?.shortLabel : ''}`;
                 if (crown.classList.contains('droplet') && !crown.classList.contains('osd-active') && !crown.classList.contains('rec-live') && !crown.classList.contains('bt-popin') && !crown.classList.contains('notif-morph') && !crown.classList.contains('island-hidden') && dSig === lastDropletSig) {
                     const tEl = crown.querySelector('.drop-time');
                     if (tEl && tEl.textContent !== state.clock) tEl.textContent = state.clock;
                     return;
                 }
                 lastDropletSig = dSig;
-                crown.className = `glass-shell droplet ${stealthIdle ? 'auto-stealth-idle' : ''} ${privGuard ? 'privacy-alert' : ''}`;
-                let mainContent = '';
-                if (islStyle === 'orbital-halo' && !privGuard) {
-                    mainContent = (media && media.isPlaying && media.artwork)
-                        ? `<img src="data:image/jpeg;base64,${media.artwork}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;"/>`
-                        : `<div class="orb-halo-ring"></div>`;
-                } else if (islStyle === 'glass-bar' && !privGuard) {
-                    const leftTxt = (media && media.isPlaying) ? media.title : (state.activeWindow?.processName || 'Aurora');
-                    const midTxt = state.focus.running ? state.focus.label : `CPU ${cpuNow}%`;
-                    mainContent = `
-                        <span style="display:inline-flex;align-items:center;gap:5px;min-width:0;">${(media && media.isPlaying) ? '<div class="eq"><span></span><span></span><span></span></div>' : '<span class="drop-dot"></span>'}<span style="font-size:11px;font-weight:700;max-width:118px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(leftTxt)}</span></span>
+                const isTwin = islStyle === 'twin-split';
+                const isLiquidMedia = islStyle === 'liquid-pill' && Boolean(media && media.isPlaying);
+                crown.className = `${isTwin ? 'droplet isl-twin-host' : 'glass-shell droplet'} ${isLiquidMedia ? 'media-ambient-live' : ''} ${stealthIdle ? 'auto-stealth-idle' : ''} ${privGuard ? 'privacy-alert' : ''}`;
+
+                if (islStyle === 'twin-split') {
+                    const leftHtml = privGuard
+                        ? `<span class="priv-pulse"></span><span>${micLive ? 'Mik' : 'Kam'}</span>`
+                        : ((media && media.isPlaying)
+                            ? `${media.artwork ? `<img src="data:image/jpeg;base64,${media.artwork}" style="width:16px;height:16px;border-radius:50%;object-fit:cover;flex-shrink:0;"/>` : '<div class="eq"><span></span><span></span><span></span></div>'}<span style="max-width:128px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(media.title)}</span>`
+                            : (state.focus.running
+                                ? `${SVG.timer}<span class="num">${escHtml(state.focus.label)}</span>`
+                                : `<span class="drop-dot"></span><span style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(state.activeWindow?.processName || 'Aurora')}</span>`));
+                    const rightBadge = unread > 0
+                        ? `<span class="drop-pill-tag num">${unread}</span>`
+                        : (wtTemp ? `<span class="drop-pill-tag num">${wtTemp}</span>` : `<span class="num" style="font-size:10px;color:var(--text-2);">${cpuNow}%</span>`);
+                    crown.innerHTML = `
+                        <div class="twin-cap twin-cap-left glass-shell">${leftHtml}</div>
+                        <div class="twin-cap twin-cap-right glass-shell"><span class="drop-time num">${escHtml(state.clock)}</span>${rightBadge}</div>
+                    `;
+                } else if (islStyle === 'orbital-ring' && !privGuard) {
+                    const ringPct = (media && media.isPlaying && mediaPct > 0) ? mediaPct : (focusPct > 0 ? focusPct : 64);
+                    const ringOff = (97.4 * (1 - ringPct / 100)).toFixed(1);
+                    crown.innerHTML = `
+                        <div class="orb-ring-wrap">
+                            <svg class="orb-ring-svg" viewBox="0 0 36 36">
+                                <circle cx="18" cy="18" r="15.5" fill="none" stroke="currentColor" stroke-opacity="0.16" stroke-width="2.4"/>
+                                <circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--accent-1)" stroke-width="2.4" stroke-dasharray="97.4" stroke-dashoffset="${ringOff}" stroke-linecap="round"/>
+                            </svg>
+                            ${(media && media.isPlaying && media.artwork)
+                                ? `<img class="orb-art-disc" src="data:image/jpeg;base64,${media.artwork}"/>`
+                                : `<div class="orb-core-dot"></div>`}
+                        </div>
+                    `;
+                } else if (islStyle === 'horizon-bar' && !privGuard) {
+                    const leftTxt = (media && media.isPlaying) ? media.title : (state.activeWindow?.processName || 'Aurora Studio');
+                    const midTxt = state.focus.running ? `Odak ${state.focus.label}` : (awakeOn ? state.awake.shortLabel : `CPU ${cpuNow}% · RAM ${ramNow}%`);
+                    const barPct = (media && media.isPlaying && mediaPct > 0) ? mediaPct : (focusPct > 0 ? focusPct : Math.max(12, Math.min(100, cpuNow)));
+                    crown.innerHTML = `
+                        <span style="display:inline-flex;align-items:center;gap:6px;min-width:0;">${(media && media.isPlaying) ? '<div class="eq"><span></span><span></span><span></span></div>' : '<span class="drop-dot"></span>'}<span style="font-size:11px;font-weight:700;max-width:136px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(leftTxt)}</span></span>
                         <span class="drop-pill-tag num">${escHtml(midTxt)}</span>
                         <span class="drop-time num">${escHtml(state.clock)}${wtTemp ? ' · ' + wtTemp : ''}</span>
+                        <div class="horizon-prog-rail"><div class="horizon-prog-fill" style="width:${barPct}%;"></div></div>
                     `;
-                } else if (media && media.isPlaying) {
-                    mainContent = `${media.artwork ? `<img src="data:image/jpeg;base64,${media.artwork}" style="width:16px;height:16px;border-radius:50%;object-fit:cover;"/>` : '<div class="eq"><span></span><span></span><span></span></div>'}<span style="font-size:11px;font-weight:700;max-width:136px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(media.title)}</span>`;
-                } else if (privGuard) {
-                    const pApp = (state.privacy.micApps?.[0] || state.privacy.cameraApps?.[0] || 'Aktif');
-                    mainContent = `<span class="priv-pulse"></span><span style="font-size:11px;font-weight:700;">${micLive ? 'Mik' : 'Kamera'} · ${escHtml(pApp)}</span>${micLive ? `<button class="pill-btn" style="height:20px;padding:0 7px;font-size:9.5px;border-color:var(--danger);color:var(--danger);" onclick="event.stopPropagation();send('toggleMicMute')">Sustur</button>` : ''}`;
-                } else if (idleMode === 'glance-weather') {
-                    mainContent = `<span class="drop-dot"></span><span class="drop-time num">${escHtml(state.clock)}</span>${wtTemp ? `<span class="drop-pill-tag num">${wtTemp}</span>` : ''}`;
-                } else if (idleMode === 'system-pulse') {
-                    mainContent = `<span class="drop-dot"></span><span class="num" style="font-size:11px;font-weight:700;">CPU ${cpuNow}% · RAM ${ramNow}%</span>`;
-                } else if (idleMode === 'auto-stealth') {
-                    mainContent = `<span class="drop-dot"></span>`;
+                } else if (islStyle === 'nothing-glyph' && !privGuard) {
+                    const glyphLevel = (media && media.isPlaying) ? (mediaPct || 72) : (focusPct > 0 ? focusPct : Math.max(18, cpuNow));
+                    const glyphMain = (media && media.isPlaying) ? media.title : (state.focus.running ? `ODAK ${state.focus.label}` : `SYS ${cpuNow}%`);
+                    crown.innerHTML = `
+                        ${buildNothingGlyphArcSvg(glyphLevel)}
+                        <span style="font-size:10.5px;font-weight:700;letter-spacing:0.04em;max-width:132px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(glyphMain)}</span>
+                        <span class="drop-time num" style="font-size:10.5px;">${escHtml(state.clock)}</span>
+                        ${wtTemp ? `<span style="font-size:10px;opacity:0.75;" class="num">${wtTemp}</span>` : ''}
+                    `;
+                } else if (islStyle === 'studio-strip') {
+                    const stripTitle = privGuard
+                        ? `${micLive ? 'Mikrofon' : 'Kamera'} · ${(state.privacy.micApps?.[0] || state.privacy.cameraApps?.[0] || 'Aktif')}`
+                        : ((media && media.isPlaying) ? media.title : (state.activeWindow?.title || state.activeWindow?.processName || 'Aurora Stüdyo'));
+                    const stripSub = privGuard
+                        ? 'Gizlilik Koruması Aktif'
+                        : ((media && media.isPlaying) ? (media.artist || media.app || 'Çalıyor') : `${state.shortDate || 'Hazır'}${wtTemp ? ' · ' + wtTemp : ''}`);
+                    const stripProg = (media && media.isPlaying && mediaPct > 0) ? mediaPct : (focusPct > 0 ? focusPct : 0);
+                    crown.innerHTML = `
+                        ${(media && media.isPlaying && media.artwork)
+                            ? `<img class="strip-art" src="data:image/jpeg;base64,${media.artwork}"/>`
+                            : `<div class="strip-art">${privGuard ? '<span class="priv-pulse"></span>' : ((media && media.isPlaying) ? SVG.musicSm : SVG.sparkles)}</div>`}
+                        <div class="strip-meta">
+                            <div class="strip-title">${escHtml(stripTitle)}</div>
+                            <div class="strip-sub">${escHtml(stripSub)}</div>
+                        </div>
+                        <div class="strip-tools" onclick="event.stopPropagation()">
+                            ${(media && media.isPlaying) ? `
+                                <button class="strip-tool-btn" onclick="event.stopPropagation();send('mediaCmd',{cmd:'prev'})" title="Önceki">${SVG.prev}</button>
+                                <button class="strip-tool-btn active" onclick="event.stopPropagation();send('mediaCmd',{cmd:'playpause'})" title="Oynat / Duraklat">${SVG.pause}</button>
+                                <button class="strip-tool-btn" onclick="event.stopPropagation();send('mediaCmd',{cmd:'next'})" title="Sonraki">${SVG.next}</button>
+                            ` : `
+                                <button class="strip-tool-btn" onclick="event.stopPropagation();send('startScreenOcr')" title="Metin OCR">${SVG.scanText}</button>
+                                <button class="strip-tool-btn" onclick="event.stopPropagation();send('startColorPicker')" title="Renk Seç">${SVG.pipette}</button>
+                                <button class="strip-tool-btn ${state.focus.running?'active':''}" onclick="event.stopPropagation();send('toggleFocus')" title="Odak Zamanlayıcı">${SVG.timer}</button>
+                            `}
+                        </div>
+                        <span class="drop-time num" style="font-size:11px;flex-shrink:0;">${escHtml(state.clock)}</span>
+                        ${stripProg > 0 ? `<div class="horizon-prog-rail"><div class="horizon-prog-fill" style="width:${stripProg}%;"></div></div>` : ''}
+                    `;
                 } else {
-                    mainContent = `<span class="drop-dot"></span><span class="drop-time num">${escHtml(state.clock)}</span><span style="font-size:10px;color:var(--text-2);">${escHtml(state.shortDate || '')}</span>`;
+                    let mainContent = '';
+                    if (media && media.isPlaying) {
+                        mainContent = `${media.artwork ? `<img src="data:image/jpeg;base64,${media.artwork}" style="width:16px;height:16px;border-radius:50%;object-fit:cover;"/>` : '<div class="eq"><span></span><span></span><span></span></div>'}<span style="font-size:11px;font-weight:700;max-width:136px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(media.title)}</span>`;
+                    } else if (privGuard) {
+                        const pApp = (state.privacy.micApps?.[0] || state.privacy.cameraApps?.[0] || 'Aktif');
+                        mainContent = `<span class="priv-pulse"></span><span style="font-size:11px;font-weight:700;">${micLive ? 'Mik' : 'Kamera'} · ${escHtml(pApp)}</span>${micLive ? `<button class="pill-btn" style="height:20px;padding:0 7px;font-size:9.5px;border-color:var(--danger);color:var(--danger);" onclick="event.stopPropagation();send('toggleMicMute')">Sustur</button>` : ''}`;
+                    } else if (idleMode === 'glance-weather') {
+                        mainContent = `<span class="drop-dot"></span><span class="drop-time num">${escHtml(state.clock)}</span>${wtTemp ? `<span class="drop-pill-tag num">${wtTemp}</span>` : ''}`;
+                    } else if (idleMode === 'system-pulse') {
+                        mainContent = `<span class="drop-dot"></span><span class="num" style="font-size:11px;font-weight:700;">CPU ${cpuNow}% · RAM ${ramNow}%</span>`;
+                    } else if (idleMode === 'auto-stealth') {
+                        mainContent = `<span class="drop-dot"></span>`;
+                    } else {
+                        mainContent = `${islStyle === 'mac-notch' ? '<span class="notch-cam-dot"></span>' : '<span class="drop-dot"></span>'}<span class="drop-time num">${escHtml(state.clock)}</span><span style="font-size:10px;opacity:0.74;">${escHtml(state.shortDate || '')}</span>`;
+                    }
+                    crown.innerHTML = `
+                        ${notchEars}
+                        ${mainContent}
+                        ${!useDualWing && awakeOn ? `<span class="drop-pill-tag num" style="color:#F59E0B;background:rgba(245,158,11,0.18);display:inline-flex;align-items:center;gap:3px;">${SVG.coffee}${escHtml(state.awake.shortLabel)}</span>` : ''}
+                        ${!useDualWing && state.focus.running ? `<span class="drop-pill-tag num">${escHtml(state.focus.label)}</span>` : ''}
+                        ${!useDualWing && unread > 0 ? `<span class="drop-pill-tag num" style="display:inline-flex;align-items:center;gap:3px;">${SVG.bell}${unread}</span>` : ''}
+                    `;
                 }
-                crown.innerHTML = islStyle === 'orbital-halo' || islStyle === 'glass-bar' ? mainContent : `
-                    ${mainContent}
-                    ${!useDualWing && awakeOn ? `<span class="drop-pill-tag num" style="color:#F59E0B;background:rgba(245,158,11,0.18);display:inline-flex;align-items:center;gap:3px;">${SVG.coffee}${escHtml(state.awake.shortLabel)}</span>` : ''}
-                    ${!useDualWing && state.focus.running ? `<span class="drop-pill-tag num">${escHtml(state.focus.label)}</span>` : ''}
-                    ${!useDualWing && unread > 0 ? `<span class="drop-pill-tag num" style="display:inline-flex;align-items:center;gap:3px;">${SVG.bell}${unread}</span>` : ''}
-                `;
             }
         }
     }
@@ -3553,22 +4026,23 @@ function renderAll() {
 const WIDGET_SKINS = [
     { id: 'frameless', name: 'Çerçevesiz' },
     { id: 'glass',     name: 'Optik Cam' },
-    { id: 'neoglass',  name: 'Neo-Cam' },
+    { id: 'acrylic',   name: 'Akrilik Cam' },
     { id: 'braun',     name: 'Braun' },
     { id: 'matrix',    name: 'Dot-Matrix' },
     { id: 'editorial', name: 'İsviçre Kart' }
 ];
 
 const WIDGET_GALLERY_ITEMS = [
-    { kind: 'clock', name: 'Saat Stüdyosu (11 Tasarım)', desc: 'LED Dot-Matrix, Solar Orbit, Orbital Chrono, Editoryal Poster, Dev Hex, Braun Pro, Swiss', variant: 'swiss', size: 'M' },
+    { kind: 'daily-brief', name: 'Günlük Özet (Daily Brief)', desc: 'Editoryal selamlama, tarih, hava durumu, bekleyen görevler ve 1-tık günlük araçlar', variant: 'brief', size: 'M' },
+    { kind: 'clock', name: 'Saat Stüdyosu (Editoryal & Krono)', desc: 'Editorial Hero, Swiss Chrono, Split-Flap, Dot-Matrix, Solar Orbit, Dev Hex', variant: 'editorial-hero', size: 'M' },
     { kind: 'world-clock', name: 'Dünya Saatleri (4 Şehir)', desc: 'İstanbul, Londra, New York ve Tokyo canlı saatleri & gündüz/gece göstergesi', variant: 'cities', size: 'M' },
-    { kind: 'media', name: 'Medya Stüdyo (8 Tasarım)', desc: 'Tam Kapak Poster, TP-7 Makara, Kaset Teyp, Spektrum, Pikap Plak ve Donanım Deck', variant: 'poster', size: 'M' },
+    { kind: 'media', name: 'Medya Stüdyo (Stüdyo Şerit & Pikap)', desc: 'Sınırız Studio Strip, Pikap Plak, Poster, Kaset Teyp, TP-7 Makara ve Ambient', variant: 'studio-strip', size: 'M' },
     { kind: 'studio-strip', name: 'Medya Stüdyo Şeridi', desc: 'Yatay şeffaf medya barı, canlı sarıcı, oynat/duraklat ve ses seviyesi', variant: 'strip', size: 'L' },
-    { kind: 'battery', name: 'Pil & Bluetooth Halkaları', desc: 'Laptop ve bağlı BT kulaklık/fare şarj halkaları + vektör cihaz ikonları', variant: 'rings', size: 'M' },
+    { kind: 'battery', name: 'Pil & BT Çoklu Halka (Multi-Ring)', desc: 'Laptop ve bağlı BT kulaklık/fare için dairesel pil halkaları', variant: 'multi-ring', size: 'M' },
     { kind: 'ai-quota', name: 'AI Kota Stüdyosu', desc: 'ChatGPT, Gemini ve Claude marka amblemli canlı API / CLI / sayaç kotası', variant: 'cards', size: 'L' },
-    { kind: 'weather', name: 'Vektör Hava Durumu (4)', desc: 'Dinamik Gökyüzü Atmosferi, Barometre & Rüzgar Kadranı veya Minimal Sıcaklık', variant: 'dynamic-sky', size: 'S' },
+    { kind: 'weather', name: 'Atmosferik Hava Durumu', desc: 'Gökyüzü gradyanı, vektör güneş/bulut, hissedilen/rüzgar/nem ve tahmin', variant: 'atmospheric', size: 'S' },
     { kind: 'forecast-strip', name: 'Hava Tahmin Şeridi', desc: 'Güncel hava durumu ve saatlik vektör tahmin şeridi', variant: 'strip', size: 'M' },
-    { kind: 'system', name: 'Sistem Telemetri (3)', desc: 'Osiloskop Canlı Akış Grafiği, Hassas Halkalar veya Kompakt Metrikler', variant: 'oscilloscope', size: 'M' },
+    { kind: 'system', name: 'Sistem Kokpiti (Cockpit)', desc: 'Çift SVG radyal CPU/RAM kadranı, sparkline, ağ akışı ve disk çubukları', variant: 'cockpit', size: 'M' },
     { kind: 'calendar', name: 'Takvim & Ajanda (2)', desc: 'Tam Aylık İnteraktif Takvim Izgarası veya Mimari Gün & Ajanda Kartı', variant: 'month', size: 'M' },
     { kind: 'audio-mixer', name: 'Uygulama Ses Mikseri', desc: 'Masaüstünden her uygulamanın sesini ayrı kaydırıcıyla anında ayarla ve sustur', variant: 'bars', size: 'M' },
     { kind: 'focus-rings', name: 'Odak Aktivite Halkaları', desc: 'Günlük odak dakikası, görev tamamlama ve üretkenlik hedefleri (3 halka)', variant: 'rings', size: 'S' },
@@ -3578,7 +4052,7 @@ const WIDGET_GALLERY_ITEMS = [
     { kind: 'pomodoro', name: 'Odak Zamanlayıcı', desc: '25 dk odak seansı, ilerleme çubuğu ve tek tık başlat/sıfırla', variant: 'ring', size: 'S' },
     { kind: 'launcher', name: 'Hızlı Başlatıcı', desc: 'Sabitli uygulamalara masaüstünden 1 tık güvenli erişim', variant: 'grid', size: 'M' },
     { kind: 'todo', name: 'Görev Listesi', desc: 'Etkileşimli günlük görev ekleme, tamamlama ve takip kartı', variant: 'list', size: 'M' },
-    { kind: 'market', name: 'Piyasa & Döviz', desc: 'USD/TRY, EUR/TRY, BTC ve ETH canlı takip (opt-in)', variant: 'cards', size: 'M' },
+    { kind: 'market', name: 'Piyasa & Döviz', desc: 'USD/TRY, EUR/TRY, BTC canlı takip ve satır içi kur çevirici', variant: 'cards', size: 'M' },
     { kind: 'countdown', name: 'Geri Sayım', desc: 'Seçilen hedef tarihe kalan gün sayacı', variant: 'card', size: 'S' },
     { kind: 'storage-net', name: 'Disk & Depolama', desc: 'Sürücü doluluk çubukları ve boş alan göstergesi', variant: 'bars', size: 'M' },
     { kind: 'quote', name: 'Günün İlhamı', desc: 'Dieter Rams ve tasarım ustalarından editoryal sözler', variant: 'editorial', size: 'M' },
@@ -3587,6 +4061,22 @@ const WIDGET_GALLERY_ITEMS = [
 
 function buildWidgetMiniPreview(kind) {
     const clk = (state?.clock || '14:45').slice(0, 5);
+    if (kind === 'daily-brief') {
+        const hr = new Date().getHours();
+        const greet = hr < 12 ? 'Günaydın' : (hr < 18 ? 'İyi Günler' : 'İyi Akşamlar');
+        const temp = state?.weather?.live ? `${Math.round(state.weather.temp)}°` : '21°';
+        return `<div style="display:flex;flex-direction:column;gap:5px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+                <span style="font-size:12.5px;font-weight:800;letter-spacing:-0.02em;">${greet}</span>
+                <span class="num" style="font-size:9.5px;padding:1px 6px;border-radius:99px;background:rgba(var(--a1-rgb),0.18);color:var(--accent-1);font-weight:700;">${temp} · Odak</span>
+            </div>
+            <div style="display:flex;gap:4px;align-items:center;">
+                <span style="flex:1;height:5px;border-radius:99px;background:currentColor;opacity:0.24;"></span>
+                <span style="width:24px;height:13px;border-radius:99px;background:rgba(128,128,128,0.18);font-size:8px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;">OCR</span>
+                <span style="width:28px;height:13px;border-radius:99px;background:rgba(var(--a1-rgb),0.22);color:var(--accent-1);font-size:8px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;">Odak</span>
+            </div>
+        </div>`;
+    }
     if (kind === 'clock') {
         return `<div style="display:flex;align-items:baseline;justify-content:space-between;">
             <span class="num" style="font-size:28px;font-weight:800;letter-spacing:-0.04em;line-height:1;">${escHtml(clk)}</span>
@@ -3673,8 +4163,9 @@ function buildWidgetMiniPreview(kind) {
 }
 
 const DOCK_WIDGET_CATALOG = [
-    { kind: 'clock',             icon: SVG.clock,    name: 'Alt Dock Saati',         desc: 'Klasik, 5×7 LED Matrix, Split-Flap, Kronograf veya Dünya saati', variants: [['classic','Klasik'],['dot5x7','5×7 LED'],['flip','Split-Flap'],['analog','Kronograf'],['matrix','Dot-Matrix'],['world','Dünya']] },
-    { kind: 'media',             icon: SVG.musicSm,  name: 'Mini Müzik Çalar',       desc: 'Kapak kapsülü, dönen vinil plak, ekolayzer veya kontrol kapsülü', variants: [['vinyl','Vinil Plak'],['art-pill','Kapak Kapsül'],['eq','Ekolayzer'],['capsule','Kapsül']] },
+    { kind: 'clock',             icon: SVG.clock,    name: 'Alt Dock Saati',         desc: 'Klasik, Editoryal 2-Satır, 5×7 LED Matrix, Split-Flap, Kronograf veya Dünya', variants: [['classic','Klasik'],['editorial-2line','Editoryal'],['dot5x7','5×7 LED'],['flip','Split-Flap'],['analog','Kronograf'],['world','Dünya']] },
+    { kind: 'media',             icon: SVG.musicSm,  name: 'Mini Müzik Çalar',       desc: 'Stüdyo Barı, kapak kapsülü, dönen vinil plak veya ekolayzer', variants: [['studio-bar','Stüdyo Bar'],['vinyl','Vinil Plak'],['art-pill','Kapak Kapsül'],['eq','Ekolayzer'],['capsule','Kapsül']] },
+    { kind: 'quick-tools',       icon: SVG.bolt,     name: 'Hızlı Araçlar Şeridi',   desc: 'Metin OCR, Renk Seçici, Ekran Alıntısı ve Araç Merkezi tek tık kısayolları', variants: [['strip','Şerit'],['compact','Kompakt']] },
     { kind: 'volume-slider',     icon: SVG.vol,      name: 'Anında Ses Kaydırıcı',   desc: 'Tek hareketle sürükle/tekerlek ses · İkon: Sessiz · Orta Tık: Çıkış Değiştir', variants: [['bar','Kaydırıcı'],['mini','Mini']] },
     { kind: 'brightness-slider', icon: SVG.sun,      name: 'Parlaklık Kaydırıcı',    desc: 'Monitör parlaklığını açılır penceresiz doğrudan çubuktan ayarla', variants: [['bar','Kaydırıcı'],['mini','Mini']] },
     { kind: 'mic-privacy',       icon: SVG.mic,      name: 'Mikrofon & Gizlilik LED', desc: 'Tek tıkla mikrofonu sustur + canlı kamera/mikrofon kullanım ışığı', variants: [['pill','Kapsül'],['icon','Sadece İkon']] },
@@ -3684,7 +4175,7 @@ const DOCK_WIDGET_CATALOG = [
     { kind: 'battery',           icon: SVG.battery,  name: 'Pil & BT Halka',         desc: 'Laptop + bağlı Bluetooth kulaklık/fare şarj halkası', variants: [['ring','Halka'],['pill','Kapsül']] },
     { kind: 'system',            icon: SVG.cpu,      name: 'CPU & RAM Mini',         desc: 'Canlı işlemci eğrisi (sparkline), çubuk veya metin', variants: [['bars','Çubuk'],['spark','Canlı Eğri'],['text','Metin']] },
     { kind: 'network',           icon: SVG.activity, name: 'Ağ Hızı (↓/↑)',          desc: 'Anlık indirme ve yükleme hız göstergesi', variants: [['speed','Canlı Hız']] },
-    { kind: 'pomodoro',          icon: SVG.timer,    name: 'Mini Pomodoro',          desc: 'Tek tıkla başlat/duraklat odak sayacı', variants: [['pill','Sayaç']] },
+    { kind: 'pomodoro',          icon: SVG.timer,    name: 'Mini Pomodoro',          desc: 'Tek tıkla başlat/duraklat odak sayacı', variants: [['ring','Halka'],['pill','Sayaç']] },
     { kind: 'market',            icon: SVG.market,   name: 'Döviz & BTC Kayan',      desc: 'USD/TRY & BTC/USD (yalnızca aktifken 5dk önbellekli)', variants: [['ticker','Kayan Kur']] },
     { kind: 'clipboard',         icon: SVG.clip,     name: 'Son Pano Özeti',         desc: 'Son kopyalanan metin ve pano kasası kısayolu', variants: [['latest','Özet']] }
 ];
@@ -3786,7 +4277,7 @@ function buildExpandedDeckHtml() {
 
     // DEFAULT: Apple / Linear 6-Section Sidebar Settings ("Aurora Ayarlar")
     const navItems = [
-        ['appearance', SVG.palette, 'Mimari & 26 Tema'],
+        ['appearance', SVG.palette, 'Tasarım Galerisi & 26 Tema'],
         ['taskbar', SVG.layers, 'Görev Çubuğu & Akış'],
         ['widgets', SVG.grid, 'Widget Stüdyosu'],
         ['island', SVG.sparkles, 'Dinamik Ada Stüdyosu'],
@@ -3798,8 +4289,8 @@ function buildExpandedDeckHtml() {
             <div style="display:flex;align-items:center;gap:9px;">
                 <div class="orb" onclick="openOmni()" title="Başlat & Ara">✦</div>
                 <div>
-                    <div style="font-size:13.5px;font-weight:800;letter-spacing:-0.015em;">Aurora Ayarlar <span style="font-size:10.5px;font-weight:700;color:var(--accent-1);">v${escHtml(state.version || '8.0.0')}</span></div>
-                    <div style="font-size:10.5px;color:var(--text-2);">10 Kabuk Mimarisi · 26 Tema · Her değişiklik anında canlı uygulanır</div>
+                    <div style="font-size:13.5px;font-weight:800;letter-spacing:-0.015em;">Aurora Ayarlar <span style="font-size:10.5px;font-weight:700;color:var(--accent-1);">v${escHtml(state.version || '8.1.0')}</span></div>
+                    <div style="font-size:10.5px;color:var(--text-2);">8 Dock · 8 Dinamik Ada · ${getThemesList().length} Tema · Her değişiklik anında canlı uygulanır</div>
                 </div>
             </div>
             <div style="display:flex;gap:6px;align-items:center;">
@@ -3832,91 +4323,117 @@ function buildSettingsSectionHtml() {
     if (settingsSection === 'appearance') {
         const rawCurArch = state.shellArchitecture || 'tahoe-glass';
         const curArch = rawCurArch === 'fluent-aurora' ? 'fluent-mica' : rawCurArch;
+        const curIsl = normalizeIslandStyle(state.islandStyle);
         const curRad = state.cornerRadiusPreset || 'modern';
         const opPct = Math.round((t.surfaceOpacity ?? 0.92) * 100);
         const wcagRatio = typeof t.contrastRatio === 'number' ? t.contrastRatio.toFixed(1) : '7.0';
         const c = t.colors || {};
-        const filteredThemes = themeCategoryFilter === 'all'
-            ? themes
-            : themes.filter(th => classifyThemeGroup(th) === themeCategoryFilter);
-        const archCards = [
+        const darkThemesCount = themes.filter(th => !th.isLight).length;
+        const lightThemesCount = themes.filter(th => th.isLight).length;
+        const filteredThemes = themes.filter(th => {
+            if (themeModeFilter === 'dark' && th.isLight) return false;
+            if (themeModeFilter === 'light' && !th.isLight) return false;
+            if (themeCategoryFilter !== 'all' && classifyThemeGroup(th) !== themeCategoryFilter) return false;
+            return true;
+        });
+        const dockDesignCards = [
             {
                 id: 'tahoe-glass',
                 name: 'macOS Tahoe Spatial',
+                tag: 'Optik Cam',
                 desc: 'Yüzen cam kapsül, ikiz kanatlı Ada ve optik çift kenar ışığı.',
-                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="64" y="4" width="52" height="8" rx="4" fill="var(--accent-1)" opacity="0.88"/><rect x="120" y="4" width="16" height="8" rx="4" fill="currentColor" opacity="0.22"/><rect x="16" y="25" width="148" height="12" rx="6" fill="currentColor" opacity="0.18" stroke="currentColor" stroke-opacity="0.38" stroke-width="0.9"/><circle cx="30" cy="31" r="3" fill="var(--accent-1)"/><rect x="70" y="29" width="40" height="4" rx="2" fill="currentColor" opacity="0.48"/></svg>`
-            },
-            {
-                id: 'nothing-hardware',
-                name: 'Nothing Hardware (3-Ada)',
-                desc: '3 tamamen ayrı dot-matrix ada, monospaced tipografi ve kırmızı LED.',
-                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="66" y="4" width="48" height="8" rx="3" fill="none" stroke="currentColor" stroke-opacity="0.48" stroke-width="1"/><circle cx="73" cy="8" r="2" fill="#EF4444"/><rect x="8" y="26" width="34" height="11" rx="4" fill="currentColor" opacity="0.16" stroke="currentColor" stroke-opacity="0.35" stroke-width="0.8"/><rect x="52" y="26" width="76" height="11" rx="4" fill="currentColor" opacity="0.16" stroke="currentColor" stroke-opacity="0.35" stroke-width="0.8"/><rect x="138" y="26" width="34" height="11" rx="4" fill="currentColor" opacity="0.16" stroke="currentColor" stroke-opacity="0.35" stroke-width="0.8"/></svg>`
-            },
-            {
-                id: 'linear-studio',
-                name: 'Linear Ultra-Craft (40px)',
-                desc: '40px ince kenardan kenara bar, 1px hairline kenarlık ve ufuk çizgisi.',
-                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="54" y="2" width="72" height="3" rx="1.5" fill="var(--accent-1)"/><line x1="0" y1="31" x2="180" y2="31" stroke="currentColor" stroke-opacity="0.34" stroke-width="0.9"/><rect x="0" y="31" width="180" height="11" fill="currentColor" opacity="0.12"/><rect x="70" y="35" width="40" height="3.5" rx="1" fill="currentColor" opacity="0.48"/></svg>`
-            },
-            {
-                id: 'vision-orb',
-                name: 'visionOS Spatial Küre',
-                desc: 'Tam oval stadyum kapsül, yuvarlak cam küre ikonlar ve parlak hale.',
-                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><circle cx="90" cy="8" r="5" fill="var(--accent-1)" opacity="0.85"/><rect x="20" y="24" width="140" height="14" rx="7" fill="currentColor" opacity="0.18" stroke="#FFF" stroke-opacity="0.45" stroke-width="0.9"/><circle cx="64" cy="31" r="3.8" fill="currentColor" opacity="0.45"/><circle cx="80" cy="31" r="3.8" fill="var(--accent-1)"/><circle cx="96" cy="31" r="3.8" fill="currentColor" opacity="0.45"/><circle cx="112" cy="31" r="3.8" fill="currentColor" opacity="0.45"/></svg>`
+                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="64" y="4" width="52" height="8" rx="4" fill="var(--accent-1)" opacity="0.88"/><rect x="120" y="4" width="16" height="8" rx="4" fill="currentColor" opacity="0.22"/><rect x="16" y="24" width="148" height="13" rx="6.5" fill="currentColor" opacity="0.18" stroke="currentColor" stroke-opacity="0.38" stroke-width="0.9"/><circle cx="30" cy="30.5" r="3" fill="var(--accent-1)"/><rect x="66" y="28.5" width="48" height="4" rx="2" fill="currentColor" opacity="0.5"/></svg>`
             },
             {
                 id: 'arc-split',
-                name: 'Arc Çift Bölümlü Dock',
+                name: 'Arc Çift Bölümlü',
+                tag: 'Ayrık Pod',
                 desc: 'Solda birleşik Ara+Uygulamalar kartı, sağda ayrı yüzen araç podu.',
-                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="64" y="4" width="52" height="8" rx="4" fill="var(--accent-1)" opacity="0.78"/><rect x="8" y="25" width="24" height="12" rx="4" fill="var(--accent-1)" opacity="0.28" stroke="var(--accent-1)" stroke-opacity="0.55" stroke-width="0.8"/><rect x="33" y="25" width="76" height="12" rx="4" fill="currentColor" opacity="0.16" stroke="currentColor" stroke-opacity="0.35" stroke-width="0.8"/><rect x="134" y="25" width="38" height="12" rx="4" fill="currentColor" opacity="0.18" stroke="currentColor" stroke-opacity="0.38" stroke-width="0.8"/></svg>`
+                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="64" y="4" width="52" height="8" rx="4" fill="var(--accent-1)" opacity="0.78"/><rect x="8" y="24" width="24" height="13" rx="4.5" fill="var(--accent-1)" opacity="0.28" stroke="var(--accent-1)" stroke-opacity="0.55" stroke-width="0.8"/><rect x="35" y="24" width="76" height="13" rx="4.5" fill="currentColor" opacity="0.16" stroke="currentColor" stroke-opacity="0.35" stroke-width="0.8"/><rect x="132" y="24" width="40" height="13" rx="4.5" fill="currentColor" opacity="0.18" stroke="currentColor" stroke-opacity="0.38" stroke-width="0.8"/></svg>`
+            },
+            {
+                id: 'linear-studio',
+                name: 'Linear Studio (40px)',
+                tag: '1px Çizgi',
+                desc: '40px ince kenardan kenara bar, 1px hairline kenarlık ve ufuk çizgisi.',
+                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="54" y="2" width="72" height="3" rx="1.5" fill="var(--accent-1)"/><line x1="0" y1="30" x2="180" y2="30" stroke="currentColor" stroke-opacity="0.38" stroke-width="0.9"/><rect x="0" y="30" width="180" height="12" fill="currentColor" opacity="0.12"/><rect x="68" y="34" width="44" height="3.5" rx="1" fill="currentColor" opacity="0.48"/></svg>`
+            },
+            {
+                id: 'nothing-hardware',
+                name: 'Nothing Hardware',
+                tag: '3-Ada',
+                desc: '3 ayrı dot-matrix ada, monospaced tipografi ve kırmızı LED.',
+                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="66" y="4" width="48" height="8" rx="3" fill="none" stroke="currentColor" stroke-opacity="0.48" stroke-width="1"/><circle cx="73" cy="8" r="2" fill="#EF4444"/><rect x="8" y="25" width="34" height="12" rx="4" fill="currentColor" opacity="0.16" stroke="currentColor" stroke-opacity="0.35" stroke-width="0.8"/><rect x="52" y="25" width="76" height="12" rx="4" fill="currentColor" opacity="0.16" stroke="currentColor" stroke-opacity="0.35" stroke-width="0.8"/><rect x="138" y="25" width="34" height="12" rx="4" fill="currentColor" opacity="0.16" stroke="currentColor" stroke-opacity="0.35" stroke-width="0.8"/></svg>`
+            },
+            {
+                id: 'vision-orb',
+                name: 'visionOS Spatial',
+                tag: 'Küre Cam',
+                desc: 'Tam oval stadyum kapsül, yuvarlak cam küre ikonlar ve parlak hale.',
+                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><circle cx="90" cy="8" r="5" fill="var(--accent-1)" opacity="0.85"/><rect x="20" y="23" width="140" height="15" rx="7.5" fill="currentColor" opacity="0.18" stroke="#FFF" stroke-opacity="0.45" stroke-width="0.9"/><circle cx="64" cy="30.5" r="3.8" fill="currentColor" opacity="0.45"/><circle cx="80" cy="30.5" r="3.8" fill="var(--accent-1)"/><circle cx="96" cy="30.5" r="3.8" fill="currentColor" opacity="0.45"/><circle cx="112" cy="30.5" r="3.8" fill="currentColor" opacity="0.45"/></svg>`
             },
             {
                 id: 'braun-atelier',
-                name: 'Braun Atelier Konsol',
+                name: 'Braun Atelier',
+                tag: 'Rams Konsol',
                 desc: 'Mat anodize seramik/metal gövde, içe gömülü yuvalar ve #EA580C turuncu.',
-                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="62" y="4" width="56" height="8" rx="2" fill="currentColor" opacity="0.22" stroke="currentColor" stroke-opacity="0.45" stroke-width="1"/><circle cx="70" cy="8" r="2" fill="#EA580C"/><rect x="10" y="25" width="160" height="12" rx="3" fill="currentColor" opacity="0.18" stroke="currentColor" stroke-opacity="0.48" stroke-width="1"/><rect x="18" y="29" width="18" height="4" fill="#EA580C"/><rect x="66" y="29" width="48" height="4" fill="currentColor" opacity="0.45"/></svg>`
+                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="62" y="4" width="56" height="8" rx="2" fill="currentColor" opacity="0.22" stroke="currentColor" stroke-opacity="0.45" stroke-width="1"/><circle cx="70" cy="8" r="2" fill="#EA580C"/><rect x="10" y="24" width="160" height="13" rx="3" fill="currentColor" opacity="0.18" stroke="currentColor" stroke-opacity="0.48" stroke-width="1"/><rect x="18" y="28.5" width="18" height="4" fill="#EA580C"/><rect x="66" y="28.5" width="48" height="4" fill="currentColor" opacity="0.45"/></svg>`
             },
             {
-                id: 'swiss-editorial',
-                name: 'İsviçre Editoryal Izgara',
-                desc: '2px kalın üst mürekkep çizgisi, net hücre çerçeveleri ve sıfır gölge.',
-                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="46" y="4" width="88" height="8" rx="2" fill="currentColor" opacity="0.2" stroke="var(--accent-1)" stroke-width="0.8"/><line x1="0" y1="27" x2="180" y2="27" stroke="var(--accent-1)" stroke-width="1.8"/><rect x="0" y="27" width="180" height="15" fill="currentColor" opacity="0.10"/><rect x="12" y="30" width="24" height="9" fill="none" stroke="currentColor" stroke-opacity="0.45" stroke-width="0.8"/><rect x="136" y="30" width="32" height="9" fill="none" stroke="currentColor" stroke-opacity="0.45" stroke-width="0.8"/></svg>`
+                id: 'zen-ghost',
+                name: 'Zen Hayalet Şerit',
+                tag: 'Çerçevesiz',
+                desc: 'Tamamen çerçevesiz yüzen ikonlar — duvar kağıdı üzerinde saf sadelik.',
+                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="66" y="2" width="48" height="2.5" rx="1" fill="var(--accent-1)" opacity="0.7"/><circle cx="66" cy="31" r="3.8" fill="currentColor" opacity="0.55"/><circle cx="82" cy="31" r="3.8" fill="var(--accent-1)"/><circle cx="98" cy="31" r="3.8" fill="currentColor" opacity="0.55"/><circle cx="114" cy="31" r="3.8" fill="currentColor" opacity="0.55"/></svg>`
             },
             {
                 id: 'cockpit-hud',
                 name: 'Aero Kokpit HUD',
+                tag: 'Pahlı HUD',
                 desc: '45° pahlı köşeler, teknik ızgara dokusu ve üst lazer aktif çizgisi.',
-                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><path d="M58 5 L64 5 L64 11 M122 5 L116 5 L116 11" fill="none" stroke="var(--accent-1)" stroke-width="1.2"/><rect x="66" y="5" width="48" height="6" fill="var(--accent-1)" opacity="0.22"/><polygon points="14,25 166,25 174,31 166,38 14,38 6,31" fill="currentColor" opacity="0.14" stroke="var(--accent-1)" stroke-opacity="0.7" stroke-width="1"/><line x1="18" y1="26" x2="48" y2="26" stroke="var(--accent-1)" stroke-width="2"/></svg>`
-            },
-            {
-                id: 'fluent-mica',
-                name: 'Windows 11 Fluent Pro',
-                desc: 'Tam genişlikte porselen Mica bar, üst ışık kenarı ve çentikli Ada.',
-                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><path d="M64 0 H116 L112 9 Q110 12 106 12 H74 Q70 12 68 9 Z" fill="var(--accent-1)" opacity="0.72"/><rect x="0" y="26" width="180" height="16" fill="currentColor" opacity="0.16" stroke="currentColor" stroke-opacity="0.35" stroke-width="0.8"/><rect x="64" y="31" width="52" height="5" rx="2" fill="currentColor" opacity="0.45"/></svg>`
-            },
-            {
-                id: 'zen-ghost',
-                name: 'Zen Şeffaf Hayalet',
-                desc: 'Tamamen çerçevesiz yüzen ikonlar — duvar kağıdı üzerinde saf sadelik.',
-                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="66" y="2" width="48" height="2.5" rx="1" fill="var(--accent-1)" opacity="0.7"/><circle cx="70" cy="32" r="3.5" fill="currentColor" opacity="0.55"/><circle cx="84" cy="32" r="3.5" fill="var(--accent-1)"/><circle cx="98" cy="32" r="3.5" fill="currentColor" opacity="0.55"/><circle cx="112" cy="32" r="3.5" fill="currentColor" opacity="0.55"/></svg>`
+                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><path d="M58 5 L64 5 L64 11 M122 5 L116 5 L116 11" fill="none" stroke="var(--accent-1)" stroke-width="1.2"/><rect x="66" y="5" width="48" height="6" fill="var(--accent-1)" opacity="0.22"/><polygon points="14,24 166,24 174,31 166,38 14,38 6,31" fill="currentColor" opacity="0.14" stroke="var(--accent-1)" stroke-opacity="0.7" stroke-width="1"/><line x1="18" y1="25" x2="48" y2="25" stroke="var(--accent-1)" stroke-width="2"/></svg>`
             }
         ];
+        const activeDockName = dockDesignCards.find(a => a.id === curArch)?.name
+            || (curArch === 'swiss-editorial' ? 'İsviçre Editoryal Izgara' : (curArch === 'fluent-mica' ? 'Windows 11 Fluent Pro' : 'macOS Tahoe Spatial'));
         return `
             <div>
-                <div class="sp-title">10 Kabuk Tasarım Mimarisi & ${themes.length} Tema</div>
-                <div class="sp-sub">Her biri gerçek yerleşim, köşe geometrisi ve yüzey yapısıyla ayrışan 10 kabuk mimarisini ${themes.length} WCAG AA+ renk paletiyle özgürce birleştirin.</div>
+                <div class="sp-title">Görsel Tasarım Galerisi · 8 Dock, 8 Ada & ${themes.length} Tema</div>
+                <div class="sp-sub">8 amiral Dock tasarımı, 8 yapısal Dinamik Ada formu ve ${themes.length} WCAG AA+ renk temasını canlı tel kafes önizlemeleriyle birleştirin.</div>
             </div>
             <div class="sp-group">
                 <div class="sp-group-title">
-                    <span>Kabuk Tasarım Mimarisi (10 Amiral Mimari)</span>
-                    <span style="color:var(--accent-1);">${escHtml(archCards.find(a => a.id === curArch)?.name || 'macOS Tahoe Spatial')}</span>
+                    <span>8 Dock Tasarımı (Canlı Tel Kafes Önizleme)</span>
+                    <span style="color:var(--accent-1);">${escHtml(activeDockName)}</span>
                 </div>
                 <div class="arch-grid">
-                    ${archCards.map(a => `
+                    ${dockDesignCards.map(a => `
                         <button class="arch-card ${curArch===a.id?'active':''}" onclick="send('setShellArchitecture',{arch:'${a.id}'})">
                             <div class="arch-diag">${a.svg}</div>
-                            <strong>${a.name}</strong>
+                            <div class="arch-card-head"><strong>${a.name}</strong><span class="arch-badge">${a.tag}</span></div>
                             <span>${a.desc}</span>
+                        </button>
+                    `).join('')}
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding-top:4px;border-top:1px solid var(--border-subtle);">
+                    <span style="font-size:10px;color:var(--text-2);font-weight:600;">Klasik Ek Mimariler</span>
+                    <div style="display:flex;gap:5px;">
+                        <button class="pill-btn ${curArch==='swiss-editorial'?'accent':''}" style="height:23px;font-size:10px;" onclick="send('setShellArchitecture',{arch:'swiss-editorial'})">İsviçre Izgara</button>
+                        <button class="pill-btn ${curArch==='fluent-mica'?'accent':''}" style="height:23px;font-size:10px;" onclick="send('setShellArchitecture',{arch:'fluent-mica'})">Windows 11 Fluent Mica</button>
+                    </div>
+                </div>
+            </div>
+            <div class="sp-group">
+                <div class="sp-group-title">
+                    <span>8 Dinamik Ada Tasarımı (Canlı Form Faktörleri)</span>
+                    <span style="color:var(--accent-1);">${escHtml(ISLAND_DESIGN_CATALOG.find(x => x.id === curIsl)?.name || 'Sıvı Kapsül')}</span>
+                </div>
+                <div class="isl-grid">
+                    ${ISLAND_DESIGN_CATALOG.map(ic => `
+                        <button class="arch-card ${curIsl===ic.id?'active':''}" onclick="setIslandStyleLive('${ic.id}')">
+                            <div class="arch-diag">${ic.svg}</div>
+                            <strong>${ic.short}</strong>
+                            <span>${ic.desc}</span>
                         </button>
                     `).join('')}
                 </div>
@@ -3926,12 +4443,19 @@ function buildSettingsSectionHtml() {
                     <span>${themes.length} Tasarım Teması (${filteredThemes.length} gösteriliyor)</span>
                     <span style="color:var(--accent-1);">${escHtml(t.displayName || '')}</span>
                 </div>
-                <div class="theme-filter-bar">
-                    <button class="tf-chip ${themeCategoryFilter==='all'?'active':''}" onclick="themeCategoryFilter='all';lastExpandedSig='';renderAll();">Tümü (${themes.length})</button>
-                    <button class="tf-chip ${themeCategoryFilter==='glass'?'active':''}" onclick="themeCategoryFilter='glass';lastExpandedSig='';renderAll();">Cam & Uzamsal (${themes.filter(x=>classifyThemeGroup(x)==='glass').length})</button>
-                    <button class="tf-chip ${themeCategoryFilter==='minimal'?'active':''}" onclick="themeCategoryFilter='minimal';lastExpandedSig='';renderAll();">Aydınlık & Kağıt (${themes.filter(x=>classifyThemeGroup(x)==='minimal').length})</button>
-                    <button class="tf-chip ${themeCategoryFilter==='mood'?'active':''}" onclick="themeCategoryFilter='mood';lastExpandedSig='';renderAll();">Atmosfer & Estetik (${themes.filter(x=>classifyThemeGroup(x)==='mood').length})</button>
-                    <button class="tf-chip ${themeCategoryFilter==='tech'?'active':''}" onclick="themeCategoryFilter='tech';lastExpandedSig='';renderAll();">Teknik & OLED (${themes.filter(x=>classifyThemeGroup(x)==='tech').length})</button>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;">
+                    <div class="seg-group" style="padding:2px;">
+                        <button class="seg-btn ${themeModeFilter==='all'?'active':''}" style="padding:3px 9px;font-size:10px;" onclick="themeModeFilter='all';lastExpandedSig='';renderAll();">Tümü (${themes.length})</button>
+                        <button class="seg-btn ${themeModeFilter==='dark'?'active':''}" style="padding:3px 9px;font-size:10px;" onclick="themeModeFilter='dark';lastExpandedSig='';renderAll();">Koyu (${darkThemesCount})</button>
+                        <button class="seg-btn ${themeModeFilter==='light'?'active':''}" style="padding:3px 9px;font-size:10px;" onclick="themeModeFilter='light';lastExpandedSig='';renderAll();">Açık (${lightThemesCount})</button>
+                    </div>
+                    <div class="theme-filter-bar">
+                        <button class="tf-chip ${themeCategoryFilter==='all'?'active':''}" onclick="themeCategoryFilter='all';lastExpandedSig='';renderAll();">Tüm Stiller</button>
+                        <button class="tf-chip ${themeCategoryFilter==='glass'?'active':''}" onclick="themeCategoryFilter='glass';lastExpandedSig='';renderAll();">Cam</button>
+                        <button class="tf-chip ${themeCategoryFilter==='minimal'?'active':''}" onclick="themeCategoryFilter='minimal';lastExpandedSig='';renderAll();">Kağıt</button>
+                        <button class="tf-chip ${themeCategoryFilter==='mood'?'active':''}" onclick="themeCategoryFilter='mood';lastExpandedSig='';renderAll();">Atmosfer</button>
+                        <button class="tf-chip ${themeCategoryFilter==='tech'?'active':''}" onclick="themeCategoryFilter='tech';lastExpandedSig='';renderAll();">Teknik & OLED</button>
+                    </div>
                 </div>
                 <div class="theme-gallery" style="grid-template-columns:repeat(4,minmax(0,1fr));">
                     ${filteredThemes.map(th => `
@@ -3946,7 +4470,7 @@ function buildSettingsSectionHtml() {
                             </div>
                             <div class="theme-card-meta">
                                 <span class="theme-card-name">${escHtml(th.name)}</span>
-                                <span class="theme-swatch-strip"><i style="background:${th.surface1};"></i><i style="background:${th.accent};"></i><i style="background:${th.accent2};"></i></span>
+                                <span class="theme-swatch-strip"><i style="background:${th.surface1};"></i><i style="background:${th.surface2};"></i><i style="background:${th.accent};"></i><i style="background:${th.accent2};"></i></span>
                             </div>
                             <div class="theme-card-meta">
                                 <span class="theme-card-tag">${escHtml(th.styleTag || th.mode)}</span>
@@ -4178,11 +4702,11 @@ function buildSettingsSectionHtml() {
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;">
                 <div>
                     <div class="sp-title">Widget Stüdyosu · 6 Endüstriyel Arketip</div>
-                    <div class="sp-sub">Alt Dock'a modüller ekleyin veya canlı önizlemeli 20 Pro masaüstü widget'ını kurun (Widget üzerinde sağ tık → anında stil denetçisi).</div>
+                    <div class="sp-sub">Alt Dock'a modüller ekleyin veya canlı önizlemeli ${WIDGET_GALLERY_ITEMS.length} Pro masaüstü widget'ını kurun (Widget üzerinde sağ tık → anında stil denetçisi).</div>
                 </div>
                 <div class="seg-group">
-                    <button class="seg-btn ${widgetStudioTab==='dock'?'active':''}" onclick="widgetStudioTab='dock';lastExpandedSig='';renderAll();">Alt Dock (${activeDockCnt}/14)</button>
-                    <button class="seg-btn ${widgetStudioTab==='desktop'?'active':''}" onclick="widgetStudioTab='desktop';lastExpandedSig='';renderAll();">Masaüstü (${activeW.length}/20)</button>
+                    <button class="seg-btn ${widgetStudioTab==='dock'?'active':''}" onclick="widgetStudioTab='dock';lastExpandedSig='';renderAll();">Alt Dock (${activeDockCnt}/${DOCK_WIDGET_CATALOG.length})</button>
+                    <button class="seg-btn ${widgetStudioTab==='desktop'?'active':''}" onclick="widgetStudioTab='desktop';lastExpandedSig='';renderAll();">Masaüstü (${activeW.length}/${WIDGET_GALLERY_ITEMS.length})</button>
                 </div>
             </div>
             ${widgetStudioTab === 'dock' ? `
@@ -4263,25 +4787,35 @@ function buildSettingsSectionHtml() {
                     </div>
                 </div>
                 <div class="sp-group">
-                    <div class="sp-group-title"><span>1-Tık Widget Paketleri (5 Küratörlü Düzen)</span></div>
+                    <div class="sp-group-title"><span>1-Tık Widget Paketleri (6 Küratörlü Masaüstü Paketi)</span></div>
                     <div class="bundle-row">
+                        <button class="bundle-btn" onclick="send('applyWidgetPreset',{preset:'atelier-showcase'})">
+                            <div class="bundle-wire"><span class="bundle-wire-pill">Günlük Özet</span><span class="bundle-wire-pill">Stüdyo Medya</span><span class="bundle-wire-pill">Pil Halka</span></div>
+                            <strong>Atelier Showcase (Önerilen)</strong>
+                            <span>Günlük Özet, Stüdyo Medya, Editoryal Saat ve Çoklu Pil Halkası</span>
+                        </button>
                         <button class="bundle-btn" onclick="send('applyWidgetPreset',{preset:'minimal-studio'})">
+                            <div class="bundle-wire"><span class="bundle-wire-pill">Günlük Özet</span><span class="bundle-wire-pill">Editoryal Saat</span><span class="bundle-wire-pill">Medya</span></div>
                             <strong>Minimal Stüdyo</strong>
-                            <span>İsviçre saat, hava tahmin şeridi ve medya barı</span>
+                            <span>Günlük Özet, Editoryal Saat ve sınırız medya şeridi</span>
                         </button>
                         <button class="bundle-btn" onclick="send('applyWidgetPreset',{preset:'dev-cockpit'})">
+                            <div class="bundle-wire"><span class="bundle-wire-pill">Kokpit CPU/RAM</span><span class="bundle-wire-pill">AI Kota</span><span class="bundle-wire-pill">Dünya Saati</span></div>
                             <strong>Geliştirici Kokpiti</strong>
-                            <span>Dev Hex saat, osiloskop, AI kotası ve yerel AI</span>
+                            <span>Sistem Kokpiti, AI Kota Stüdyosu ve 4 şehirli Dünya Saati</span>
                         </button>
                         <button class="bundle-btn" onclick="send('applyWidgetPreset',{preset:'productivity'})">
+                            <div class="bundle-wire"><span class="bundle-wire-pill">Günlük Özet</span><span class="bundle-wire-pill">Odak</span><span class="bundle-wire-pill">Görevler</span></div>
                             <strong>Üretkenlik Stüdyosu</strong>
-                            <span>Odak halkaları, pomodoro, görevler, takvim ve notlar</span>
+                            <span>Günlük Özet, Pomodoro odak sayacı, görev listesi ve takvim</span>
                         </button>
                         <button class="bundle-btn" onclick="send('applyWidgetPreset',{preset:'media-lounge'})">
+                            <div class="bundle-wire"><span class="bundle-wire-pill">Studio Strip</span><span class="bundle-wire-pill">Poster</span><span class="bundle-wire-pill">Mikser</span></div>
                             <strong>Medya Salonu</strong>
-                            <span>Stüdyo medya şeridi, poster çalar, mikser ve dünya saati</span>
+                            <span>Stüdyo medya şeridi, poster çalar, mikser ve çoklu pil halkası</span>
                         </button>
-                        <button class="bundle-btn" style="grid-column:span 2;" onclick="send('applyWidgetPreset',{preset:'clean'})">
+                        <button class="bundle-btn" onclick="send('applyWidgetPreset',{preset:'clean'})">
+                            <div class="bundle-wire"><span style="font-size:9px;color:var(--text-2);opacity:0.75;">Saf Masaüstü Tuvali · 0 Widget</span></div>
                             <strong>Temiz Masaüstü</strong>
                             <span>Tüm masaüstü widget'larını kaldırıp saf duvar kağıdına geç</span>
                         </button>
@@ -4374,60 +4908,24 @@ function buildSettingsSectionHtml() {
 
     if (settingsSection === 'island') {
         const cm = state.crownVisibilityMode || 'Dynamic';
-        const rawIsl = state.islandStyle || 'liquid-pill';
-        const islSty = rawIsl === 'compact-notch' ? 'mac-notch' : rawIsl;
+        const islSty = normalizeIslandStyle(state.islandStyle);
         const idleM = state.islandIdleMode || 'media-ambient';
         const notifMode = state.notificationMode || 'windows-native';
-        const islCards = [
-            {
-                id: 'liquid-pill',
-                name: 'Sıvı Ada + İkiz Kanat',
-                desc: 'Yüzen cam kapsül; müzik veya odak aktifken sağda akıllı kanat açılır.',
-                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="48" y="13" width="64" height="16" rx="8" fill="var(--accent-1)" opacity="0.85"/><rect x="118" y="13" width="22" height="16" rx="8" fill="currentColor" opacity="0.22" stroke="currentColor" stroke-opacity="0.35" stroke-width="0.8"/></svg>`
-            },
-            {
-                id: 'mac-notch',
-                name: 'MacBook / iPhone Çentik',
-                desc: 'Ekranın üstüne kulaklı ters kıvrımlarla oturan mat obsidian çentik.',
-                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><path d="M52 0 H128 Q122 0 120 7 L118 16 Q116 20 110 20 H70 Q64 20 62 16 L60 7 Q58 0 52 0 Z" fill="currentColor" opacity="0.28" stroke="var(--accent-1)" stroke-opacity="0.65" stroke-width="0.9"/><circle cx="90" cy="10" r="2.2" fill="var(--accent-1)"/></svg>`
-            },
-            {
-                id: 'edge-horizon',
-                name: 'Ufuk Çizgisi (Oto-Gizli)',
-                desc: 'Boştayken üst kenarda ince 4px çizgi; fare gelince tam Komuta Sahnesi açılır.',
-                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="44" y="3" width="92" height="4" rx="2" fill="var(--accent-1)"/><rect x="52" y="16" width="76" height="14" rx="7" fill="currentColor" opacity="0.16" stroke="var(--accent-1)" stroke-opacity="0.45" stroke-width="0.8"/></svg>`
-            },
-            {
-                id: 'hardware-pod',
-                name: 'Donanım Pod (Matrix)',
-                desc: 'Dot-matrix mat gövde, kırmızı durum LED’i ve monospaced telemetri.',
-                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="50" y="12" width="80" height="18" rx="5" fill="currentColor" opacity="0.18" stroke="currentColor" stroke-opacity="0.55" stroke-width="1"/><circle cx="60" cy="21" r="2.5" fill="#EF4444"/><rect x="70" y="19" width="46" height="4" rx="1" fill="currentColor" opacity="0.5"/></svg>`
-            },
-            {
-                id: 'glass-bar',
-                name: 'Geniş Canlı Durum Barı',
-                desc: '344px geniş kapsül: üzerine gelmeden medya, CPU/odak ve saat görünür.',
-                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><rect x="18" y="12" width="144" height="18" rx="8" fill="currentColor" opacity="0.16" stroke="var(--accent-1)" stroke-opacity="0.5" stroke-width="0.9"/><rect x="28" y="18" width="42" height="6" rx="3" fill="var(--accent-1)" opacity="0.75"/><rect x="78" y="18" width="24" height="6" rx="3" fill="currentColor" opacity="0.35"/><rect x="114" y="18" width="38" height="6" rx="3" fill="currentColor" opacity="0.45"/></svg>`
-            },
-            {
-                id: 'orbital-halo',
-                name: 'Yörünge Küresi (Orb)',
-                desc: '34px minimal cam küre; müzikte albüm kapağı döner, dokununca sahneye açılır.',
-                svg: `<svg width="100%" height="42" viewBox="0 0 180 42"><circle cx="90" cy="21" r="12" fill="currentColor" opacity="0.18" stroke="var(--accent-1)" stroke-width="1.4"/><circle cx="90" cy="21" r="5" fill="var(--accent-1)" opacity="0.85"/></svg>`
-            }
-        ];
         return `
             <div>
-                <div class="sp-title">Dinamik Ada Stüdyosu (Aurora Crown)</div>
-                <div class="sp-sub">Üzerine gelince anında 4 sekmeli Canlı Komuta Sahnesi açılır. Ses kontrolü Alt Dock’a bırakılmıştır; çakışmasız Windows bildirimleri varsayılandır.</div>
+                <div class="sp-title">Dinamik Ada Stüdyosu (8 Amiral Tasarım)</div>
+                <div class="sp-sub">Üzerine gelince 4 sekmeli Canlı Komuta Sahnesi ve 1-tık Ada Tasarımı değiştirici açılır. Çakışmasız Windows bildirimleri varsayılandır.</div>
             </div>
             <div class="sp-group">
-                <div class="sp-group-title"><span>Ada Tasarım Tarzı (6 Farklı Form Faktörü)</span></div>
+                <div class="sp-group-title">
+                    <span>8 Dinamik Ada Form Faktörü</span>
+                    <span style="color:var(--accent-1);">${escHtml(ISLAND_DESIGN_CATALOG.find(x => x.id === islSty)?.name || 'Sıvı Kapsül')}</span>
+                </div>
                 <div class="isl-grid">
-                    ${islCards.map(ic => `
-                        <button class="arch-card ${islSty===ic.id?'active':''}" onclick="send('setIslandConfig',{style:'${ic.id}'})">
+                    ${ISLAND_DESIGN_CATALOG.map(ic => `
+                        <button class="arch-card ${islSty===ic.id?'active':''}" onclick="setIslandStyleLive('${ic.id}')">
                             <div class="arch-diag">${ic.svg}</div>
-                            <strong>${ic.name}</strong>
+                            <strong>${ic.short}</strong>
                             <span>${ic.desc}</span>
                         </button>
                     `).join('')}
