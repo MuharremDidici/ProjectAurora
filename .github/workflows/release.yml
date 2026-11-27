@@ -7,13 +7,13 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Yayınlanacak SemVer sürümü (ör. 8.1.0)'
+        description: 'Yayınlanacak SemVer sürümü (ör. 8.2.0)'
         required: true
-        default: '8.1.0'
+        default: '8.2.0'
       release_notes:
         description: 'Sürüm notları (isteğe bağlı)'
         required: false
-        default: 'Project Aurora v8.1.0: Çakışmasız adaptif Dock motoru, tepsi rozet/ok ayrımı, gerçek çerçevesiz clean widgetlar, 8 özgün Dock ve 8 Dinamik Ada stili + Tasarım Galerisi, Daily Brief / Multi-Ring Battery / Cockpit Telemetry / Atmospheric Weather widgetları ve atelier-showcase şablonu.'
+        default: 'Project Aurora v8.2.0: Saat-hizalı boşta CPU/RAM optimizasyonu, tam sıfır üretim unwrap/panic sertleştirmesi, 26 benzersiz temada isim netleştirmesi, Türkçe mojibake otomatik onarımı ve tam güvenli arayüz kaçış katmanı.'
 
 permissions:
   contents: write

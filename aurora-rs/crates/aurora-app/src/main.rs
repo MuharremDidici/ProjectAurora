@@ -843,6 +843,7 @@ fn run_shell_host(
     let mut last_dock_json: HashMap<String, String> = HashMap::new();
     let mut trimmed_boot_ws = false;
     let mut trimmed_settled_ws = false;
+    let mut last_idle_trim = Instant::now();
     let mut pending_open_studio = open_studio;
     let mut pending_open_tour =
         !state.prefs.onboarding_completed && smoke_exit_secs.is_none() && !open_studio;
@@ -2040,8 +2041,8 @@ fn run_shell_host(
             }
         }
 
-        // 8. Refresh Open Window Catalog & Fullscreen/SmartDodge State (on hook event or 1.4s fallback)
-        if catalog_changed || last_window_scan.elapsed() >= Duration::from_millis(1400) {
+        // 8. Refresh Open Window Catalog & Fullscreen/SmartDodge State (on hook event or 3.2s fallback)
+        if catalog_changed || last_window_scan.elapsed() >= Duration::from_millis(3200) {
             last_window_scan = Instant::now();
             let mut own_hwnds: HashSet<isize> = HashSet::new();
             own_hwnds.insert(crown.hwnd.0 as isize);
@@ -2156,7 +2157,7 @@ fn run_shell_host(
             peek_tray_until_ms = 0;
             needs_taskbar_sync = true;
         }
-        if last_tb_guard.elapsed() >= Duration::from_millis(1200) {
+        if last_tb_guard.elapsed() >= Duration::from_millis(2500) {
             last_tb_guard = Instant::now();
             if state.prefs.hide_native_taskbar_while_active && peek_tray_until_ms == 0 {
                 appbar.enforce_native_taskbar_suppressed(None);
@@ -2306,6 +2307,16 @@ fn run_shell_host(
                 trim_process_working_set();
             } else if !trimmed_settled_ws && now_ms >= 35000 {
                 trimmed_settled_ws = true;
+                last_idle_trim = Instant::now();
+                trim_process_working_set();
+            } else if trimmed_settled_ws
+                && transient_overlay.is_none()
+                && !crown.is_interactive()
+                && !state.crown_stage_open
+                && state.dock_popover_open_mons.is_empty()
+                && last_idle_trim.elapsed() >= Duration::from_secs(1800)
+            {
+                last_idle_trim = Instant::now();
                 trim_process_working_set();
             }
         }
@@ -2518,7 +2529,7 @@ fn run_shell_host(
             }
         }
 
-        // 14. Zero-CPU Kernel Wait until next Win32 message / WM_AURORA_WAKE / timer
+        // 14. Clock-Aligned Zero-CPU Kernel Wait until next Win32 message / WM_AURORA_WAKE / timer
         let docks_hydrating = dock_ui_ready.len() < docks.len()
             || (widgets_surface.is_some() && !widgets_ui_ready);
         let wait_ms = if transient_overlay.is_some() {
@@ -2527,8 +2538,11 @@ fn run_shell_host(
             50
         } else if dock_mode == "AutoHide" || dock_mode == "SmartDodge" {
             160
+        } else if state.prefs.show_clock_seconds {
+            let sub_ms = chrono::Local::now().timestamp_subsec_millis() % 1000;
+            1015u32.saturating_sub(sub_ms).clamp(200, 1015)
         } else {
-            400
+            1000
         };
         unsafe {
             let _ = MsgWaitForMultipleObjectsEx(None, wait_ms, QS_ALLINPUT, MWMO_INPUTAVAILABLE);
@@ -2811,7 +2825,15 @@ fn spawn_background_workers(
                 .into_iter()
                 .map(|w| w.process_name.to_ascii_lowercase())
                 .collect();
-            let _ = reply_tx.send(BgReply::TrayApps(query_background_tray_apps(&visible_procs)));
+            let tray_sig = |items: &[aurora_core::BackgroundTrayApp]| -> Vec<(String, String, String, u32)> {
+                items
+                    .iter()
+                    .map(|t| (t.id.clone(), t.name.clone(), t.executable_path.clone(), t.process_id))
+                    .collect()
+            };
+            let init_tray = query_background_tray_apps(&visible_procs);
+            let mut last_tray_sig = tray_sig(&init_tray);
+            let _ = reply_tx.send(BgReply::TrayApps(init_tray));
             post_wake_ui(wake_hwnd);
 
             // Full UWP + Win32 + 48 Settings catalog with 32x32 ARGB PNG icons
@@ -2836,6 +2858,7 @@ fn spawn_background_workers(
             let mut last_metrics_snap: Option<SystemMetricsSnapshot> = None;
             let mut last_brightness_snap: Option<Vec<ExternalMonitorBrightness>> = None;
             let mut last_metrics_push = Instant::now() - Duration::from_secs(10);
+            let mut last_privacy_tick = Instant::now() - Duration::from_secs(5);
             let mut last_audio_tick = Instant::now();
             let mut last_tray_tick = Instant::now();
             let mut last_bt_tick = Instant::now();
@@ -2861,11 +2884,22 @@ fn spawn_background_workers(
                     should_wake = true;
                 }
 
-                let privacy_snap = query_privacy_snapshot();
-                if last_privacy_snap.as_ref() != Some(&privacy_snap) {
-                    last_privacy_snap = Some(privacy_snap.clone());
-                    let _ = reply_tx.send(BgReply::Privacy(privacy_snap));
-                    should_wake = true;
+                let priv_interval = if last_privacy_snap
+                    .as_ref()
+                    .is_some_and(|p| p.camera_active || p.mic_active)
+                {
+                    Duration::from_millis(1500)
+                } else {
+                    Duration::from_secs(3)
+                };
+                if last_privacy_tick.elapsed() >= priv_interval {
+                    last_privacy_tick = Instant::now();
+                    let privacy_snap = query_privacy_snapshot();
+                    if last_privacy_snap.as_ref() != Some(&privacy_snap) {
+                        last_privacy_snap = Some(privacy_snap.clone());
+                        let _ = reply_tx.send(BgReply::Privacy(privacy_snap));
+                        should_wake = true;
+                    }
                 }
 
                 let cur_metrics = metrics.sample(true);
@@ -2887,16 +2921,21 @@ fn spawn_background_workers(
                     }
                 }
 
-                // 12s loop: System Tray background apps (excluding only apps with visible windows!)
-                if last_tray_tick.elapsed() >= Duration::from_secs(12) {
+                // 20s loop: System Tray background apps (change-filtered!)
+                if last_tray_tick.elapsed() >= Duration::from_secs(20) {
                     last_tray_tick = Instant::now();
                     let visible_procs: HashSet<String> =
                         enumerate_open_windows(&HashSet::new(), &HashSet::new())
                             .into_iter()
                             .map(|w| w.process_name.to_ascii_lowercase())
                             .collect();
-                    let _ = reply_tx.send(BgReply::TrayApps(query_background_tray_apps(&visible_procs)));
-                    should_wake = true;
+                    let fresh_tray = query_background_tray_apps(&visible_procs);
+                    let fresh_sig = tray_sig(&fresh_tray);
+                    if fresh_sig != last_tray_sig {
+                        last_tray_sig = fresh_sig;
+                        let _ = reply_tx.send(BgReply::TrayApps(fresh_tray));
+                        should_wake = true;
+                    }
                 }
 
                 // 8s loop: Live Connected Bluetooth Devices & Batteries (sub-3ms cfgmgr32 scan, change-filtered!)

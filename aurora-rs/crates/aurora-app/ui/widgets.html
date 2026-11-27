@@ -1219,7 +1219,10 @@ let inspectorPos = { x: 0, y: 0 };
 const marketConvState = { amount: '100', pair: 'usd-try' };
 
 function escHtml(s) {
-    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function escJsAttr(s) {
+    return String(s ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\r?\n/g, ' ');
 }
 function hexToRgb(hex) {
     const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '');
@@ -1713,7 +1716,7 @@ function buildWidgetInner(w) {
                     ${topTasks.length === 0
                         ? `<div class="w-sub" style="padding:4px 2px;">Bugün için bekleyen görev yok.</div>`
                         : topTasks.map(t => `
-                            <div class="db-task" onclick="send('toggleTodo',{id:'${escHtml(t.id)}'})">
+                            <div class="db-task" onclick="send('toggleTodo',{id:'${escJsAttr(t.id)}'})">
                                 <span class="td-chk ${t.done ? 'done' : ''}">${t.done ? IC.check.replace('<svg ','<svg width="10" height="10" ') : ''}</span>
                                 <span class="td-txt ${t.done ? 'done' : ''}">${escHtml(t.text)}</span>
                             </div>
@@ -2449,15 +2452,15 @@ function buildWidgetInner(w) {
             <div class="td-inp-row" onpointerdown="event.stopPropagation()">
                 <input class="td-inp" id="tdInp-${escHtml(w.id)}" placeholder="Yeni görev ekle..."
                     onfocus="send('requestWidgetFocus')" onblur="send('releaseWidgetFocus')"
-                    onkeydown="if(event.key==='Enter')submitTodo('${escHtml(w.id)}')"/>
-                <button class="w-btn primary" onclick="submitTodo('${escHtml(w.id)}')">Ekle</button>
+                    onkeydown="if(event.key==='Enter')submitTodo('${escJsAttr(w.id)}')"/>
+                <button class="w-btn primary" onclick="submitTodo('${escJsAttr(w.id)}')">Ekle</button>
             </div>
             <div class="td-list" onpointerdown="event.stopPropagation()">
                 ${todos.length === 0 ? `<div class="w-sub" style="padding:8px 2px;">Henüz görev yok.</div>` : todos.slice(0, 6).map(t => `
                     <div class="td-row">
-                        <button class="td-chk ${t.done ? 'done' : ''}" onclick="send('toggleTodo',{id:'${escHtml(t.id)}'})">${t.done ? IC.check.replace('<svg ','<svg width="10" height="10" ') : ''}</button>
-                        <span class="td-txt ${t.done ? 'done' : ''}" onclick="send('toggleTodo',{id:'${escHtml(t.id)}'})">${escHtml(t.text)}</span>
-                        <button class="w-ibtn danger" style="width:20px;height:20px;" onclick="send('removeTodo',{id:'${escHtml(t.id)}'})">${IC.close}</button>
+                        <button class="td-chk ${t.done ? 'done' : ''}" onclick="send('toggleTodo',{id:'${escJsAttr(t.id)}'})">${t.done ? IC.check.replace('<svg ','<svg width="10" height="10" ') : ''}</button>
+                        <span class="td-txt ${t.done ? 'done' : ''}" onclick="send('toggleTodo',{id:'${escJsAttr(t.id)}'})">${escHtml(t.text)}</span>
+                        <button class="w-ibtn danger" style="width:20px;height:20px;" onclick="send('removeTodo',{id:'${escJsAttr(t.id)}'})">${IC.close}</button>
                     </div>
                 `).join('')}
             </div>
@@ -2605,7 +2608,7 @@ function buildWidgetInner(w) {
             `).join('')}
             ${outs.length > 1 ? `
                 <div class="mix-outs" onpointerdown="event.stopPropagation()">
-                    ${outs.map(o => `<button class="mix-out-chip ${o.isDefault ? 'active' : ''}" onclick="send('setAudioOutputDevice',{id:'${escHtml(o.id)}'})" title="${escHtml(o.fullName || o.name)}">${escHtml(o.name)}</button>`).join('')}
+                    ${outs.map(o => `<button class="mix-out-chip ${o.isDefault ? 'active' : ''}" onclick="send('setAudioOutputDevice',{id:'${escJsAttr(o.id)}'})" title="${escHtml(o.fullName || o.name)}">${escHtml(o.name)}</button>`).join('')}
                 </div>
             ` : `<div class="w-sub" style="margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(aud.device || '')}</div>`}
         `;

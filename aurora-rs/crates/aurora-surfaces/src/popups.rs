@@ -295,7 +295,7 @@ fn paint_calendar_popup(
     }
 
     // Calendar day cells
-    let first = NaiveDate::from_ymd_opt(state.calendar_year, state.calendar_month, 1).unwrap_or_else(|| NaiveDate::from_ymd_opt(2026, 1, 1).unwrap());
+    let first = NaiveDate::from_ymd_opt(state.calendar_year, state.calendar_month, 1).unwrap_or(NaiveDate::MIN);
     let start_col = first.weekday().num_days_from_monday() as usize;
     let next_m = if state.calendar_month == 12 {
         NaiveDate::from_ymd_opt(state.calendar_year + 1, 1, 1)

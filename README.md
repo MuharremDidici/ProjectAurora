@@ -1,6 +1,6 @@
 <div align="center">
   <img src="assets/aurora-icon.png" alt="Project Aurora Logo" width="112" height="112" />
-  <h1>✦ Project Aurora v8.1</h1>
+  <h1>✦ Project Aurora v8.2</h1>
   <p><strong>Windows 11 için Saf Rust Motorlu Aurora OS Studio, Masaüstü Widget Motoru &amp; Kristal Görev Çubuğu</strong></p>
   <p>
     <a href="https://github.com/MuharremDidici/ProjectAurora/releases/latest">
@@ -14,7 +14,7 @@
   </p>
 </div>
 
-**Project Aurora v8.1**, Windows 11 için **.NET 10 ve harici DLL bağımlılığı olmadan** **Saf Rust Win32 / Direct2D motoru + tek paylaşımlı WebView2 renderer** üzerinde geliştirilmiş; **yönetici izni (UAC) gerektirmeyen**, `explorer.exe`'ye dokunmayan veya DLL enjekte etmeyen, **çoklu monitör + karma DPI** destekli yeni nesil masaüstü kabuğudur.
+**Project Aurora v8.2**, Windows 11 için **.NET 10 ve harici DLL bağımlılığı olmadan** **Saf Rust Win32 / Direct2D motoru + tek paylaşımlı WebView2 renderer** üzerinde geliştirilmiş; **yönetici izni (UAC) gerektirmeyen**, `explorer.exe`'ye dokunmayan veya DLL enjekte etmeyen, **çoklu monitör + karma DPI** destekli yeni nesil masaüstü kabuğudur.
 
 ---
 
@@ -22,18 +22,22 @@
 
 *Ölçüm ortamı: Windows 11 x64 (`2560×1440 @ 125%` DPI), saniyeli saat, canlı pil/Bluetooth, bildirim köprüsü ve olay-tabanlı pano aktif.*
 
-| Metrik | `v2.5.1` (C# .NET 10 + Çoklu WebView2) | **`v8.1` (Saf Rust + Tek Paylaşımlı WebView2)** | İyileşme |
+| Metrik | `v2.5.1` (C# .NET 10 + Çoklu WebView2) | **`v8.2` (Saf Rust + Tek Paylaşımlı WebView2)** | İyileşme |
 | --- | ---: | ---: | ---: |
 | **Çalışma Zamanı / Harici DLL** | .NET 10 (~198 MB, 220+ DLL) | **Saf Rust (1 `.exe`, 0 harici DLL)** | **%100 Bağımsız** |
 | **Toplam WorkingSet RAM (Boşta)** | 490.1 MB | **53.0 MB** (`aurora.exe` 8.0 MB) | **9.2× Daha Düşük** |
 | **Boşta CPU (Saniyeli Saat Açık)** | %0.71 | **%0.052** (`aurora.exe` %0.000) | **13.6× Daha Düşük** |
 | **Arka Plan Pano & Bildirim G/Ç** | Sürekli polling | **`WM_CLIPBOARDUPDATE` + `mtime` kapılı + delta ikon IPC** | **%90+ Daha Hafif IPC** |
 | **Soğuk Arayüz Hazır Süresi** | ~900 ms | **Crown 40 ms · Dock 72 ms** | **12× Daha Hızlı** |
-| **Tek Dosya Kurulum Paketi** | 92.4 MB | **3.65 MB** (`zstd -19` atomik yükseltme) | **25× Daha Küçük** |
+| **Tek Dosya Kurulum Paketi** | 92.4 MB | **3.73 MB** (`zstd -19` atomik yükseltme) | **25× Daha Küçük** |
 
 ---
 
-## v8.1 Başlıca Yetenekler
+## v8.2 Başlıca Yetenekler
+
+- **Boşta CPU/RAM Optimizasyonu & Sıfır-Hata Sertleştirme (`v8.2.0`):**
+  - Saat-hizalı boşta çekirdek bekleme (`200–1015 ms`), `20s` imza fark-filtreli tepsi yoklaması, adaptif gizlilik yoklaması, 30 dakikada bir periyodik bellek kırpma ve tüm 8 crate'te `0` üretim `.unwrap()`/`panic!()`.
+  - 26 benzersiz temada isim netleştirmesi (`Arktik Gece`, `Bordo Kadife`), `widgets_layout.json` Türkçe mojibake otomatik onarımı (`Yeni YÄ±l` → `Yeni Yıl`) ve satır içi JS kaçış güvenliği (`escJsAttr`).
 
 - **Çakışmasız Dock Motoru, 8 Dock/Ada Stili & Amiral Gemisi Widget'lar (`v8.1.0`):**
   - Adaptif `fitDockZones()` yerleşim motoru, yan yana tepsi rozet/ok düzeni, gerçek kenarlıksız `clean` Dock widget'ları, `quick-tools` ve 1 tıkla Dock Tasarım seçicisi.
@@ -108,12 +112,12 @@
 
 ---
 
-## Tek Tık Kurulum & Otomatik Yükseltme (Windows 11 x64 — 3.65 MB)
+## Tek Tık Kurulum & Otomatik Yükseltme (Windows 11 x64 — 3.73 MB)
 
-1. [Releases (Son Sürüm)](https://github.com/MuharremDidici/ProjectAurora/releases/latest) sayfasından **`Aurora-Kurulum-v8.1.0-x64.exe`** dosyasını indirin.
+1. [Releases (Son Sürüm)](https://github.com/MuharremDidici/ProjectAurora/releases/latest) sayfasından **`Aurora-Kurulum-v8.2.0-x64.exe`** dosyasını indirin.
 2. Çift tıklayıp **"Kurulumu Başlat"** butonuna basın — **Yönetici izni (UAC) veya .NET kurulumu gerekmez** (~2 saniyede kurulur).
 3. **Eski Sürümlerden (`v2.x` .NET ve `v3.x+` Rust) Yükseltme:**
-   - Mevcut kurulumlar uygulama içi **Güncelle** butonuyla `v8.1.0`'ı SHA-256 doğrulamalı olarak otomatik indirip kurar (`--update` ve `--silent` tam desteklidir).
+   - Mevcut kurulumlar uygulama içi **Güncelle** butonuyla `v8.2.0`'ı SHA-256 doğrulamalı olarak otomatik indirip kurar (`--update` ve `--silent` tam desteklidir).
    - `%LOCALAPPDATA%\ProjectAurora\data\` içindeki tüm ayarlarınız, sabit uygulamalarınız, widget yerleşiminiz, pano kasası ve ajandanız **%100 korunur**.
 
 ---
@@ -129,7 +133,7 @@ aurora-rs/ (8 Crate — Rust Stable + Win32 Native + Direct2D/DirectComposition 
 ├── crates/aurora-win32/     # Native AppBar, CoreAudio, DDC/CI EDID, Live Bluetooth, GSMTC, NotifyIconSettings, OCR/GIF/QR
 ├── crates/aurora-surfaces/  # Yüzey durum modelleri, veri köprüsü ve çoklu tema demo düzeni
 ├── crates/aurora-app/       # Hibrit Rust konağı (`aurora.exe`), tek paylaşımlı WebView2, Watchdog, Crown/Dock/Widgets UI
-└── crates/aurora-setup/     # ~3.65 MB zstd-19 gömülü atomik retry sıfır-UAC kurulum & kaldırma sihirbazı
+└── crates/aurora-setup/     # ~3.73 MB zstd-19 gömülü atomik retry sıfır-UAC kurulum & kaldırma sihirbazı
 ```
 
 ---
@@ -142,7 +146,7 @@ cargo clippy --manifest-path .\aurora-rs\Cargo.toml --workspace --all-targets --
 cargo test --manifest-path .\aurora-rs\Cargo.toml --workspace
 
 # Tek dosya zstd-19 kurulum paketi ve SHA-256 manifesti (dist/)
-.\Build-Installer.ps1 -Version "8.1.0"
+.\Build-Installer.ps1 -Version "8.2.0"
 ```
 
 Diğer belgeler: [Sürüm Notları](RELEASE_NOTES.md) · [Mimari Özeti](docs/Architecture/Architecture_Overview.md) · [Kurulum & Dağıtım](docs/Product/Tek_Tik_Kurulum_ve_Dagitim_Kilavuzu.md) · [Kod İmzalama](docs/Kod-Imzalama-ve-Dagitim.md) · [Görev Çubuğu Kurtarma](docs/QA/Native_Taskbar_Recovery_Guide.md) · [ADR-013 Saf Rust](docs/ADR/ADR-013-Pure-Rust-Hybrid-Shell-Evolution.md)

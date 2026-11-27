@@ -1,5 +1,13 @@
 # Project Aurora — Sürüm Notları
 
+## v8.2.0
+> Summary: Saat-hizalı boşta çekirdek bekleme ve periyodik çalışma seti kırpma ile düşük CPU/RAM yükü, fark-filtreli sistem tepsisi ve adaptif gizlilik yoklaması, üretim kodunda sıfır `.unwrap()`, `nordic-frost` / `rose-velvet` benzersiz tema adları, Türkçe mojibake otomatik onarımı ve satır içi JS kaçış güvenliği.
+
+### İyileştirmeler
+- **24 Saatlik Boşta CPU & Bellek Optimizasyonu (`main.rs`):** Boşta ana döngü bekleyişi saniye çizgisine hizalanarak (`200–1015 ms`) uyandırma sayısı azaltıldı; arka plan tepsi (`TrayApps`) taraması `20s` + imza fark filtrelemesine, gizlilik sensörü yoklaması boşta `3s` aralığına, görev çubuğu ve pencere tarama yedekleri `2.5s`/`3.2s` aralığına çekildi ve 30 dakikada bir boşta bellek kırpması (`trim_process_working_set`) eklendi.
+- **Sıfır Üretim `.unwrap()` & Tema / Veri Onarımı (`popups.rs`, `tokens.rs`, `widgets_store.rs`):** Son üretim `.unwrap()` kaldırıldı (`NaiveDate::MIN` fallback); 26 temanın tamamında benzersiz adlar (`Arktik Gece`, `Bordo Kadife`) sağlandı; `widgets_layout.json` yüklemesinde çift kodlanmış Türkçe karakterler (`Yeni YÄ±l` → `Yeni Yıl`) otomatik onarılır hale getirildi.
+- **Arayüz CSS & JS Güvenlik Cilası (`dock.html`, `widgets.html`, `crown.html`):** Tanımsız `--font-ui` değişkeni `--font` olarak düzeltildi; `widgets.html` üzerinde dinamik kimlik ve ses cihazı seçimlerinde `escJsAttr` + tam `escHtml` kaçışı uygulandı.
+
 ## v8.1.0
 > Summary: Çakışmasız adaptif Dock motoru (`fitDockZones`), tepsi rozet/ok ayrımı, gerçek çerçevesiz `clean` widget görünümü, 8 özgün Dock stili, 8 Dinamik Ada stili + Ayarlar Tasarım Galerisi, Daily Brief / Multi-Ring Battery / Cockpit Telemetry / Atmospheric Weather amiral gemisi widget'ları ve `atelier-showcase` şablonu.
 

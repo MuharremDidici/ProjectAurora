@@ -1114,10 +1114,10 @@ pub fn built_in_themes() -> Vec<ThemeTokens> {
             radius_btn: 10.0,
             shadow_intensity: 0.20,
         },
-        // 23. Nordik Buz — Deep Arctic Night Glass & Glacier Ice (Dark)
+        // 23. Arktik Gece — Deep Arctic Night Glass & Glacier Ice (Dark)
         ThemeTokens {
             id: "nordic-frost".into(),
-            display_name: "Nordik Buz".into(),
+            display_name: "Arktik Gece".into(),
             description: "Kutup gecesi buz camı, berrak buzul mavisi vurgular ve sakin kuzey derinliği.".into(),
             color_mode: ColorMode::Dark,
             visual_style: VisualStyle::LiquidGlass,
@@ -1146,11 +1146,11 @@ pub fn built_in_themes() -> Vec<ThemeTokens> {
             radius_btn: 12.0,
             shadow_intensity: 0.46,
         },
-        // 24. Gül Kadife — Plush Plum Velvet & Rose Quartz (Dark)
+        // 24. Bordo Kadife — Plush Plum Velvet & Rose Quartz (Dark)
         ThemeTokens {
             id: "rose-velvet".into(),
-            display_name: "Gül Kadife".into(),
-            description: "Derin gül kadife yüzeyi, yumuşak pembe kuvars vurgular ve sıcak akşam parıltısı.".into(),
+            display_name: "Bordo Kadife".into(),
+            description: "Derin bordo kadife yüzeyi, yumuşak pembe kuvars vurgular ve sıcak akşam parıltısı.".into(),
             color_mode: ColorMode::Dark,
             visual_style: VisualStyle::SpatialVision,
             colors: ThemePalette {
@@ -1328,6 +1328,18 @@ mod tests {
             assert!(
                 themes.iter().any(|t| t.id == id),
                 "Missing required theme ID: {id}"
+            );
+        }
+
+        let mut seen_ids = std::collections::HashSet::new();
+        let mut seen_names = std::collections::HashSet::new();
+        for theme in &themes {
+            assert!(seen_ids.insert(theme.id.as_str()), "Duplicate theme id: {}", theme.id);
+            assert!(
+                seen_names.insert(theme.display_name.as_str()),
+                "Duplicate theme display_name: {} ({})",
+                theme.display_name,
+                theme.id
             );
         }
 

@@ -123,6 +123,18 @@ impl WidgetsLayoutStore {
                 upgraded = true;
             }
         }
+        let healed_cd = heal_turkish_mojibake(&doc.countdown.title);
+        if healed_cd != doc.countdown.title {
+            doc.countdown.title = healed_cd;
+            upgraded = true;
+        }
+        for todo in &mut doc.todos {
+            let healed_t = heal_turkish_mojibake(&todo.text);
+            if healed_t != todo.text {
+                todo.text = healed_t;
+                upgraded = true;
+            }
+        }
         if upgraded {
             self.save(&doc);
         }
@@ -134,6 +146,32 @@ impl WidgetsLayoutStore {
             let _ = atomic_write_bytes(&self.path, &bytes);
         }
     }
+}
+
+pub fn heal_turkish_mojibake(s: &str) -> String {
+    if !s.contains('Ä') && !s.contains('Ã') && !s.contains('Å') {
+        return s.to_string();
+    }
+    let mut out = s.to_string();
+    for (bad, good) in [
+        ("Ä±", "ı"),
+        ("Ä°", "İ"),
+        ("Ã§", "ç"),
+        ("Ã‡", "Ç"),
+        ("ÅŸ", "ş"),
+        ("Åž", "Ş"),
+        ("ÄŸ", "ğ"),
+        ("Äž", "Ğ"),
+        ("Ã¶", "ö"),
+        ("Ã–", "Ö"),
+        ("Ã¼", "ü"),
+        ("Ãœ", "Ü"),
+    ] {
+        if out.contains(bad) {
+            out = out.replace(bad, good);
+        }
+    }
+    out
 }
 
 #[cfg(test)]
@@ -343,5 +381,31 @@ mod tests {
         assert!(!db.load_pinned_shortcuts().is_empty());
 
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn mojibake_turkish_text_heals_once_without_altering_valid_utf8() {
+        assert_eq!(heal_turkish_mojibake("Yeni YÄ±l"), "Yeni Yıl");
+        assert_eq!(
+            heal_turkish_mojibake("Ä°stanbul Ã‡aÄŸrÄ± ÅŸafak Ã¶zÃ¼r gÃ¼nÃ¼"),
+            "İstanbul Çağrı şafak özür günü"
+        );
+        assert_eq!(heal_turkish_mojibake("Yeni Yıl 2027 🎉"), "Yeni Yıl 2027 🎉");
+        assert_eq!(heal_turkish_mojibake("Lansman & Kontrol"), "Lansman & Kontrol");
+
+        let pid = std::process::id();
+        let tmp = std::env::temp_dir().join(format!("aurora_mojibake_{pid}"));
+        let _ = std::fs::remove_dir_all(&tmp);
+        assert!(std::fs::create_dir_all(&tmp).is_ok());
+        let json = r#"{
+            "dockWidgetsSchemaVer": 2,
+            "todos": [{"id":"t-1","text":"AkÅŸam koÅŸusu","done":false}],
+            "countdown": {"title":"Yeni YÄ±l","targetDate":"2027-01-01"}
+        }"#;
+        let _ = std::fs::write(tmp.join("widgets_layout.json"), json);
+        let doc = WidgetsLayoutStore::new(Some(tmp.clone())).load();
+        assert_eq!(doc.countdown.title, "Yeni Yıl");
+        assert_eq!(doc.todos[0].text, "Akşam koşusu");
+        let _ = std::fs::remove_dir_all(&tmp);
     }
 }
